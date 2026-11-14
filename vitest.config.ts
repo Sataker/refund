@@ -1,7 +1,19 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 // *.live.test.ts only run with LIVE=1 (never in CI). TESTS §1.
 const live = process.env.LIVE === '1';
+
+// apps/web code imports `@/…` and `server-only` (E4): same alias as its tsconfig, and an empty
+// stand-in for `server-only` (the real one throws outside Next's react-server condition).
+const webResolve = {
+  alias: {
+    '@/': fileURLToPath(new URL('./apps/web/src/', import.meta.url)),
+    'server-only': fileURLToPath(
+      new URL('./apps/web/tests/integration/support/server-only.ts', import.meta.url),
+    ),
+  },
+};
 
 export default defineConfig({
   test: {
@@ -22,6 +34,7 @@ export default defineConfig({
     },
     projects: [
       {
+        resolve: webResolve,
         test: {
           name: 'unit',
           include: ['packages/*/test/**/*.test.ts', 'apps/web/src/**/*.test.ts'],
@@ -48,6 +61,7 @@ export default defineConfig({
         },
       },
       {
+        resolve: webResolve,
         test: {
           name: 'integration',
           include: ['apps/web/tests/integration/**/*.test.ts', 'packages/db/test/**/*.test.ts'],
