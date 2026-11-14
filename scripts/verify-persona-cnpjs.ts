@@ -4,13 +4,15 @@
 // issued, public in the Receita's news of 31/07/2026) must answer 200 on BrasilAPI; otherwise its
 // 404s prove nothing and every persona CNPJ is also checked on CNPJ.ws. Writes a Markdown report.
 //
-// Usage (from the repository root of the main checkout, where docs/ exists; docs/ is outside Git):
-//   node scripts/verify-persona-cnpjs.ts [--out docs/conferencias/cnpj-personas.md]
-// From a worktree, pass the main checkout's absolute path in --out.
+// Usage: node scripts/verify-persona-cnpjs.ts [--out <path>]
+// Default output: <repo root>/docs/conferencias/cnpj-personas.md (docs/ is outside Git, D8). From a
+// worktree, pass the main checkout's absolute path in --out. An --out that `git check-ignore` does
+// not ignore is refused, so the report can never be committed by accident.
 // Run at G2 and again on 29/11. Exit code: 0 = none exists; 1 = some CNPJ exists or is inconclusive.
 // Only status codes and the API's short error message go to the report: a 200 body is never
 // written (it could carry a real company's QSA).
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { ALL_PERSONA_CNPJS } from '../packages/personas/src/cnpjs.ts';
 
@@ -103,11 +105,29 @@ function report(checks: Check[], control: Probe, when: string): string {
 function outPath(argv: string[]): string {
   const i = argv.indexOf('--out');
   const value = i >= 0 ? argv[i + 1] : undefined;
-  return resolve(value ?? 'docs/conferencias/cnpj-personas.md');
+  return value === undefined
+    ? resolve(import.meta.dirname, '..', 'docs/conferencias/cnpj-personas.md')
+    : resolve(value);
+}
+
+/** True only if the path is inside a Git working tree and ignored there. */
+function isGitIgnored(path: string): boolean {
+  let dir = dirname(path);
+  while (!existsSync(dir)) dir = dirname(dir);
+  try {
+    execFileSync('git', ['-C', dir, 'check-ignore', '-q', path], { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false; // exit 1 = not ignored; 128 = not in a repository
+  }
 }
 
 async function main(): Promise<void> {
   const out = outPath(process.argv);
+  if (!isGitIgnored(out)) {
+    console.error(`refusing to write ${out}: it is not ignored by Git (use a path under docs/)`);
+    process.exit(2);
+  }
   const checks: Check[] = [];
   let usedCnpjWs = false;
   const control = await probe(`${BRASILAPI}${CONTROL_CNPJ}`);
