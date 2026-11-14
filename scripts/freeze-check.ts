@@ -6,13 +6,16 @@ import { existsSync, readFileSync } from 'node:fs';
 import { checkFile } from './lint-conventions.ts';
 
 const EXPECTED_EMAIL = 'enzosvacarro@gmail.com';
+const WRITE_ACCESS = /\b[a-z-]+\s*:\s*write\b|write-all|git\s+(push|commit)\b/g;
 
 // Decision D8 (PLAN §0): only code goes to GitHub; docs/ and CLAUDE.md stay on Enzo's disk.
 const PRIVATE_PATHS: RegExp[] = [
   /^docs\//,
-  /^CLAUDE\.md$/,
-  /^docs-privado\//,
+  /(^|\/)CLAUDE\.md$/,
+  /(^|\/)docs-privado\//,
   /(^|\/)REVISAO-PLANO\.md$/,
+  // Receita simulator code has no license (only its public JSON tables may be versioned).
+  /(^|\/)simulador-receita\/(main\.js|index\.html)$/,
 ];
 
 function git(...args: string[]): string {
@@ -45,9 +48,7 @@ const checks: Check[] = [
         .filter((f) => f.startsWith('.github/workflows/'))
         .flatMap((f) => {
           const text = readFileSync(f, 'utf8');
-          return ['contents: write', 'pull-requests: write', 'git push', 'git commit']
-            .filter((needle) => text.includes(needle))
-            .map((needle) => `${f}: "${needle}"`);
+          return [...text.matchAll(WRITE_ACCESS)].map((m) => `${f}: "${m[0]}"`);
         }),
   },
   {

@@ -24,11 +24,12 @@ next-env.d.ts
 !.vscode/extensions.json
 
 # Claude Code
-.claude/worktrees/
-.claude/settings.local.json
+.claude/
 
 # Decision D8 (PLAN §0): only code goes to GitHub.
 # Specs, research, pitch and history stay on Enzo's disk.
 /docs/
-/CLAUDE.md
+**/CLAUDE.md
+**/simulador-receita/main.js
+**/simulador-receita/index.html
 docs-privado/

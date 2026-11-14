@@ -8,7 +8,7 @@ import { extname } from 'node:path';
 export interface Finding {
   file: string;
   line: number;
-  rule: 'forbidden-key' | 'formatted-cpf' | 'exception-without-reason';
+  rule: 'forbidden-key' | 'formatted-cpf' | 'exception-without-reason' | 'cpf-in-exceptions';
   excerpt: string;
 }
 
@@ -19,6 +19,7 @@ export interface Exception {
   source: string;
 }
 
+const EXCEPTIONS_FILE = 'scripts/pii-exceptions.json';
 const FORBIDDEN_KEYS = ['qsa', 'cnpj_cpf_do_socio'];
 const FORMATTED_CPF = /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g;
 const BINARY_EXTENSIONS = new Set([
@@ -44,11 +45,7 @@ function lineOf(text: string, index: number): number {
   return text.slice(0, index).split('\n').length;
 }
 
-function isExcepted(file: string, value: string, exceptions: Exception[]): boolean {
-  return exceptions.some((e) => e.value === value && (e.file === '*' || e.file === file));
-}
-
-export function scanText(file: string, text: string, exceptions: Exception[] = []): Finding[] {
+export function scanText(file: string, text: string): Finding[] {
   const findings: Finding[] = [];
 
   if (extname(file) === '.json') {
@@ -65,8 +62,8 @@ export function scanText(file: string, text: string, exceptions: Exception[] = [
     }
   }
 
+  // No exception for CPFs (ARCHITECTURE §6.4: "the CPF guard has no exception").
   for (const match of text.matchAll(FORMATTED_CPF)) {
-    if (isExcepted(file, match[0], exceptions)) continue;
     findings.push({
       file,
       line: lineOf(text, match.index),
@@ -78,15 +75,30 @@ export function scanText(file: string, text: string, exceptions: Exception[] = [
   return findings;
 }
 
+const CPF_LIKE = /^\D*\d{3}\D?\d{3}\D?\d{3}\D?\d{2}\D*$/;
+
 export function validateExceptions(exceptions: Exception[]): Finding[] {
-  return exceptions
-    .filter((e) => typeof e.reason !== 'string' || e.reason.trim() === '')
-    .map((e) => ({
-      file: 'scripts/pii-exceptions.json',
-      line: 0,
-      rule: 'exception-without-reason' as const,
-      excerpt: mask(String(e.value)),
-    }));
+  const findings: Finding[] = [];
+  for (const e of exceptions) {
+    const value = String(e.value);
+    if (typeof e.reason !== 'string' || e.reason.trim() === '') {
+      findings.push({
+        file: EXCEPTIONS_FILE,
+        line: 0,
+        rule: 'exception-without-reason',
+        excerpt: mask(value),
+      });
+    }
+    if (CPF_LIKE.test(value)) {
+      findings.push({
+        file: EXCEPTIONS_FILE,
+        line: 0,
+        rule: 'cpf-in-exceptions',
+        excerpt: mask(value),
+      });
+    }
+  }
+  return findings;
 }
 
 function gitFiles(staged: boolean): string[] {
@@ -105,20 +117,18 @@ function readStaged(file: string): string {
 
 function main(): void {
   const staged = process.argv.includes('--staged');
-  const exceptions = JSON.parse(readFileSync('scripts/pii-exceptions.json', 'utf8')) as Exception[];
+  const exceptions = JSON.parse(readFileSync(EXCEPTIONS_FILE, 'utf8')) as Exception[];
   const findings: Finding[] = validateExceptions(exceptions);
 
   for (const file of gitFiles(staged)) {
     if (BINARY_EXTENSIONS.has(extname(file).toLowerCase())) continue;
-    if (file === 'scripts/pii-exceptions.json') continue;
-    if (file.startsWith('scripts/test/')) continue; // poisoned fixtures of the guard's own tests
     let text: string;
     try {
       text = staged ? readStaged(file) : readFileSync(file, 'utf8');
     } catch {
       continue; // deleted or unreadable
     }
-    findings.push(...scanText(file, text, exceptions));
+    findings.push(...scanText(file, text));
   }
 
   if (findings.length === 0) {

@@ -39,6 +39,13 @@ describe('pii-guard', () => {
     assert.equal(findings[0]?.rule, 'exception-without-reason');
   });
 
+  it('rejects a CPF on the exception list (CPFs have no exception)', () => {
+    const findings = validateExceptions([
+      { value: cpf, file: '*', reason: 'test', source: 'test' },
+    ]);
+    assert.equal(findings[0]?.rule, 'cpf-in-exceptions');
+  });
+
   it('masks short and long values', () => {
     assert.equal(mask('abc'), '***');
     assert.equal(mask('abcdef'), 'ab**ef');
