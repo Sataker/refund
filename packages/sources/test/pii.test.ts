@@ -247,6 +247,18 @@ describe('detectPii and scanText', () => {
     }
   });
 
+  // Code review 14/11 (MEDIUM): the immediate key ("value") hid the context of nested fields.
+  it('uses the full path as context, so nested documents and phones are found', () => {
+    const findings = detectPii({
+      paymentData: { payer: { documentNumber: { type: 'X', value: CPF } } },
+      contacts: { telefones: [{ value: PHONE }] },
+    });
+    expect(findings.map((f) => [f.rule, f.path])).toEqual([
+      ['unformatted-cpf', '$.paymentData.payer.documentNumber.value'],
+      ['phone', '$.contacts.telefones[0].value'],
+    ]);
+  });
+
   it('finds a formatted CPF glued to letters and partial forms with valid check digits', () => {
     const spaced = `${CPF.slice(0, 3)} ${CPF.slice(3, 6)} ${CPF.slice(6, 9)} ${CPF.slice(9)}`;
     for (const text of [

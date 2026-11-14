@@ -6,6 +6,7 @@ import {
   hmacDocument,
   type PersonaDataset,
   PersonaFinancial,
+  protectedDocumentSchema,
   ReplayFinancial,
   reaisToCents,
   type SourceTransaction,
@@ -218,6 +219,48 @@ describe('reaisToCents', () => {
     [Number.MAX_SAFE_INTEGER, null],
   ])('%s → %s', (input, expected) => {
     expect(reaisToCents(input)).toBe(expected);
+  });
+});
+
+describe('protectedDocumentSchema (fixtures read back)', () => {
+  const masked = `***.${CPF.slice(3, 6)}.${CPF.slice(6, 9)}-**`;
+  it('a CPF must have no public value and a ***.NNN.NNN-** (or fully hidden) mask', () => {
+    expect(
+      protectedDocumentSchema.safeParse({
+        type: 'CPF',
+        hmac: null,
+        publicValue: null,
+        mask: masked,
+      }).success,
+    ).toBe(true);
+    expect(
+      protectedDocumentSchema.safeParse({
+        type: 'CPF',
+        hmac: null,
+        publicValue: null,
+        mask: '***.***.***-**',
+      }).success,
+    ).toBe(true);
+    expect(
+      protectedDocumentSchema.safeParse({ type: 'CPF', hmac: null, publicValue: CPF, mask: masked })
+        .success,
+    ).toBe(false);
+    expect(
+      protectedDocumentSchema.safeParse({
+        type: 'CPF',
+        hmac: null,
+        publicValue: null,
+        mask: formatCpf(CPF),
+      }).success,
+    ).toBe(false);
+    expect(
+      protectedDocumentSchema.safeParse({
+        type: 'CNPJ',
+        hmac: null,
+        publicValue: NUMERIC_CNPJ,
+        mask: 'x',
+      }).success,
+    ).toBe(true);
   });
 });
 

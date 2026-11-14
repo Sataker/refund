@@ -84,6 +84,14 @@ describe('pii-guard rule 3: unformatted CPF with a valid check digit', () => {
     }
   });
 
+  it('fails on a nested value whose context is only in the JSON path (parsed JSON pass)', () => {
+    const text = `{\n  "documentNumber": {\n    "issuer": "${'x'.repeat(40)}",\n    "value": "${cpfDigits}"\n  }\n}\n`;
+    const findings = scanText('fixture.json', text);
+    assert.deepEqual(rules(findings), ['unformatted-cpf']);
+    assert.equal(findings[0]?.line, 4);
+    assert.ok(!findings[0]?.excerpt.includes(cpfDigits.slice(2, 9)));
+  });
+
   it('passes without that context, or with an invalid check digit', () => {
     assert.deepEqual(scanText('f.json', `{ "amountCents": ${cpfDigits} }`), []);
     const wrong = `${cpfDigits.slice(0, 10)}${(Number(cpfDigits[10]) + 1) % 10}`;

@@ -120,15 +120,20 @@ export function findForbiddenKeys(jsonText: string): PiiFinding[] {
 const FORBIDDEN = new Set(FORBIDDEN_KEYS.map((k) => k.toLowerCase()));
 
 /**
- * Rules 1–5 over a value (the recorder's check before writing). The key that holds a string or number
- * is its context for the CPF and phone neighborhood rules. `email` is tolerated only inside
+ * Rules 1–5 over a value (the recorder's and the guard's check). The full JSON path of a string or
+ * number is its context for the CPF and phone neighborhood rules. `email` is tolerated only inside
  * `sanitization` (where it names a discarded field, never a value).
  */
-export function detectPii(value: unknown, path = '$'): PiiFinding[] {
+export function detectPii(
+  value: unknown,
+  path = '$',
+  options: Pick<ScanOptions, 'allow'> = {},
+): PiiFinding[] {
   const findings: PiiFinding[] = [];
-  const walk = (v: unknown, p: string, key: string, inSanitization: boolean): void => {
+  const walk = (v: unknown, p: string, inSanitization: boolean): void => {
     if (typeof v === 'string' || typeof v === 'number') {
-      for (const f of scanText(String(v), { path: p, context: key })) {
+      // The whole path is the context: `documentNumber.value` must count as a document field.
+      for (const f of scanText(String(v), { ...options, path: p, context: p })) {
         const { index: _ignored, ...rest } = f;
         findings.push(rest);
       }
@@ -136,7 +141,7 @@ export function detectPii(value: unknown, path = '$'): PiiFinding[] {
     }
     if (Array.isArray(v)) {
       v.forEach((item, i) => {
-        walk(item, `${p}[${i}]`, key, inSanitization);
+        walk(item, `${p}[${i}]`, inSanitization);
       });
       return;
     }
@@ -146,10 +151,10 @@ export function detectPii(value: unknown, path = '$'): PiiFinding[] {
         if (FORBIDDEN.has(lower) && !(lower === 'email' && inSanitization)) {
           findings.push({ path: `${p}.${k}`, rule: 'forbidden-key', excerpt: `"${k}": …` });
         }
-        walk(child, `${p}.${k}`, k, inSanitization || k === 'sanitization');
+        walk(child, `${p}.${k}`, inSanitization || k === 'sanitization');
       }
     }
   };
-  walk(value, path, '', false);
+  walk(value, path, false);
   return findings;
 }

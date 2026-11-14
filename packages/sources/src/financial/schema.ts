@@ -6,12 +6,20 @@ import type { SourceAccount, SourceIdentity, SourceItem, SourceTransaction } fro
 const civilDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const cents = z.number().int().refine(Number.isSafeInteger);
 
-export const protectedDocumentSchema = z.strictObject({
-  type: z.enum(['CPF', 'CNPJ']),
-  hmac: z.string().nullable(),
-  publicValue: z.string().nullable(),
-  mask: z.string(),
-});
+/** `***.456.789-**`, or fully hidden `***.***.***-**` (partners, §6.2). */
+const CPF_MASK = /^\*{3}\.(\d{3}|\*{3})\.(\d{3}|\*{3})-\*{2}$/;
+
+export const protectedDocumentSchema = z
+  .strictObject({
+    type: z.enum(['CPF', 'CNPJ']),
+    hmac: z.string().nullable(),
+    publicValue: z.string().nullable(),
+    mask: z.string(),
+  })
+  // A CPF never travels in clear (ARCHITECTURE §4.3): no public value, and a mask that hides it.
+  .refine((d) => d.type !== 'CPF' || (d.publicValue === null && CPF_MASK.test(d.mask)), {
+    message: 'CPF em claro',
+  });
 
 export const sourceItemSchema = z.strictObject({
   sourceId: z.string(),

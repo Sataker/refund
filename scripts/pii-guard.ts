@@ -10,7 +10,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { extname } from 'node:path';
 import { cnpjCheckDigits } from '../packages/sources/src/cnpj/validate.ts';
 import { mask } from '../packages/sources/src/pii/cpf.ts';
-import { findForbiddenKeys, scanText as scanPii } from '../packages/sources/src/pii/detect.ts';
+import {
+  detectPii,
+  findForbiddenKeys,
+  scanText as scanPii,
+} from '../packages/sources/src/pii/detect.ts';
 import type { PiiRule } from '../packages/sources/src/types.ts';
 
 export { mask };
@@ -120,8 +124,48 @@ export function scanText(file: string, text: string, ctx: GuardContext = EMPTY_C
   for (const f of scanPii(text, { allow })) {
     findings.push({ file, line: at(f.index), rule: f.rule, excerpt: f.excerpt });
   }
+  if (extname(file) === '.json') findings.push(...jsonFindings(file, text, findings, allow));
   if (file.startsWith(PERSONA_DATA)) findings.push(...personaCnpjFindings(file, text, ctx));
   return findings;
+}
+
+/** Value at a `detectPii` path such as `$.a.b[0].c`. */
+function valueAt(root: unknown, path: string): unknown {
+  let v: unknown = root;
+  for (const m of path.matchAll(/\.([^.[\]]+)|\[(\d+)\]/g)) {
+    if (v === null || typeof v !== 'object') return undefined;
+    v = (v as Record<string, unknown>)[m[1] ?? m[2] ?? ''];
+  }
+  return v;
+}
+
+/**
+ * Second pass over parsed JSON: `detectPii` sees the whole path as context, so a CPF in
+ * `documentNumber.value` is found even when the key is more than 30 characters away in the text.
+ * Findings the text scan already reported are not repeated.
+ */
+function jsonFindings(
+  file: string,
+  text: string,
+  already: readonly Finding[],
+  allow: (rule: string, raw: string) => boolean,
+): Finding[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  const seen = new Set(already.map((f) => `${f.rule}|${f.excerpt}`));
+  const out: Finding[] = [];
+  for (const f of detectPii(parsed, '$', { allow })) {
+    if (f.rule === 'forbidden-key' || seen.has(`${f.rule}|${f.excerpt}`)) continue;
+    seen.add(`${f.rule}|${f.excerpt}`);
+    const leaf = valueAt(parsed, f.path);
+    const index = leaf === undefined ? -1 : text.indexOf(String(leaf));
+    out.push({ file, line: index < 0 ? 0 : lineOf(text, index), rule: f.rule, excerpt: f.excerpt });
+  }
+  return out;
 }
 
 const CPF_LIKE = /^\D*\d{3}\D?\d{3}\D?\d{3}\D?\d{2}\D*$/;
