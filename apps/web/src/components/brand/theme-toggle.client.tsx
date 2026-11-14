@@ -54,7 +54,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label="Alternar tema claro e escuro (atalho D)"
       title="Alternar tema (D)"
       className={cx(
-        'type-small inline-flex h-10 items-center gap-2 rounded-md border border-border bg-surface px-3 text-muted-foreground transition-colors duration-(--dur-fast) hover:border-strong-border hover:text-foreground',
+        'type-small inline-flex h-11 items-center gap-2 rounded-md border border-border bg-surface px-3 text-muted-foreground transition-colors duration-(--dur-fast) hover:border-strong-border hover:text-foreground',
         className,
       )}
     >
@@ -62,7 +62,9 @@ export function ThemeToggle({ className }: { className?: string }) {
       <Sun className="hidden size-4 dark:block" strokeWidth={1.5} aria-hidden="true" />
       <span className="dark:hidden">Tema escuro</span>
       <span className="hidden dark:inline">Tema claro</span>
-      <kbd className="type-caption ml-1 rounded-sm border border-border px-1 font-mono">D</kbd>
+      <kbd className="type-caption ml-1 rounded-sm border border-border px-1 font-mono [@media(hover:none)]:hidden">
+        D
+      </kbd>
     </button>
   );
 }

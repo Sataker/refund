@@ -65,6 +65,20 @@ export function formatYearMonth(ym: string): string {
   return `${name}/${year}`;
 }
 
+/**
+ * Rate as a decimal string → percent, truncated (never rounded up) to `decimals`: "0.27722" → "27,72%",
+ * "0.28" → "28%". String arithmetic only.
+ */
+export function formatRatePercent(rate: string, decimals = 2): string {
+  const m = /^(-?)(\d+)(?:\.(\d+))?$/.exec(rate);
+  if (!m) throw new RangeError(`invalid rate: ${rate}`);
+  const [, sign = '', int = '0', frac = ''] = m;
+  const digits = frac.padEnd(2 + decimals, '0');
+  const whole = String(Number(`${int}${digits.slice(0, 2)}`));
+  const rest = digits.slice(2, 2 + decimals).replace(/0+$/, '');
+  return `${sign}${whole}${rest === '' ? '' : `,${rest}`}%`;
+}
+
 /** Rate as a decimal string ("0.28") → "0,28" (no float conversion). */
 export function formatRateDecimal(rate: string): string {
   return rate.replace('.', ',');

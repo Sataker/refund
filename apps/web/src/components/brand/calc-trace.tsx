@@ -1,6 +1,6 @@
 import type { Step, Trace } from '@refund/engine';
 import { ChevronDown } from 'lucide-react';
-import { formatBRL, formatRateDecimal } from '@/lib/format';
+import { formatBRL, formatRatePercent } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { LawSeal } from './law-seal';
 
@@ -15,7 +15,7 @@ function StepValue({ value, testId }: { value: Value; testId?: string }) {
     );
   }
   if (value.unit === 'rate')
-    return <span className="num">{formatRateDecimal(String(value.value))}</span>;
+    return <span className="num">{formatRatePercent(String(value.value))}</span>;
   return <span>{String(value.value)}</span>;
 }
 
@@ -24,7 +24,7 @@ function inputText(input: Step['inputs'][string]): string {
     case 'cents':
       return typeof input.value === 'number' ? formatBRL(input.value) : String(input.value);
     case 'rate':
-      return formatRateDecimal(String(input.value));
+      return formatRatePercent(String(input.value));
     case 'months':
       return `${input.value} meses`;
     default:
@@ -54,7 +54,7 @@ export function CalcTrace({
 }: CalcTraceProps) {
   return (
     <details open={open} className={cn('group', className)} data-testid="calc-trace">
-      <summary className="type-small inline-flex cursor-pointer list-none items-center gap-1.5 rounded-md font-medium text-cobalt [&::-webkit-details-marker]:hidden">
+      <summary className="type-small inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-md font-medium text-cobalt [&::-webkit-details-marker]:hidden">
         <span className="group-open:hidden">Ver cálculo</span>
         <span className="hidden group-open:inline">Esconder cálculo</span>
         <ChevronDown

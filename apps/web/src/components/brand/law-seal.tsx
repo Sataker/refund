@@ -21,7 +21,7 @@ export function LawSeal({ lawRef, className }: { lawRef: LawSealRef; className?:
       data-testid="law-seal"
       aria-label={`${lawRef.label}: abrir o texto oficial em nova aba`}
       className={cn(
-        'inline-flex max-w-full items-center gap-1.5 rounded-sm border border-border bg-surface px-2 py-0.5 font-mono text-[12px] leading-5 text-foreground no-underline transition-colors duration-(--dur-fast) hover:border-strong-border',
+        'relative inline-flex max-w-full items-center gap-1.5 rounded-sm after:absolute after:-inset-x-1 after:-inset-y-[11px] border border-border bg-surface px-2 py-0.5 font-mono text-[12px] leading-5 text-foreground no-underline transition-colors duration-(--dur-fast) hover:border-strong-border',
         className,
       )}
     >

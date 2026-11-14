@@ -4,6 +4,7 @@ import {
   formatBRLThousands,
   formatBRLWhole,
   formatRateDecimal,
+  formatRatePercent,
   formatYearMonth,
   moneyParts,
   speakBRL,
@@ -47,5 +48,10 @@ describe('formatters', () => {
     expect(formatYearMonth('2027-04')).toBe('abr/2027');
     expect(() => formatYearMonth('2027-13')).toThrow(RangeError);
     expect(formatRateDecimal('0.28')).toBe('0,28');
+    expect(formatRatePercent('0.27722')).toBe('27,72%');
+    expect(formatRatePercent('0.28')).toBe('28%');
+    expect(formatRatePercent('0.105')).toBe('10,5%');
+    expect(formatRatePercent('1')).toBe('100%');
+    expect(() => formatRatePercent('abc')).toThrow(RangeError);
   });
 });

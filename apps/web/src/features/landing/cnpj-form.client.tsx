@@ -51,12 +51,12 @@ export function CnpjForm({ id, className }: CnpjFormProps) {
       onSubmit={onSubmit}
       noValidate
       data-testid={`${id}/cnpj-form`}
-      className={cx('w-full max-w-xl', className)}
+      className={cx('w-full max-w-2xl', className)}
     >
       <label htmlFor={`${id}-cnpj`} className="type-small mb-2 block font-medium text-foreground">
         CNPJ da sua empresa
       </label>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <input
           ref={inputRef}
           id={`${id}-cnpj`}
@@ -75,7 +75,7 @@ export function CnpjForm({ id, className }: CnpjFormProps) {
           aria-invalid={invalid}
           aria-describedby={hintId}
           className={cx(
-            'num h-14 w-full min-w-0 rounded-md sm:flex-1 border bg-surface px-4 font-mono text-lg text-foreground shadow-xs transition-colors duration-(--dur-fast) placeholder:text-subtle',
+            'num h-14 w-full min-w-0 rounded-md sm:flex-1 lg:min-w-[22.5rem] border bg-surface px-4 font-mono text-lg text-foreground shadow-xs transition-colors duration-(--dur-fast) placeholder:text-subtle',
             invalid ? 'border-risk' : 'border-strong-border',
           )}
         />
