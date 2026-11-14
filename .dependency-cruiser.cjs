@@ -3,6 +3,13 @@ module.exports = {
   forbidden: [
     { name: 'no-cycles', severity: 'error', from: {}, to: { circular: true } },
     {
+      // An import pnpm cannot resolve (e.g. a package not declared in dependencies) hides a boundary breach.
+      name: 'not-to-unresolvable',
+      severity: 'error',
+      from: {},
+      to: { couldNotResolve: true },
+    },
+    {
       name: 'pure-engine',
       severity: 'error',
       from: { path: '^packages/engine/src' },
@@ -48,9 +55,15 @@ module.exports = {
     },
   ],
   options: {
-    tsConfig: { fileName: 'tsconfig.base.json' },
+    tsConfig: { fileName: 'tsconfig.depcruise.json' }, // base + apps/web's @/ alias
+    // Without this, @refund/* imports stay unresolved and the cross-package rules never fire.
+    enhancedResolveOptions: {
+      exportsFields: ['exports'],
+      conditionNames: ['import', 'require', 'node', 'default'],
+      extensions: ['.ts', '.tsx', '.js', '.mjs', '.cjs', '.json'],
+    },
     doNotFollow: { path: 'node_modules' },
     tsPreCompilationDeps: true,
-    exclude: { path: ['\\.next/', 'node_modules/'] },
+    exclude: { path: ['\\.next/', 'node_modules/', '\\.d\\.ts$'] },
   },
 };

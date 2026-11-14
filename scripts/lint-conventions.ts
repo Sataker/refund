@@ -8,10 +8,10 @@ export interface Violation {
   rule: string;
 }
 
-const EDGE_RUNTIME = /export\s+const\s+runtime\s*=\s*['"]edge['"]/;
+const EDGE_RUNTIME = /export\s+const\s+runtime\b[^=]*=\s*['"]edge['"]/;
 const USE_CLIENT = /^\s*['"]use client['"]/m;
 const ENGINE_FORBIDDEN: Array<[RegExp, string]> = [
-  [/\bnew\s+Date\b|\bDate\.\w+/, 'engine-uses-Date'],
+  [/\bDate\b/, 'engine-uses-Date'],
   [/\bMath\.random\b/, 'engine-uses-Math.random'],
   [/\bfetch\s*\(/, 'engine-uses-fetch'],
   [/\bprocess\./, 'engine-uses-process'],

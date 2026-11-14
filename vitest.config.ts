@@ -10,6 +10,12 @@ export default defineConfig({
       provider: 'v8',
       reportsDirectory: 'coverage',
       include: ['packages/*/src/**', 'apps/web/src/**'],
+      // TESTS §7.1. @refund/ai/guards (95/90) enters with E10; @refund/sources whitelist/pii/validate (90/85) with E7.
+      thresholds: {
+        'packages/engine/src/**': { lines: 95, branches: 90 },
+        'packages/pipeline/src/**': { lines: 85, branches: 80 },
+        'apps/web/src/server/**': { lines: 70, branches: 60 },
+      },
     },
     projects: [
       {
@@ -21,6 +27,7 @@ export default defineConfig({
             '**/golden/**',
             '**/properties/**',
             '**/invariants/**',
+            'packages/db/test/**', // integration project (PGlite, forks, 20 s timeout)
             ...(live ? [] : ['**/*.live.test.ts']),
           ],
           environment: 'node',
