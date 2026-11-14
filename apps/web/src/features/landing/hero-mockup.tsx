@@ -15,9 +15,12 @@ export function HeroMockup() {
       aria-label={`Exemplo: painel da ${hero.companyName}, persona sintética`}
       className="relative overflow-hidden rounded-2xl border border-border bg-surface shadow-lg"
     >
-      <figcaption className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 sm:px-6">
-        <span className="type-small font-medium text-foreground">{hero.companyName}</span>
-        <span className="type-caption font-mono text-muted-foreground">
+      <figcaption className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-border px-5 py-3 sm:px-6">
+        <span className="flex flex-col">
+          <span className="type-small font-medium text-foreground">{hero.companyName}</span>
+          <span className="type-caption text-muted-foreground">Exemplo · persona sintética</span>
+        </span>
+        <span className="type-caption font-mono whitespace-nowrap text-muted-foreground">
           Simples · CNAE {hero.cnae}
         </span>
       </figcaption>

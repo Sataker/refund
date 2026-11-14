@@ -40,6 +40,24 @@ test.describe('landing @demo', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
   });
 
+  test('landing shows a traceable R$ in the first viewport of a 390×844 phone', async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    const line = page.getByTestId('landing/hero-line');
+    await expect(line).toHaveAttribute('data-cents', String(HERO.savings12m));
+    await expect(line).toHaveAttribute('href', '/demo');
+    const box = await line.boundingBox();
+    expect(box, 'hero line rendered').not.toBeNull();
+    expect((box?.y ?? Number.POSITIVE_INFINITY) + (box?.height ?? 0)).toBeLessThanOrEqual(844);
+    if (testInfo.project.name === 'demo-mobile') {
+      await settled(page);
+      await page.screenshot({ path: testInfo.outputPath('landing-390x844-fold.png') });
+    }
+  });
+
   test('landing CNPJ field masks, explains what is missing and opens the demo', async ({
     page,
   }) => {
@@ -126,6 +144,15 @@ test.describe('landing @demo', () => {
         path: testInfo.outputPath(`landing-${testInfo.project.name}-${scheme}.png`),
         fullPage: true,
       });
+      if (testInfo.project.name === 'demo-mobile') {
+        // IDENTITY-AND-UI §5 wireframes are drawn at 390 px.
+        await page.setViewportSize({ width: 390, height: 844 });
+        await settled(page);
+        await page.screenshot({
+          path: testInfo.outputPath(`landing-390-${scheme}.png`),
+          fullPage: true,
+        });
+      }
     });
   }
 });

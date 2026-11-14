@@ -3,8 +3,8 @@
 // amounts come from the hero persona's answer key (ENGINE-SPEC F.4, pinned by the golden tests), citations
 // from @refund/law (CLAUDE.md rule 3). When E12 ships the /demo snapshot, swap the source for it.
 import type { CivilDate, Confidence, LegalRef, Trace, YearMonth } from '@refund/engine';
-import { addMonths, displayFatorR, rate } from '@refund/engine';
-import { article } from '@refund/law';
+import { addMonths, fs12, param } from '@refund/engine';
+import { all, article } from '@refund/law';
 import type { AnswerKey, ExpectedFinding, PersonaData } from '@refund/personas';
 import answerKeyJson from '@refund/personas/data/dev-exportador.answer-key.json' with {
   type: 'json',
@@ -109,24 +109,44 @@ export const hero = {
  * labels and formulas are the plain description of ENGINE-SPEC D.1 and F.3 (step 3). The engine's own
  * `Finding.trace` replaces this once the /demo snapshot exists (E12).
  */
+const facts = answerKey.expectedFacts;
+/** The PA right after the reference month: its Fator R window is the persona's 12 months (nov/25–oct/26). */
+const CURRENT_PA = addMonths(facts.referenceMonth, 1);
+/**
+ * Payroll without the pró-labore (ENGINE-SPEC D.1 "FSo"), computed by the engine's own `fs12` over the
+ * answer key's CLT series: the UI never adds money up (CLAUDE.md rule 1).
+ */
+export const payrollWithoutProLabore = fs12(CURRENT_PA, {
+  cltGrossPay: facts.cltPayroll.grossPay,
+  fgtsPaid: facts.cltPayroll.fgtsPaid,
+  cppOutsideDas: facts.cltPayroll.cppOutsideDas,
+  proLabore: {},
+});
+const FATOR_R_LIMIT = param('simples.fatorR.limit', CURRENT_PA).value;
+
 export const heroR01Trace: Trace = [
   {
     id: 'R01.FATOR_R.current',
     label: 'Fator R hoje',
     formula: 'folha dos últimos 12 meses ÷ faturamento dos últimos 12 meses',
     inputs: {
-      folha: { value: answerKey.expectedFacts.fs12, unit: 'cents' },
-      faturamento: { value: answerKey.expectedFacts.rbt12, unit: 'cents' },
+      folha: { value: facts.fs12, unit: 'cents' },
+      faturamento: { value: facts.rbt12, unit: 'cents' },
     },
-    result: { value: displayFatorR(rate(answerKey.expectedFacts.fatorR)), unit: 'rate' },
-    rounding: 'TRUNC_2_DECIMALS_DISPLAY',
+    result: { value: facts.fatorR, unit: 'rate' },
+    rounding: 'NONE',
     ref: FATOR_R_REF,
   },
   {
     id: 'R01.PRO_LABORE.target',
-    label: 'Pró-labore que leva o Fator R a 28% (com margem de segurança)',
+    label: 'Pró-labore que leva o Fator R a 29% (28% + 1 p.p. de margem)',
     formula: '(29% × faturamento 12 meses − folha sem o pró-labore) ÷ 12',
-    inputs: { 'pró-labore hoje': { value: detail(r01, 'currentProLabore'), unit: 'cents' } },
+    inputs: {
+      'faturamento 12 meses': { value: facts.rbt12, unit: 'cents' },
+      'folha sem o pró-labore': { value: payrollWithoutProLabore, unit: 'cents' },
+      'limite do Anexo III': { value: FATOR_R_LIMIT, unit: 'rate' },
+      'margem de segurança': { value: '1 p.p. (premissa padrão, editável)', unit: 'text' },
+    },
     result: { value: detail(r01, 'proLaboreTarget'), unit: 'cents' },
     rounding: 'HALF_UP_CENT',
   },
@@ -169,4 +189,9 @@ export const lawChanges = {
   dividends: legalRef('lei9250-1995/art6-a'),
   cbsExport: legalRef('lc214-2025/art79'),
   mei: legalRef('lc238-2026/art2'),
+  /** The 2027–2029 increases depend on the LOA (ENGINE-SPEC G7). */
+  meiCondition: legalRef('lc238-2026/art3'),
 };
+
+/** Provisions of the curated corpus, each captured from the official source with date and hash. */
+export const lawProvisionCount = all().length;

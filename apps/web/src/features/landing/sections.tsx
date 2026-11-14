@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   BadgeCheck,
   FileCheck2,
   Landmark,
@@ -22,7 +23,7 @@ import { ThemeToggle } from '@/components/brand/theme-toggle.client';
 import { formatBRLWhole } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { CnpjForm } from './cnpj-form.client';
-import { fatorRProvision, hero, heroR01Trace, lawChanges } from './hero-data';
+import { fatorRProvision, hero, heroR01Trace, lawChanges, lawProvisionCount } from './hero-data';
 import { HeroMockup } from './hero-mockup';
 import { ROUTES } from './routes';
 import { WaitlistForm } from './waitlist-form.client';
@@ -80,7 +81,11 @@ function DemoLink({ className }: { className?: string }) {
 export function SiteHeader() {
   return (
     <header className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 border-border px-4 py-4 sm:px-6 lg:border-x lg:px-12">
-      <Link href="/" aria-label="Refund, página inicial" className="rounded-sm text-[26px]">
+      <Link
+        href="/"
+        aria-label="Refund, página inicial"
+        className="inline-flex min-h-11 items-center rounded-sm text-[26px]"
+      >
         <Logo descriptor />
       </Link>
       <nav aria-label="Principal" className="flex items-center gap-1 sm:gap-6">
@@ -104,7 +109,7 @@ export function SiteHeader() {
         </a>
         <Link
           href={ROUTES.demo}
-          className="type-small inline-flex h-10 items-center rounded-md border border-strong-border bg-surface px-4 font-medium text-foreground transition-colors duration-(--dur-fast) hover:bg-muted"
+          className="type-small inline-flex h-11 items-center rounded-md border border-strong-border bg-surface px-4 font-medium text-foreground transition-colors duration-(--dur-fast) hover:bg-muted"
         >
           Ver demo
         </Link>
@@ -125,9 +130,24 @@ export function HeroSection() {
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-7">
           <SandboxSeal />
+          <p className="type-small mt-4">
+            <Link
+              href={ROUTES.demo}
+              data-testid="landing/hero-line"
+              data-cents={hero.savings12m}
+              className="inline-flex min-h-11 flex-wrap items-center gap-x-1.5 text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              {hero.firstName}, persona sintética:
+              <span className="num font-semibold text-found-ink">
+                {formatBRLWhole(hero.savings12m)}
+              </span>
+              a menos em 12 meses
+              <ArrowRight className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
+            </Link>
+          </p>
           <h1
             id="hero-title"
-            className="type-display mt-6 max-w-[13em] text-balance text-foreground"
+            className="type-display mt-4 max-w-[13em] text-balance text-foreground lg:mt-6"
           >
             Ache o dinheiro que o governo te deve.
           </h1>
@@ -164,7 +184,12 @@ export function ProofSection() {
       cents: hero.savings12m,
       text: `a menos para a ${hero.firstName}, persona sintética, em 12 meses`,
     },
-    { value: '6', text: 'regras da lei no motor, cada uma com o artigo citado' },
+    // TODO(E8): show the engine's rule count (rulesByRef) once the rules exist.
+    {
+      value: String(lawProvisionCount),
+      testId: 'landing/proof-provisions',
+      text: 'dispositivos de lei capturados da fonte oficial, com data e hash',
+    },
     { value: '< 10 s', text: 'do CNPJ à primeira estimativa (meta da demo)' },
     { value: '100%', text: 'dos cálculos com a conta aberta, passo a passo' },
   ];
@@ -189,7 +214,8 @@ export function ProofSection() {
       </dl>
       <p className="type-small mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-subtle">
         <span>Construído com</span>
-        {['Open Finance Brasil', 'Pluggy', 'Claude', 'AbacatePay', 'WorkOS'].map((n) => (
+        {/* Add AbacatePay, WorkOS etc. when their stage lands (E11, E17). */}
+        {['Open Finance (Pluggy, sandbox)', 'Claude'].map((n) => (
           <span key={n} className="font-medium text-muted-foreground">
             {n}
           </span>
@@ -218,8 +244,9 @@ export function ProblemSection() {
     {
       when: '2027',
       title: 'Novo MEI',
-      text: 'O limite de faturamento do MEI sobe para R$ 110 mil por ano.',
+      text: 'Em 2027, o limite do MEI pode subir para R$ 110 mil, se a LOA 2027 prever a renúncia.',
       ref: lawChanges.mei,
+      condition: lawChanges.meiCondition,
       level: 'depends_on_regulation' as const,
     },
   ];
@@ -236,6 +263,7 @@ export function ProblemSection() {
             <p className="text-muted-foreground">{c.text}</p>
             <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 pt-2">
               <LawSeal lawRef={c.ref} />
+              {'condition' in c && c.condition ? <LawSeal lawRef={c.condition} /> : null}
               {c.level === 'depends_on_regulation' ? <ConfidenceBadge level={c.level} /> : null}
             </div>
           </li>
