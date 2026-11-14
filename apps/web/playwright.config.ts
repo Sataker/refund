@@ -2,8 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 // TESTS §6. Production projects run against E2E_BASE_URL; every other project
 // runs against `next start` (production build) on localhost:3000.
+// E2E_PORT lets parallel worktrees run their own `next start` side by side (default 3000).
 const productionRun = (process.env.E2E_BASE_URL ?? '') !== '';
-const baseURL = productionRun ? process.env.E2E_BASE_URL : 'http://localhost:3000';
+const port = process.env.E2E_PORT ?? '3000';
+const baseURL = productionRun ? process.env.E2E_BASE_URL : `http://localhost:${port}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -37,8 +39,8 @@ export default defineConfig({
     ? {}
     : {
         webServer: {
-          command: 'pnpm start',
-          url: 'http://localhost:3000/api/health',
+          command: `pnpm start --port ${port}`,
+          url: `http://localhost:${port}/api/health`,
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,
         },
