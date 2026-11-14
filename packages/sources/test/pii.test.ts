@@ -182,6 +182,28 @@ describe('redactDescription', () => {
     expect(redactDescription('PIX ANA BANANA', ana)).toBe('PIX [pessoa] BANANA');
   });
 
+  // Code review 14/11 (MEDIUM): names without a document and bank-truncated names survived.
+  it('redacts the name of a counterparty without any document', () => {
+    expect(
+      redactDescription('PIX ENVIADO ANA PAULA ROCHA', { document: null, name: 'Ana Paula Rocha' }),
+    ).toBe('PIX ENVIADO [pessoa]');
+  });
+
+  it('redacts each name token of 3+ letters, so bank-truncated names do not survive', () => {
+    const maria = { document: protectDocument(CPF, null), name: 'Maria José da Silva Santos' };
+    expect(redactDescription('PIX MARIA JOSE S', maria)).toBe('PIX [pessoa] S');
+    expect(redactDescription('TED SANTOS M J', maria)).toBe('TED [pessoa] M J');
+    expect(redactDescription('PIX MARIA DA SILVA', maria)).toBe('PIX [pessoa]');
+  });
+
+  it('keeps particles and tokens shorter than 3 letters on their own', () => {
+    const maria = { document: null, name: 'Maria da Silva' };
+    expect(redactDescription('PAGTO DA LOJA', maria)).toBe('PAGTO DA LOJA');
+    const li = { document: null, name: 'Li Wu' };
+    expect(redactDescription('PIX LI WU', li)).toBe('PIX [pessoa]');
+    expect(redactDescription('PIX LI', li)).toBe('PIX LI');
+  });
+
   it('keeps a company name (CNPJ counterparty) and ignores a blank name', () => {
     const company = { document: protectDocument(NUMERIC_CNPJ, null), name: 'ACME LTDA' };
     expect(redactDescription('BOLETO ACME LTDA', company)).toBe('BOLETO ACME LTDA');

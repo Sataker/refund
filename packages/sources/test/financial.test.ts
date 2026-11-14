@@ -149,6 +149,14 @@ describe('Pluggy transaction whitelist (pluggy@1)', () => {
       { pepper },
     );
     expect(withName.ok && withName.value.counterparty).toBeNull();
+    const truncated = sanitizePluggyTransaction(
+      pixOut({
+        description: 'TED ENVIADA FULANO T',
+        paymentData: { paymentMethod: 'TED', receiver: { name: 'Fulano de Tal' } },
+      }),
+      { pepper },
+    );
+    expect(truncated.ok && truncated.value.description).toBe('TED ENVIADA [pessoa] T');
     const merchantNoCnpj = sanitizePluggyTransaction(
       pixOut({ paymentData: null, merchant: { businessName: 'X', cnpj: null, cnae: null } }),
       { pepper },

@@ -64,17 +64,37 @@ function replaceName(text: string, name: string): string {
   return out + chars.slice(last).join('');
 }
 
+const PARTICLES = new Set(['da', 'de', 'do', 'dos', 'das', 'e']);
+// Adjacent redactions (optionally joined by da/de/do/dos/das) become one; "e" is kept, since it also
+// joins two different people.
+const PERSON_RUN = /\[pessoa\](?:\s+(?:(?:da|de|do|dos|das)\s+)?\[pessoa\])+/giu;
+
+/**
+ * Redacts a person's name: the whole name, then every token of 3+ letters that is not a particle, so a
+ * name truncated by the bank ("MARIA JOSE S" for "Maria José da Silva Santos") does not survive.
+ */
+function redactPersonName(text: string, name: string): string {
+  let out = replaceName(text, name);
+  const tokens = Array.from(name.normalize('NFC')).map(foldChar).join('').split(/\s+/);
+  for (const token of tokens) {
+    if (PARTICLES.has(token) || (token.match(/\p{L}/gu)?.length ?? 0) < 3) continue;
+    out = replaceName(out, token);
+  }
+  return out.replace(PERSON_RUN, '[pessoa]');
+}
+
 /**
  * Transaction description that may leave the provider: (1) `stripDocuments`; (2) when the counterparty
- * is a CPF and has a name, its occurrences become `[pessoa]`; (3) runs of 6 or more digits become `#`.
+ * has a name and is not a company (CPF or no document at all), the name becomes `[pessoa]`; (3) runs of
+ * 6 or more digits become `#`.
  */
 export function redactDescription(
   text: string,
   counterparty?: { document: ProtectedDocument | null; name: string | null },
 ): string {
   let out = stripDocuments(text);
-  if (counterparty?.document?.type === 'CPF' && counterparty.name) {
-    out = replaceName(out, counterparty.name);
+  if (counterparty?.name && counterparty.document?.type !== 'CNPJ') {
+    out = redactPersonName(out, counterparty.name);
   }
   return out.replace(LONG_DIGITS, '#');
 }
