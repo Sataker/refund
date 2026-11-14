@@ -179,6 +179,11 @@ export interface Step {
   rounding: StepRounding; // [CONTRACT] ENGINE-SPEC C.8
   month?: YearMonth; // [CONTRACT] PA the step refers to
   ref?: LegalRef;
+  /**
+   * [CONTRACT proposal, E5] Set when the step used a parameter not yet published for its month (ENGINE-SPEC C.1,
+   * item 4): "parâmetro de 2027 ainda não publicado; usado o de 2026". Absent otherwise.
+   */
+  projectedNote?: string;
 }
 /** ENGINE-SPEC C.2 `EngineStep`: the [CONTRACT] fields already live in `Step`. */
 export type EngineStep = Step;

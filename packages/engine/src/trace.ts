@@ -27,8 +27,22 @@ export function step(spec: StepSpec): Step {
     rounding: spec.rounding,
   };
   if (spec.month !== undefined) out.month = spec.month;
-  if (spec.parameter !== undefined) out.ref = legalRefOf(spec.parameter);
+  if (spec.parameter !== undefined) {
+    out.ref = legalRefOf(spec.parameter);
+    if (spec.parameter.projected) out.projectedNote = projectedNote(spec.parameter, spec.month);
+  }
   return out;
+}
+
+/** C.1, item 4: the trace says the parameter of the month was not published and which one was used. */
+export function projectedNote(
+  lookup: { effectiveFrom: YearMonth },
+  month: YearMonth | undefined,
+): string {
+  const used = lookup.effectiveFrom.slice(0, 4);
+  return month === undefined
+    ? `parâmetro ainda não publicado; usado o de ${used}`
+    : `parâmetro de ${month.slice(0, 4)} ainda não publicado; usado o de ${used}`;
 }
 
 /** Step id '<prefix>.<quantity>[.<month>]'. */

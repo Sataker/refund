@@ -1,5 +1,6 @@
 // Simples Nacional primitives: effective rate, DAS per market rounded per tax, window, RBT12, FS12, Fator R and
 // anexo (ENGINE-SPEC C.3.4, C.3.5; rounding points C.8; oracles B.3).
+import { EngineError } from '../errors.ts';
 import { D, type Dec, rate, rateOf, reais, roundToCents, sumCents, truncate } from '../money.ts';
 import { param } from '../parameters/index.ts';
 import type {
@@ -33,7 +34,9 @@ const TABLE_KEYS = {
 /** Anexo table in force in `month`. Anexos II and IV have no table in ENGINE-SPEC A.3 (no P0 persona uses them). */
 export function anexoTable(anexo: Anexo, month: YearMonth): ParameterLookup<'simples.anexo.I'> {
   if (anexo !== 'I' && anexo !== 'III' && anexo !== 'V') {
-    throw new RangeError(`Anexo ${anexo} has no table in ENGINE-SPEC A.3`);
+    throw new EngineError('ANEXO_WITHOUT_TABLE', `Anexo ${anexo} has no table in ENGINE-SPEC A.3`, {
+      anexo,
+    });
   }
   return param(TABLE_KEYS[anexo], month) as ParameterLookup<'simples.anexo.I'>;
 }
@@ -62,7 +65,11 @@ export function effectiveRate(
   const row = table.brackets.find((b) => b.upTo === null || rb.lte(reais(b.upTo)));
   if (row === undefined) {
     // Above R$ 4,8 mi the company leaves the Simples (excess rules: R03); no rate is specified here.
-    throw new RangeError(`RBT12 ${rb.toFixed()} above the last bracket of Anexo ${anexo}`);
+    throw new EngineError(
+      'RBT12_ABOVE_CEILING',
+      `RBT12 ${rb.toFixed()} above the last bracket of Anexo ${anexo}`,
+      { month },
+    );
   }
   const e = rb.times(row.nominal).minus(reais(row.deduction)).dividedBy(rb);
   return { bracket: row.bracket, row, rbt12Used: rb, effectiveRate: e };

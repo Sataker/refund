@@ -1,4 +1,5 @@
 // Parameter lookup by effective period (ENGINE-SPEC C.1, item 4).
+import { EngineError } from '../errors.ts';
 import { compareYearMonth } from '../time.ts';
 import type { LegalRef, YearMonth } from '../types.ts';
 import { PARAMETERS_2026 } from './2026.ts';
@@ -41,7 +42,10 @@ export function param<K extends ParameterKey>(key: K, month: YearMonth): Paramet
     }
   }
   if (found === undefined) {
-    throw new RangeError(`no parameter '${key}' in force in ${month}`);
+    throw new EngineError('PARAMETER_NOT_IN_FORCE', `no parameter '${key}' in force in ${month}`, {
+      key,
+      month,
+    });
   }
   return {
     key,
@@ -54,6 +58,17 @@ export function param<K extends ParameterKey>(key: K, month: YearMonth): Paramet
       found.publishedThrough !== undefined && compareYearMonth(month, found.publishedThrough) > 0,
     dependsOnRegulation: found.dependsOnRegulation === true,
   };
+}
+
+/** Same as `param`, but null when the key has no record in force in `month` (e.g. a regime born later). */
+export function paramOrNull<K extends ParameterKey>(
+  key: K,
+  month: YearMonth,
+): ParameterLookup<K> | null {
+  const inForce = ALL_PARAMETERS.some(
+    (e) => e.key === key && compareYearMonth(e.effectiveFrom, month) <= 0,
+  );
+  return inForce ? param(key, month) : null;
 }
 
 const slug = (s: string): string =>
