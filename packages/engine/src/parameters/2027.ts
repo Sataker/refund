@@ -397,4 +397,24 @@ export const PARAMETERS_2027: readonly AnyParameterEntry[] = [
     dependsOnRegulation: true,
     note: 'Vigência em 01/01/2028, também condicionada à LOA (2027–2029).',
   },
+
+  // ---------- Start of activity from PA 01/2027 (Res. CGSN 190/2026, art. 22, §§ 2º and 4º of Res. 140) ----------
+  {
+    key: 'simples.startOfActivity',
+    value: {
+      firstBracketMonths: 2,
+      firstMonthRevenueTimes12: false,
+      averageEndOffset: -2,
+      untilMonthOfActivity: 13,
+    },
+    source: src(
+      'Res. CGSN 190/2026',
+      'art. 22, § 2º, I e II, e § 4º, da Res. CGSN 140/2018 (art. 9º: efeitos a partir de 01/01/2027)',
+      SOURCE_URL.resCgsn190,
+    ),
+    effectiveFrom: '2027-01',
+    verifiedAt: VERIFIED_H1,
+    status: 'verified',
+    note: '"no 1º e 2º mês de atividade, as alíquotas previstas na primeira faixa"; "do 3º até o 13º mês de atividade, como RBT12 [...] a média aritmética da receita bruta total auferida nos meses antecedentes ao mês anterior do período de apuração, multiplicada por 12"; § 4º: a partir do 14º mês, a regra geral. Captura: res-cgsn-190-2026.md (SHA-256 e89ec9a9…).',
+  },
 ];

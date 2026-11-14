@@ -53,6 +53,18 @@ export interface WindowRule {
   endOffset: number;
 }
 
+/**
+ * Proportionalized RBT12 at the start of activity (LC 123, art. 18, § 2º). Month of activity 1 = opening month.
+ * Months ≤ `firstBracketMonths`: 1st-bracket rate. Month 1 with `firstMonthRevenueTimes12`: revenue of the PA × 12.
+ * Otherwise: average of the months from the opening to PA + `averageEndOffset`, × 12, up to `untilMonthOfActivity`.
+ */
+export interface StartOfActivityRule {
+  firstBracketMonths: number;
+  firstMonthRevenueTimes12: boolean;
+  averageEndOffset: number;
+  untilMonthOfActivity: number;
+}
+
 export interface ParameterValues {
   // A.1 IRPF
   'irpf.monthly.table': IrTable;
@@ -87,6 +99,7 @@ export interface ParameterValues {
   'simples.fatorR.window': WindowRule;
   'simples.rbt12.window': WindowRule;
   'simples.rbt12.byMarket': boolean;
+  'simples.startOfActivity': StartOfActivityRule;
   'simples.export.exclude': readonly Tax[];
   'simples.export.concept': string;
   'simples.monofasico.exclude': readonly Tax[];
@@ -94,7 +107,8 @@ export interface ParameterValues {
   'simples.excess': { tolerance: Rate; ceilingWithTolerance: Cents; sublimitWithTolerance: Cents };
   // A.4 MEI
   'mei.limit': { annual: Cents; monthlyAtStart: Cents };
-  'mei.excess': { tolerance: Rate; limitWithTolerance: Cents };
+  /** Tolerance over the `mei.limit` in force (art. 18-A, § 7º, III); the amount is derived by `meiExcessLimit`. */
+  'mei.excess': { tolerance: Rate };
   'mei.das.inss': Cents;
   'mei.das.icmsIss': { icms: Cents; iss: Cents };
   // A.5 Dividends, deadlines and rates
