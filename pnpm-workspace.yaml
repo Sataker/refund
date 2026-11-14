@@ -6,3 +6,6 @@ packages:
 allowBuilds:
   sharp: false
   unrs-resolver: false
+  # drizzle-kit (devDependency of @refund/db) pulls esbuild; its postinstall only re-checks the
+  # platform binary, which pnpm already installs as an optional dependency.
+  esbuild: false

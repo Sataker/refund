@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794695858286,
+      "tag": "0000_refund_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794695866163,
+      "tag": "0001_privileges",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794695866497,
+      "tag": "0002_fk_findings_law_change",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794695866837,
+      "tag": "0003_heartbeat_seed",
+      "breakpoints": true
+    }
+  ]
+}

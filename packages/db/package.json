@@ -8,10 +8,22 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "db:generate": "drizzle-kit generate",
+    "db:check": "node check.ts",
+    "db:migrate": "node migrate.ts",
+    "db:seed": "node seed.ts"
   },
   "dependencies": {
+    "@electric-sql/pglite": "0.5.16",
     "@refund/engine": "workspace:*",
-    "@refund/sources": "workspace:*"
+    "@refund/sources": "workspace:*",
+    "drizzle-orm": "0.45.4",
+    "postgres": "4.1.1"
+  },
+  "devDependencies": {
+    "@refund/law": "workspace:*",
+    "@refund/personas": "workspace:*",
+    "drizzle-kit": "0.31.11"
   }
 }
