@@ -1,0 +1,2555 @@
+{
+  "schemaVersion": 1,
+  "personaId": "dev-exportador",
+  "source": "ENGINE-SPEC F.2–F.4 (verified 12/11/2026)",
+  "transactions": [
+    {
+      "sourceId": "6b1addfc-623a-4f5f-be7e-dbee3294e06f",
+      "holder": "PJ",
+      "month": "2025-11",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2025-11: export revenue, accrual 2025-11"
+    },
+    {
+      "sourceId": "2673ef61-b105-4d17-b4f2-93f0d5981aa1",
+      "holder": "PJ",
+      "month": "2025-11",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "2232a5ac-1735-4327-8380-047216e5e48b",
+      "holder": "PJ",
+      "month": "2025-11",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "654235c6-2d77-496e-9b31-e94e26a75ec9",
+      "holder": "PJ",
+      "month": "2025-11",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2025-11: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "61a702cf-901e-4c44-84b6-3a82f0462a79",
+      "holder": "PJ",
+      "month": "2025-11",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2025-11: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "00313e11-ca46-482c-bf10-c139ac9ca464",
+      "holder": "PJ",
+      "month": "2025-11",
+      "amountCents": -81600,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2025-11"
+    },
+    {
+      "sourceId": "47abba9c-77f1-4638-abd2-53cccd3a8df8",
+      "holder": "PJ",
+      "month": "2025-11",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2025-11 for PA 2025-10"
+    },
+    {
+      "sourceId": "fbbd603e-e70d-4e3f-b065-0312e27958dc",
+      "holder": "PJ",
+      "month": "2025-11",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "901a93eb-f256-411f-bcea-626cbbcb5b1a",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "45f63ddc-2716-4bcd-adfd-ae52da6a8b60",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -81699,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "⅓ vacation of employee A, gross 1.700,00 (F.2); net per generator convention"
+    },
+    {
+      "sourceId": "4660ebe6-f98b-4712-bef2-b51bfa024e28",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "74f6a981-ddb0-4fb8-8c82-a238f6054a93",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2025-12: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "df9dd183-1860-4d21-b528-828b87f7e779",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2025-12: export revenue, accrual 2025-12"
+    },
+    {
+      "sourceId": "49b67a90-ee54-46ac-8c05-2f968a011564",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2025-12: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "872dd699-4954-4b8a-9516-f49d882dedaa",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "13º of employee A, gross 5.100,00 (F.2); net per generator convention"
+    },
+    {
+      "sourceId": "a0fac246-a274-4f19-97e8-13720a004435",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "13º of employee B, gross 5.100,00 (F.2); net per generator convention"
+    },
+    {
+      "sourceId": "d990cd9f-9974-489c-b065-b730a181316a",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -122400,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2025-12"
+    },
+    {
+      "sourceId": "558ac4a4-9145-4001-9c75-692aee2fd054",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2025-12 for PA 2025-11"
+    },
+    {
+      "sourceId": "46c13efd-e025-422a-94c4-1f5f505266e1",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "0984e296-5f8e-4596-b9ef-c31e1b61cc92",
+      "holder": "PJ",
+      "month": "2026-01",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2026-01: export revenue, accrual 2026-01"
+    },
+    {
+      "sourceId": "4c48e51b-f9ea-4cb2-a19d-09191b6fb28a",
+      "holder": "PJ",
+      "month": "2026-01",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "2a88ed91-569f-4f40-83f3-14db81196ed0",
+      "holder": "PJ",
+      "month": "2026-01",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "cc76a705-ae20-4363-a384-03c4325c5c09",
+      "holder": "PJ",
+      "month": "2026-01",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2026-01: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "366d82fc-9b74-408e-86cd-f4873e25c0cd",
+      "holder": "PJ",
+      "month": "2026-01",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2026-01: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "caea6b7b-4d93-43ac-98a2-49af9bd7b36a",
+      "holder": "PJ",
+      "month": "2026-01",
+      "amountCents": -136000,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2026-01"
+    },
+    {
+      "sourceId": "9e5d04dc-fbef-45b1-88cc-8a2eaa2c9035",
+      "holder": "PJ",
+      "month": "2026-01",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2026-01 for PA 2025-12"
+    },
+    {
+      "sourceId": "7e084544-d42a-4d37-9706-4402e5506880",
+      "holder": "PJ",
+      "month": "2026-01",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "2323650d-9de0-4afe-947b-1fc0743ff152",
+      "holder": "PJ",
+      "month": "2026-02",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2026-02: export revenue, accrual 2026-02"
+    },
+    {
+      "sourceId": "077fc659-7ba8-43b6-bccc-7b7e9e16044c",
+      "holder": "PJ",
+      "month": "2026-02",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "d23c276d-148a-43ba-aabe-2d909fed1fdc",
+      "holder": "PJ",
+      "month": "2026-02",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "cbdabb1d-ea80-4ac3-9b61-602855aef1f6",
+      "holder": "PJ",
+      "month": "2026-02",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2026-02: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "f231bef9-e300-4738-a8e6-d4ee16ccd3d5",
+      "holder": "PJ",
+      "month": "2026-02",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2026-02: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "137d4a4f-15b1-4196-ba2d-a57a46ee8122",
+      "holder": "PJ",
+      "month": "2026-02",
+      "amountCents": -81600,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2026-02"
+    },
+    {
+      "sourceId": "dd42e996-634f-4fe2-90d0-f449ce9b664e",
+      "holder": "PJ",
+      "month": "2026-02",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2026-02 for PA 2026-01"
+    },
+    {
+      "sourceId": "89e06037-ba25-4cb4-b5e4-1559323d36f5",
+      "holder": "PJ",
+      "month": "2026-02",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "4a61dee5-a2a0-4416-9fa3-3ab38e99170f",
+      "holder": "PJ",
+      "month": "2026-03",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2026-03: export revenue, accrual 2026-03"
+    },
+    {
+      "sourceId": "c08ad8dd-751d-4cbf-a8ed-23b9cdce029e",
+      "holder": "PJ",
+      "month": "2026-03",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "530c98cf-eed6-448f-8754-eda1dacdfa00",
+      "holder": "PJ",
+      "month": "2026-03",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "851a29ed-3fa1-4700-9d73-c071617b9b22",
+      "holder": "PJ",
+      "month": "2026-03",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2026-03: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "41489c37-bf4f-44ae-98eb-fdc7ab417878",
+      "holder": "PJ",
+      "month": "2026-03",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2026-03: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "5e2e6657-97f3-4b06-8025-16dbe83fdda6",
+      "holder": "PJ",
+      "month": "2026-03",
+      "amountCents": -81600,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2026-03"
+    },
+    {
+      "sourceId": "31c93ca8-bee8-4fd7-b258-426917bc941a",
+      "holder": "PJ",
+      "month": "2026-03",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2026-03 for PA 2026-02"
+    },
+    {
+      "sourceId": "8c506043-b21f-43b5-9132-da8cb55357c0",
+      "holder": "PJ",
+      "month": "2026-03",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "613e7005-606b-4a9f-b118-5d8c142f39a8",
+      "holder": "PJ",
+      "month": "2026-04",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2026-04: export revenue, accrual 2026-04"
+    },
+    {
+      "sourceId": "7ef99182-b638-48b2-b8de-40fbd27dac19",
+      "holder": "PJ",
+      "month": "2026-04",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "a2d83c52-6e6a-4e0b-bbeb-b1e34b394d5b",
+      "holder": "PJ",
+      "month": "2026-04",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "55310d6f-9922-4fd8-abbc-77ea59578940",
+      "holder": "PJ",
+      "month": "2026-04",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2026-04: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "b7b65205-115d-464c-8ef2-fb2fd14ed7f9",
+      "holder": "PJ",
+      "month": "2026-04",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2026-04: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "5b372e1c-7462-4390-af9b-12ce5970691b",
+      "holder": "PJ",
+      "month": "2026-04",
+      "amountCents": -81600,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2026-04"
+    },
+    {
+      "sourceId": "a9a8a3d6-0ea0-4e8c-9d76-5ee72cd876e2",
+      "holder": "PJ",
+      "month": "2026-04",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2026-04 for PA 2026-03"
+    },
+    {
+      "sourceId": "8012a3bf-6b43-45b6-a7fa-8abe0af71737",
+      "holder": "PJ",
+      "month": "2026-04",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "b8e744de-2ed7-41df-a550-9a0530fba101",
+      "holder": "PJ",
+      "month": "2026-05",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2026-05: export revenue, accrual 2026-05"
+    },
+    {
+      "sourceId": "e71c1c3e-89a6-49fd-a072-d5ccb82aa577",
+      "holder": "PJ",
+      "month": "2026-05",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "8dcc118b-fa92-4ecc-81a5-b1dfb56cad81",
+      "holder": "PJ",
+      "month": "2026-05",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "16ca4cec-196d-4963-bd6a-da01d547454c",
+      "holder": "PJ",
+      "month": "2026-05",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2026-05: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "6b164a64-5ec8-4cb0-a6e7-519d14bb19c6",
+      "holder": "PJ",
+      "month": "2026-05",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2026-05: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "11c52246-81a7-44dc-9976-c4b01a452b5d",
+      "holder": "PJ",
+      "month": "2026-05",
+      "amountCents": -81600,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2026-05"
+    },
+    {
+      "sourceId": "939e17f9-8157-442d-80a0-8b4bdd2e67e8",
+      "holder": "PJ",
+      "month": "2026-05",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2026-05 for PA 2026-04"
+    },
+    {
+      "sourceId": "05a48603-9f81-4774-bad7-2efb084c4fda",
+      "holder": "PJ",
+      "month": "2026-05",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "c3df4bd2-6d96-4530-baee-b3756243d0d2",
+      "holder": "PJ",
+      "month": "2026-06",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2026-06: export revenue, accrual 2026-06"
+    },
+    {
+      "sourceId": "56877d11-5ef2-471e-969c-a58aec467024",
+      "holder": "PJ",
+      "month": "2026-06",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "9c6e362a-631a-4dfb-8754-2746013a0bb7",
+      "holder": "PJ",
+      "month": "2026-06",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "fa385452-0393-4f49-93d2-a1d6b748c9c1",
+      "holder": "PJ",
+      "month": "2026-06",
+      "amountCents": -81699,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "⅓ vacation of employee B, gross 1.700,00 (F.2); net per generator convention"
+    },
+    {
+      "sourceId": "533363b3-0f24-4197-9476-8298e01addb5",
+      "holder": "PJ",
+      "month": "2026-06",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2026-06: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "8663bf87-6cbf-4993-aeb1-a8c7b905eecf",
+      "holder": "PJ",
+      "month": "2026-06",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2026-06: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "66279f61-dafb-410d-815b-db3a6e6afe0c",
+      "holder": "PJ",
+      "month": "2026-06",
+      "amountCents": -81600,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2026-06"
+    },
+    {
+      "sourceId": "9458ebcc-49f5-4ef3-a59f-a9063d229122",
+      "holder": "PJ",
+      "month": "2026-06",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2026-06 for PA 2026-05"
+    },
+    {
+      "sourceId": "830cd848-41bc-447c-8004-355163ff6c5e",
+      "holder": "PJ",
+      "month": "2026-06",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "54c61cd3-1477-4224-8050-53afed7872b3",
+      "holder": "PJ",
+      "month": "2026-07",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2026-07: export revenue, accrual 2026-07"
+    },
+    {
+      "sourceId": "1d5c7b8d-6ce6-40f1-ac95-e8ce2513b40e",
+      "holder": "PJ",
+      "month": "2026-07",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "24f3669e-922c-4d0d-966a-70174f5cdbc2",
+      "holder": "PJ",
+      "month": "2026-07",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "89342bb4-9a32-4be0-b790-8518245f070f",
+      "holder": "PJ",
+      "month": "2026-07",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2026-07: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "2641fd1b-1331-4b71-8496-17ae21c8bb9b",
+      "holder": "PJ",
+      "month": "2026-07",
+      "amountCents": -8100000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2026-07: gross 90000, IRRF 10% withheld, DARF 1841 in 2026-08 (F.2)"
+    },
+    {
+      "sourceId": "d9220b3c-4af0-4444-8491-8edbebfc0294",
+      "holder": "PJ",
+      "month": "2026-07",
+      "amountCents": -95200,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2026-07"
+    },
+    {
+      "sourceId": "0eab7552-d6d8-48ee-b187-e7a3ec3f406a",
+      "holder": "PJ",
+      "month": "2026-07",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2026-07 for PA 2026-06"
+    },
+    {
+      "sourceId": "471684aa-5c8d-4913-ad53-7fb485e3a321",
+      "holder": "PJ",
+      "month": "2026-07",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "c0c59bd5-3831-48f8-b3cf-38cd29fada66",
+      "holder": "PJ",
+      "month": "2026-08",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2026-08: export revenue, accrual 2026-08"
+    },
+    {
+      "sourceId": "ea33eed7-ac32-4e8c-9894-544a6045bf75",
+      "holder": "PJ",
+      "month": "2026-08",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "5a546313-bf74-463c-9c4f-225302217e89",
+      "holder": "PJ",
+      "month": "2026-08",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "899b9d4f-b653-4d17-91ee-1e596d7506fa",
+      "holder": "PJ",
+      "month": "2026-08",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2026-08: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "445e86dc-e8fa-4d9d-9d27-fb839b2ba119",
+      "holder": "PJ",
+      "month": "2026-08",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2026-08: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "4868c473-4f47-4771-a0c8-eefc288894da",
+      "holder": "PJ",
+      "month": "2026-08",
+      "amountCents": -81600,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2026-08"
+    },
+    {
+      "sourceId": "2add1795-a0cc-43c6-ba7d-0afa7d3e3429",
+      "holder": "PJ",
+      "month": "2026-08",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2026-08 for PA 2026-07"
+    },
+    {
+      "sourceId": "05bd595c-bb95-4ec1-a6df-8b1fbc090424",
+      "holder": "PJ",
+      "month": "2026-08",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "87d83028-da39-4d4f-80b0-4702305373f1",
+      "holder": "PJ",
+      "month": "2026-08",
+      "amountCents": -900000,
+      "label": "darf_irrf_dividends",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 DARF 1841 2026-08: IRRF withheld on the distribution of 2026-07"
+    },
+    {
+      "sourceId": "77b71fa1-69ae-4fe3-9af4-e27b32ff3d40",
+      "holder": "PJ",
+      "month": "2026-09",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2026-09: export revenue, accrual 2026-09"
+    },
+    {
+      "sourceId": "4e76d5d2-4c1e-4ba4-83b6-e54927120af5",
+      "holder": "PJ",
+      "month": "2026-09",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "ec5adac0-a196-43ca-a97d-09dc44dbc116",
+      "holder": "PJ",
+      "month": "2026-09",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "6908d04c-4197-43c1-b3ac-c20fed4addd9",
+      "holder": "PJ",
+      "month": "2026-09",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2026-09: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "d2da2442-1fe9-48c1-9ce8-fc242c48a586",
+      "holder": "PJ",
+      "month": "2026-09",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2026-09: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "7f7ea9f0-b1bc-41bd-b7d0-cc47ad53f32d",
+      "holder": "PJ",
+      "month": "2026-09",
+      "amountCents": -81600,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2026-09"
+    },
+    {
+      "sourceId": "fed10e04-d544-4834-b8a0-e80c46aca797",
+      "holder": "PJ",
+      "month": "2026-09",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2026-09 for PA 2026-08"
+    },
+    {
+      "sourceId": "07e4c1b4-837e-4622-a792-50dcc946899b",
+      "holder": "PJ",
+      "month": "2026-09",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "fc931d8e-0b8d-4777-950b-3330c35cdafe",
+      "holder": "PJ",
+      "month": "2026-10",
+      "amountCents": 5000000,
+      "label": "export_revenue",
+      "category": "export_revenue",
+      "cardId": "export-qualification",
+      "note": "F.2 FX 2026-10: export revenue, accrual 2026-10"
+    },
+    {
+      "sourceId": "fa7fa447-5186-4323-81a2-2a2a6117ac7c",
+      "holder": "PJ",
+      "month": "2026-10",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-A",
+      "note": "salary of employee A, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "ffc7073d-da73-43e5-b246-53b655a37a9d",
+      "holder": "PJ",
+      "month": "2026-10",
+      "amountCents": -454868,
+      "label": "salary",
+      "category": "salary",
+      "cardId": "clt-employee-B",
+      "note": "salary of employee B, gross 5.100,00 (F.2 note)"
+    },
+    {
+      "sourceId": "29f96edc-046a-4e82-a388-a9b96f9f0c3c",
+      "holder": "PJ",
+      "month": "2026-10",
+      "amountCents": -144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": "pro-labore-gross",
+      "note": "pró-labore 2026-10: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "2d3f4901-1c39-44e3-80f5-a3d72e10655b",
+      "holder": "PJ",
+      "month": "2026-10",
+      "amountCents": -1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": "monthly-distribution",
+      "note": "distribution 2026-10: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "1c221f7c-7677-472b-9cbd-42f68abb66f5",
+      "holder": "PJ",
+      "month": "2026-10",
+      "amountCents": -81600,
+      "label": "fgts",
+      "category": "fgts_charge",
+      "cardId": null,
+      "note": "F.2 FGTS paid 2026-10"
+    },
+    {
+      "sourceId": "70ab00e1-58fa-413f-8f6f-ddf985143efd",
+      "holder": "PJ",
+      "month": "2026-10",
+      "amountCents": -892500,
+      "label": "das_simples",
+      "category": "das_tax",
+      "cardId": null,
+      "note": "F.2 DAS paid 2026-10 for PA 2026-09"
+    },
+    {
+      "sourceId": "7cdbcb41-5368-42fb-8597-886b21f2afd6",
+      "holder": "PJ",
+      "month": "2026-10",
+      "amountCents": -128095,
+      "label": "dctfweb",
+      "category": "darf_tax",
+      "cardId": null,
+      "note": "F.2 note: monthly DCTFWeb = INSS 1.209,33 + IRRF 71,62"
+    },
+    {
+      "sourceId": "25decb30-aa14-423a-9c18-6fd8144c80e8",
+      "holder": "PJ",
+      "month": "2025-11",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2025-11"
+    },
+    {
+      "sourceId": "5492b52a-fe15-4358-a510-5fdc3ee9e6cf",
+      "holder": "PJ",
+      "month": "2025-12",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2025-12"
+    },
+    {
+      "sourceId": "f079ba13-724f-43b2-93eb-18f447d827aa",
+      "holder": "PJ",
+      "month": "2026-01",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2026-01"
+    },
+    {
+      "sourceId": "1149b1e4-9ac9-4e0e-9b72-31d73c78b63e",
+      "holder": "PJ",
+      "month": "2026-02",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2026-02"
+    },
+    {
+      "sourceId": "65dd4f57-aa9d-44b7-af44-fd04299d10da",
+      "holder": "PJ",
+      "month": "2026-03",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2026-03"
+    },
+    {
+      "sourceId": "acdb8080-8349-4e7a-9bb8-3e00c9fe6db2",
+      "holder": "PJ",
+      "month": "2026-03",
+      "amountCents": -81240,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 supermarket on the PJ card 2026-03"
+    },
+    {
+      "sourceId": "ab75996d-819d-4a1b-a61b-19e447d0662c",
+      "holder": "PJ",
+      "month": "2026-04",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2026-04"
+    },
+    {
+      "sourceId": "8785c3f6-e8de-426e-9cc7-dae62b693bca",
+      "holder": "PJ",
+      "month": "2026-05",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2026-05"
+    },
+    {
+      "sourceId": "3ceb8ecf-2386-4f57-8a6c-a29dd6d0d3a4",
+      "holder": "PJ",
+      "month": "2026-06",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2026-06"
+    },
+    {
+      "sourceId": "0ce4ae73-7a80-4082-bbfa-eefb77a7dc4a",
+      "holder": "PJ",
+      "month": "2026-07",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2026-07"
+    },
+    {
+      "sourceId": "370bacb3-d0b8-4c0b-8191-43a97767ac1f",
+      "holder": "PJ",
+      "month": "2026-08",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2026-08"
+    },
+    {
+      "sourceId": "1e098ff3-8538-4a0b-96b9-c79f01e9a504",
+      "holder": "PJ",
+      "month": "2026-09",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2026-09"
+    },
+    {
+      "sourceId": "8571d934-0dd9-4a4a-adc6-05f3808ba791",
+      "holder": "PJ",
+      "month": "2026-10",
+      "amountCents": -5590,
+      "label": "personal_in_pj",
+      "category": "personal_expense_in_pj",
+      "cardId": null,
+      "note": "F.2 Netflix on the PJ card 2026-10"
+    },
+    {
+      "sourceId": "fe77f5f0-92cd-404b-92b0-9a156b1aa9cc",
+      "holder": "PF",
+      "month": "2025-11",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2025-11 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "6b6c44c7-1074-46e8-bfc6-731ea7d3cadc",
+      "holder": "PF",
+      "month": "2025-11",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of 654235c6-2d77-496e-9b31-e94e26a75ec9; pró-labore 2025-11: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "89985a7c-fdf2-47c9-bd49-14170a60a981",
+      "holder": "PF",
+      "month": "2025-11",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of 61a702cf-901e-4c44-84b6-3a82f0462a79; distribution 2025-11: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "e62af3e9-7655-4963-a03d-b36af20e0347",
+      "holder": "PF",
+      "month": "2025-11",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2025-11 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "acfb716b-6481-42e6-98f7-796196d73273",
+      "holder": "PF",
+      "month": "2025-11",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2025-11 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "6b29e2e8-2e0b-490a-922d-d22ac4acaedc",
+      "holder": "PF",
+      "month": "2025-12",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2025-12 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "2248f4b5-ff91-48b0-b832-1a59e07f39e3",
+      "holder": "PF",
+      "month": "2025-12",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of 74f6a981-ddb0-4fb8-8c82-a238f6054a93; pró-labore 2025-12: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "c1db733c-4972-4e39-8d3e-755882ea4d94",
+      "holder": "PF",
+      "month": "2025-12",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of 49b67a90-ee54-46ac-8c05-2f968a011564; distribution 2025-12: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "821d75e8-9e79-4712-ae22-7d8fca2c605e",
+      "holder": "PF",
+      "month": "2025-12",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2025-12 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "e5be5452-9e09-46f6-8f27-405eaa1c1bf4",
+      "holder": "PF",
+      "month": "2025-12",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2025-12 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "4297c893-e564-41fc-8b78-4b938f4a02a4",
+      "holder": "PF",
+      "month": "2026-01",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2026-01 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "28c1105d-f305-45a7-9457-3e052a49625c",
+      "holder": "PF",
+      "month": "2026-01",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of cc76a705-ae20-4363-a384-03c4325c5c09; pró-labore 2026-01: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "5593cf69-ecdf-4984-a356-5bd03273ffbf",
+      "holder": "PF",
+      "month": "2026-01",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of 366d82fc-9b74-408e-86cd-f4873e25c0cd; distribution 2026-01: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "91ddcb8c-c03a-4937-b696-6ff07adf67cf",
+      "holder": "PF",
+      "month": "2026-01",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2026-01 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "c608509e-8c28-452e-ac1c-e7e3b0750952",
+      "holder": "PF",
+      "month": "2026-01",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2026-01 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "492bd3fe-f26a-4708-98e0-a324f5017f03",
+      "holder": "PF",
+      "month": "2026-02",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2026-02 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "8fa4193a-fbdd-49b2-999c-c3d202de4df5",
+      "holder": "PF",
+      "month": "2026-02",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of cbdabb1d-ea80-4ac3-9b61-602855aef1f6; pró-labore 2026-02: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "5a2dadda-812a-4e15-a33d-1cc8bc11ed0d",
+      "holder": "PF",
+      "month": "2026-02",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of f231bef9-e300-4738-a8e6-d4ee16ccd3d5; distribution 2026-02: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "a35fb105-feee-4638-91d5-4a96ea8f27a8",
+      "holder": "PF",
+      "month": "2026-02",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2026-02 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "3312849d-6fca-4090-89d6-611f04e1c5fb",
+      "holder": "PF",
+      "month": "2026-02",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2026-02 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "26b25230-0a61-4db6-8777-6168c42fc0fa",
+      "holder": "PF",
+      "month": "2026-03",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2026-03 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "c331e94a-c435-4917-acd5-0f4dd802ed75",
+      "holder": "PF",
+      "month": "2026-03",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of 851a29ed-3fa1-4700-9d73-c071617b9b22; pró-labore 2026-03: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "8cbe2a27-043f-4e73-95c3-e7bdeb201ad6",
+      "holder": "PF",
+      "month": "2026-03",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of 41489c37-bf4f-44ae-98eb-fdc7ab417878; distribution 2026-03: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "e20b9317-9af0-40b5-8fc8-db09b7ba5c26",
+      "holder": "PF",
+      "month": "2026-03",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2026-03 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "71200df7-15cc-47ac-bcd1-be550f5e9ec1",
+      "holder": "PF",
+      "month": "2026-03",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2026-03 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "a85fbbf0-8f22-46e6-92cc-34f24f59f68a",
+      "holder": "PF",
+      "month": "2026-04",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2026-04 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "82e6de15-f48e-49ad-be74-d4a11a4d8d8a",
+      "holder": "PF",
+      "month": "2026-04",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of 55310d6f-9922-4fd8-abbc-77ea59578940; pró-labore 2026-04: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "e811fee3-217f-47ba-bb05-2f1f09db9998",
+      "holder": "PF",
+      "month": "2026-04",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of b7b65205-115d-464c-8ef2-fb2fd14ed7f9; distribution 2026-04: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "07db8282-4e95-426c-b0e2-6c5491b1e113",
+      "holder": "PF",
+      "month": "2026-04",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2026-04 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "d03f8896-b2e8-488d-83ae-7cde1aab23d0",
+      "holder": "PF",
+      "month": "2026-04",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2026-04 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "0fa74645-387f-42aa-b4f7-a97f888e63d4",
+      "holder": "PF",
+      "month": "2026-05",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2026-05 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "5cb64aa0-1af1-4955-a904-f0bab6c366d1",
+      "holder": "PF",
+      "month": "2026-05",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of 16ca4cec-196d-4963-bd6a-da01d547454c; pró-labore 2026-05: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "703d4704-5855-415a-baa4-2bfb78a490bf",
+      "holder": "PF",
+      "month": "2026-05",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of 6b164a64-5ec8-4cb0-a6e7-519d14bb19c6; distribution 2026-05: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "1bebc9d9-9d52-4730-92b2-d99bc5184766",
+      "holder": "PF",
+      "month": "2026-05",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2026-05 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "64d63078-8ee6-44f7-9cfc-ff969d82a092",
+      "holder": "PF",
+      "month": "2026-05",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2026-05 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "e5206b45-1a62-4a76-a03a-06e0ee42dca8",
+      "holder": "PF",
+      "month": "2026-06",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2026-06 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "484d241e-244e-45e6-9eff-24668223656d",
+      "holder": "PF",
+      "month": "2026-06",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of 533363b3-0f24-4197-9476-8298e01addb5; pró-labore 2026-06: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "b54a5804-9a9f-42ea-aff3-0038a0316628",
+      "holder": "PF",
+      "month": "2026-06",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of 8663bf87-6cbf-4993-aeb1-a8c7b905eecf; distribution 2026-06: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "4b1728e3-32e9-43ee-ac6d-aa1fe05c97e4",
+      "holder": "PF",
+      "month": "2026-06",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2026-06 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "34792ff3-170c-48f2-93ad-065359c5dd1d",
+      "holder": "PF",
+      "month": "2026-06",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2026-06 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "ccf2d6c1-135d-459e-b76b-89ec7556e97a",
+      "holder": "PF",
+      "month": "2026-07",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2026-07 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "73b6f5f8-b0ee-4d09-8ad7-5349b99400dc",
+      "holder": "PF",
+      "month": "2026-07",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of 89342bb4-9a32-4be0-b790-8518245f070f; pró-labore 2026-07: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "824b5628-8ded-4c52-9f76-1cf79e521621",
+      "holder": "PF",
+      "month": "2026-07",
+      "amountCents": 8100000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of 2641fd1b-1331-4b71-8496-17ae21c8bb9b; distribution 2026-07: gross 90000, IRRF 10% withheld, DARF 1841 in 2026-08 (F.2)"
+    },
+    {
+      "sourceId": "1812bcd4-34d5-4eee-902b-1c3f45b57235",
+      "holder": "PF",
+      "month": "2026-07",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2026-07 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "96e02ccc-4d8b-4a89-889c-dba809960595",
+      "holder": "PF",
+      "month": "2026-07",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2026-07 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "b394c02b-e82f-4432-bc30-7fb22ee749b5",
+      "holder": "PF",
+      "month": "2026-08",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2026-08 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "b8d5b999-483b-4652-bc6e-789b1f4a815d",
+      "holder": "PF",
+      "month": "2026-08",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of 899b9d4f-b653-4d17-91ee-1e596d7506fa; pró-labore 2026-08: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "f48c9ff7-08a3-4f99-ae79-6b51ea65b803",
+      "holder": "PF",
+      "month": "2026-08",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of 445e86dc-e8fa-4d9d-9d27-fb839b2ba119; distribution 2026-08: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "5f916a62-200c-4829-a01a-ec8c14b70e36",
+      "holder": "PF",
+      "month": "2026-08",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2026-08 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "dc9c1a4e-df36-477c-9242-e6dd03fc83ce",
+      "holder": "PF",
+      "month": "2026-08",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2026-08 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "52353ad4-4e8e-4b40-bf9b-aeba1218e16f",
+      "holder": "PF",
+      "month": "2026-09",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2026-09 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "b5b81a85-4f9f-43b6-9417-6fc77bbbb209",
+      "holder": "PF",
+      "month": "2026-09",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of 6908d04c-4197-43c1-b3ac-c20fed4addd9; pró-labore 2026-09: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "ba733de5-f1a3-48fd-8f0c-524e2a1ece8b",
+      "holder": "PF",
+      "month": "2026-09",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of d2da2442-1fe9-48c1-9ce8-fc242c48a586; distribution 2026-09: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "6b1374f5-b5e0-42de-9b4c-f62b2669866e",
+      "holder": "PF",
+      "month": "2026-09",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2026-09 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "6e8d0e76-2561-4a78-8644-c48cab87998b",
+      "holder": "PF",
+      "month": "2026-09",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2026-09 (Pix to a CPF; card answer: care for the holder)"
+    },
+    {
+      "sourceId": "8127266f-deea-4b26-9113-ca9ade503eca",
+      "holder": "PF",
+      "month": "2026-10",
+      "amountCents": -12990,
+      "label": "non_deductible",
+      "category": null,
+      "cardId": null,
+      "note": "F.2 gym 2026-10 (CNAE 9313-1/00, not deductible)"
+    },
+    {
+      "sourceId": "29eedf08-b172-45da-aba2-fecb570baf62",
+      "holder": "PF",
+      "month": "2026-10",
+      "amountCents": 144269,
+      "label": "pro_labore",
+      "category": "pro_labore",
+      "cardId": null,
+      "note": "PF leg of 29f96edc-046a-4e82-a388-a9b96f9f0c3c; pró-labore 2026-10: gross 1.621,00, net 1.442,69 (F.2)"
+    },
+    {
+      "sourceId": "c6e010e8-7a2b-40c0-865f-86e81dc1dd40",
+      "holder": "PF",
+      "month": "2026-10",
+      "amountCents": 1800000,
+      "label": "distribution",
+      "category": "profit_distribution",
+      "cardId": null,
+      "note": "PF leg of 2d3f4901-1c39-44e3-80f5-a3d72e10655b; distribution 2026-10: gross 18000 (F.2)"
+    },
+    {
+      "sourceId": "c2389c4b-2f8f-464e-bc65-91c71b324043",
+      "holder": "PF",
+      "month": "2026-10",
+      "amountCents": -65000,
+      "label": "deductible_health",
+      "category": "deductible_health",
+      "cardId": null,
+      "note": "F.2 health plan 2026-10 (CNAE 6550-2/00)"
+    },
+    {
+      "sourceId": "638ff967-4dd9-425f-a9ec-8a44419a77b4",
+      "holder": "PF",
+      "month": "2026-10",
+      "amountCents": -80000,
+      "label": "health_to_confirm",
+      "category": "deductible_health",
+      "cardId": "psychologist-beneficiary",
+      "note": "F.2 psychologist 2026-10 (Pix to a CPF; card answer: care for the holder)"
+    }
+  ],
+  "sameHolderPairs": [
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "654235c6-2d77-496e-9b31-e94e26a75ec9",
+      "pfTransactionId": "6b6c44c7-1074-46e8-bfc6-731ea7d3cadc",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "61a702cf-901e-4c44-84b6-3a82f0462a79",
+      "pfTransactionId": "89985a7c-fdf2-47c9-bd49-14170a60a981",
+      "amountCents": 1800000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "74f6a981-ddb0-4fb8-8c82-a238f6054a93",
+      "pfTransactionId": "2248f4b5-ff91-48b0-b832-1a59e07f39e3",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "49b67a90-ee54-46ac-8c05-2f968a011564",
+      "pfTransactionId": "c1db733c-4972-4e39-8d3e-755882ea4d94",
+      "amountCents": 1800000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "cc76a705-ae20-4363-a384-03c4325c5c09",
+      "pfTransactionId": "28c1105d-f305-45a7-9457-3e052a49625c",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "366d82fc-9b74-408e-86cd-f4873e25c0cd",
+      "pfTransactionId": "5593cf69-ecdf-4984-a356-5bd03273ffbf",
+      "amountCents": 1800000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "cbdabb1d-ea80-4ac3-9b61-602855aef1f6",
+      "pfTransactionId": "8fa4193a-fbdd-49b2-999c-c3d202de4df5",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "f231bef9-e300-4738-a8e6-d4ee16ccd3d5",
+      "pfTransactionId": "5a2dadda-812a-4e15-a33d-1cc8bc11ed0d",
+      "amountCents": 1800000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "851a29ed-3fa1-4700-9d73-c071617b9b22",
+      "pfTransactionId": "c331e94a-c435-4917-acd5-0f4dd802ed75",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "41489c37-bf4f-44ae-98eb-fdc7ab417878",
+      "pfTransactionId": "8cbe2a27-043f-4e73-95c3-e7bdeb201ad6",
+      "amountCents": 1800000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "55310d6f-9922-4fd8-abbc-77ea59578940",
+      "pfTransactionId": "82e6de15-f48e-49ad-be74-d4a11a4d8d8a",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "b7b65205-115d-464c-8ef2-fb2fd14ed7f9",
+      "pfTransactionId": "e811fee3-217f-47ba-bb05-2f1f09db9998",
+      "amountCents": 1800000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "16ca4cec-196d-4963-bd6a-da01d547454c",
+      "pfTransactionId": "5cb64aa0-1af1-4955-a904-f0bab6c366d1",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "6b164a64-5ec8-4cb0-a6e7-519d14bb19c6",
+      "pfTransactionId": "703d4704-5855-415a-baa4-2bfb78a490bf",
+      "amountCents": 1800000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "533363b3-0f24-4197-9476-8298e01addb5",
+      "pfTransactionId": "484d241e-244e-45e6-9eff-24668223656d",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "8663bf87-6cbf-4993-aeb1-a8c7b905eecf",
+      "pfTransactionId": "b54a5804-9a9f-42ea-aff3-0038a0316628",
+      "amountCents": 1800000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "89342bb4-9a32-4be0-b790-8518245f070f",
+      "pfTransactionId": "73b6f5f8-b0ee-4d09-8ad7-5349b99400dc",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "2641fd1b-1331-4b71-8496-17ae21c8bb9b",
+      "pfTransactionId": "824b5628-8ded-4c52-9f76-1cf79e521621",
+      "amountCents": 8100000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "899b9d4f-b653-4d17-91ee-1e596d7506fa",
+      "pfTransactionId": "b8d5b999-483b-4652-bc6e-789b1f4a815d",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "445e86dc-e8fa-4d9d-9d27-fb839b2ba119",
+      "pfTransactionId": "f48c9ff7-08a3-4f99-ae79-6b51ea65b803",
+      "amountCents": 1800000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "6908d04c-4197-43c1-b3ac-c20fed4addd9",
+      "pfTransactionId": "b5b81a85-4f9f-43b6-9417-6fc77bbbb209",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "d2da2442-1fe9-48c1-9ce8-fc242c48a586",
+      "pfTransactionId": "ba733de5-f1a3-48fd-8f0c-524e2a1ece8b",
+      "amountCents": 1800000
+    },
+    {
+      "kind": "pro_labore",
+      "pjTransactionId": "29f96edc-046a-4e82-a388-a9b96f9f0c3c",
+      "pfTransactionId": "29eedf08-b172-45da-aba2-fecb570baf62",
+      "amountCents": 144269
+    },
+    {
+      "kind": "distribution",
+      "pjTransactionId": "2d3f4901-1c39-44e3-80f5-a3d72e10655b",
+      "pfTransactionId": "c6e010e8-7a2b-40c0-865f-86e81dc1dd40",
+      "amountCents": 1800000
+    }
+  ],
+  "expectedFacts": {
+    "referenceMonth": "2026-10",
+    "analysisDate": "2026-11-12",
+    "rbt12": 60000000,
+    "fs12": 16633200,
+    "fatorR": "0.27722",
+    "anexo": "V",
+    "company": {
+      "cnpj": "RFDEV001000158",
+      "primaryCnae": "6201-5/01",
+      "regime": "SIMPLES",
+      "uf": "SP",
+      "openedOn": "2019-03-11"
+    },
+    "companyDetails": {
+      "subjectToFatorR": true,
+      "resellsMonofasico": false,
+      "hasFullBookkeeping": true
+    },
+    "revenueByMarket": {
+      "domestic": {
+        "2025-11": 0,
+        "2025-12": 0,
+        "2026-01": 0,
+        "2026-02": 0,
+        "2026-03": 0,
+        "2026-04": 0,
+        "2026-05": 0,
+        "2026-06": 0,
+        "2026-07": 0,
+        "2026-08": 0,
+        "2026-09": 0,
+        "2026-10": 0
+      },
+      "export": {
+        "2025-11": 5000000,
+        "2025-12": 5000000,
+        "2026-01": 5000000,
+        "2026-02": 5000000,
+        "2026-03": 5000000,
+        "2026-04": 5000000,
+        "2026-05": 5000000,
+        "2026-06": 5000000,
+        "2026-07": 5000000,
+        "2026-08": 5000000,
+        "2026-09": 5000000,
+        "2026-10": 5000000
+      }
+    },
+    "cltPayroll": {
+      "grossPay": {
+        "2025-11": 1020000,
+        "2025-12": 2210000,
+        "2026-01": 1020000,
+        "2026-02": 1020000,
+        "2026-03": 1020000,
+        "2026-04": 1020000,
+        "2026-05": 1020000,
+        "2026-06": 1190000,
+        "2026-07": 1020000,
+        "2026-08": 1020000,
+        "2026-09": 1020000,
+        "2026-10": 1020000
+      },
+      "fgtsPaid": {
+        "2025-11": 81600,
+        "2025-12": 122400,
+        "2026-01": 136000,
+        "2026-02": 81600,
+        "2026-03": 81600,
+        "2026-04": 81600,
+        "2026-05": 81600,
+        "2026-06": 81600,
+        "2026-07": 95200,
+        "2026-08": 81600,
+        "2026-09": 81600,
+        "2026-10": 81600
+      },
+      "cppOutsideDas": {
+        "2025-11": 0,
+        "2025-12": 0,
+        "2026-01": 0,
+        "2026-02": 0,
+        "2026-03": 0,
+        "2026-04": 0,
+        "2026-05": 0,
+        "2026-06": 0,
+        "2026-07": 0,
+        "2026-08": 0,
+        "2026-09": 0,
+        "2026-10": 0
+      }
+    },
+    "partner": {
+      "worksInCompany": true,
+      "grossProLabore": {
+        "2025-11": 162100,
+        "2025-12": 162100,
+        "2026-01": 162100,
+        "2026-02": 162100,
+        "2026-03": 162100,
+        "2026-04": 162100,
+        "2026-05": 162100,
+        "2026-06": 162100,
+        "2026-07": 162100,
+        "2026-08": 162100,
+        "2026-09": 162100,
+        "2026-10": 162100
+      },
+      "distributions": [
+        {
+          "month": "2025-11",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2025-12",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2026-01",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2026-02",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2026-03",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2026-04",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2026-05",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2026-06",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2026-07",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 9000000,
+          "irrfWithheld": 900000,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2026-08",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2026-09",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        },
+        {
+          "month": "2026-10",
+          "payerCnpj": "RFDEV001000158",
+          "grossAmount": 1800000,
+          "irrfWithheld": 0,
+          "profitThrough2025Approved": false
+        }
+      ]
+    },
+    "dasPaid": [
+      {
+        "pa": "2025-10",
+        "amount": 892500,
+        "paymentDate": "2025-11-19"
+      },
+      {
+        "pa": "2025-11",
+        "amount": 892500,
+        "paymentDate": "2025-12-19"
+      },
+      {
+        "pa": "2025-12",
+        "amount": 892500,
+        "paymentDate": "2026-01-20"
+      },
+      {
+        "pa": "2026-01",
+        "amount": 892500,
+        "paymentDate": "2026-02-20"
+      },
+      {
+        "pa": "2026-02",
+        "amount": 892500,
+        "paymentDate": "2026-03-20"
+      },
+      {
+        "pa": "2026-03",
+        "amount": 892500,
+        "paymentDate": "2026-04-20"
+      },
+      {
+        "pa": "2026-04",
+        "amount": 892500,
+        "paymentDate": "2026-05-20"
+      },
+      {
+        "pa": "2026-05",
+        "amount": 892500,
+        "paymentDate": "2026-06-19"
+      },
+      {
+        "pa": "2026-06",
+        "amount": 892500,
+        "paymentDate": "2026-07-20"
+      },
+      {
+        "pa": "2026-07",
+        "amount": 892500,
+        "paymentDate": "2026-08-20"
+      },
+      {
+        "pa": "2026-08",
+        "amount": 892500,
+        "paymentDate": "2026-09-18"
+      },
+      {
+        "pa": "2026-09",
+        "amount": 892500,
+        "paymentDate": "2026-10-20"
+      }
+    ],
+    "qualifications": {
+      "exportResultAbroad": true,
+      "pgdasSegregatesExport": "no",
+      "contributesToRgps": true
+    },
+    "pgdasInference": {
+      "hypothesis": "V_not_segregated",
+      "matchedPas": 12,
+      "expectedDasByHypothesis": {
+        "vNotSegregated": 892500,
+        "vSegregated": 560936,
+        "iiiNotSegregated": 528000,
+        "iiiSegregated": 268752
+      }
+    },
+    "pfDetails": {
+      "monthlyTaxableIncome": {
+        "2025-11": 162100,
+        "2025-12": 162100,
+        "2026-01": 162100,
+        "2026-02": 162100,
+        "2026-03": 162100,
+        "2026-04": 162100,
+        "2026-05": 162100,
+        "2026-06": 162100,
+        "2026-07": 162100,
+        "2026-08": 162100,
+        "2026-09": 162100,
+        "2026-10": 162100
+      },
+      "officialPensionDeductions": {
+        "2025-11": 17831,
+        "2025-12": 17831,
+        "2026-01": 17831,
+        "2026-02": 17831,
+        "2026-03": 17831,
+        "2026-04": 17831,
+        "2026-05": 17831,
+        "2026-06": 17831,
+        "2026-07": 17831,
+        "2026-08": 17831,
+        "2026-09": 17831,
+        "2026-10": 17831
+      },
+      "dependents": 0,
+      "healthExpenses": [
+        {
+          "amount": 780000,
+          "cnaeOrProfession": "6550-2/00",
+          "beneficiary": "holder"
+        },
+        {
+          "amount": 960000,
+          "cnaeOrProfession": "psychologist",
+          "beneficiary": "holder"
+        }
+      ],
+      "educationExpenses": [],
+      "pgblContributedThisYear": 0
+    },
+    "totals12m": {
+      "exportRevenue": 60000000,
+      "grossCltPay": 13600000,
+      "fgtsPaid": 1088000,
+      "grossProLabore": 1945200,
+      "dasPaid": 10710000,
+      "grossDistributions": 28800000,
+      "darf1841": 900000,
+      "personalOnPjCard": 148320,
+      "pfHealthPlan": 780000,
+      "pfPsychologist": 960000,
+      "pfGym": 155880,
+      "pfTotalIncome": 30745200
+    }
+  },
+  "cardAnswers": [
+    {
+      "id": "pro-labore-gross",
+      "type": "monthly_pro_labore",
+      "question": "Seu pró-labore bruto é R$ 1.621,00 por mês?",
+      "answer": 162100,
+      "transactionIds": [
+        "654235c6-2d77-496e-9b31-e94e26a75ec9",
+        "74f6a981-ddb0-4fb8-8c82-a238f6054a93",
+        "cc76a705-ae20-4363-a384-03c4325c5c09",
+        "cbdabb1d-ea80-4ac3-9b61-602855aef1f6",
+        "851a29ed-3fa1-4700-9d73-c071617b9b22",
+        "55310d6f-9922-4fd8-abbc-77ea59578940",
+        "16ca4cec-196d-4963-bd6a-da01d547454c",
+        "533363b3-0f24-4197-9476-8298e01addb5",
+        "89342bb4-9a32-4be0-b790-8518245f070f",
+        "899b9d4f-b653-4d17-91ee-1e596d7506fa",
+        "6908d04c-4197-43c1-b3ac-c20fed4addd9",
+        "29f96edc-046a-4e82-a388-a9b96f9f0c3c"
+      ],
+      "source": "ENGINE-SPEC F.2, \"Cards answered (all yes)\""
+    },
+    {
+      "id": "clt-payroll-gross",
+      "type": "assumption",
+      "question": "Qual é a folha bruta mensal (relatório do contador)?",
+      "answer": {
+        "2025-11": 1020000,
+        "2025-12": 2210000,
+        "2026-01": 1020000,
+        "2026-02": 1020000,
+        "2026-03": 1020000,
+        "2026-04": 1020000,
+        "2026-05": 1020000,
+        "2026-06": 1190000,
+        "2026-07": 1020000,
+        "2026-08": 1020000,
+        "2026-09": 1020000,
+        "2026-10": 1020000
+      },
+      "transactionIds": [
+        "2673ef61-b105-4d17-b4f2-93f0d5981aa1",
+        "2232a5ac-1735-4327-8380-047216e5e48b",
+        "901a93eb-f256-411f-bcea-626cbbcb5b1a",
+        "45f63ddc-2716-4bcd-adfd-ae52da6a8b60",
+        "872dd699-4954-4b8a-9516-f49d882dedaa",
+        "4660ebe6-f98b-4712-bef2-b51bfa024e28",
+        "a0fac246-a274-4f19-97e8-13720a004435",
+        "4c48e51b-f9ea-4cb2-a19d-09191b6fb28a",
+        "2a88ed91-569f-4f40-83f3-14db81196ed0",
+        "077fc659-7ba8-43b6-bccc-7b7e9e16044c",
+        "d23c276d-148a-43ba-aabe-2d909fed1fdc",
+        "c08ad8dd-751d-4cbf-a8ed-23b9cdce029e",
+        "530c98cf-eed6-448f-8754-eda1dacdfa00",
+        "7ef99182-b638-48b2-b8de-40fbd27dac19",
+        "a2d83c52-6e6a-4e0b-bbeb-b1e34b394d5b",
+        "e71c1c3e-89a6-49fd-a072-d5ccb82aa577",
+        "8dcc118b-fa92-4ecc-81a5-b1dfb56cad81",
+        "56877d11-5ef2-471e-969c-a58aec467024",
+        "9c6e362a-631a-4dfb-8754-2746013a0bb7",
+        "fa385452-0393-4f49-93d2-a1d6b748c9c1",
+        "1d5c7b8d-6ce6-40f1-ac95-e8ce2513b40e",
+        "24f3669e-922c-4d0d-966a-70174f5cdbc2",
+        "ea33eed7-ac32-4e8c-9894-544a6045bf75",
+        "5a546313-bf74-463c-9c4f-225302217e89",
+        "4e76d5d2-4c1e-4ba4-83b6-e54927120af5",
+        "ec5adac0-a196-43ca-a97d-09dc44dbc116",
+        "fa7fa447-5186-4323-81a2-2a2a6117ac7c",
+        "ffc7073d-da73-43e5-b246-53b655a37a9d"
+      ],
+      "source": "ENGINE-SPEC F.2, \"Cards answered (all yes)\""
+    },
+    {
+      "id": "clt-employee-A",
+      "type": "transaction",
+      "question": "Esta pessoa é empregada com carteira?",
+      "answer": true,
+      "transactionIds": [
+        "2673ef61-b105-4d17-b4f2-93f0d5981aa1",
+        "901a93eb-f256-411f-bcea-626cbbcb5b1a",
+        "45f63ddc-2716-4bcd-adfd-ae52da6a8b60",
+        "872dd699-4954-4b8a-9516-f49d882dedaa",
+        "4c48e51b-f9ea-4cb2-a19d-09191b6fb28a",
+        "077fc659-7ba8-43b6-bccc-7b7e9e16044c",
+        "c08ad8dd-751d-4cbf-a8ed-23b9cdce029e",
+        "7ef99182-b638-48b2-b8de-40fbd27dac19",
+        "e71c1c3e-89a6-49fd-a072-d5ccb82aa577",
+        "56877d11-5ef2-471e-969c-a58aec467024",
+        "1d5c7b8d-6ce6-40f1-ac95-e8ce2513b40e",
+        "ea33eed7-ac32-4e8c-9894-544a6045bf75",
+        "4e76d5d2-4c1e-4ba4-83b6-e54927120af5",
+        "fa7fa447-5186-4323-81a2-2a2a6117ac7c"
+      ],
+      "source": "ENGINE-SPEC F.2, \"Cards answered (all yes)\": implied by the gross CLT payroll card (one card per person, E.2)"
+    },
+    {
+      "id": "clt-employee-B",
+      "type": "transaction",
+      "question": "Esta pessoa é empregada com carteira?",
+      "answer": true,
+      "transactionIds": [
+        "2232a5ac-1735-4327-8380-047216e5e48b",
+        "4660ebe6-f98b-4712-bef2-b51bfa024e28",
+        "a0fac246-a274-4f19-97e8-13720a004435",
+        "2a88ed91-569f-4f40-83f3-14db81196ed0",
+        "d23c276d-148a-43ba-aabe-2d909fed1fdc",
+        "530c98cf-eed6-448f-8754-eda1dacdfa00",
+        "a2d83c52-6e6a-4e0b-bbeb-b1e34b394d5b",
+        "8dcc118b-fa92-4ecc-81a5-b1dfb56cad81",
+        "9c6e362a-631a-4dfb-8754-2746013a0bb7",
+        "fa385452-0393-4f49-93d2-a1d6b748c9c1",
+        "24f3669e-922c-4d0d-966a-70174f5cdbc2",
+        "5a546313-bf74-463c-9c4f-225302217e89",
+        "ec5adac0-a196-43ca-a97d-09dc44dbc116",
+        "ffc7073d-da73-43e5-b246-53b655a37a9d"
+      ],
+      "source": "ENGINE-SPEC F.2, \"Cards answered (all yes)\": implied by the gross CLT payroll card (one card per person, E.2)"
+    },
+    {
+      "id": "export-qualification",
+      "type": "transaction",
+      "question": "Estes créditos são de clientes no exterior, por serviço usufruído lá?",
+      "answer": true,
+      "transactionIds": [
+        "6b1addfc-623a-4f5f-be7e-dbee3294e06f",
+        "df9dd183-1860-4d21-b528-828b87f7e779",
+        "0984e296-5f8e-4596-b9ef-c31e1b61cc92",
+        "2323650d-9de0-4afe-947b-1fc0743ff152",
+        "4a61dee5-a2a0-4416-9fa3-3ab38e99170f",
+        "613e7005-606b-4a9f-b118-5d8c142f39a8",
+        "b8e744de-2ed7-41df-a550-9a0530fba101",
+        "c3df4bd2-6d96-4530-baee-b3756243d0d2",
+        "54c61cd3-1477-4224-8050-53afed7872b3",
+        "c0c59bd5-3831-48f8-b3cf-38cd29fada66",
+        "77b71fa1-69ae-4fe3-9af4-e27b32ff3d40",
+        "fc931d8e-0b8d-4777-950b-3330c35cdafe"
+      ],
+      "source": "ENGINE-SPEC F.2, \"Cards answered (all yes)\""
+    },
+    {
+      "id": "partner-works-in-company",
+      "type": "assumption",
+      "question": "Você trabalha na empresa?",
+      "answer": true,
+      "transactionIds": [],
+      "source": "ENGINE-SPEC F.2, \"Cards answered (all yes)\""
+    },
+    {
+      "id": "monthly-distribution",
+      "type": "transaction",
+      "question": "Os PIX para você além do pró-labore (R$ 18.000,00 por mês; R$ 81.000,00 em julho) são distribuição de lucros?",
+      "answer": true,
+      "transactionIds": [
+        "61a702cf-901e-4c44-84b6-3a82f0462a79",
+        "49b67a90-ee54-46ac-8c05-2f968a011564",
+        "366d82fc-9b74-408e-86cd-f4873e25c0cd",
+        "f231bef9-e300-4738-a8e6-d4ee16ccd3d5",
+        "41489c37-bf4f-44ae-98eb-fdc7ab417878",
+        "b7b65205-115d-464c-8ef2-fb2fd14ed7f9",
+        "6b164a64-5ec8-4cb0-a6e7-519d14bb19c6",
+        "8663bf87-6cbf-4993-aeb1-a8c7b905eecf",
+        "2641fd1b-1331-4b71-8496-17ae21c8bb9b",
+        "445e86dc-e8fa-4d9d-9d27-fb839b2ba119",
+        "d2da2442-1fe9-48c1-9ce8-fc242c48a586",
+        "2d3f4901-1c39-44e3-80f5-a3d72e10655b"
+      ],
+      "source": "ENGINE-SPEC F.2, \"Cards answered (all yes)\""
+    },
+    {
+      "id": "full-bookkeeping",
+      "type": "assumption",
+      "question": "A empresa tem escrituração contábil completa?",
+      "answer": true,
+      "transactionIds": [],
+      "source": "ENGINE-SPEC F.2, \"Cards answered (all yes)\""
+    },
+    {
+      "id": "psychologist-beneficiary",
+      "type": "transaction",
+      "question": "Foi atendimento de saúde de você ou de dependente? Com qual profissional?",
+      "answer": "holder",
+      "transactionIds": [
+        "acfb716b-6481-42e6-98f7-796196d73273",
+        "e5be5452-9e09-46f6-8f27-405eaa1c1bf4",
+        "c608509e-8c28-452e-ac1c-e7e3b0750952",
+        "3312849d-6fca-4090-89d6-611f04e1c5fb",
+        "71200df7-15cc-47ac-bcd1-be550f5e9ec1",
+        "d03f8896-b2e8-488d-83ae-7cde1aab23d0",
+        "64d63078-8ee6-44f7-9cfc-ff969d82a092",
+        "34792ff3-170c-48f2-93ad-065359c5dd1d",
+        "96e02ccc-4d8b-4a89-889c-dba809960595",
+        "dc9c1a4e-df36-477c-9242-e6dd03fc83ce",
+        "6e8d0e76-2561-4a78-8644-c48cab87998b",
+        "638ff967-4dd9-425f-a9ec-8a44419a77b4"
+      ],
+      "source": "ENGINE-SPEC F.2, \"Cards answered (all yes)\""
+    }
+  ],
+  "expectedFindings": [
+    {
+      "ruleId": "R01",
+      "confidence": "confirmed",
+      "countsInTotal": true,
+      "marginalValue12m": 2831652,
+      "annualRegimeValue": 4289652,
+      "range": null,
+      "cashCost": null,
+      "note": "pró-labore 1.621 → 2.260; Anexo V → III from 2027-04"
+    },
+    {
+      "ruleId": "R05",
+      "confidence": "confirmed",
+      "countsInTotal": true,
+      "marginalValue12m": 3400240,
+      "annualRegimeValue": 3110976,
+      "range": null,
+      "cashCost": null,
+      "note": "segregate exports in the PGDAS-D"
+    },
+    {
+      "ruleId": "R06",
+      "confidence": null,
+      "countsInTotal": false,
+      "marginalValue12m": null,
+      "annualRegimeValue": null,
+      "range": null,
+      "cashCost": null,
+      "note": "CNAE not on the monofásico list (F.3 step 5): no finding"
+    },
+    {
+      "ruleId": "R04",
+      "confidence": null,
+      "countsInTotal": false,
+      "marginalValue12m": null,
+      "annualRegimeValue": null,
+      "range": null,
+      "cashCost": null,
+      "note": "IR already zero in 2026 and 2027 (F.3 step 6): no finding; UI shows T04-12"
+    },
+    {
+      "ruleId": "R05-REC",
+      "confidence": "estimated",
+      "countsInTotal": false,
+      "marginalValue12m": null,
+      "annualRegimeValue": null,
+      "range": {
+        "min": 3978768,
+        "max": 19893840
+      },
+      "cashCost": null,
+      "note": "12 measured PAs × 3.315,64 to 60 PAs; without Selic; PA 10/2021 expires 23/11/2026"
+    },
+    {
+      "ruleId": "R02",
+      "confidence": "estimated",
+      "countsInTotal": false,
+      "marginalValue12m": null,
+      "annualRegimeValue": null,
+      "range": null,
+      "cashCost": 111170,
+      "note": "jul/2026 distribution of 90.000: withheld 9.000,00 (DARF 1841); suggestion 2 × 45.000"
+    },
+    {
+      "ruleId": "A01",
+      "confidence": "confirmed",
+      "countsInTotal": false,
+      "marginalValue12m": null,
+      "annualRegimeValue": null,
+      "range": null,
+      "cashCost": null,
+      "note": "Netflix (12×) and supermarket (1×) on the PJ card"
+    },
+    {
+      "ruleId": "A02",
+      "confidence": null,
+      "countsInTotal": false,
+      "marginalValue12m": null,
+      "annualRegimeValue": null,
+      "range": null,
+      "cashCost": null,
+      "note": "does not fire: P0 = minimum wage"
+    },
+    {
+      "ruleId": "R03",
+      "confidence": null,
+      "countsInTotal": false,
+      "marginalValue12m": null,
+      "annualRegimeValue": null,
+      "range": null,
+      "cashCost": null,
+      "note": "does not fire: RBT12 600.000, far from 2,88 mi"
+    }
+  ],
+  "expectedTotal": {
+    "next12m": 6231892,
+    "annualRegime": 7400628
+  },
+  "videoNumbers": [
+    {
+      "screen": "analysis",
+      "testId": "analysis/money-hero",
+      "cents": 6231892
+    },
+    {
+      "screen": "dashboard",
+      "testId": "dashboard/money-hero",
+      "cents": 6231892
+    },
+    {
+      "screen": "dashboard",
+      "testId": "dashboard/regime-total",
+      "cents": 7400628
+    },
+    {
+      "screen": "dashboard",
+      "testId": "dashboard/recovery-min",
+      "cents": 3978768
+    },
+    {
+      "screen": "dashboard",
+      "testId": "dashboard/recovery-max",
+      "cents": 19893840
+    },
+    {
+      "screen": "dashboard",
+      "testId": "dashboard/alert-R02-cost",
+      "cents": 111170
+    }
+  ]
+}

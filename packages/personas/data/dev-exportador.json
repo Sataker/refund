@@ -1,0 +1,3523 @@
+{
+  "schemaVersion": 1,
+  "id": "dev-exportador",
+  "seed": 20261112,
+  "synthetic": true,
+  "holderDisplayName": "Marina",
+  "analysisDate": "2026-11-12",
+  "referenceMonth": "2026-10",
+  "period": {
+    "from": "2025-11-01",
+    "to": "2026-10-31"
+  },
+  "company": {
+    "cnpj": "RFDEV001000158",
+    "displayLegalName": "MARINA DEV LTDA",
+    "displayTradeName": "Marina Dev",
+    "masked": false,
+    "legalNature": {
+      "code": "2062",
+      "description": "Sociedade Empresária Limitada"
+    },
+    "size": "EPP",
+    "primaryCnae": {
+      "code": "6201-5/01",
+      "description": "Desenvolvimento de programas de computador sob encomenda"
+    },
+    "secondaryCnaes": [],
+    "registrationStatus": "ATIVA",
+    "activityStartDate": "2019-03-11",
+    "uf": "SP",
+    "ibgeMunicipality": "3550308",
+    "simples": {
+      "optedIn": true,
+      "since": "2019-03-11",
+      "excludedAt": null
+    },
+    "mei": {
+      "optedIn": false,
+      "since": null,
+      "excludedAt": null
+    },
+    "taxRegimeHistory": [],
+    "source": "persona",
+    "fetchedAt": "2026-11-12T12:00:00.000Z"
+  },
+  "items": [
+    {
+      "holder": "PJ",
+      "item": {
+        "sourceId": "1953ce15-ce79-4dd7-af0a-3bf28a9f485d",
+        "clientUserId": null,
+        "status": "UPDATED",
+        "executionStatus": "SUCCESS",
+        "connector": {
+          "id": 0,
+          "name": "Banco Meridiano Empresas (persona sintética)",
+          "sandbox": true,
+          "type": "BUSINESS_BANK"
+        }
+      },
+      "identity": {
+        "holder": "PJ",
+        "document": {
+          "type": "CNPJ",
+          "hmac": null,
+          "publicValue": "RFDEV001000158",
+          "mask": "RF.DEV.001/0001-58"
+        },
+        "economicActivities": ["6201-5/01"],
+        "partnerDocuments": [
+          {
+            "type": "CPF",
+            "hmac": null,
+            "publicValue": null,
+            "mask": "***.711.985-**"
+          }
+        ]
+      },
+      "accounts": [
+        {
+          "account": {
+            "sourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+            "holder": "PJ",
+            "type": "BANK",
+            "subtype": "CHECKING_ACCOUNT",
+            "productName": "Conta Corrente PJ",
+            "institution": "Banco Meridiano",
+            "currency": "BRL",
+            "balanceCents": 10143666
+          },
+          "transactions": [
+            {
+              "sourceId": "6b1addfc-623a-4f5f-be7e-dbee3294e06f",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-11-06",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "2673ef61-b105-4d17-b4f2-93f0d5981aa1",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-11-07",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "2232a5ac-1735-4327-8380-047216e5e48b",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-11-07",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "654235c6-2d77-496e-9b31-e94e26a75ec9",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-11-07",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "61a702cf-901e-4c44-84b6-3a82f0462a79",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-11-10",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "00313e11-ca46-482c-bf10-c139ac9ca464",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-11-19",
+              "amountCents": -81600,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 10/2025",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "47abba9c-77f1-4638-abd2-53cccd3a8df8",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-11-19",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 10/2025",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "fbbd603e-e70d-4e3f-b065-0312e27958dc",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-11-19",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 10/2025",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "901a93eb-f256-411f-bcea-626cbbcb5b1a",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-05",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "45f63ddc-2716-4bcd-adfd-ae52da6a8b60",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-05",
+              "amountCents": -81699,
+              "description": "PIX ENVIADO [pessoa] FERIAS",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "4660ebe6-f98b-4712-bef2-b51bfa024e28",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-05",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "74f6a981-ddb0-4fb8-8c82-a238f6054a93",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-05",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "df9dd183-1860-4d21-b528-828b87f7e779",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-08",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "49b67a90-ee54-46ac-8c05-2f968a011564",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-10",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "872dd699-4954-4b8a-9516-f49d882dedaa",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-18",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa] 13 SALARIO",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "a0fac246-a274-4f19-97e8-13720a004435",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-18",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa] 13 SALARIO",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "d990cd9f-9974-489c-b065-b730a181316a",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-19",
+              "amountCents": -122400,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 11/2025",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "558ac4a4-9145-4001-9c75-692aee2fd054",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-19",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 11/2025",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "46c13efd-e025-422a-94c4-1f5f505266e1",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2025-12-19",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 11/2025",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "0984e296-5f8e-4596-b9ef-c31e1b61cc92",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-01-06",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "4c48e51b-f9ea-4cb2-a19d-09191b6fb28a",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-01-08",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "2a88ed91-569f-4f40-83f3-14db81196ed0",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-01-08",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "cc76a705-ae20-4363-a384-03c4325c5c09",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-01-08",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "366d82fc-9b74-408e-86cd-f4873e25c0cd",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-01-12",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "caea6b7b-4d93-43ac-98a2-49af9bd7b36a",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-01-20",
+              "amountCents": -136000,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 12/2025",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "9e5d04dc-fbef-45b1-88cc-8a2eaa2c9035",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-01-20",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 12/2025",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "7e084544-d42a-4d37-9706-4402e5506880",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-01-20",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 12/2025",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "2323650d-9de0-4afe-947b-1fc0743ff152",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-02-06",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "077fc659-7ba8-43b6-bccc-7b7e9e16044c",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-02-06",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "d23c276d-148a-43ba-aabe-2d909fed1fdc",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-02-06",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "cbdabb1d-ea80-4ac3-9b61-602855aef1f6",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-02-06",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "f231bef9-e300-4738-a8e6-d4ee16ccd3d5",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-02-10",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "137d4a4f-15b1-4196-ba2d-a57a46ee8122",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-02-20",
+              "amountCents": -81600,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 01/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "dd42e996-634f-4fe2-90d0-f449ce9b664e",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-02-20",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 01/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "89e06037-ba25-4cb4-b5e4-1559323d36f5",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-02-20",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 01/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "4a61dee5-a2a0-4416-9fa3-3ab38e99170f",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-03-06",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "c08ad8dd-751d-4cbf-a8ed-23b9cdce029e",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-03-06",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "530c98cf-eed6-448f-8754-eda1dacdfa00",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-03-06",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "851a29ed-3fa1-4700-9d73-c071617b9b22",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-03-06",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "41489c37-bf4f-44ae-98eb-fdc7ab417878",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-03-10",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "5e2e6657-97f3-4b06-8025-16dbe83fdda6",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-03-20",
+              "amountCents": -81600,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 02/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "31c93ca8-bee8-4fd7-b258-426917bc941a",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-03-20",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 02/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "8c506043-b21f-43b5-9132-da8cb55357c0",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-03-20",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 02/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "613e7005-606b-4a9f-b118-5d8c142f39a8",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-04-06",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "7ef99182-b638-48b2-b8de-40fbd27dac19",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-04-08",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "a2d83c52-6e6a-4e0b-bbeb-b1e34b394d5b",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-04-08",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "55310d6f-9922-4fd8-abbc-77ea59578940",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-04-08",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "b7b65205-115d-464c-8ef2-fb2fd14ed7f9",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-04-10",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "5b372e1c-7462-4390-af9b-12ce5970691b",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-04-20",
+              "amountCents": -81600,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 03/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "a9a8a3d6-0ea0-4e8c-9d76-5ee72cd876e2",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-04-20",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 03/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "8012a3bf-6b43-45b6-a7fa-8abe0af71737",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-04-20",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 03/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "b8e744de-2ed7-41df-a550-9a0530fba101",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-05-06",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "e71c1c3e-89a6-49fd-a072-d5ccb82aa577",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-05-08",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "8dcc118b-fa92-4ecc-81a5-b1dfb56cad81",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-05-08",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "16ca4cec-196d-4963-bd6a-da01d547454c",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-05-08",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "6b164a64-5ec8-4cb0-a6e7-519d14bb19c6",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-05-11",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "11c52246-81a7-44dc-9976-c4b01a452b5d",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-05-20",
+              "amountCents": -81600,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 04/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "939e17f9-8157-442d-80a0-8b4bdd2e67e8",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-05-20",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 04/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "05a48603-9f81-4774-bad7-2efb084c4fda",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-05-20",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 04/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "c3df4bd2-6d96-4530-baee-b3756243d0d2",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-06-08",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "56877d11-5ef2-471e-969c-a58aec467024",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-06-08",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "9c6e362a-631a-4dfb-8754-2746013a0bb7",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-06-08",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "fa385452-0393-4f49-93d2-a1d6b748c9c1",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-06-08",
+              "amountCents": -81699,
+              "description": "PIX ENVIADO [pessoa] FERIAS",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "533363b3-0f24-4197-9476-8298e01addb5",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-06-08",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "8663bf87-6cbf-4993-aeb1-a8c7b905eecf",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-06-10",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "66279f61-dafb-410d-815b-db3a6e6afe0c",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-06-19",
+              "amountCents": -81600,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 05/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "9458ebcc-49f5-4ef3-a59f-a9063d229122",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-06-19",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 05/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "830cd848-41bc-447c-8004-355163ff6c5e",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-06-19",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 05/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "54c61cd3-1477-4224-8050-53afed7872b3",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-07-06",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "1d5c7b8d-6ce6-40f1-ac95-e8ce2513b40e",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-07-07",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "24f3669e-922c-4d0d-966a-70174f5cdbc2",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-07-07",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "89342bb4-9a32-4be0-b790-8518245f070f",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-07-07",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "2641fd1b-1331-4b71-8496-17ae21c8bb9b",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-07-10",
+              "amountCents": -8100000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "d9220b3c-4af0-4444-8491-8edbebfc0294",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-07-20",
+              "amountCents": -95200,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 06/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "0eab7552-d6d8-48ee-b187-e7a3ec3f406a",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-07-20",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 06/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "471684aa-5c8d-4913-ad53-7fb485e3a321",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-07-20",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 06/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "c0c59bd5-3831-48f8-b3cf-38cd29fada66",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-08-06",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "ea33eed7-ac32-4e8c-9894-544a6045bf75",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-08-07",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "5a546313-bf74-463c-9c4f-225302217e89",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-08-07",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "899b9d4f-b653-4d17-91ee-1e596d7506fa",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-08-07",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "445e86dc-e8fa-4d9d-9d27-fb839b2ba119",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-08-10",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "4868c473-4f47-4771-a0c8-eefc288894da",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-08-20",
+              "amountCents": -81600,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 07/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "2add1795-a0cc-43c6-ba7d-0afa7d3e3429",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-08-20",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 07/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "05bd595c-bb95-4ec1-a6df-8b1fbc090424",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-08-20",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 07/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "87d83028-da39-4d4f-80b0-4702305373f1",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-08-20",
+              "amountCents": -900000,
+              "description": "PAGAMENTO DARF 1841 - IRRF LUCROS E DIVIDENDOS PA 07/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "77b71fa1-69ae-4fe3-9af4-e27b32ff3d40",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-09-08",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "4e76d5d2-4c1e-4ba4-83b6-e54927120af5",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-09-08",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "ec5adac0-a196-43ca-a97d-09dc44dbc116",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-09-08",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "6908d04c-4197-43c1-b3ac-c20fed4addd9",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-09-08",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "d2da2442-1fe9-48c1-9ce8-fc242c48a586",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-09-10",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "7f7ea9f0-b1bc-41bd-b7d0-cc47ad53f32d",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-09-18",
+              "amountCents": -81600,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 08/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "fed10e04-d544-4834-b8a0-e80c46aca797",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-09-18",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 08/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "07e4c1b4-837e-4622-a792-50dcc946899b",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-09-18",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 08/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "fc931d8e-0b8d-4777-950b-3330c35cdafe",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-10-06",
+              "amountCents": 5000000,
+              "description": "CAMBIO - ORDEM DE PAGAMENTO DO EXTERIOR - HARBORLIGHT ANALYTICS INC",
+              "pluggyType": "CREDIT",
+              "method": "FX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "HARBORLIGHT ANALYTICS INC",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "fa7fa447-5186-4323-81a2-2a2a6117ac7c",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-10-07",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.493.103-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "ffc7073d-da73-43e5-b246-53b655a37a9d",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-10-07",
+              "amountCents": -454868,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.036.610-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "29f96edc-046a-4e82-a388-a9b96f9f0c3c",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-10-07",
+              "amountCents": -144269,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "2d3f4901-1c39-44e3-80f5-a3d72e10655b",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-10-13",
+              "amountCents": -1800000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.711.985-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "1c221f7c-7677-472b-9cbd-42f68abb66f5",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-10-20",
+              "amountCents": -81600,
+              "description": "PAGAMENTO GUIA FGTS DIGITAL - GFD COMP 09/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "70ab00e1-58fa-413f-8f6f-ddf985143efd",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-10-20",
+              "amountCents": -892500,
+              "description": "PAGAMENTO DAS - SIMPLES NACIONAL PA 09/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "7cdbcb41-5368-42fb-8597-886b21f2afd6",
+              "accountSourceId": "5f424af2-6eeb-45fc-9aae-75e72608ae16",
+              "date": "2026-10-20",
+              "amountCents": -128095,
+              "description": "PAGAMENTO DARF NUMERADO - DCTFWEB PA 09/2026",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": null,
+              "mcc": null,
+              "installment": null
+            }
+          ]
+        },
+        {
+          "account": {
+            "sourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+            "holder": "PJ",
+            "type": "CREDIT",
+            "subtype": "CREDIT_CARD",
+            "productName": "Cartão de Crédito Empresarial",
+            "institution": "Banco Meridiano",
+            "currency": "BRL",
+            "balanceCents": null
+          },
+          "transactions": [
+            {
+              "sourceId": "25decb30-aa14-423a-9c18-6fd8144c80e8",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2025-11-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "5492b52a-fe15-4358-a510-5fdc3ee9e6cf",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2025-12-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "f079ba13-724f-43b2-93eb-18f447d827aa",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-01-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "1149b1e4-9ac9-4e0e-9b72-31d73c78b63e",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-02-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "65dd4f57-aa9d-44b7-af44-fd04299d10da",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-03-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "acdb8080-8349-4e7a-9bb8-3e00c9fe6db2",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-03-14",
+              "amountCents": -81240,
+              "description": "SUPERMERC VILA SERENA",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "SUPERMERCADO VILA SERENA",
+                "cnae": null
+              },
+              "mcc": "5411",
+              "installment": null
+            },
+            {
+              "sourceId": "ab75996d-819d-4a1b-a61b-19e447d0662c",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-04-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "8785c3f6-e8de-426e-9cc7-dae62b693bca",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-05-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "3ceb8ecf-2386-4f57-8a6c-a29dd6d0d3a4",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-06-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "0ce4ae73-7a80-4082-bbfa-eefb77a7dc4a",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-07-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "370bacb3-d0b8-4c0b-8191-43a97767ac1f",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-08-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "1e098ff3-8538-4a0b-96b9-c79f01e9a504",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-09-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            },
+            {
+              "sourceId": "8571d934-0dd9-4a4a-adc6-05f3808ba791",
+              "accountSourceId": "16aad99e-c640-42cd-94e1-16f98ea313aa",
+              "date": "2026-10-12",
+              "amountCents": -5590,
+              "description": "NETFLIX.COM",
+              "pluggyType": "DEBIT",
+              "method": "CARD",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": null,
+                "name": "NETFLIX.COM",
+                "cnae": null
+              },
+              "mcc": "4899",
+              "installment": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "holder": "PF",
+      "item": {
+        "sourceId": "d0a80011-88ef-430c-9dd1-e1397040e577",
+        "clientUserId": null,
+        "status": "UPDATED",
+        "executionStatus": "SUCCESS",
+        "connector": {
+          "id": 0,
+          "name": "Banco Meridiano (persona sintética)",
+          "sandbox": true,
+          "type": "PERSONAL_BANK"
+        }
+      },
+      "identity": {
+        "holder": "PF",
+        "document": {
+          "type": "CPF",
+          "hmac": null,
+          "publicValue": null,
+          "mask": "***.711.985-**"
+        },
+        "economicActivities": [],
+        "partnerDocuments": []
+      },
+      "accounts": [
+        {
+          "account": {
+            "sourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+            "holder": "PF",
+            "type": "BANK",
+            "subtype": "CHECKING_ACCOUNT",
+            "productName": "Conta Corrente",
+            "institution": "Banco Meridiano",
+            "currency": "BRL",
+            "balanceCents": 30235348
+          },
+          "transactions": [
+            {
+              "sourceId": "fe77f5f0-92cd-404b-92b0-9a156b1aa9cc",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2025-11-03",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "6b6c44c7-1074-46e8-bfc6-731ea7d3cadc",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2025-11-07",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "89985a7c-fdf2-47c9-bd49-14170a60a981",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2025-11-10",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "e62af3e9-7655-4963-a03d-b36af20e0347",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2025-11-10",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "acfb716b-6481-42e6-98f7-796196d73273",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2025-11-25",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "6b29e2e8-2e0b-490a-922d-d22ac4acaedc",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2025-12-03",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "2248f4b5-ff91-48b0-b832-1a59e07f39e3",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2025-12-05",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "c1db733c-4972-4e39-8d3e-755882ea4d94",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2025-12-10",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "821d75e8-9e79-4712-ae22-7d8fca2c605e",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2025-12-10",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "e5be5452-9e09-46f6-8f27-405eaa1c1bf4",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2025-12-26",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "4297c893-e564-41fc-8b78-4b938f4a02a4",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-01-05",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "28c1105d-f305-45a7-9457-3e052a49625c",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-01-08",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "5593cf69-ecdf-4984-a356-5bd03273ffbf",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-01-12",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "91ddcb8c-c03a-4937-b696-6ff07adf67cf",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-01-12",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "c608509e-8c28-452e-ac1c-e7e3b0750952",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-01-26",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "492bd3fe-f26a-4708-98e0-a324f5017f03",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-02-03",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "8fa4193a-fbdd-49b2-999c-c3d202de4df5",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-02-06",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "5a2dadda-812a-4e15-a33d-1cc8bc11ed0d",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-02-10",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "a35fb105-feee-4638-91d5-4a96ea8f27a8",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-02-10",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "3312849d-6fca-4090-89d6-611f04e1c5fb",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-02-25",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "26b25230-0a61-4db6-8777-6168c42fc0fa",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-03-03",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "c331e94a-c435-4917-acd5-0f4dd802ed75",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-03-06",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "8cbe2a27-043f-4e73-95c3-e7bdeb201ad6",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-03-10",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "e20b9317-9af0-40b5-8fc8-db09b7ba5c26",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-03-10",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "71200df7-15cc-47ac-bcd1-be550f5e9ec1",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-03-25",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "a85fbbf0-8f22-46e6-92cc-34f24f59f68a",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-04-06",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "82e6de15-f48e-49ad-be74-d4a11a4d8d8a",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-04-08",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "e811fee3-217f-47ba-bb05-2f1f09db9998",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-04-10",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "07db8282-4e95-426c-b0e2-6c5491b1e113",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-04-10",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "d03f8896-b2e8-488d-83ae-7cde1aab23d0",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-04-27",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "0fa74645-387f-42aa-b4f7-a97f888e63d4",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-05-04",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "5cb64aa0-1af1-4955-a904-f0bab6c366d1",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-05-08",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "703d4704-5855-415a-baa4-2bfb78a490bf",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-05-11",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "1bebc9d9-9d52-4730-92b2-d99bc5184766",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-05-11",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "64d63078-8ee6-44f7-9cfc-ff969d82a092",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-05-25",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "e5206b45-1a62-4a76-a03a-06e0ee42dca8",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-06-03",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "484d241e-244e-45e6-9eff-24668223656d",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-06-08",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "b54a5804-9a9f-42ea-aff3-0038a0316628",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-06-10",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "4b1728e3-32e9-43ee-ac6d-aa1fe05c97e4",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-06-10",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "34792ff3-170c-48f2-93ad-065359c5dd1d",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-06-25",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "ccf2d6c1-135d-459e-b76b-89ec7556e97a",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-07-03",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "73b6f5f8-b0ee-4d09-8ad7-5349b99400dc",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-07-07",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "824b5628-8ded-4c52-9f76-1cf79e521621",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-07-10",
+              "amountCents": 8100000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "1812bcd4-34d5-4eee-902b-1c3f45b57235",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-07-10",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "96e02ccc-4d8b-4a89-889c-dba809960595",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-07-27",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "b394c02b-e82f-4432-bc30-7fb22ee749b5",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-08-03",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "b8d5b999-483b-4652-bc6e-789b1f4a815d",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-08-07",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "f48c9ff7-08a3-4f99-ae79-6b51ea65b803",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-08-10",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "5f916a62-200c-4829-a01a-ec8c14b70e36",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-08-10",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "dc9c1a4e-df36-477c-9242-e6dd03fc83ce",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-08-25",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "52353ad4-4e8e-4b40-bf9b-aeba1218e16f",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-09-03",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "b5b81a85-4f9f-43b6-9417-6fc77bbbb209",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-09-08",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "ba733de5-f1a3-48fd-8f0c-524e2a1ece8b",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-09-10",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "6b1374f5-b5e0-42de-9b4c-f62b2669866e",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-09-10",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "6e8d0e76-2561-4a78-8644-c48cab87998b",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-09-25",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "8127266f-deea-4b26-9113-ca9ade503eca",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-10-05",
+              "amountCents": -12990,
+              "description": "PIX ENVIADO - ACADEMIA RITMO FORTE LTDA",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFACAD01000132",
+                  "mask": "RF.ACA.D01/0001-32"
+                },
+                "name": "ACADEMIA RITMO FORTE LTDA",
+                "cnae": "9313-1/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "29eedf08-b172-45da-aba2-fecb570baf62",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-10-07",
+              "amountCents": 144269,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "c6e010e8-7a2b-40c0-865f-86e81dc1dd40",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-10-13",
+              "amountCents": 1800000,
+              "description": "PIX RECEBIDO - MARINA DEV LTDA",
+              "pluggyType": "CREDIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFDEV001000158",
+                  "mask": "RF.DEV.001/0001-58"
+                },
+                "name": "MARINA DEV LTDA",
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "c2389c4b-2f8f-464e-bc65-91c71b324043",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-10-13",
+              "amountCents": -65000,
+              "description": "PAGAMENTO BOLETO - PLANO AURORA SAUDE S.A.",
+              "pluggyType": "DEBIT",
+              "method": "BOLETO",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CNPJ",
+                  "hmac": null,
+                  "publicValue": "RFPLAN01000131",
+                  "mask": "RF.PLA.N01/0001-31"
+                },
+                "name": "PLANO AURORA SAUDE S.A.",
+                "cnae": "6550-2/00"
+              },
+              "mcc": null,
+              "installment": null
+            },
+            {
+              "sourceId": "638ff967-4dd9-425f-a9ec-8a44419a77b4",
+              "accountSourceId": "b666e3eb-3e33-488a-a2b7-0bec5f3e7afe",
+              "date": "2026-10-26",
+              "amountCents": -80000,
+              "description": "PIX ENVIADO [pessoa]",
+              "pluggyType": "DEBIT",
+              "method": "PIX",
+              "sourceCategory": null,
+              "counterparty": {
+                "document": {
+                  "type": "CPF",
+                  "hmac": null,
+                  "publicValue": null,
+                  "mask": "***.300.730-**"
+                },
+                "name": null,
+                "cnae": null
+              },
+              "mcc": null,
+              "installment": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

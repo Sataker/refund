@@ -5,9 +5,11 @@
   "type": "module",
   "description": "Seeded synthetic personas and answer keys.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./data/*": "./data/*"
   },
   "scripts": {
+    "generate": "node src/cli.ts",
     "typecheck": "tsc --noEmit -p ."
   },
   "dependencies": {
