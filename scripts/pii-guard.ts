@@ -1,14 +1,24 @@
-// PII guard (ARCHITECTURE §6.4). E0 version: forbidden JSON keys (QSA) and formatted CPF.
-// E7 completes it (unformatted CPF with check digit, e-mail, phone, forbidden-key list, persona CNPJs).
+// PII guard (ARCHITECTURE §6.4, TESTS §5). Node 24, no dependencies: the detectors are the same ones
+// the recorder uses (`packages/sources/src/pii/detect.ts`, dependency-free, loaded by type stripping).
+// Rules: 1 forbidden JSON keys at any depth · 2 formatted CPF · 3 unformatted CPF (valid check digit,
+// near cpf/doc/tax/document/socio) · 4 e-mail outside the allowed domains · 5 BR phone near
+// tel/phone/fone/celular · 6 CNPJ in packages/personas/data/ not listed in personas/src/cnpjs.ts.
+// Output: path, line, rule and a masked excerpt; never the whole value found.
 // Usage: node scripts/pii-guard.ts [--ci | --staged]
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { extname } from 'node:path';
+import { cnpjCheckDigits } from '../packages/sources/src/cnpj/validate.ts';
+import { mask } from '../packages/sources/src/pii/cpf.ts';
+import { findForbiddenKeys, scanText as scanPii } from '../packages/sources/src/pii/detect.ts';
+import type { PiiRule } from '../packages/sources/src/types.ts';
+
+export { mask };
 
 export interface Finding {
   file: string;
   line: number;
-  rule: 'forbidden-key' | 'formatted-cpf' | 'exception-without-reason' | 'cpf-in-exceptions';
+  rule: PiiRule | 'exception-without-reason' | 'cpf-in-exceptions';
   excerpt: string;
 }
 
@@ -19,9 +29,15 @@ export interface Exception {
   source: string;
 }
 
+export interface GuardContext {
+  exceptions: readonly Exception[];
+  /** Canonical CNPJs listed in packages/personas/src/cnpjs.ts. */
+  personaCnpjs: ReadonlySet<string>;
+}
+
 const EXCEPTIONS_FILE = 'scripts/pii-exceptions.json';
-const FORBIDDEN_KEYS = ['qsa', 'cnpj_cpf_do_socio'];
-const FORMATTED_CPF = /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g;
+const PERSONA_CNPJS_FILE = 'packages/personas/src/cnpjs.ts';
+const PERSONA_DATA = 'packages/personas/data/';
 const BINARY_EXTENSIONS = new Set([
   '.pdf',
   '.png',
@@ -36,42 +52,75 @@ const BINARY_EXTENSIONS = new Set([
   '.zip',
 ]);
 
-export function mask(value: string): string {
-  if (value.length <= 4) return '*'.repeat(value.length);
-  return `${value.slice(0, 2)}${'*'.repeat(value.length - 4)}${value.slice(-2)}`;
-}
+const EMPTY_CONTEXT: GuardContext = { exceptions: [], personaCnpjs: new Set() };
 
 function lineOf(text: string, index: number): number {
   return text.slice(0, index).split('\n').length;
 }
 
-export function scanText(file: string, text: string): Finding[] {
-  const findings: Finding[] = [];
+function fileMatches(pattern: string, file: string): boolean {
+  if (pattern === '*') return true;
+  if (pattern.endsWith('/**')) return file.startsWith(pattern.slice(0, -2));
+  return pattern === file;
+}
 
-  if (extname(file) === '.json') {
-    for (const key of FORBIDDEN_KEYS) {
-      const pattern = new RegExp(`"${key}"\\s*:`, 'gi');
-      for (const match of text.matchAll(pattern)) {
-        findings.push({
-          file,
-          line: lineOf(text, match.index),
-          rule: 'forbidden-key',
-          excerpt: `"${key}": …`,
-        });
-      }
+/** An exception covers the exact value, or every e-mail of a domain listed as the value. */
+export function isExcepted(exceptions: readonly Exception[], file: string, raw: string): boolean {
+  const value = raw.toLowerCase();
+  return exceptions.some((e) => {
+    if (typeof e.reason !== 'string' || e.reason.trim() === '') return false;
+    if (!fileMatches(e.file, file)) return false;
+    const allowed = String(e.value).toLowerCase();
+    return value === allowed || value.endsWith(`@${allowed}`) || value.endsWith(`.${allowed}`);
+  });
+}
+
+/** CNPJs quoted in personas/src/cnpjs.ts (read as text: the guard imports no workspace package). */
+export function personaCnpjsFrom(source: string): Set<string> {
+  return new Set([...source.matchAll(/['"]([0-9A-Z]{12}\d{2})['"]/g)].map((m) => m[1] ?? ''));
+}
+
+const BARE_CNPJ = /(?<![0-9A-Za-z])[0-9A-Z]{12}\d{2}(?![0-9A-Za-z])/g;
+const MASKED_CNPJ =
+  /(?<![0-9A-Za-z])[0-9A-Z]{2}\.[0-9A-Z]{3}\.[0-9A-Z]{3}\/[0-9A-Z]{4}-\d{2}(?!\d)/g;
+
+function isCnpj(canonical: string): boolean {
+  if (!/^[0-9A-Z]{12}\d{2}$/.test(canonical) || /^(.)\1{13}$/.test(canonical)) return false;
+  return canonical.slice(12) === cnpjCheckDigits(canonical.slice(0, 12));
+}
+
+function personaCnpjFindings(file: string, text: string, ctx: GuardContext): Finding[] {
+  const findings: Finding[] = [];
+  for (const pattern of [BARE_CNPJ, MASKED_CNPJ]) {
+    for (const m of text.matchAll(pattern)) {
+      const canonical = m[0].replace(/[./-]/g, '');
+      if (!isCnpj(canonical) || ctx.personaCnpjs.has(canonical)) continue;
+      if (isExcepted(ctx.exceptions, file, m[0])) continue;
+      findings.push({
+        file,
+        line: lineOf(text, m.index),
+        rule: 'persona-cnpj',
+        excerpt: mask(m[0]),
+      });
     }
   }
+  return findings;
+}
 
-  // No exception for CPFs (ARCHITECTURE §6.4: "the CPF guard has no exception").
-  for (const match of text.matchAll(FORMATTED_CPF)) {
-    findings.push({
-      file,
-      line: lineOf(text, match.index),
-      rule: 'formatted-cpf',
-      excerpt: mask(match[0]),
-    });
+export function scanText(file: string, text: string, ctx: GuardContext = EMPTY_CONTEXT): Finding[] {
+  const findings: Finding[] = [];
+  const at = (index: number | undefined): number => lineOf(text, index ?? 0);
+
+  if (extname(file) === '.json') {
+    for (const f of findForbiddenKeys(text)) {
+      findings.push({ file, line: at(f.index), rule: f.rule, excerpt: f.excerpt });
+    }
   }
-
+  const allow = (_rule: string, raw: string): boolean => isExcepted(ctx.exceptions, file, raw);
+  for (const f of scanPii(text, { allow })) {
+    findings.push({ file, line: at(f.index), rule: f.rule, excerpt: f.excerpt });
+  }
+  if (file.startsWith(PERSONA_DATA)) findings.push(...personaCnpjFindings(file, text, ctx));
   return findings;
 }
 
@@ -89,6 +138,7 @@ export function validateExceptions(exceptions: Exception[]): Finding[] {
         excerpt: mask(value),
       });
     }
+    // No exception for CPFs (ARCHITECTURE §6.4: "the CPF guard has no exception").
     if (CPF_LIKE.test(value)) {
       findings.push({
         file: EXCEPTIONS_FILE,
@@ -118,6 +168,12 @@ function readStaged(file: string): string {
 function main(): void {
   const staged = process.argv.includes('--staged');
   const exceptions = JSON.parse(readFileSync(EXCEPTIONS_FILE, 'utf8')) as Exception[];
+  const ctx: GuardContext = {
+    exceptions,
+    personaCnpjs: existsSync(PERSONA_CNPJS_FILE)
+      ? personaCnpjsFrom(readFileSync(PERSONA_CNPJS_FILE, 'utf8'))
+      : new Set(),
+  };
   const findings: Finding[] = validateExceptions(exceptions);
 
   for (const file of gitFiles(staged)) {
@@ -128,7 +184,7 @@ function main(): void {
     } catch {
       continue; // deleted or unreadable
     }
-    findings.push(...scanText(file, text));
+    findings.push(...scanText(file, text, ctx));
   }
 
   if (findings.length === 0) {

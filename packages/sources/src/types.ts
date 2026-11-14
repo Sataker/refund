@@ -1,5 +1,4 @@
-// Boundary types of @refund/sources (ARCHITECTURE §4.1 and §4.3). E3 ships only the types and
-// `validateCnpj`; E7 implements the providers, whitelists, PII helpers and the recorder.
+// Boundary types of @refund/sources (ARCHITECTURE §4.1 and §4.3).
 // This package does not import the engine, so it declares its own `Result` and `CivilDate`
 // with the same shape as `@refund/engine` (ARCHITECTURE §4.1).
 
@@ -21,7 +20,10 @@ export interface ProviderError {
     | 'UNEXPECTED_RESPONSE';
   message: string;
   recoverable: boolean;
-  /** 'brasilapi' | 'cnpjws' | 'pluggy' | 'sgs' | 'persona' | 'replay' */
+  /**
+   * 'brasilapi' | 'cnpjws' | 'pluggy' | 'sgs' | 'persona' | 'replay', or 'input' when no provider is
+   * involved (validating what the user typed, e.g. `validateCnpj`; EXECUTION §9, 14/11).
+   */
   source: string;
   /** From Retry-After. */
   retryInMs?: number;
@@ -172,4 +174,85 @@ export interface SeriesProvider {
     period: { from: CivilDate; to: CivilDate },
     ctx: ProviderContext,
   ): Promise<Result<{ date: CivilDate; value: string }[], ProviderError>>;
+}
+
+// ---------- Monofásico NCM (frozen file) ----------
+
+export interface NcmRegime {
+  monofasico: boolean;
+  /** Legal basis of the matched row of table 4.3.10 (null when nothing matched). */
+  law: string | null;
+  /** Matched NCM prefix, digits only (null when nothing matched). */
+  prefix: string | null;
+}
+
+// ---------- PII (ARCHITECTURE §6.3, §6.4) ----------
+
+export type PiiRule =
+  | 'forbidden-key'
+  | 'formatted-cpf'
+  | 'unformatted-cpf'
+  | 'email'
+  | 'phone'
+  | 'persona-cnpj';
+
+export interface PiiFinding {
+  /** JSON path (`$.items[0].document`) or `$` for plain text. */
+  path: string;
+  rule: PiiRule;
+  /** Masked excerpt: never the whole value found. */
+  excerpt: string;
+  /** Offset in the scanned text, when the finding comes from text. */
+  index?: number;
+}
+
+// ---------- Fixtures (ARCHITECTURE §5.2) ----------
+
+export type FixtureSource =
+  | 'brasilapi.cnpj'
+  | 'cnpjws.cnpj'
+  | 'sgs.series'
+  | 'pluggy.item'
+  | 'pluggy.accounts'
+  | 'pluggy.transactions'
+  | 'pluggy.identity'
+  | 'firecrawl.monitor.page';
+
+export interface Sanitization {
+  /** Version of the applied whitelist, e.g. `cnpj@1`, `pluggy@1`, `sgs@1`. */
+  whitelist: string;
+  /** Top-level raw fields that the whitelist did not copy. */
+  discardedFields: string[];
+  /** Documents replaced by synthetic ones (Pluggy sandbox fixtures, §5.2). */
+  replacedDocuments: number;
+}
+
+export interface FixtureEnvelope<T = unknown> {
+  $format: 'refund.fixture/v1';
+  source: FixtureSource;
+  key: string;
+  origin: 'live' | 'synthetic';
+  /** ISO-8601. */
+  recordedAt: string;
+  recordedBy: string;
+  sanitization: Sanitization;
+  /** SHA-256 (hex) of the canonical JSON of `data`. */
+  dataSha256: string;
+  data: T;
+}
+
+// ---------- External cache port (SCHEMA `external_cache`; implemented by apps/web) ----------
+
+export interface CachedEntry {
+  /** Already sanitized when written; re-validated on read. */
+  payload: unknown;
+  /** ISO-8601. */
+  fetchedAt: string;
+  /** ISO-8601. An expired entry is still served as the last resort (ARCHITECTURE §4.3). */
+  expiresAt: string;
+}
+
+export interface ExternalCachePort {
+  get(source: 'cnpj' | 'sgs', key: string): Promise<CachedEntry | null>;
+  set?(source: 'cnpj' | 'sgs', key: string, payload: unknown, fetchedAt: string): Promise<void>;
 }
