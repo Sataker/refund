@@ -121,6 +121,13 @@ export interface ParameterValues {
   'irpfm.threshold': Cents;
   'selic.series': { sgsCode: number };
   'statuteOfLimitations.years': number;
+  // C.12.2 dates (E5: R05-REC eligibility, T05-10)
+  /** DAS due day of the month after the PA; without banking hours it is postponed (Res. CGSN 140, art. 40, § 3º). */
+  'simples.das.dueDate': { day: number; monthsAfterPa: number };
+  /** The refund cannot be claimed for the PA of the last 4 months, including the month of the claim (Manual 3.1.1). */
+  'simples.refund.claimFromMonths': number;
+  /** Fixed-date national holidays ('MM-DD'), each from the year its law made it a holiday. */
+  'calendar.nationalHolidays': readonly { monthDay: string; fromYear: number }[];
 }
 
 export type ParameterKey = keyof ParameterValues;

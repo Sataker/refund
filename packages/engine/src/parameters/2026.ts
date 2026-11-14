@@ -34,6 +34,9 @@ const SOURCE_URL = {
   rfbDividendsQa:
     'https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/dirf/manual_padrao_rfb_per_tributacao_cotin_v-19-12-2025.pdf',
   ctn: 'https://www.planalto.gov.br/ccivil_03/leis/l5172compilado.htm',
+  lei662: 'https://www.planalto.gov.br/ccivil_03/leis/l0662.htm',
+  manualRestituicao:
+    'https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_RESTITUICAO.pdf',
   sgs432: 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados',
 } as const;
 
@@ -907,5 +910,52 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
     verifiedAt: VERIFIED_H1,
     status: 'verified',
     note: 'H.1 item 8 fechado: CTN, art. 168, I (5 anos da extinção do crédito) e LC 118, art. 3º (extinção no pagamento antecipado). Capturas: ctn-planalto.md e lc-118-2005-planalto.md.',
+  },
+
+  // ---------- C.12.2 dates (R05-REC eligibility; T05-10) ----------
+  {
+    key: 'simples.das.dueDate',
+    value: { day: 20, monthsAfterPa: 1 },
+    source: src('Res. CGSN 140/2018', 'art. 40, caput e § 3º', SOURCE_URL.resCgsn140),
+    effectiveFrom: '2018-08',
+    verifiedAt: VERIFIED_H1,
+    status: 'verified',
+    note: 'Vence no dia 20 do mês seguinte ao PA; sem expediente bancário, prorroga para o dia útil seguinte (§ 3º). Corpus: res-cgsn140-2018/art40/p3.',
+  },
+  {
+    key: 'simples.refund.claimFromMonths',
+    value: 4,
+    source: src(
+      'Manual da Restituição do Simples Nacional (20/10/2025)',
+      'item 3.1.1',
+      SOURCE_URL.manualRestituicao,
+    ),
+    effectiveFrom: '2018-08',
+    verifiedAt: VERIFIED,
+    status: 'verified',
+    note: 'Não é possível pedir o PA dos últimos 4 meses, incluído o mês do pedido (ENGINE-SPEC C.12.1–C.12.2). Captura: fontes-oficiais/manual-restituicao-simples.pdf (SHA-256 74ae352b145fa48f034d51be7ade731a6cd0fcba3b226b9bed93a3952bd12db2).',
+  },
+  {
+    key: 'calendar.nationalHolidays',
+    value: [
+      { monthDay: '01-01', fromYear: 1949 },
+      { monthDay: '04-21', fromYear: 1949 },
+      { monthDay: '05-01', fromYear: 1949 },
+      { monthDay: '09-07', fromYear: 1949 },
+      { monthDay: '10-12', fromYear: 1980 },
+      { monthDay: '11-02', fromYear: 1949 },
+      { monthDay: '11-15', fromYear: 1949 },
+      { monthDay: '11-20', fromYear: 2024 },
+      { monthDay: '12-25', fromYear: 1949 },
+    ],
+    source: src(
+      'Lei 662/1949 (redação da Lei 10.607/2002); Lei 6.802/1980; Lei 14.759/2023',
+      'art. 1º',
+      SOURCE_URL.lei662,
+    ),
+    effectiveFrom: '2018-01',
+    verifiedAt: VERIFIED_H1,
+    status: 'to_confirm',
+    note: 'Feriados nacionais de data fixa (C.12, item 4: "tabela de feriados nacionais nos parâmetros"; ENGINE-SPEC não lista as datas). Leis não capturadas em docs/conferencias: confirmar e capturar (EXECUTION §9, E5). Datas móveis (Carnaval, Sexta-feira Santa, Corpus Christi) e feriados locais não entram.',
   },
 ];
