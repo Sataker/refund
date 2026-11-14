@@ -1,0 +1,41 @@
+[
+  {
+    "id": "res-cgsn190-2026/art9",
+    "regulation": "res-cgsn190-2026",
+    "provision": "art. 9º",
+    "label": "Res. CGSN 190/2026, art. 9º",
+    "text": "Art. 9º Esta Resolução entra em vigor na data de sua publicação no Diário Oficial da União e produzirá efeitos a partir de 1º de janeiro de 2027.",
+    "notes": [],
+    "effectiveFrom": null,
+    "url": "https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832",
+    "capturedAt": "2026-11-14",
+    "hash": "4384811b7114887e1977bef6b6ad5df1ab4e49db95343740d3288e06c6be69ec",
+    "sourceSha256": "55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40"
+  },
+  {
+    "id": "res-cgsn190-2026/art1/res140-art21",
+    "regulation": "res-cgsn190-2026",
+    "provision": "art. 1º (redação dada ao art. 21 da Res. CGSN 140/2018)",
+    "label": "Res. CGSN 190/2026, art. 1º",
+    "text": "\"Art. 21.................................................................................................................\nII -.........................................................................................................................\na) RBT12: receita bruta acumulada nos doze meses antecedentes ao mês anterior ao do período de apuração; (Lei Complementar nº 123, de 2006, art. 18, caput e § 1º)\nIII - percentual efetivo de cada tributo o calculado mediante multiplicação da alíquota efetiva pelo percentual de repartição constante dos Anexos I a V desta Resolução, observando-se que o percentual efetivo máximo destinado ao ISS será de 5% (cinco por cento), e que eventual diferença será transferida, de forma proporcional, aos tributos federais e IBS da mesma faixa de receita bruta anual. (Lei Complementar nº 123, de 2006, art. 18, § 1º-B, inciso I)\nIV - O valor da RBT12, quando for superior ao limite da 5ª faixa de receita bruta anual prevista nos Anexos I a V desta Resolução, o percentual efetivo do ICMS, do ISS e do IBS será calculado mediante aplicação da fórmula {[(RBT12 × alíquota nominal da 5ª faixa) - (menos) a Parcela a Deduzir da 5ª Faixa]/RBT12} × o Percentual de Distribuição do ICMS, ISS e do IBS da 5ª faixa.\" (NR)",
+    "notes": [],
+    "effectiveFrom": "2027-01-01",
+    "url": "https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832",
+    "capturedAt": "2026-11-14",
+    "hash": "ba78fbd537543863be8c7db880f413308a0f778cdde80550e0bdc1397cd42461",
+    "sourceSha256": "55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40"
+  },
+  {
+    "id": "res-cgsn190-2026/art1/res140-art26",
+    "regulation": "res-cgsn190-2026",
+    "provision": "art. 1º (redação dada ao art. 26 da Res. CGSN 140/2018)",
+    "label": "Res. CGSN 190/2026, art. 1º",
+    "text": "\"Art. 26.................................................................................................................\nI - folha de salários, incluídos encargos, nos 12 (doze) meses antecedentes ao mês anterior ao período de apuração; e\nII - receita bruta total acumulada auferida nos mercados interno e externo nos 12 (doze) meses antecedentes ao mês anterior ao período de apuração.\n§ 1º Para efeito do disposto no inciso I do caput, considera-se folha de salários, incluídos encargos, o montante pago nos 12 (doze) meses antecedente ao mês anterior ao do período de apuração a título de remuneração a pessoas físicas decorrentes do trabalho e de pró-labore, acrescido do montante efetivamente recolhido a título de contribuição patronal previdenciária e para o Fundo de Garantia do Tempo de Serviço (FGTS). (Lei Complementar nº 123, de 2006, art. 18, § 24)\n§ 4º Na hipótese de a ME ou EPP ter mais de 2 (dois) meses e menos de 14 (quatorze) meses de atividade, adotar-se-ão, para a determinação da folha de salários anualizada, incluídos encargos, os mesmos critérios para a determinação da receita bruta total acumulada, estabelecidos no art. 22, no que couber. (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º)\n§ 5º.......................................................................................................................\nIV - FS12, a folha de salários dos 12 (doze) meses antecedentes ao mês anterior ao PA; e\nV - RBT12r, a receita bruta acumulada dos 12 (doze) meses antecedentes ao mês anterior ao PA, considerando conjuntamente as receitas brutas auferidas no mercado interno e aquelas decorrentes da exportação.\n§ 6º O fator \"r\" referente aos 2 (dois) primeiros meses de início de atividades será considerado 0,28 (vinte e oito centésimos). (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º)\n§ 7º Para o cálculo do fator \"r\" referente a período de apuração posterior ao segundo mês de início de atividades: (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º)\" (NR)",
+    "notes": [],
+    "effectiveFrom": "2027-01-01",
+    "url": "https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832",
+    "capturedAt": "2026-11-14",
+    "hash": "6007b4fc14424bd5a6136333885f27c2c698ed47d2e8cd088135bf5d49cd85ad",
+    "sourceSha256": "55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40"
+  }
+]

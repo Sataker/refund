@@ -1,0 +1,85 @@
+[
+  {
+    "id": "lei8212-1991/art12/v",
+    "regulation": "lei8212-1991",
+    "provision": "art. 12, V",
+    "label": "Lei 8.212/1991, art. 12, V",
+    "text": "V - como contribuinte individual:\na) a pessoa física, proprietária ou não, que explora atividade agropecuária, a qualquer título, em caráter permanente ou temporário, em área superior a 4 (quatro) módulos fiscais; ou, quando em área igual ou inferior a 4 (quatro) módulos fiscais ou atividade pesqueira, com auxílio de empregados ou por intermédio de prepostos; ou ainda nas hipóteses dos §§ 10 e 11 deste artigo;\nb) a pessoa física, proprietária ou não, que explora atividade de extração mineral - garimpo, em caráter permanente ou temporário, diretamente ou por intermédio de prepostos, com ou sem o auxílio de empregados, utilizados a qualquer título, ainda que de forma não contínua;\nc) o ministro de confissão religiosa e o membro de instituto de vida consagrada, de congregação ou de ordem religiosa;\ne) o brasileiro civil que trabalha no exterior para organismo oficial internacional do qual o Brasil é membro efetivo, ainda que lá domiciliado e contratado, salvo quando coberto por regime próprio de previdência social;\nf) o titular de firma individual urbana ou rural, o diretor não empregado e o membro de conselho de administração de sociedade anônima, o sócio solidário, o sócio de indústria, o sócio gerente e o sócio cotista que recebam remuneração decorrente de seu trabalho em empresa urbana ou rural, e o associado eleito para cargo de direção em cooperativa, associação ou entidade de qualquer natureza ou finalidade, bem como o síndico ou administrador eleito para exercer atividade de direção condominial, desde que recebam remuneração;\ng) quem presta serviço de natureza urbana ou rural, em caráter eventual, a uma ou mais empresas, sem relação de emprego;\nh) a pessoa física que exerce, por conta própria, atividade econômica de natureza urbana, com fins lucrativos ou não;",
+    "notes": [
+      "(Redação dada pela Lei nº 9.876, de 1999).",
+      "(Redação dada pela Lei nº 11.718, de 2008).",
+      "(Redação dada pela Lei nº 10.403, de 2002).",
+      "(Incluído pela Lei nº 9.876, de 1999)."
+    ],
+    "effectiveFrom": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/l8212cons.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "ea8637e1c4986127818c4f3808354b4fa3bc1460476f434980d8cac3d8b192c0",
+    "sourceSha256": "09224fdf72e6338d34559ee8d7857e8483590772c4ebd38bf5d70dabb02474e5"
+  },
+  {
+    "id": "lei8212-1991/art21/caput",
+    "regulation": "lei8212-1991",
+    "provision": "art. 21, caput",
+    "label": "Lei 8.212/1991, art. 21, caput",
+    "text": "Art. 21. A alíquota de contribuição dos segurados contribuinte individual e facultativo será de vinte por cento sobre o respectivo salário-de-contribuição.",
+    "notes": ["(Redação dada pela Lei nº 9.876, de 1999)."],
+    "effectiveFrom": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/l8212cons.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "2af56b48535e2dcb9f424c3f48a4e4e7d41c3634398df73e52ca23687f106e47",
+    "sourceSha256": "09224fdf72e6338d34559ee8d7857e8483590772c4ebd38bf5d70dabb02474e5"
+  },
+  {
+    "id": "lei8212-1991/art22/iii",
+    "regulation": "lei8212-1991",
+    "provision": "art. 22, III",
+    "label": "Lei 8.212/1991, art. 22, III",
+    "text": "III - vinte por cento sobre o total das remunerações pagas ou creditadas a qualquer título, no decorrer do mês, aos segurados contribuintes individuais que lhe prestem serviços;",
+    "notes": ["(Incluído pela Lei nº 9.876, de 1999)."],
+    "effectiveFrom": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/l8212cons.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "bed35d5791ea79b02984707b6c3db4e6e79dd11242e999b2de94a8dbd0964865",
+    "sourceSha256": "09224fdf72e6338d34559ee8d7857e8483590772c4ebd38bf5d70dabb02474e5"
+  },
+  {
+    "id": "lei8212-1991/art28/iii",
+    "regulation": "lei8212-1991",
+    "provision": "art. 28, III",
+    "label": "Lei 8.212/1991, art. 28, III",
+    "text": "III - para o contribuinte individual: a remuneração auferida em uma ou mais empresas ou pelo exercício de sua atividade por conta própria, durante o mês, observado o limite máximo a que se refere o § 5o;",
+    "notes": ["(Redação dada pela Lei nº 9.876, de 1999)."],
+    "effectiveFrom": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/l8212cons.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "2d19ef3a24e7e20a3ae9b07815ba9d882dd6cc7f2f186e87d757f868db09559e",
+    "sourceSha256": "09224fdf72e6338d34559ee8d7857e8483590772c4ebd38bf5d70dabb02474e5"
+  },
+  {
+    "id": "lei8212-1991/art28/p3",
+    "regulation": "lei8212-1991",
+    "provision": "art. 28, § 3º",
+    "label": "Lei 8.212/1991, art. 28, § 3º",
+    "text": "§ 3º O limite mínimo do salário-de-contribuição corresponde ao piso salarial, legal ou normativo, da categoria ou, inexistindo este, ao salário mínimo, tomado no seu valor mensal, diário ou horário, conforme o ajustado e o tempo de trabalho efetivo durante o mês.",
+    "notes": ["(Redação dada pela Lei nº 9.528, de 10.12.97)"],
+    "effectiveFrom": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/l8212cons.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "9a04273e0d05a03aad82450b7f160a1703cd839dcb2b1b0df23bddb8be60afe8",
+    "sourceSha256": "09224fdf72e6338d34559ee8d7857e8483590772c4ebd38bf5d70dabb02474e5"
+  },
+  {
+    "id": "lei8212-1991/art30/p4",
+    "regulation": "lei8212-1991",
+    "provision": "art. 30, § 4º",
+    "label": "Lei 8.212/1991, art. 30, § 4º",
+    "text": "§ 4o Na hipótese de o contribuinte individual prestar serviço a uma ou mais empresas, poderá deduzir, da sua contribuição mensal, quarenta e cinco por cento da contribuição da empresa, efetivamente recolhida ou declarada, incidente sobre a remuneração que esta lhe tenha pago ou creditado, limitada a dedução a nove por cento do respectivo salário-de-contribuição.",
+    "notes": ["(Incluído pela Lei nº 9.876, de 1999)."],
+    "effectiveFrom": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/l8212cons.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "99bafe7105fdbc68ce2832c15adb5f53ec3ea85c32909d9d2bcddda0a8fdc0b2",
+    "sourceSha256": "09224fdf72e6338d34559ee8d7857e8483590772c4ebd38bf5d70dabb02474e5"
+  }
+]

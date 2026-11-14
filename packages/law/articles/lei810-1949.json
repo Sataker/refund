@@ -1,0 +1,28 @@
+[
+  {
+    "id": "lei810-1949/art1",
+    "regulation": "lei810-1949",
+    "provision": "art. 1º",
+    "label": "Lei 810/1949, art. 1º",
+    "text": "Art. 1º Considera-se ano o período de doze meses contado do dia do início ao dia e mês correspondentes do ano seguinte.",
+    "notes": [],
+    "effectiveFrom": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/1930-1949/l810-49.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "0918362d67a2d8cf16860bd05df1bf094a606363101926e9b02ef68af21647a9",
+    "sourceSha256": "a318c770e992c776d223f245345c4320669e92a25982795734fe366b41ba9035"
+  },
+  {
+    "id": "lei810-1949/art3",
+    "regulation": "lei810-1949",
+    "provision": "art. 3º",
+    "label": "Lei 810/1949, art. 3º",
+    "text": "Art. 3º Quando no ano ou mês do vencimento não houver o dia correspondente ao do início do prazo, êste findará no primeiro dia subsequente.",
+    "notes": [],
+    "effectiveFrom": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/1930-1949/l810-49.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "a0a64a31153379ad99136c3f7d3c959c527849862cbc9fb1ffda09976a0e79bc",
+    "sourceSha256": "a318c770e992c776d223f245345c4320669e92a25982795734fe366b41ba9035"
+  }
+]

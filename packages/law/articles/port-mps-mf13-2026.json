@@ -1,0 +1,41 @@
+[
+  {
+    "id": "port-mps-mf13-2026/art2",
+    "regulation": "port-mps-mf13-2026",
+    "provision": "art. 2º",
+    "label": "Portaria Interministerial MPS/MF 13/2026, art. 2º",
+    "text": "Art. 2º O salário de benefício e o salário de contribuição, a partir de 1º de janeiro de 2026, não poderão ser inferiores a R$ 1.621,00 (mil seiscentos e vinte e um reais) nem superiores a R$ 8.475,55 (oito mil quatrocentos e setenta e cinco reais e cinquenta e cinco centavos).",
+    "notes": [],
+    "effectiveFrom": "2026-01-01",
+    "url": "https://www.in.gov.br/web/dou/-/portaria-interministerial-mps/mf-n-13-de-9-de-janeiro-de-2026-680382603",
+    "capturedAt": "2026-11-14",
+    "hash": "73ccea9a81e39ddd33e85c6f98010d8e8a75b066b1c7e1795ce25c40fa82d590",
+    "sourceSha256": "98885d28277593554e53f70cd48c0331187e7079fc599db4e5954a3b05780615"
+  },
+  {
+    "id": "port-mps-mf13-2026/art7",
+    "regulation": "port-mps-mf13-2026",
+    "provision": "art. 7º",
+    "label": "Portaria Interministerial MPS/MF 13/2026, art. 7º",
+    "text": "Art. 7º A contribuição dos segurados empregados, inclusive do doméstico e do trabalhador avulso, relativamente aos fatos geradores que ocorrerem a partir da competência janeiro de 2026, será calculada mediante a aplicação da correspondente alíquota sobre o salário de contribuição mensal, de forma progressiva, de acordo com a tabela constante do Anexo II, desta Portaria.",
+    "notes": [],
+    "effectiveFrom": "2026-01-01",
+    "url": "https://www.in.gov.br/web/dou/-/portaria-interministerial-mps/mf-n-13-de-9-de-janeiro-de-2026-680382603",
+    "capturedAt": "2026-11-14",
+    "hash": "cb3fb63159de19e11e66ebfd02af6506039f8b86049f9b5ba8d0ec0d78db2c3c",
+    "sourceSha256": "98885d28277593554e53f70cd48c0331187e7079fc599db4e5954a3b05780615"
+  },
+  {
+    "id": "port-mps-mf13-2026/anexo2",
+    "regulation": "port-mps-mf13-2026",
+    "provision": "Anexo II",
+    "label": "Portaria Interministerial MPS/MF 13/2026, Anexo II",
+    "text": "ANEXO II\nTABELA DE CONTRIBUIÇÃO DOS SEGURADOS EMPREGADO, EMPREGADO DOMÉSTICO E TRABALHADOR AVULSO, PARA PAGAMENTO DE REMUNERAÇÃO A PARTIR DE 1º DE JANEIRO DE 2026\nSALÁRIO-DE-CONTRIBUIÇÃO (R$) | ALÍQUOTA PROGRESSIVA PARA FINS DE RECOLHIMENTO AO INSS\naté 1.621,00 | 7,5%\nde 1.621,01 até 2.902,84 | 9%\nde 2.902,85 até 4.354,27 | 12 %\nde 4.354,28 até 8.475,55 | 14%",
+    "notes": [],
+    "effectiveFrom": "2026-01-01",
+    "url": "https://www.in.gov.br/web/dou/-/portaria-interministerial-mps/mf-n-13-de-9-de-janeiro-de-2026-680382603",
+    "capturedAt": "2026-11-14",
+    "hash": "bc2267823cd213f0911bef1be83be9e094fd3cd9f238894842ff5ac9d32f52c2",
+    "sourceSha256": "98885d28277593554e53f70cd48c0331187e7079fc599db4e5954a3b05780615"
+  }
+]

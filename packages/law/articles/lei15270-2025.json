@@ -1,0 +1,28 @@
+[
+  {
+    "id": "lei15270-2025/art7",
+    "regulation": "lei15270-2025",
+    "provision": "art. 7º",
+    "label": "Lei 15.270/2025, art. 7º",
+    "text": "Art. 7º Revoga-se o art. 11 da Lei nº 9.250, de 26 de dezembro de 1995.",
+    "notes": [],
+    "effectiveFrom": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/L15270.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "e986f6dd0a9271346ef1a014bbb3756ce9521ab28d7530e78cdb6a5f3836a0c2",
+    "sourceSha256": "bdbfd9965cf6cffbcdecbb7627e7209667a244aebfea589a95b7c861ca396f54"
+  },
+  {
+    "id": "lei15270-2025/art8",
+    "regulation": "lei15270-2025",
+    "provision": "art. 8º",
+    "label": "Lei 15.270/2025, art. 8º",
+    "text": "Art. 8º Esta Lei entra em vigor na data de sua publicação e produzirá efeitos a partir de 1º de janeiro de 2026.",
+    "notes": [],
+    "effectiveFrom": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/L15270.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "e7dbfe36915a0aa9f1d128db6872f4f9f6844682bfe0305b9a093dedf49c131e",
+    "sourceSha256": "bdbfd9965cf6cffbcdecbb7627e7209667a244aebfea589a95b7c861ca396f54"
+  }
+]
