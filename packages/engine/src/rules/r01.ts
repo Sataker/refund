@@ -369,7 +369,7 @@ export function r01Finding(i: R01FindingInput): Finding {
         after: { value: next.regimeCost.total, unit: 'cents' },
         threshold: { value: threshold, unit: 'cents' },
       },
-      result: { value: regimeValue, unit: 'cents' },
+      result: { value: gain.regimeGain, unit: 'cents' },
       rounding: 'NONE',
     }),
     step({

@@ -117,7 +117,7 @@ export function r05Finding(
         before: { value: prev.regimeCost.total, unit: 'cents' },
         after: { value: next.regimeCost.total, unit: 'cents' },
       },
-      result: { value: regimeValue, unit: 'cents' },
+      result: { value: gain.regimeGain, unit: 'cents' },
       rounding: 'NONE',
     }),
     step({
