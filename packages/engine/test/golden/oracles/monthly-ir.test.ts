@@ -18,7 +18,8 @@ const ORACLES: MonthlyIrOracle[] = [
   {
     id: 'OR-IR-01',
     source: SOURCES.receitaLei15270Examples,
-    example: 'Exemplo 1 (João)',
+    example:
+      'Exemplo 1 (João); a página imprime base 2.428,00, erro dela (EXECUTION §9, G-OR-IR-01)',
     rt: '3.036,00',
     legalDeductions: '257,73',
     expected: { base: '2.428,80', tableTax: '0,00', ir: '0,00' },
@@ -108,7 +109,7 @@ const ORACLES: MonthlyIrOracle[] = [
     source: SOURCES.sipec566295,
     example: 'Exemplo 1',
     rt: '4.000,00',
-    legalDeductions: '0,00',
+    legalDeductions: '373,41',
     expected: { base: '3.392,80', tableTax: '114,76', reduction: '114,76', ir: '0,00' },
   },
   {
@@ -116,7 +117,7 @@ const ORACLES: MonthlyIrOracle[] = [
     source: SOURCES.sipec566295,
     example: 'Exemplo 2',
     rt: '5.000,00',
-    legalDeductions: '0,00',
+    legalDeductions: '509,60',
     expected: { base: '4.392,80', tableTax: '312,89', reduction: '312,89', ir: '0,00' },
   },
 ];

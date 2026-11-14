@@ -1,9 +1,10 @@
 // TESTS §2.1: primitives of ENGINE-SPEC C.3 beyond the official oracles (rounding points, boundaries, errors).
 import { describe, expect, it } from 'vitest';
-import { brl } from '../src/money.ts';
+import { brl, D } from '../src/money.ts';
 import { monthlyWithholding } from '../src/primitives/dividends.ts';
 import { cppOutsideDas, inssEmployee, inssPartner } from '../src/primitives/inss.ts';
 import { annualIr, annualTable, monthlyIr, reductionOf } from '../src/primitives/irpf.ts';
+import { meiExcessLimit } from '../src/primitives/mei.ts';
 import {
   anexoForPa,
   dasByMarket,
@@ -271,12 +272,100 @@ describe('window, RBT12, FS12, Fator R and anexo (C.3.5)', () => {
       '2026-03': brl('0,00'),
       '2026-04': brl('590.000,00'),
     };
-    expect(proportionalRbt12('2026-05', '2026-02', revenue).toFixed()).toBe('2400000');
-    expect(
-      effectiveRate(proportionalRbt12('2026-05', '2026-02', revenue), 'III', '2026-05').bracket,
-    ).toBe(5);
-    expect(() => proportionalRbt12('2027-02', '2026-02', revenue)).toThrow(RangeError);
+    const may = proportionalRbt12('2026-05', '2026-02', revenue);
+    expect(may).toMatchObject({ rule: 'AVERAGE_TIMES_12', monthOfActivity: 4 });
+    expect(may.rbt12.toFixed()).toBe('2400000');
+    expect(effectiveRate(may.rbt12, 'III', '2026-05').bracket).toBe(5);
+    // Up to 12/2026 the rule covers the first 12 months; the 13th (jan/2027 opened in jan/2026) is outside it.
+    expect(() => proportionalRbt12('2026-12', '2025-12', revenue)).toThrow(RangeError);
     expect(() => proportionalRbt12('2026-01', '2026-02', revenue)).toThrow(RangeError);
+  });
+
+  describe('start of activity from PA 01/2027 (Res. CGSN 190/2026, art. 22, §§ 2º and 4º of Res. 140)', () => {
+    const revenue: Series = {
+      '2026-11': brl('30.000,00'),
+      '2027-01': brl('10.000,00'),
+      '2027-02': brl('100.000,00'),
+      '2027-03': brl('100.000,00'),
+    };
+
+    it('1st and 2nd months of activity: 1st-bracket rate (RBT12 0 → effective rate = 1st nominal)', () => {
+      for (const pa of ['2027-01', '2027-02'] as const) {
+        const r = proportionalRbt12(pa, '2027-01', revenue);
+        expect(r.rule).toBe('FIRST_BRACKET');
+        expect(effectiveRate(r.rbt12, 'III', pa)).toMatchObject({ bracket: 1 });
+        expect(effectiveRate(r.rbt12, 'III', pa).effectiveRate.toFixed()).toBe('0.06');
+      }
+    });
+
+    it('3rd month: average of the months before the month preceding the PA × 12 → 120.000 (not 660.000)', () => {
+      const r = proportionalRbt12('2027-03', '2027-01', revenue);
+      expect(r).toMatchObject({ rule: 'AVERAGE_TIMES_12', monthOfActivity: 3 });
+      expect(r.rbt12.toFixed()).toBe('120000');
+    });
+
+    it('a company opened in 2026 follows the 2027 rule from PA 01/2027 (3rd month: only nov/2026 counts)', () => {
+      expect(proportionalRbt12('2027-01', '2026-11', revenue).rbt12.toFixed()).toBe('360000');
+    });
+
+    it('covers up to the 13th month; the 14th uses the ordinary RBT12 (§ 4º)', () => {
+      const thirteenth = proportionalRbt12('2028-01', '2027-01', revenue); // jan…nov/2027 = 11 months
+      expect(thirteenth.monthOfActivity).toBe(13);
+      expect(thirteenth.rbt12.toFixed()).toBe(D('210000').dividedBy(11).times(12).toFixed());
+      expect(() => proportionalRbt12('2028-02', '2027-01', revenue)).toThrow(RangeError);
+    });
+  });
+});
+
+describe('PAs before 2026 (R05-REC and C.3.7 go back up to 5 years)', () => {
+  it('PA 11/2025: the LC 155 tables and the § 5º-K window are in force since 01/2018', () => {
+    expect(window('2025-12')).toEqual(['2024-12', '2025-11']);
+    const r = dasForPa({
+      pa: '2025-11',
+      anexo: 'III',
+      domestic: { revenue: brl('100.000,00'), rbt12: brl('300.000,00') },
+    });
+    expect(r.das).toBe(brl('8.080,00')); // same tables as OR-SN-02
+  });
+
+  it('PA 10/2021: segregated export, Fator R and anexo resolve with the parameters in force then', () => {
+    const pa = '2021-10' as const;
+    const f = fatorR(brl('300.000,00'), brl('1.000.000,00'), pa);
+    expect(anexoForPa(f.value, { subjectToFatorR: true, baseAnexo: 'V' }, pa)).toBe('III');
+    const r = dasForPa({
+      pa,
+      anexo: 'III',
+      domestic: { revenue: brl('0,00'), rbt12: brl('0,00') },
+      export: { revenue: brl('80.000,00'), rbt12: brl('960.000,00') },
+      segregateExport: true,
+    });
+    // RBT12 960.000 → 4th bracket: e = (153.600 − 35.640) / 960.000 = 12,2875%; Cofins/PIS/ISS excluded.
+    expect(r.byMarket[1]?.effectiveRate).toBe('0.122875');
+    expect(r.byMarket[1]?.byTax.ISS).toBe(0);
+    expect(r.byMarket[1]?.byTax.CPP).toBe(brl('4.266,22')); // 80.000 × 12,2875% × 43,40% = 4.266,22
+  });
+
+  it('values that changed in 2026 (IR, INSS, minimum wage) stay unavailable before 2026', () => {
+    expect(() => monthlyIr(brl('5.000,00'), brl('0,00'), 0, '2025-12')).toThrow(RangeError);
+    expect(() => inssPartner(brl('5.000,00'), '2025-12')).toThrow(RangeError);
+  });
+});
+
+describe('MEI excess tolerance (LC 123, art. 18-A, § 7º, III): 20% over the § 1º limit', () => {
+  it('97.200 in 2026; 132.000 in 2027 and 168.000 in 2028, conditioned on the LOA like the limit', () => {
+    expect(meiExcessLimit('2026-06')).toEqual({
+      value: brl('97.200,00'),
+      dependsOnRegulation: false,
+    });
+    expect(meiExcessLimit('2027-06')).toEqual({
+      value: brl('132.000,00'),
+      dependsOnRegulation: true,
+    });
+    expect(meiExcessLimit('2028-06')).toEqual({
+      value: brl('168.000,00'),
+      dependsOnRegulation: true,
+    });
+    expect(meiExcessLimit('2021-06').value).toBe(brl('97.200,00'));
   });
 });
 

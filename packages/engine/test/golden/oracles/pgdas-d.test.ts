@@ -73,29 +73,35 @@ describe(`ENGINE-SPEC B.3 — PGDAS-D manual oracles (${SOURCE.id}, sha256 ${SOU
 
     it('jan: RBT12p = 10.000 × 12 = 120.000 → 400,00', () => {
       const rb = proportionalRbt12('2026-01', opened, revenue);
-      expect(rb.toFixed()).toBe('120000');
+      expect(rb.rbt12.toFixed()).toBe('120000');
       expect(
-        dasForPa({ pa: '2026-01', anexo: 'I', domestic: { revenue: brl('10.000,00'), rbt12: rb } })
-          .das,
+        dasForPa({
+          pa: '2026-01',
+          anexo: 'I',
+          domestic: { revenue: brl('10.000,00'), rbt12: rb.rbt12 },
+        }).das,
       ).toBe(brl('400,00'));
     });
 
     it('feb: RBT12p = 10.000 × 12 = 120.000 → 4.000,00', () => {
       const rb = proportionalRbt12('2026-02', opened, revenue);
-      expect(rb.toFixed()).toBe('120000');
+      expect(rb.rbt12.toFixed()).toBe('120000');
       expect(
-        dasForPa({ pa: '2026-02', anexo: 'I', domestic: { revenue: brl('100.000,00'), rbt12: rb } })
-          .das,
+        dasForPa({
+          pa: '2026-02',
+          anexo: 'I',
+          domestic: { revenue: brl('100.000,00'), rbt12: rb.rbt12 },
+        }).das,
       ).toBe(brl('4.000,00'));
     });
 
     it('mar: RBT12p = average 55.000 × 12 = 660.000 → 7,40%, 7.400,00', () => {
       const rb = proportionalRbt12('2026-03', opened, revenue);
-      expect(rb.toFixed()).toBe('660000');
+      expect(rb.rbt12.toFixed()).toBe('660000');
       const r = dasForPa({
         pa: '2026-03',
         anexo: 'I',
-        domestic: { revenue: brl('100.000,00'), rbt12: rb },
+        domestic: { revenue: brl('100.000,00'), rbt12: rb.rbt12 },
       });
       expect(r.byMarket[0]?.effectiveRate).toBe('0.074');
       expect(r.byMarket[0]?.byTax).toEqual(

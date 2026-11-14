@@ -39,6 +39,9 @@ const USED_BY_PRIMITIVES: readonly ParameterKey[] = [
   'simples.fatorR.window',
   'simples.rbt12.window',
   'dividends.withholding',
+  'simples.startOfActivity',
+  'mei.limit',
+  'mei.excess',
 ];
 
 const MONTHS: YearMonth[] = ['2026-01', '2026-12', '2027-01', '2027-06', '2028-12'];
@@ -156,6 +159,80 @@ describe('param(key, month): effective period', () => {
 
   it('fails for a month before the first published record', () => {
     expect(() => param('irpf.monthly.table', '2025-12')).toThrow(RangeError);
+    // Res. CGSN 140 produces effects from 01/08/2018 (art. 154, II).
+    expect(() => param('simples.fatorR.formula', '2018-07')).toThrow(RangeError);
+  });
+
+  it('values in force before 2026 carry their real effectiveFrom (from the captures)', () => {
+    const since = (key: ParameterKey, m: YearMonth) => param(key, m).effectiveFrom;
+    // LC 155/2016, "Vigência: 01/01/2018" (lc-123-2006-planalto.md).
+    for (const key of [
+      'simples.anexo.I',
+      'simples.anexo.III',
+      'simples.anexo.V',
+      'simples.effectiveRate',
+      'simples.fatorR.limit',
+      'simples.fatorR.payroll',
+      'simples.fatorR.window',
+      'simples.rbt12.window',
+      'simples.export.exclude',
+      'simples.monofasico.exclude',
+      'simples.limits',
+      'simples.excess',
+      'mei.limit',
+      'mei.excess',
+    ] as const) {
+      expect(since(key, '2021-10'), key).toBe('2018-01');
+    }
+    // Res. CGSN 140/2018: effects from 01/08/2018.
+    for (const key of [
+      'simples.fatorR.formula',
+      'simples.rbt12.byMarket',
+      'simples.export.concept',
+    ] as const) {
+      expect(since(key, '2021-10'), key).toBe('2018-08');
+    }
+    // Changed in 2026: stays 2026-01.
+    for (const key of [
+      'irpf.monthly.table',
+      'inss.ceiling',
+      'minimumWage',
+      'dividends.withholding',
+    ] as const) {
+      expect(since(key, '2026-06'), key).toBe('2026-01');
+    }
+    expect(param('simples.anexo.III', '2025-11').projected).toBe(false);
+  });
+
+  it('start-of-activity rule by effective period (manual 8.3 up to 12/2026; Res. CGSN 190 from 01/2027)', () => {
+    expect(param('simples.startOfActivity', '2026-12').value).toEqual({
+      firstBracketMonths: 0,
+      firstMonthRevenueTimes12: true,
+      averageEndOffset: -1,
+      untilMonthOfActivity: 12,
+    });
+    expect(param('simples.startOfActivity', '2027-01').value).toEqual({
+      firstBracketMonths: 2,
+      firstMonthRevenueTimes12: false,
+      averageEndOffset: -2,
+      untilMonthOfActivity: 13,
+    });
+  });
+
+  it('simples.export.concept stays to_confirm (only the PN COSIT 1/2018 summary was captured)', () => {
+    expect(param('simples.export.concept', '2026-06').status).toBe('to_confirm');
+  });
+
+  it('links the 2026 IR, INSS and minimum-wage records to their captures', () => {
+    expect(ALL_PARAMETERS.find((e) => e.key === 'inss.employee.brackets')?.note).toContain(
+      'inss-tabela-contribuicao-mensal-2026',
+    );
+    expect(ALL_PARAMETERS.find((e) => e.key === 'irpf.annual.table')?.note).toContain(
+      'rfb-tributacao-2026',
+    );
+    expect(ALL_PARAMETERS.find((e) => e.key === 'minimumWage')?.note).toContain(
+      'decreto-12797-2025-planalto',
+    );
   });
 });
 
