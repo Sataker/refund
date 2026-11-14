@@ -1,0 +1,199 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NODE_VERSION: "24"
+  NEXT_TELEMETRY_DISABLED: "1"
+  TURBO_TELEMETRY_DISABLED: "1"
+  FORCE_COLOR: "1"
+
+jobs:
+  quality:
+    name: Quality (lint, types, dependencies, conventions)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1 (reads packageManager from package.json)
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Biome (lint + formatting)
+        run: pnpm exec biome ci .
+      - name: TypeScript
+        run: pnpm turbo run typecheck
+      - name: Dependency rules between packages
+        run: pnpm exec depcruise apps packages --config .dependency-cruiser.cjs
+      - name: Conventions (no edge runtime, .client.tsx, pure engine)
+        run: node scripts/lint-conventions.ts
+
+  unit:
+    name: Unit and integration (Vitest + PGlite)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Vitest (unit + integration projects, with coverage and thresholds)
+        run: pnpm exec vitest run --project unit --project integration --coverage
+      # E12: complete demo in replay (fixtures and recordings cover everything)
+      # - name: Complete demo in replay
+      #   run: pnpm exec vitest run --project unit -t "demo complete"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  golden:
+    name: Engine (golden, invariants and properties)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Golden + Σ marginals == total + fast-check (numRuns 1000)
+        run: pnpm exec vitest run --project golden
+        env:
+          FC_NUM_RUNS: "1000"
+      # E2: corpus integrity (engine refs exist, no revoked text)
+      # - name: Corpus integrity
+      #   run: pnpm --filter @refund/law test
+
+  pii-guard:
+    name: PII and secrets guard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Personal data (QSA, CPF, e-mail, phone, forbidden keys)
+        run: node scripts/pii-guard.ts --ci
+      - name: Tests of the guard itself (poisoned fixtures)
+        run: node --test scripts/test/pii-guard.test.ts
+      - name: Secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  demo-zero-env:
+    name: Demo with zero environment variables (build + E2E)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @refund/web exec playwright install --with-deps chromium
+      - name: Build without any app variable
+        run: env -i PATH="$PATH" HOME="$HOME" CI=1 pnpm --filter @refund/web build
+      - name: E2E @demo against `next start` without variables (fails if any external network call goes out)
+        run: env -i PATH="$PATH" HOME="$HOME" CI=1 E2E_TARGET=zero-env pnpm --filter @refund/web exec playwright test --project=demo-chromium --project=demo-mobile --pass-with-no-tests
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: playwright-demo-zero-env
+          path: apps/web/test-results/
+          retention-days: 7
+
+  e2e:
+    name: E2E of the live app (replay + Postgres 17)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: refund
+          POSTGRES_PASSWORD: refund
+          POSTGRES_DB: refund
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U refund"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATA_MODE: replay
+      DATABASE_URL: postgres://refund:refund@localhost:5432/refund
+      DATABASE_URL_DIRECT: postgres://refund:refund@localhost:5432/refund
+      DB_SSL: "disable"
+      SESSION_SECRET: Y2ktc29tZW50ZS1uYW8tZS1zZWdyZWRvLTMyYnl0ZXMhIQ==
+      ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+      PII_PEPPER: cGVwcGVyLWRlLWNpLW5hby1lLXNlZ3JlZG8tMzJieXRlcw==
+      CRON_SECRET: ci-cron
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # E4: migrations from scratch + reference seed, then Playwright @app and @security
+      # - run: pnpm --filter @refund/web exec playwright install --with-deps chromium
+      # - name: Migrations from scratch + reference seed
+      #   run: pnpm --filter @refund/db db:migrate && pnpm --filter @refund/db db:seed --profile=reference
+      - name: Build
+        run: pnpm --filter @refund/web build
+      - name: Health check against `next start`
+        run: |
+          pnpm --filter @refund/web start > /tmp/next.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://localhost:3000/api/health && exit 0; sleep 2; done
+          cat /tmp/next.log; exit 1
+      # - name: E2E @app and @security
+      #   run: pnpm --filter @refund/web exec playwright test --project=app-chromium --project=security
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: playwright-app
+          path: apps/web/test-results/
+          retention-days: 7
+
+  ci-ok:
+    name: CI ok
+    if: always()
+    needs: [quality, unit, golden, pii-guard, demo-zero-env, e2e]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: All jobs passed
+        run: |
+          test "${{ needs.quality.result }}" = success
+          test "${{ needs.unit.result }}" = success
+          test "${{ needs.golden.result }}" = success
+          test "${{ needs.pii-guard.result }}" = success
+          test "${{ needs.demo-zero-env.result }}" = success
+          test "${{ needs.e2e.result }}" = success
