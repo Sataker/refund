@@ -5,10 +5,14 @@ import { isValidCpf } from './cpf.ts';
 // Redaction of free text that leaves the provider (ARCHITECTURE §6.3).
 
 const DOC = '[doc]';
-const FORMATTED_CPF = /(?<![0-9A-Za-z])\d{3}\.\d{3}\.\d{3}-\d{2}(?!\d)/g;
+// Look-around is digit-based only: a document glued to letters ("PIX REF529.…") is still a document.
+const FORMATTED_CPF = /(?<!\d)\d{3}\.\d{3}\.\d{3}-\d{2}(?!\d)/g;
+/** Bare, partial (`…-NN`) or spaced CPF; replaced only when the check digits are valid. */
+const LOOSE_CPF = /(?<!\d)\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2}(?!\d)/g;
+// No look-behind: an alphanumeric CNPJ may start with letters, and over-redacting is the safe side.
 const FORMATTED_CNPJ =
-  /(?<![0-9A-Za-z])[0-9A-Za-z]{2}\.[0-9A-Za-z]{3}\.[0-9A-Za-z]{3}\/[0-9A-Za-z]{4}-\d{2}(?!\d)/g;
-const DIGIT_RUN = /(?<!\d)\d{11}(?!\d)|(?<!\d)\d{14}(?!\d)/g;
+  /[0-9A-Za-z]{2}\.[0-9A-Za-z]{3}\.[0-9A-Za-z]{3}\/[0-9A-Za-z]{4}-\d{2}(?!\d)/g;
+const CNPJ_RUN = /(?<!\d)\d{14}(?!\d)/g;
 const LONG_DIGITS = /\d{6,}/g;
 
 function isValidNumericCnpj(digits: string): boolean {
@@ -17,16 +21,16 @@ function isValidNumericCnpj(digits: string): boolean {
 }
 
 /**
- * Replaces documents with `[doc]`: any formatted CPF or CNPJ (alphanumeric CNPJ included), and runs of
- * exactly 11 or 14 digits with a valid CPF/CNPJ check digit.
+ * Replaces documents with `[doc]`: any formatted CPF or CNPJ (alphanumeric CNPJ included); bare,
+ * partial or spaced CPFs (`\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2}`) and 14-digit runs when their
+ * check digits are valid.
  */
 export function stripDocuments(text: string): string {
   return text
-    .replace(FORMATTED_CPF, DOC)
     .replace(FORMATTED_CNPJ, DOC)
-    .replace(DIGIT_RUN, (run) =>
-      (run.length === 11 ? isValidCpf(run) : isValidNumericCnpj(run)) ? DOC : run,
-    );
+    .replace(FORMATTED_CPF, DOC)
+    .replace(LOOSE_CPF, (m) => (isValidCpf(m.replace(/\D/g, '')) ? DOC : m))
+    .replace(CNPJ_RUN, (run) => (isValidNumericCnpj(run) ? DOC : run));
 }
 
 /** Folds one code point (accents off, lower case); keeps it unchanged if folding is not 1:1. */

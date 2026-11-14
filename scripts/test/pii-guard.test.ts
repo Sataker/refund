@@ -59,6 +59,23 @@ describe('pii-guard rule 2: formatted CPF', () => {
   });
 });
 
+describe('pii-guard rule 2: CPF glued to letters or in partial form (code review 14/11)', () => {
+  it('fails on REF+formatted CPF, dash-only and spaced forms', () => {
+    const spaced = `${cpfDigits.slice(0, 3)} ${cpfDigits.slice(3, 6)} ${cpfDigits.slice(6, 9)} ${cpfDigits.slice(9)}`;
+    for (const text of [
+      `PIX REF${cpf}`,
+      `${cpfDigits.slice(0, 9)}-${cpfDigits.slice(9)}`,
+      spaced,
+    ]) {
+      assert.deepEqual(
+        rules(scanText('notes.md', text)),
+        ['formatted-cpf'],
+        text.length.toString(),
+      );
+    }
+  });
+});
+
 describe('pii-guard rule 3: unformatted CPF with a valid check digit', () => {
   it('fails next to a cpf/doc/tax/document/socio key', () => {
     for (const key of ['cpf', 'documentNumber', 'taxNumber', 'socio_doc']) {

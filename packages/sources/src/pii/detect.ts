@@ -35,7 +35,10 @@ export const ALLOWED_EMAIL_DOMAINS: readonly string[] = [
 const NEIGHBORHOOD = 30;
 const CPF_CONTEXT = /cpf|doc|tax|document|socio/i;
 const PHONE_CONTEXT = /tel|phone|fone|celular/i;
-const FORMATTED_CPF = /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g;
+// Digit-based look-around only: a CPF glued to letters ("REF529.…") must still be found.
+const FORMATTED_CPF = /(?<!\d)\d{3}\.\d{3}\.\d{3}-\d{2}(?!\d)/g;
+/** Partial or spaced CPF (`NNNNNNNNN-NN`, `NNN NNN NNN NN`), reported when the check digits are valid. */
+const LOOSE_CPF = /(?<!\d)\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2}(?!\d)/g;
 const ELEVEN_DIGITS = /(?<!\d)\d{11}(?!\d)/g;
 const EMAIL = /[A-Za-z0-9._%+-]+@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})/g;
 const PHONE = /(?<!\d)\(?\d{2}\)?\s?9?\d{4}-?\d{4}(?!\d)/g;
@@ -71,6 +74,11 @@ export function scanText(text: string, options: ScanOptions = {}): PiiFinding[] 
 
   // CPFs have no exception (ARCHITECTURE §6.4).
   for (const m of text.matchAll(FORMATTED_CPF)) push('formatted-cpf', m[0], m.index);
+  for (const m of text.matchAll(LOOSE_CPF)) {
+    // Fully formatted ones were reported above; bare 11 digits need context (rule 3, below).
+    if (/^\d{11}$/.test(m[0]) || /^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(m[0])) continue;
+    if (isValidCpf(m[0].replace(/\D/g, ''))) push('formatted-cpf', m[0], m.index);
+  }
   for (const m of text.matchAll(ELEVEN_DIGITS)) {
     if (isValidCpf(m[0]) && near(text, m.index, m[0].length, CPF_CONTEXT, context)) {
       push('unformatted-cpf', m[0], m.index);

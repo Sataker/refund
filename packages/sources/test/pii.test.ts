@@ -120,6 +120,31 @@ describe('stripDocuments', () => {
     expect(stripDocuments(`BOLETO ${NUMERIC_CNPJ}`)).toBe('BOLETO [doc]');
   });
 
+  // Code review 14/11 (HIGH): CPFs glued to letters or in partial/spaced forms survived.
+  it.each([
+    ['glued to a letter', (c: string) => `PIX REF${formatCpf(c)}`, 'PIX REF[doc]'],
+    ['glued on both sides', (c: string) => `X${formatCpf(c)}Y`, 'X[doc]Y'],
+    ['dash only', (c: string) => `TED ${c.slice(0, 9)}-${c.slice(9)}`, 'TED [doc]'],
+    [
+      'spaces',
+      (c: string) => `TED ${c.slice(0, 3)} ${c.slice(3, 6)} ${c.slice(6, 9)} ${c.slice(9)}`,
+      'TED [doc]',
+    ],
+    [
+      'dots without dash',
+      (c: string) => `TED ${c.slice(0, 3)}.${c.slice(3, 6)}.${c.slice(6, 9)}${c.slice(9)}`,
+      'TED [doc]',
+    ],
+    ['CNPJ glued to a letter', () => 'REF12.ABC.345/01DE-35', 'REF[doc]'],
+  ])('removes a CPF %s', (_label, build, expected) => {
+    expect(stripDocuments(build(CPF))).toBe(expected);
+  });
+
+  it('keeps a spaced or partial sequence whose check digits are not a CPF', () => {
+    expect(stripDocuments('TEL 123 456 789 00')).toBe('TEL 123 456 789 00');
+    expect(stripDocuments('NF 123456789-01')).toBe('NF 123456789-01');
+  });
+
   it('keeps runs with an invalid check digit and ordinary text', () => {
     expect(stripDocuments('PEDIDO 12345678901')).toBe('PEDIDO 12345678901');
     expect(stripDocuments('00000000000000')).toBe('00000000000000');
@@ -198,6 +223,20 @@ describe('detectPii and scanText', () => {
       expect(f.excerpt).not.toContain(CPF.slice(2, 9));
       expect(f.excerpt).not.toContain('silva');
     }
+  });
+
+  it('finds a formatted CPF glued to letters and partial forms with valid check digits', () => {
+    const spaced = `${CPF.slice(0, 3)} ${CPF.slice(3, 6)} ${CPF.slice(6, 9)} ${CPF.slice(9)}`;
+    for (const text of [
+      `PIX REF${formatCpf(CPF)}`,
+      `REF${formatCpf(CPF)}X`,
+      `TED ${CPF.slice(0, 9)}-${CPF.slice(9)}`,
+      `TED ${spaced}`,
+    ]) {
+      expect(scanText(text).map((f) => f.rule)).toEqual(['formatted-cpf']);
+    }
+    expect(redactDescription(`PIX ${spaced} OK`)).toBe('PIX [doc] OK');
+    expect(scanText('NF 123456789-01')).toEqual([]);
   });
 
   it('passes clean data, allowed e-mail domains and numbers without context', () => {
