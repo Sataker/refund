@@ -20,6 +20,7 @@ export {
   type MonthlyIrResult,
   monthlyIr,
 } from './primitives/irpf.ts';
+export { meiExcessLimit } from './primitives/mei.ts';
 export {
   anexoForPa,
   type DasForPaInput,
@@ -35,6 +36,7 @@ export {
   type PayrollSeries,
   proportionalRbt12,
   rbt12,
+  type StartOfActivityRbt12,
   window,
 } from './primitives/simples.ts';
 export {

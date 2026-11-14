@@ -349,17 +349,49 @@ export function anexoForPa(
   return D(fatorRValue).gte(param('simples.fatorR.limit', month).value) ? 'III' : 'V';
 }
 
+export interface StartOfActivityRbt12 {
+  /** FIRST_BRACKET: `rbt12` is 0, which `effectiveRate` reads as RBT12 = 1 → 1st bracket, effective = nominal. */
+  rule: 'FIRST_BRACKET' | 'PA_TIMES_12' | 'AVERAGE_TIMES_12';
+  monthOfActivity: number; // 1 = month of the opening
+  rbt12: Dec; // reais, full precision
+}
+
 /**
- * Proportionalized RBT12 in the first 12 months of activity (LC 123, art. 18, § 2º; manual 8.3): 1st month,
- * revenue of the PA × 12; next 11 months, average of the previous months × 12. Full precision (reais).
+ * RBT12 at the start of activity (LC 123, art. 18, § 2º), rule chosen by the PA's effective period
+ * (`simples.startOfActivity`):
+ * - up to PA 12/2026 (Res. CGSN 140, art. 22; manual 8.3): 1st month, revenue of the PA × 12; months 2–12,
+ *   average of the months before the PA × 12;
+ * - from PA 01/2027 (Res. CGSN 190/2026): months 1–2, 1st-bracket rate; months 3–13, average of the months
+ *   before the month preceding the PA × 12; from the 14th month, the ordinary RBT12 (§ 4º).
  */
-export function proportionalRbt12(pa: YearMonth, openedIn: YearMonth, revenue: Series): Dec {
-  const n = monthsBetween(openedIn, pa);
-  if (n < 0 || n > 11)
-    throw new RangeError(`PA ${pa} is not in the first 12 months of activity (${openedIn})`);
-  if (n === 0) return reais(revenue[pa] ?? cents(0)).times(12);
-  const previous = sumCents(
-    monthRange(openedIn, addMonths(pa, -1)).map((m) => revenue[m] ?? cents(0)),
-  );
-  return reais(previous).dividedBy(n).times(12);
+export function proportionalRbt12(
+  pa: YearMonth,
+  openedIn: YearMonth,
+  revenue: Series,
+): StartOfActivityRbt12 {
+  const rule = param('simples.startOfActivity', pa).value;
+  const monthOfActivity = monthsBetween(openedIn, pa) + 1;
+  if (monthOfActivity < 1 || monthOfActivity > rule.untilMonthOfActivity) {
+    throw new RangeError(
+      `PA ${pa} is month ${monthOfActivity} of activity (opened ${openedIn}): outside the start-of-activity rule`,
+    );
+  }
+  if (monthOfActivity <= rule.firstBracketMonths) {
+    return { rule: 'FIRST_BRACKET', monthOfActivity, rbt12: D(0) };
+  }
+  if (monthOfActivity === 1 && rule.firstMonthRevenueTimes12) {
+    return {
+      rule: 'PA_TIMES_12',
+      monthOfActivity,
+      rbt12: reais(revenue[pa] ?? cents(0)).times(12),
+    };
+  }
+  const months = monthRange(openedIn, addMonths(pa, rule.averageEndOffset));
+  if (months.length === 0) throw new RangeError(`no months to average for PA ${pa}`);
+  const total = sumCents(months.map((m) => revenue[m] ?? cents(0)));
+  return {
+    rule: 'AVERAGE_TIMES_12',
+    monthOfActivity,
+    rbt12: reais(total).dividedBy(months.length).times(12),
+  };
 }
