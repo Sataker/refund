@@ -3,7 +3,12 @@ import { D, Dec, reais, roundToCents } from '../money.ts';
 import { param } from '../parameters/index.ts';
 import { displayFatorR, fatorR, window } from '../primitives/simples.ts';
 import { type Ctx, cltPayroll, revenue } from '../projection.ts';
-import { regimeCostOf, regimeStart, type ScenarioDecisions, type Simulation } from '../scenario.ts';
+import {
+  regimeCostModel,
+  regimeStart,
+  type ScenarioDecisions,
+  type Simulation,
+} from '../scenario.ts';
 import { monthRange } from '../time.ts';
 import { step } from '../trace.ts';
 import {
@@ -112,17 +117,12 @@ export function optimizerR01(
   for (let p: number = sm; p <= gridTop; p += 5000) set.add(p);
   const candidates = [...set].filter((p) => p >= sm).sort((x, y) => x - y) as Cents[];
 
+  const model = regimeCostModel(ctx, { ...s0, segregateExport: seg, segregateMonofasico: mono });
   const costCache = new Map<number, Cents>();
   const regimeCost = (p: Cents): Cents => {
     const hit = costCache.get(p);
     if (hit !== undefined) return hit;
-    const d: ScenarioDecisions = {
-      ...s0,
-      proLabore: p,
-      segregateExport: seg,
-      segregateMonofasico: mono,
-    };
-    const c = regimeCostOf(ctx, d).total;
+    const c = model(p).total;
     costCache.set(p, c);
     return c;
   };

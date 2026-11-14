@@ -3,7 +3,7 @@ import { D, reais, roundToCents, sumCents } from './money.ts';
 import { param } from './parameters/index.ts';
 import { cppOutsideDas, inssPartner } from './primitives/inss.ts';
 import { annualIr, monthlyIr } from './primitives/irpf.ts';
-import { anexoForPa, dasForPa, fatorR, window } from './primitives/simples.ts';
+import { anexoForPa, dasForPa, fatorR, fatorRValue, window } from './primitives/simples.ts';
 import {
   assertNotStartOfActivity,
   type Ctx,
@@ -230,6 +230,58 @@ function costOf(pas: PaResult[], irpfAdjustment: Cents, pgblRedemptionProvision:
     irpfAdjustment,
     pgblRedemptionProvision,
     total: sumCents([das, inss, cpp, irpfAdjustment, pgblRedemptionProvision]),
+  };
+}
+
+/**
+ * Steady-state cost as a function of a constant pró-labore P, for the R01 optimizer (D.1). In the steady-state
+ * block every FS12 window lies inside the new scenario, so FS12 = payroll without pró-labore + 12 × P, and the DAS
+ * of each PA depends only on its anexo: it is computed once per anexo. Same numbers as `regimeCostOf` (tested).
+ */
+export function regimeCostModel(ctx: Ctx, base: Omit<ScenarioDecisions, 'proLabore'>) {
+  const company = ctx.facts.companyDetails.value;
+  const pas = regimePas(ctx).map((pa) => ({ pa, inputs: paInputs(ctx, pa, () => cents(0)) }));
+  const dasCache = new Map<string, Cents>();
+  const dasAt = (i: number, anexo: Anexo): Cents => {
+    const key = `${i}|${anexo}`;
+    let v = dasCache.get(key);
+    if (v === undefined) {
+      const { pa, inputs } = pas[i] as (typeof pas)[number];
+      v = dasUnder(ctx, pa, inputs, anexo, base.segregateExport).das;
+      dasCache.set(key, v);
+    }
+    return v;
+  };
+  const year = yearOf((pas[0] as (typeof pas)[number]).pa);
+  const contribution = base.pgblContribution[ctx.analysisYear] ?? cents(0);
+  return (p: Cents): Cost => {
+    let das = 0;
+    let inss = 0;
+    let cpp = 0;
+    pas.forEach(({ pa, inputs }, i) => {
+      const fr = company.subjectToFatorR
+        ? fatorRValue(cents(inputs.fs12 + 12 * p), inputs.rbt12.total, pa)
+        : null;
+      const anexo = anexoForPa(fr, company, pa);
+      das += dasAt(i, anexo);
+      inss += inssPartner(p, pa);
+      cpp += cppOutsideDas(p, anexo, pa);
+    });
+    const pf = pfOver(
+      ctx,
+      pas.map((x) => x.pa),
+      () => p,
+    );
+    const ir = irOf(ctx, year, pf.rt, pf.inss, contribution);
+    const prov = provision(ctx, contribution);
+    return {
+      das: cents(das),
+      inssPartner: cents(inss),
+      cppOutsideDas: cents(cpp),
+      irpfAdjustment: ir.ir,
+      pgblRedemptionProvision: prov,
+      total: cents(das + inss + cpp + ir.ir + prov),
+    };
   };
 }
 

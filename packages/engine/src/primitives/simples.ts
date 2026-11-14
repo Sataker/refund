@@ -313,19 +313,23 @@ export interface FatorRResult {
 }
 
 /** Fator R = FS12 ÷ RBT12 (total = domestic + export). FS12 = 0 → 0,01; RBT12 = 0 and FS12 > 0 → 0,28 (8.2.1). */
+/** The Fator R value alone (no trace): the same rule as `fatorR`, for the optimizer's inner loop. */
+export function fatorRValue(fs12Value: Cents, rbt12Total: Cents, month: YearMonth): Rate {
+  if (fs12Value < 0 || rbt12Total < 0) throw new RangeError('negative FS12 or RBT12');
+  const formula = param('simples.fatorR.formula', month).value;
+  if (rbt12Total === 0) return fs12Value > 0 ? formula.zeroRevenue : formula.zeroPayroll;
+  if (fs12Value === 0) return formula.zeroPayroll;
+  return rateOf(D(fs12Value).dividedBy(rbt12Total));
+}
+
 export function fatorR(
   fs12Value: Cents,
   rbt12Total: Cents,
   month: YearMonth,
   options: { stepPrefix?: string } = {},
 ): FatorRResult {
-  if (fs12Value < 0 || rbt12Total < 0) throw new RangeError('negative FS12 or RBT12');
   const formula = param('simples.fatorR.formula', month);
-  let value: Rate;
-  if (rbt12Total === 0)
-    value = fs12Value > 0 ? formula.value.zeroRevenue : formula.value.zeroPayroll;
-  else if (fs12Value === 0) value = formula.value.zeroPayroll;
-  else value = rateOf(D(fs12Value).dividedBy(rbt12Total));
+  const value = fatorRValue(fs12Value, rbt12Total, month);
   const display = displayFatorR(value, month);
   const steps = [
     step({
