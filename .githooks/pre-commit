@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+node scripts/pii-guard.ts --staged
+pnpm exec biome check --staged --no-errors-on-unmatched
+git config user.email | grep -qx 'enzosvacarro@gmail.com' || { echo "git user.email must be enzosvacarro@gmail.com"; exit 1; }
