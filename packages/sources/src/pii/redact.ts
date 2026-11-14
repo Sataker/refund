@@ -37,27 +37,25 @@ function foldChar(ch: string): string {
 
 /** Replaces every whole-word occurrence of `name` (case- and accent-insensitive, any run of spaces). */
 function replaceName(text: string, name: string): string {
-  const words = Array.from(name.trim()).map(foldChar).join('').split(/\s+/).filter(Boolean);
+  const words = Array.from(name.normalize('NFC').trim())
+    .map(foldChar)
+    .join('')
+    .split(/\s+/)
+    .filter(Boolean);
   if (words.length === 0) return text;
-  const chars = Array.from(text);
-  const folded = chars.map(foldChar);
-  // UTF-16 offset in the folded text → code-point index (each folded element is one code point).
-  const indexAt = new Map<number, number>();
-  let offset = 0;
-  folded.forEach((c, i) => {
-    indexAt.set(offset, i);
-    offset += c.length;
-  });
-  indexAt.set(offset, chars.length);
+  // NFC first, so a decomposed "JOSÉ" folds like "JOSÉ" (one code point per letter).
+  const chars = Array.from(text.normalize('NFC'));
+  const foldedText = chars.map(foldChar).join('');
   const body = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+');
   const pattern = new RegExp(`(?<![\\p{L}\\p{N}])${body}(?![\\p{L}\\p{N}])`, 'gu');
+  // Each code point folds to exactly one code point, so code-point indexes match `chars`.
+  const codePoints = (utf16End: number): number => Array.from(foldedText.slice(0, utf16End)).length;
   let out = '';
   let last = 0;
-  for (const m of folded.join('').matchAll(pattern)) {
-    const start = indexAt.get(m.index) ?? last;
-    const end = indexAt.get(m.index + m[0].length) ?? start;
+  for (const m of foldedText.matchAll(pattern)) {
+    const start = codePoints(m.index);
     out += `${chars.slice(last, start).join('')}[pessoa]`;
-    last = end;
+    last = codePoints(m.index + m[0].length);
   }
   return out + chars.slice(last).join('');
 }
