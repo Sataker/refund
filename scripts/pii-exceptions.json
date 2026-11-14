@@ -1,0 +1,20 @@
+[
+  {
+    "value": "enzosvacarro@gmail.com",
+    "file": "*",
+    "reason": "Commit author e-mail, already public in every commit; required by Vercel (CLAUDE.md, rule 6).",
+    "source": "git log"
+  },
+  {
+    "value": "onboarding@resend.dev",
+    "file": "*",
+    "reason": "Resend's public test sender used in .env.example.",
+    "source": "resend.com docs"
+  },
+  {
+    "value": "userefund.com.br",
+    "file": "*",
+    "reason": "The product's own domain.",
+    "source": "PLAN D6"
+  }
+]
