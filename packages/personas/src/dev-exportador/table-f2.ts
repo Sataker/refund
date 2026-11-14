@@ -88,7 +88,8 @@ export const PRO_LABORE = { gross: 162_100, inss: 17_831, irrf: 0, net: 144_269 
 /** Monthly DCTFWeb: INSS 1.209,33 (2 × 515,51 + 178,31) + IRRF 71,62. */
 export const DCTFWEB = { inss: 120_933, irrf: 7_162, total: 128_095 } as const;
 
-// Not specified by F.2 (recorded in EXECUTION §9, 14/11): the net of the 13º and of the ⅓ vacation.
+// SYNTHETIC CONVENTION, not ENGINE-SPEC data. F.2 does not specify the net of the 13º and of the
+// ⅓ vacation (EXECUTION §9, 14/11); the amounts below are this generator's choice.
 // They do not feed any number (the gross payroll comes from the card, ENGINE-SPEC E.2). Convention:
 // - 13º: taxed exclusively, same formula as the salary (simplified discount 607,20; Lei 15.270
 //   reduction applies to the 13º, ENGINE-SPEC A.1) → same 4.548,68 per employee;

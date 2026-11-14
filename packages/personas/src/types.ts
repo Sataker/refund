@@ -106,14 +106,36 @@ export interface AnswerKeyTransaction {
   holder: 'PF' | 'PJ';
   month: YearMonth;
   amountCents: number;
-  /** ENGINE-SPEC E.3 label of the true classification. */
-  label: ClassificationLabel;
+  /**
+   * ENGINE-SPEC E.3 label of the true classification. null for the PF leg of a same-holder
+   * transfer: E.2 classifies the PJ debit only; the PF credit just confirms the match (rule 3).
+   */
+  label: ClassificationLabel | null;
   /** ARCHITECTURE §4.4 category; null when no category of the contract fits (EXECUTION §9, 14/11). */
   category: Category | null;
   /** Card that confirms it, when the label always asks (E.1.4, E.2, E.3). */
   cardId: string | null;
   /** What F.2 says about it (gross amount, accrual month…), for the reviewer. */
   note: string;
+}
+
+// TODO(E1-merge): import type { Confidence } from '@refund/engine' (ARCHITECTURE §4.2).
+export type Confidence = 'confirmed' | 'estimated' | 'depends_on_regulation';
+
+/** Same field names as `Total` (ARCHITECTURE §4.2): what `EngineResult.total` must equal. */
+export interface ExpectedTotal {
+  savings12m: Cents;
+  annualRegimeSavings: Cents | null;
+  byConfidence: Record<Confidence, Cents>;
+  recoveryRange: [Cents, Cents] | null;
+}
+
+/** Provenance of a fact (shape of ARCHITECTURE §4.2 `Provenance`), so E9 knows where it comes from. */
+export interface ExpectedProvenance {
+  origin: 'open_finance' | 'cnpj' | 'user' | 'default_assumption' | 'derived';
+  /** sourceIds of the persona transactions that back the fact. */
+  transactionIds?: string[];
+  source: string;
 }
 
 export interface SameHolderPair {
@@ -138,14 +160,29 @@ export interface VideoNumber {
   cents: Cents;
 }
 
+/**
+ * Expected `Finding` (field names of ARCHITECTURE §4.2), with the ENGINE-SPEC F.3/F.4/C.12 values.
+ * `fires: false` = the rule must not produce a finding; then every value is null.
+ */
 export interface ExpectedFinding {
   ruleId: 'R01' | 'R05' | 'R06' | 'R04' | 'R05-REC' | 'R02' | 'A01' | 'A02' | 'R03';
-  confidence: 'confirmed' | 'estimated' | null;
+  fires: boolean;
+  type: 'savings' | 'recovery' | 'alert' | 'risk' | null;
+  confidence: Confidence | null;
   countsInTotal: boolean;
+  /** null when F.3/F.4 give no number for it. */
   marginalValue12m: Cents | null;
   annualRegimeValue: Cents | null;
-  range: { min: Cents; max: Cents } | null;
-  cashCost: Cents | null;
+  regimeFrom: YearMonth | null;
+  range: [Cents, Cents] | null;
+  byDestination: {
+    federal: [Cents, Cents];
+    municipal: [Cents, Cents];
+    state: [Cents, Cents];
+  } | null;
+  deadline: CivilDate | null;
+  /** Rule-specific values of F.3/C.12 (P*, start, scenario costs, withheld IRRF…), never only in `note`. */
+  details: Record<string, string | number>;
   note: string;
 }
 
@@ -166,6 +203,7 @@ export interface ExpectedFacts {
   };
   companyDetails: {
     subjectToFatorR: boolean;
+    baseAnexo: 'III';
     resellsMonofasico: boolean;
     hasFullBookkeeping: boolean;
   };
@@ -205,7 +243,10 @@ export interface ExpectedFacts {
     healthExpenses: { amount: Cents; cnaeOrProfession: string; beneficiary: 'holder' }[];
     educationExpenses: { person: string; amount: Cents }[];
     pgblContributedThisYear: Cents;
+    projectedAnnualTotalIncome: Cents;
   };
+  /** Where each derived or answered fact comes from (key = fact path). */
+  provenance: Record<string, ExpectedProvenance>;
   /** Σ 12m row of ENGINE-SPEC F.2 plus the PF lines. */
   totals12m: {
     exportRevenue: Cents;
@@ -233,7 +274,7 @@ export interface AnswerKey {
   cardAnswers: CardAnswer[];
   expectedFindings: ExpectedFinding[];
   /** ENGINE-SPEC F.4: cost(S0) − cost(S4). */
-  expectedTotal: { next12m: Cents; annualRegime: Cents };
+  total: ExpectedTotal;
   videoNumbers: VideoNumber[];
 }
 

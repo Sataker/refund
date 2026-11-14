@@ -152,6 +152,11 @@ describe('answer key × ENGINE-SPEC F.2 (sums)', () => {
     const net = 170_000 - (inssTotal - 51_551) - (irrfTotal - 3_581);
     const vacation = byLabel('salary', 'PJ').filter((r) => r.tx.description.endsWith('FERIAS'));
     for (const r of vacation) expect(r.tx.amountCents).toBe(-net);
+    const conventions = byLabel('salary', 'PJ').filter((r) =>
+      /FERIAS|13 SALARIO$/.test(r.tx.description),
+    );
+    expect(conventions).toHaveLength(4);
+    for (const r of conventions) expect(r.key.note).toContain('SYNTHETIC CONVENTION');
   });
 
   it('pró-labore: 12 × net 1.442,69 (1.621 − 178,31); gross card 1.621,00; Σ gross 19.452,00', () => {
@@ -252,6 +257,39 @@ describe('answer key × ENGINE-SPEC F.2 (sums)', () => {
     }
   });
 
+  it('summing by category never double counts a same-holder transfer (PF leg is not income again)', () => {
+    const pfLegs = new Set(key.sameHolderPairs.map((p) => p.pfTransactionId));
+    for (const t of key.transactions.filter((x) => pfLegs.has(x.sourceId))) {
+      expect(t.category).toBe('same_holder_transfer');
+      expect(t.label).toBeNull();
+    }
+    const byCategory = (c: string) =>
+      key.transactions.filter((t) => t.category === c).reduce((s, t) => s + t.amountCents, 0);
+    expect(-byCategory('pro_labore')).toBe(12 * 144_269);
+    expect(-byCategory('profit_distribution')).toBe(11 * 1_800_000 + 8_100_000);
+    expect(byCategory('same_holder_transfer')).toBe(12 * 144_269 + 11 * 1_800_000 + 8_100_000);
+  });
+
+  it('structured facts of the §4.2 contract, with provenance', () => {
+    const f = key.expectedFacts;
+    expect(f.companyDetails).toEqual({
+      subjectToFatorR: true,
+      baseAnexo: 'III',
+      resellsMonofasico: false,
+      hasFullBookkeeping: true,
+    });
+    expect(f.pfDetails.projectedAnnualTotalIncome).toBe(1_945_200 + 28_800_000);
+    const rgps = f.provenance['qualifications.contributesToRgps'];
+    expect(rgps?.origin).toBe('derived');
+    const dctfIds = byLabel('dctfweb', 'PJ').map((r) => r.tx.sourceId);
+    expect(rgps?.transactionIds).toEqual(expect.arrayContaining(dctfIds));
+    for (const p of Object.values(f.provenance)) {
+      for (const id of p.transactionIds ?? []) {
+        expect(key.transactions.some((t) => t.sourceId === id)).toBe(true);
+      }
+    }
+  });
+
   it('cards: every card referenced by a transaction exists and points back to it', () => {
     const cards = new Map(key.cardAnswers.map((c) => [c.id, c]));
     for (const t of key.transactions) {
@@ -272,7 +310,12 @@ describe('answer key × ENGINE-SPEC F.4 (video numbers)', () => {
     expect(counted.map((f) => f.ruleId)).toEqual(['R01', 'R05']);
     expect(counted.reduce((s, f) => s + (f.marginalValue12m ?? 0), 0)).toBe(6_231_892);
     expect(counted.reduce((s, f) => s + (f.annualRegimeValue ?? 0), 0)).toBe(7_400_628);
-    expect(key.expectedTotal).toEqual({ next12m: 6_231_892, annualRegime: 7_400_628 });
+    expect(key.total).toEqual({
+      savings12m: 6_231_892,
+      annualRegimeSavings: 7_400_628,
+      byConfidence: { confirmed: 6_231_892, estimated: 0, depends_on_regulation: 0 },
+      recoveryRange: [3_978_768, 19_893_840],
+    });
     // cost(S0) − cost(S4): 109.239,72 − 46.920,80 and 109.239,72 − 35.233,44
     expect(10_923_972 - 4_692_080).toBe(6_231_892);
     expect(10_923_972 - 3_523_344).toBe(7_400_628);
@@ -288,7 +331,20 @@ describe('answer key × ENGINE-SPEC F.4 (video numbers)', () => {
       { screen: 'dashboard', testId: 'dashboard/alert-R02-cost', cents: 111_170 },
     ]);
     const rec = key.expectedFindings.find((f) => f.ruleId === 'R05-REC');
-    expect(rec?.range).toEqual({ min: 12 * 331_564, max: 60 * 331_564 });
+    expect(rec?.deadline).toBe('2026-11-23');
+    expect(rec?.byDestination).toEqual({
+      federal: [12 * 161_989, 60 * 161_989],
+      municipal: [12 * 169_575, 60 * 169_575],
+      state: [0, 0],
+    });
+    const r01 = key.expectedFindings.find((f) => f.ruleId === 'R01');
+    expect(r01?.regimeFrom).toBe('2027-04');
+    expect(r01?.details).toMatchObject({ start: '2026-12', proLaboreTarget: 226_000 });
+    expect(key.expectedFindings.find((f) => f.ruleId === 'R02')?.marginalValue12m).toBe(111_170);
+    for (const f of key.expectedFindings.filter((x) => !x.fires)) {
+      expect([f.marginalValue12m, f.range, f.type]).toEqual([null, null, null]);
+    }
+    expect(rec?.range).toEqual([12 * 331_564, 60 * 331_564]);
     expect(rec?.countsInTotal).toBe(false);
   });
 });

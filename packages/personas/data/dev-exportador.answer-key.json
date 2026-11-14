@@ -101,7 +101,7 @@
       "label": "salary",
       "category": "salary",
       "cardId": "clt-employee-A",
-      "note": "⅓ vacation of employee A, gross 1.700,00 (F.2); net per generator convention"
+      "note": "⅓ vacation of employee A, gross 1.700,00 (F.2); net 816,99 is a SYNTHETIC CONVENTION, not in F.2 (EXECUTION §9, 14/11)"
     },
     {
       "sourceId": "4660ebe6-f98b-4712-bef2-b51bfa024e28",
@@ -151,7 +151,7 @@
       "label": "salary",
       "category": "salary",
       "cardId": "clt-employee-A",
-      "note": "13º of employee A, gross 5.100,00 (F.2); net per generator convention"
+      "note": "13º of employee A, gross 5.100,00 (F.2); net 4.548,68 is a SYNTHETIC CONVENTION, not in F.2 (EXECUTION §9, 14/11)"
     },
     {
       "sourceId": "a0fac246-a274-4f19-97e8-13720a004435",
@@ -161,7 +161,7 @@
       "label": "salary",
       "category": "salary",
       "cardId": "clt-employee-B",
-      "note": "13º of employee B, gross 5.100,00 (F.2); net per generator convention"
+      "note": "13º of employee B, gross 5.100,00 (F.2); net 4.548,68 is a SYNTHETIC CONVENTION, not in F.2 (EXECUTION §9, 14/11)"
     },
     {
       "sourceId": "d990cd9f-9974-489c-b065-b730a181316a",
@@ -631,7 +631,7 @@
       "label": "salary",
       "category": "salary",
       "cardId": "clt-employee-B",
-      "note": "⅓ vacation of employee B, gross 1.700,00 (F.2); net per generator convention"
+      "note": "⅓ vacation of employee B, gross 1.700,00 (F.2); net 816,99 is a SYNTHETIC CONVENTION, not in F.2 (EXECUTION §9, 14/11)"
     },
     {
       "sourceId": "533363b3-0f24-4197-9476-8298e01addb5",
@@ -1158,20 +1158,20 @@
       "holder": "PF",
       "month": "2025-11",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 654235c6-2d77-496e-9b31-e94e26a75ec9; pró-labore 2025-11: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of 654235c6-2d77-496e-9b31-e94e26a75ec9 (pro_labore); counted on the PJ leg only; pró-labore 2025-11: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "89985a7c-fdf2-47c9-bd49-14170a60a981",
       "holder": "PF",
       "month": "2025-11",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 61a702cf-901e-4c44-84b6-3a82f0462a79; distribution 2025-11: gross 18000 (F.2)"
+      "note": "PF leg of 61a702cf-901e-4c44-84b6-3a82f0462a79 (distribution); counted on the PJ leg only; distribution 2025-11: gross 18000 (F.2)"
     },
     {
       "sourceId": "e62af3e9-7655-4963-a03d-b36af20e0347",
@@ -1208,20 +1208,20 @@
       "holder": "PF",
       "month": "2025-12",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 74f6a981-ddb0-4fb8-8c82-a238f6054a93; pró-labore 2025-12: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of 74f6a981-ddb0-4fb8-8c82-a238f6054a93 (pro_labore); counted on the PJ leg only; pró-labore 2025-12: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "c1db733c-4972-4e39-8d3e-755882ea4d94",
       "holder": "PF",
       "month": "2025-12",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 49b67a90-ee54-46ac-8c05-2f968a011564; distribution 2025-12: gross 18000 (F.2)"
+      "note": "PF leg of 49b67a90-ee54-46ac-8c05-2f968a011564 (distribution); counted on the PJ leg only; distribution 2025-12: gross 18000 (F.2)"
     },
     {
       "sourceId": "821d75e8-9e79-4712-ae22-7d8fca2c605e",
@@ -1258,20 +1258,20 @@
       "holder": "PF",
       "month": "2026-01",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of cc76a705-ae20-4363-a384-03c4325c5c09; pró-labore 2026-01: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of cc76a705-ae20-4363-a384-03c4325c5c09 (pro_labore); counted on the PJ leg only; pró-labore 2026-01: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "5593cf69-ecdf-4984-a356-5bd03273ffbf",
       "holder": "PF",
       "month": "2026-01",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 366d82fc-9b74-408e-86cd-f4873e25c0cd; distribution 2026-01: gross 18000 (F.2)"
+      "note": "PF leg of 366d82fc-9b74-408e-86cd-f4873e25c0cd (distribution); counted on the PJ leg only; distribution 2026-01: gross 18000 (F.2)"
     },
     {
       "sourceId": "91ddcb8c-c03a-4937-b696-6ff07adf67cf",
@@ -1308,20 +1308,20 @@
       "holder": "PF",
       "month": "2026-02",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of cbdabb1d-ea80-4ac3-9b61-602855aef1f6; pró-labore 2026-02: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of cbdabb1d-ea80-4ac3-9b61-602855aef1f6 (pro_labore); counted on the PJ leg only; pró-labore 2026-02: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "5a2dadda-812a-4e15-a33d-1cc8bc11ed0d",
       "holder": "PF",
       "month": "2026-02",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of f231bef9-e300-4738-a8e6-d4ee16ccd3d5; distribution 2026-02: gross 18000 (F.2)"
+      "note": "PF leg of f231bef9-e300-4738-a8e6-d4ee16ccd3d5 (distribution); counted on the PJ leg only; distribution 2026-02: gross 18000 (F.2)"
     },
     {
       "sourceId": "a35fb105-feee-4638-91d5-4a96ea8f27a8",
@@ -1358,20 +1358,20 @@
       "holder": "PF",
       "month": "2026-03",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 851a29ed-3fa1-4700-9d73-c071617b9b22; pró-labore 2026-03: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of 851a29ed-3fa1-4700-9d73-c071617b9b22 (pro_labore); counted on the PJ leg only; pró-labore 2026-03: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "8cbe2a27-043f-4e73-95c3-e7bdeb201ad6",
       "holder": "PF",
       "month": "2026-03",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 41489c37-bf4f-44ae-98eb-fdc7ab417878; distribution 2026-03: gross 18000 (F.2)"
+      "note": "PF leg of 41489c37-bf4f-44ae-98eb-fdc7ab417878 (distribution); counted on the PJ leg only; distribution 2026-03: gross 18000 (F.2)"
     },
     {
       "sourceId": "e20b9317-9af0-40b5-8fc8-db09b7ba5c26",
@@ -1408,20 +1408,20 @@
       "holder": "PF",
       "month": "2026-04",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 55310d6f-9922-4fd8-abbc-77ea59578940; pró-labore 2026-04: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of 55310d6f-9922-4fd8-abbc-77ea59578940 (pro_labore); counted on the PJ leg only; pró-labore 2026-04: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "e811fee3-217f-47ba-bb05-2f1f09db9998",
       "holder": "PF",
       "month": "2026-04",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of b7b65205-115d-464c-8ef2-fb2fd14ed7f9; distribution 2026-04: gross 18000 (F.2)"
+      "note": "PF leg of b7b65205-115d-464c-8ef2-fb2fd14ed7f9 (distribution); counted on the PJ leg only; distribution 2026-04: gross 18000 (F.2)"
     },
     {
       "sourceId": "07db8282-4e95-426c-b0e2-6c5491b1e113",
@@ -1458,20 +1458,20 @@
       "holder": "PF",
       "month": "2026-05",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 16ca4cec-196d-4963-bd6a-da01d547454c; pró-labore 2026-05: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of 16ca4cec-196d-4963-bd6a-da01d547454c (pro_labore); counted on the PJ leg only; pró-labore 2026-05: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "703d4704-5855-415a-baa4-2bfb78a490bf",
       "holder": "PF",
       "month": "2026-05",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 6b164a64-5ec8-4cb0-a6e7-519d14bb19c6; distribution 2026-05: gross 18000 (F.2)"
+      "note": "PF leg of 6b164a64-5ec8-4cb0-a6e7-519d14bb19c6 (distribution); counted on the PJ leg only; distribution 2026-05: gross 18000 (F.2)"
     },
     {
       "sourceId": "1bebc9d9-9d52-4730-92b2-d99bc5184766",
@@ -1508,20 +1508,20 @@
       "holder": "PF",
       "month": "2026-06",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 533363b3-0f24-4197-9476-8298e01addb5; pró-labore 2026-06: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of 533363b3-0f24-4197-9476-8298e01addb5 (pro_labore); counted on the PJ leg only; pró-labore 2026-06: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "b54a5804-9a9f-42ea-aff3-0038a0316628",
       "holder": "PF",
       "month": "2026-06",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 8663bf87-6cbf-4993-aeb1-a8c7b905eecf; distribution 2026-06: gross 18000 (F.2)"
+      "note": "PF leg of 8663bf87-6cbf-4993-aeb1-a8c7b905eecf (distribution); counted on the PJ leg only; distribution 2026-06: gross 18000 (F.2)"
     },
     {
       "sourceId": "4b1728e3-32e9-43ee-ac6d-aa1fe05c97e4",
@@ -1558,20 +1558,20 @@
       "holder": "PF",
       "month": "2026-07",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 89342bb4-9a32-4be0-b790-8518245f070f; pró-labore 2026-07: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of 89342bb4-9a32-4be0-b790-8518245f070f (pro_labore); counted on the PJ leg only; pró-labore 2026-07: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "824b5628-8ded-4c52-9f76-1cf79e521621",
       "holder": "PF",
       "month": "2026-07",
       "amountCents": 8100000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 2641fd1b-1331-4b71-8496-17ae21c8bb9b; distribution 2026-07: gross 90000, IRRF 10% withheld, DARF 1841 in 2026-08 (F.2)"
+      "note": "PF leg of 2641fd1b-1331-4b71-8496-17ae21c8bb9b (distribution); counted on the PJ leg only; distribution 2026-07: gross 90000, IRRF 10% withheld, DARF 1841 in 2026-08 (F.2)"
     },
     {
       "sourceId": "1812bcd4-34d5-4eee-902b-1c3f45b57235",
@@ -1608,20 +1608,20 @@
       "holder": "PF",
       "month": "2026-08",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 899b9d4f-b653-4d17-91ee-1e596d7506fa; pró-labore 2026-08: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of 899b9d4f-b653-4d17-91ee-1e596d7506fa (pro_labore); counted on the PJ leg only; pró-labore 2026-08: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "f48c9ff7-08a3-4f99-ae79-6b51ea65b803",
       "holder": "PF",
       "month": "2026-08",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 445e86dc-e8fa-4d9d-9d27-fb839b2ba119; distribution 2026-08: gross 18000 (F.2)"
+      "note": "PF leg of 445e86dc-e8fa-4d9d-9d27-fb839b2ba119 (distribution); counted on the PJ leg only; distribution 2026-08: gross 18000 (F.2)"
     },
     {
       "sourceId": "5f916a62-200c-4829-a01a-ec8c14b70e36",
@@ -1658,20 +1658,20 @@
       "holder": "PF",
       "month": "2026-09",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 6908d04c-4197-43c1-b3ac-c20fed4addd9; pró-labore 2026-09: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of 6908d04c-4197-43c1-b3ac-c20fed4addd9 (pro_labore); counted on the PJ leg only; pró-labore 2026-09: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "ba733de5-f1a3-48fd-8f0c-524e2a1ece8b",
       "holder": "PF",
       "month": "2026-09",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of d2da2442-1fe9-48c1-9ce8-fc242c48a586; distribution 2026-09: gross 18000 (F.2)"
+      "note": "PF leg of d2da2442-1fe9-48c1-9ce8-fc242c48a586 (distribution); counted on the PJ leg only; distribution 2026-09: gross 18000 (F.2)"
     },
     {
       "sourceId": "6b1374f5-b5e0-42de-9b4c-f62b2669866e",
@@ -1708,20 +1708,20 @@
       "holder": "PF",
       "month": "2026-10",
       "amountCents": 144269,
-      "label": "pro_labore",
-      "category": "pro_labore",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 29f96edc-046a-4e82-a388-a9b96f9f0c3c; pró-labore 2026-10: gross 1.621,00, net 1.442,69 (F.2)"
+      "note": "PF leg of 29f96edc-046a-4e82-a388-a9b96f9f0c3c (pro_labore); counted on the PJ leg only; pró-labore 2026-10: gross 1.621,00, net 1.442,69 (F.2)"
     },
     {
       "sourceId": "c6e010e8-7a2b-40c0-865f-86e81dc1dd40",
       "holder": "PF",
       "month": "2026-10",
       "amountCents": 1800000,
-      "label": "distribution",
-      "category": "profit_distribution",
+      "label": null,
+      "category": "same_holder_transfer",
       "cardId": null,
-      "note": "PF leg of 2d3f4901-1c39-44e3-80f5-a3d72e10655b; distribution 2026-10: gross 18000 (F.2)"
+      "note": "PF leg of 2d3f4901-1c39-44e3-80f5-a3d72e10655b (distribution); counted on the PJ leg only; distribution 2026-10: gross 18000 (F.2)"
     },
     {
       "sourceId": "c2389c4b-2f8f-464e-bc65-91c71b324043",
@@ -1906,6 +1906,7 @@
     },
     "companyDetails": {
       "subjectToFatorR": true,
+      "baseAnexo": "III",
       "resellsMonofasico": false,
       "hasFullBookkeeping": true
     },
@@ -2206,7 +2207,186 @@
         }
       ],
       "educationExpenses": [],
-      "pgblContributedThisYear": 0
+      "pgblContributedThisYear": 0,
+      "projectedAnnualTotalIncome": 30745200
+    },
+    "provenance": {
+      "companyDetails.subjectToFatorR": {
+        "origin": "cnpj",
+        "source": "CNAE 6201-5/01: LC 123, art. 18, § 5º-M, II (ENGINE-SPEC E.4)"
+      },
+      "companyDetails.baseAnexo": {
+        "origin": "cnpj",
+        "source": "CNAE 6201-5/01: LC 123, art. 18, § 5º-D, IV (Anexo III; V below Fator R 28%, § 5º-M)"
+      },
+      "companyDetails.hasFullBookkeeping": {
+        "origin": "user",
+        "source": "question:full-bookkeeping"
+      },
+      "partner.worksInCompany": {
+        "origin": "user",
+        "source": "question:partner-works-in-company"
+      },
+      "partner.grossProLabore": {
+        "origin": "user",
+        "transactionIds": [
+          "654235c6-2d77-496e-9b31-e94e26a75ec9",
+          "74f6a981-ddb0-4fb8-8c82-a238f6054a93",
+          "cc76a705-ae20-4363-a384-03c4325c5c09",
+          "cbdabb1d-ea80-4ac3-9b61-602855aef1f6",
+          "851a29ed-3fa1-4700-9d73-c071617b9b22",
+          "55310d6f-9922-4fd8-abbc-77ea59578940",
+          "16ca4cec-196d-4963-bd6a-da01d547454c",
+          "533363b3-0f24-4197-9476-8298e01addb5",
+          "89342bb4-9a32-4be0-b790-8518245f070f",
+          "899b9d4f-b653-4d17-91ee-1e596d7506fa",
+          "6908d04c-4197-43c1-b3ac-c20fed4addd9",
+          "29f96edc-046a-4e82-a388-a9b96f9f0c3c"
+        ],
+        "source": "question:pro-labore-gross"
+      },
+      "cltPayroll.grossPay": {
+        "origin": "user",
+        "transactionIds": [
+          "2673ef61-b105-4d17-b4f2-93f0d5981aa1",
+          "2232a5ac-1735-4327-8380-047216e5e48b",
+          "901a93eb-f256-411f-bcea-626cbbcb5b1a",
+          "45f63ddc-2716-4bcd-adfd-ae52da6a8b60",
+          "872dd699-4954-4b8a-9516-f49d882dedaa",
+          "4660ebe6-f98b-4712-bef2-b51bfa024e28",
+          "a0fac246-a274-4f19-97e8-13720a004435",
+          "4c48e51b-f9ea-4cb2-a19d-09191b6fb28a",
+          "2a88ed91-569f-4f40-83f3-14db81196ed0",
+          "077fc659-7ba8-43b6-bccc-7b7e9e16044c",
+          "d23c276d-148a-43ba-aabe-2d909fed1fdc",
+          "c08ad8dd-751d-4cbf-a8ed-23b9cdce029e",
+          "530c98cf-eed6-448f-8754-eda1dacdfa00",
+          "7ef99182-b638-48b2-b8de-40fbd27dac19",
+          "a2d83c52-6e6a-4e0b-bbeb-b1e34b394d5b",
+          "e71c1c3e-89a6-49fd-a072-d5ccb82aa577",
+          "8dcc118b-fa92-4ecc-81a5-b1dfb56cad81",
+          "56877d11-5ef2-471e-969c-a58aec467024",
+          "9c6e362a-631a-4dfb-8754-2746013a0bb7",
+          "fa385452-0393-4f49-93d2-a1d6b748c9c1",
+          "1d5c7b8d-6ce6-40f1-ac95-e8ce2513b40e",
+          "24f3669e-922c-4d0d-966a-70174f5cdbc2",
+          "ea33eed7-ac32-4e8c-9894-544a6045bf75",
+          "5a546313-bf74-463c-9c4f-225302217e89",
+          "4e76d5d2-4c1e-4ba4-83b6-e54927120af5",
+          "ec5adac0-a196-43ca-a97d-09dc44dbc116",
+          "fa7fa447-5186-4323-81a2-2a2a6117ac7c",
+          "ffc7073d-da73-43e5-b246-53b655a37a9d"
+        ],
+        "source": "question:clt-payroll-gross"
+      },
+      "qualifications.exportResultAbroad": {
+        "origin": "user",
+        "transactionIds": [
+          "6b1addfc-623a-4f5f-be7e-dbee3294e06f",
+          "df9dd183-1860-4d21-b528-828b87f7e779",
+          "0984e296-5f8e-4596-b9ef-c31e1b61cc92",
+          "2323650d-9de0-4afe-947b-1fc0743ff152",
+          "4a61dee5-a2a0-4416-9fa3-3ab38e99170f",
+          "613e7005-606b-4a9f-b118-5d8c142f39a8",
+          "b8e744de-2ed7-41df-a550-9a0530fba101",
+          "c3df4bd2-6d96-4530-baee-b3756243d0d2",
+          "54c61cd3-1477-4224-8050-53afed7872b3",
+          "c0c59bd5-3831-48f8-b3cf-38cd29fada66",
+          "77b71fa1-69ae-4fe3-9af4-e27b32ff3d40",
+          "fc931d8e-0b8d-4777-950b-3330c35cdafe"
+        ],
+        "source": "question:export-qualification"
+      },
+      "qualifications.pgdasSegregatesExport": {
+        "origin": "derived",
+        "transactionIds": [
+          "47abba9c-77f1-4638-abd2-53cccd3a8df8",
+          "558ac4a4-9145-4001-9c75-692aee2fd054",
+          "9e5d04dc-fbef-45b1-88cc-8a2eaa2c9035",
+          "dd42e996-634f-4fe2-90d0-f449ce9b664e",
+          "31c93ca8-bee8-4fd7-b258-426917bc941a",
+          "a9a8a3d6-0ea0-4e8c-9d76-5ee72cd876e2",
+          "939e17f9-8157-442d-80a0-8b4bdd2e67e8",
+          "9458ebcc-49f5-4ef3-a59f-a9063d229122",
+          "0eab7552-d6d8-48ee-b187-e7a3ec3f406a",
+          "2add1795-a0cc-43c6-ba7d-0afa7d3e3429",
+          "fed10e04-d544-4834-b8a0-e80c46aca797",
+          "70ab00e1-58fa-413f-8f6f-ddf985143efd",
+          "6b1addfc-623a-4f5f-be7e-dbee3294e06f",
+          "df9dd183-1860-4d21-b528-828b87f7e779",
+          "0984e296-5f8e-4596-b9ef-c31e1b61cc92",
+          "2323650d-9de0-4afe-947b-1fc0743ff152",
+          "4a61dee5-a2a0-4416-9fa3-3ab38e99170f",
+          "613e7005-606b-4a9f-b118-5d8c142f39a8",
+          "b8e744de-2ed7-41df-a550-9a0530fba101",
+          "c3df4bd2-6d96-4530-baee-b3756243d0d2",
+          "54c61cd3-1477-4224-8050-53afed7872b3",
+          "c0c59bd5-3831-48f8-b3cf-38cd29fada66",
+          "77b71fa1-69ae-4fe3-9af4-e27b32ff3d40",
+          "fc931d8e-0b8d-4777-950b-3330c35cdafe"
+        ],
+        "source": "C.3.7: 12 DAS paid = hypothesis V not segregated"
+      },
+      "qualifications.contributesToRgps": {
+        "origin": "derived",
+        "transactionIds": [
+          "fbbd603e-e70d-4e3f-b065-0312e27958dc",
+          "46c13efd-e025-422a-94c4-1f5f505266e1",
+          "7e084544-d42a-4d37-9706-4402e5506880",
+          "89e06037-ba25-4cb4-b5e4-1559323d36f5",
+          "8c506043-b21f-43b5-9132-da8cb55357c0",
+          "8012a3bf-6b43-45b6-a7fa-8abe0af71737",
+          "05a48603-9f81-4774-bad7-2efb084c4fda",
+          "830cd848-41bc-447c-8004-355163ff6c5e",
+          "471684aa-5c8d-4913-ad53-7fb485e3a321",
+          "05bd595c-bb95-4ec1-a6df-8b1fbc090424",
+          "07e4c1b4-837e-4622-a792-50dcc946899b",
+          "7cdbcb41-5368-42fb-8597-886b21f2afd6",
+          "654235c6-2d77-496e-9b31-e94e26a75ec9",
+          "74f6a981-ddb0-4fb8-8c82-a238f6054a93",
+          "cc76a705-ae20-4363-a384-03c4325c5c09",
+          "cbdabb1d-ea80-4ac3-9b61-602855aef1f6",
+          "851a29ed-3fa1-4700-9d73-c071617b9b22",
+          "55310d6f-9922-4fd8-abbc-77ea59578940",
+          "16ca4cec-196d-4963-bd6a-da01d547454c",
+          "533363b3-0f24-4197-9476-8298e01addb5",
+          "89342bb4-9a32-4be0-b790-8518245f070f",
+          "899b9d4f-b653-4d17-91ee-1e596d7506fa",
+          "6908d04c-4197-43c1-b3ac-c20fed4addd9",
+          "29f96edc-046a-4e82-a388-a9b96f9f0c3c"
+        ],
+        "source": "C.2 \"there is INSS on the pró-labore/salary\": INSS 11% (178,31) on the confirmed gross pró-labore, remitted in the monthly DCTFWeb"
+      },
+      "pfDetails.projectedAnnualTotalIncome": {
+        "origin": "derived",
+        "transactionIds": [
+          "654235c6-2d77-496e-9b31-e94e26a75ec9",
+          "74f6a981-ddb0-4fb8-8c82-a238f6054a93",
+          "cc76a705-ae20-4363-a384-03c4325c5c09",
+          "cbdabb1d-ea80-4ac3-9b61-602855aef1f6",
+          "851a29ed-3fa1-4700-9d73-c071617b9b22",
+          "55310d6f-9922-4fd8-abbc-77ea59578940",
+          "16ca4cec-196d-4963-bd6a-da01d547454c",
+          "533363b3-0f24-4197-9476-8298e01addb5",
+          "89342bb4-9a32-4be0-b790-8518245f070f",
+          "899b9d4f-b653-4d17-91ee-1e596d7506fa",
+          "6908d04c-4197-43c1-b3ac-c20fed4addd9",
+          "29f96edc-046a-4e82-a388-a9b96f9f0c3c",
+          "61a702cf-901e-4c44-84b6-3a82f0462a79",
+          "49b67a90-ee54-46ac-8c05-2f968a011564",
+          "366d82fc-9b74-408e-86cd-f4873e25c0cd",
+          "f231bef9-e300-4738-a8e6-d4ee16ccd3d5",
+          "41489c37-bf4f-44ae-98eb-fdc7ab417878",
+          "b7b65205-115d-464c-8ef2-fb2fd14ed7f9",
+          "6b164a64-5ec8-4cb0-a6e7-519d14bb19c6",
+          "8663bf87-6cbf-4993-aeb1-a8c7b905eecf",
+          "2641fd1b-1331-4b71-8496-17ae21c8bb9b",
+          "445e86dc-e8fa-4d9d-9d27-fb839b2ba119",
+          "d2da2442-1fe9-48c1-9ce8-fc242c48a586",
+          "2d3f4901-1c39-44e3-80f5-a3d72e10655b"
+        ],
+        "source": "gross pró-labore (card) + gross distributions (net credit + DARF 1841)"
+      }
     },
     "totals12m": {
       "exportRevenue": 60000000,
@@ -2423,102 +2603,189 @@
   ],
   "expectedFindings": [
     {
-      "ruleId": "R01",
-      "confidence": "confirmed",
-      "countsInTotal": true,
+      "fires": true,
       "marginalValue12m": 2831652,
       "annualRegimeValue": 4289652,
+      "regimeFrom": "2027-04",
       "range": null,
-      "cashCost": null,
-      "note": "pró-labore 1.621 → 2.260; Anexo V → III from 2027-04"
-    },
-    {
-      "ruleId": "R05",
+      "byDestination": null,
+      "deadline": null,
+      "ruleId": "R01",
+      "type": "savings",
       "confidence": "confirmed",
       "countsInTotal": true,
+      "details": {
+        "start": "2026-12",
+        "currentProLabore": 162100,
+        "proLaboreTarget": 226000,
+        "proLaboreAt28": 176000,
+        "inssPartnerMonthly": 24860,
+        "cost12mS0": 10923972,
+        "cost12mS1": 8092320,
+        "regimeCostS1": 6634320,
+        "bringForwardProLabore": 328900,
+        "bringForwardExtraGain": 573049
+      },
+      "note": "pró-labore 1.621 → 2.260 from 2026-12; Anexo V → III from PA 2027-04 (F.3 step 3)"
+    },
+    {
+      "fires": true,
       "marginalValue12m": 3400240,
       "annualRegimeValue": 3110976,
+      "regimeFrom": null,
       "range": null,
-      "cashCost": null,
-      "note": "segregate exports in the PGDAS-D"
+      "byDestination": null,
+      "deadline": null,
+      "ruleId": "R05",
+      "type": "savings",
+      "confidence": "confirmed",
+      "countsInTotal": true,
+      "details": {
+        "start": "2026-12",
+        "cost12mS2": 4692080,
+        "regimeCostS2": 3523344
+      },
+      "note": "segregate exports in the PGDAS-D from PA 2026-12 (F.3 step 4; C.12.3)"
     },
     {
       "ruleId": "R06",
+      "fires": false,
+      "type": null,
       "confidence": null,
       "countsInTotal": false,
       "marginalValue12m": null,
       "annualRegimeValue": null,
+      "regimeFrom": null,
       "range": null,
-      "cashCost": null,
-      "note": "CNAE not on the monofásico list (F.3 step 5): no finding"
+      "byDestination": null,
+      "deadline": null,
+      "details": {},
+      "note": "CNAE not on the monofásico list (F.3 step 5)"
     },
     {
       "ruleId": "R04",
+      "fires": false,
+      "type": null,
       "confidence": null,
       "countsInTotal": false,
       "marginalValue12m": null,
       "annualRegimeValue": null,
+      "regimeFrom": null,
       "range": null,
-      "cashCost": null,
-      "note": "IR already zero in 2026 and 2027 (F.3 step 6): no finding; UI shows T04-12"
+      "byDestination": null,
+      "deadline": null,
+      "details": {},
+      "note": "IR already zero in 2026 and 2027 (F.3 step 6); the UI shows T04-12"
     },
     {
-      "ruleId": "R05-REC",
-      "confidence": "estimated",
-      "countsInTotal": false,
+      "fires": true,
       "marginalValue12m": null,
       "annualRegimeValue": null,
-      "range": {
-        "min": 3978768,
-        "max": 19893840
+      "regimeFrom": null,
+      "range": [3978768, 19893840],
+      "byDestination": {
+        "federal": [1943868, 9719340],
+        "municipal": [2034900, 10174500],
+        "state": [0, 0]
       },
-      "cashCost": null,
-      "note": "12 measured PAs × 3.315,64 to 60 PAs; without Selic; PA 10/2021 expires 23/11/2026"
-    },
-    {
-      "ruleId": "R02",
+      "deadline": "2026-11-23",
+      "ruleId": "R05-REC",
+      "type": "recovery",
       "confidence": "estimated",
       "countsInTotal": false,
-      "marginalValue12m": null,
-      "annualRegimeValue": null,
-      "range": null,
-      "cashCost": 111170,
-      "note": "jul/2026 distribution of 90.000: withheld 9.000,00 (DARF 1841); suggestion 2 × 45.000"
+      "details": {
+        "measuredPas": 12,
+        "projectedPas": 48,
+        "overpaymentPerPa": 331564,
+        "federalPerPa": 161989,
+        "issPerPa": 169575,
+        "oldestPa": "2021-10",
+        "oldestPaPaymentDate": "2021-11-22"
+      },
+      "note": "without Selic; PA 10/2021 expires 23/11/2026 (T05-09, C.12.4, T12-02)"
     },
     {
+      "fires": true,
+      "marginalValue12m": 111170,
+      "annualRegimeValue": null,
+      "regimeFrom": null,
+      "range": null,
+      "byDestination": null,
+      "deadline": null,
+      "ruleId": "R02",
+      "type": "alert",
+      "confidence": "estimated",
+      "countsInTotal": false,
+      "details": {
+        "month": "2026-07",
+        "grossDistribution": 9000000,
+        "irrfWithheld": 900000,
+        "darfMonth": "2026-08",
+        "dividendRefundMonth": "2027-06",
+        "selicAnnual": "0.15",
+        "suggestedSplit": 2,
+        "suggestedMonthly": 4500000
+      },
+      "note": "cash alert outside the total; distributions above the bookkeeping-free limit are information only (bookkeeping confirmed)"
+    },
+    {
+      "fires": true,
+      "marginalValue12m": null,
+      "annualRegimeValue": null,
+      "regimeFrom": null,
+      "range": null,
+      "byDestination": null,
+      "deadline": null,
       "ruleId": "A01",
+      "type": "risk",
       "confidence": "confirmed",
       "countsInTotal": false,
-      "marginalValue12m": null,
-      "annualRegimeValue": null,
-      "range": null,
-      "cashCost": null,
-      "note": "Netflix (12×) and supermarket (1×) on the PJ card"
+      "details": {
+        "netflixCount": 12,
+        "supermarketCount": 1
+      },
+      "note": "Netflix (12×) and supermarket (1×) on the PJ card (E.7); no R$"
     },
     {
       "ruleId": "A02",
+      "fires": false,
+      "type": null,
       "confidence": null,
       "countsInTotal": false,
       "marginalValue12m": null,
       "annualRegimeValue": null,
+      "regimeFrom": null,
       "range": null,
-      "cashCost": null,
-      "note": "does not fire: P0 = minimum wage"
+      "byDestination": null,
+      "deadline": null,
+      "details": {},
+      "note": "P0 = minimum wage"
     },
     {
       "ruleId": "R03",
+      "fires": false,
+      "type": null,
       "confidence": null,
       "countsInTotal": false,
       "marginalValue12m": null,
       "annualRegimeValue": null,
+      "regimeFrom": null,
       "range": null,
-      "cashCost": null,
-      "note": "does not fire: RBT12 600.000, far from 2,88 mi"
+      "byDestination": null,
+      "deadline": null,
+      "details": {},
+      "note": "RBT12 600.000, far from 2,88 mi"
     }
   ],
-  "expectedTotal": {
-    "next12m": 6231892,
-    "annualRegime": 7400628
+  "total": {
+    "savings12m": 6231892,
+    "annualRegimeSavings": 7400628,
+    "byConfidence": {
+      "confirmed": 6231892,
+      "estimated": 0,
+      "depends_on_regulation": 0
+    },
+    "recoveryRange": [3978768, 19893840]
   },
   "videoNumbers": [
     {

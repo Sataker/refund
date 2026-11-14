@@ -27,8 +27,10 @@ import type {
   AnswerKeyTransaction,
   CardAnswer,
   Category,
+  Cents,
   ClassificationLabel,
   ExpectedFacts,
+  ExpectedFinding,
   GeneratedPersona,
   PersonaData,
   SameHolderPair,
@@ -94,7 +96,7 @@ export function generateDevExportador(seed: number = DEV_EXPORTADOR_SEED): Gener
   const add = (
     account: keyof typeof drafts,
     t: Omit<SourceTransaction, 'sourceId' | 'accountSourceId' | 'pluggyType' | 'installment'>,
-    label: ClassificationLabel,
+    label: ClassificationLabel | null,
     category: Category | null,
     cardId: string | null,
     note: string,
@@ -176,10 +178,12 @@ export function generateDevExportador(seed: number = DEV_EXPORTADOR_SEED): Gener
         counterparty: company(pjDoc, COMPANY_NAMES.devExportador.legalName, null),
         mcc: null,
       },
-      label,
-      category,
+      // E.2/E.3 classify only the PJ debit; the PF credit confirms the match (rule 3) and must not
+      // be counted again: no label, category same_holder_transfer (EXECUTION §9, 14/11).
       null,
-      `PF leg of ${pjId}; ${note}`,
+      'same_holder_transfer',
+      null,
+      `PF leg of ${pjId} (${kind}); counted on the PJ leg only; ${note}`,
     );
     pairs.push({ kind, pjTransactionId: pjId, pfTransactionId: pfId, amountCents: amount });
     (kind === 'pro_labore' ? cardTx.proLabore : cardTx.distribution)?.push(pjId);
@@ -240,7 +244,7 @@ export function generateDevExportador(seed: number = DEV_EXPORTADOR_SEED): Gener
           payday,
           VACATION_THIRD.net,
           ' FERIAS',
-          `⅓ vacation of employee ${employee}, gross 1.700,00 (F.2); net per generator convention`,
+          `⅓ vacation of employee ${employee}, gross 1.700,00 (F.2); net 816,99 is a SYNTHETIC CONVENTION, not in F.2 (EXECUTION §9, 14/11)`,
         );
       }
       if (row.thirteenthPerEmployee > 0) {
@@ -248,7 +252,7 @@ export function generateDevExportador(seed: number = DEV_EXPORTADOR_SEED): Gener
           businessDayOnOrBefore(m, 18),
           THIRTEENTH.net,
           ' 13 SALARIO',
-          `13º of employee ${employee}, gross 5.100,00 (F.2); net per generator convention`,
+          `13º of employee ${employee}, gross 5.100,00 (F.2); net 4.548,68 is a SYNTHETIC CONVENTION, not in F.2 (EXECUTION §9, 14/11)`,
         );
       }
     }
@@ -600,92 +604,19 @@ export function generateDevExportador(seed: number = DEV_EXPORTADOR_SEED): Gener
     source: 'ENGINE-SPEC F.2–F.4 (verified 12/11/2026)',
     transactions,
     sameHolderPairs: pairs,
-    expectedFacts: expectedFacts(pjCnpj, pj),
+    expectedFacts: expectedFacts(pjCnpj, pj, cardTx),
     cardAnswers: cardAnswers(cardTx),
-    expectedFindings: [
-      finding(
-        'R01',
-        'confirmed',
-        true,
-        2_831_652,
-        4_289_652,
-        null,
-        null,
-        'pró-labore 1.621 → 2.260; Anexo V → III from 2027-04',
-      ),
-      finding(
-        'R05',
-        'confirmed',
-        true,
-        3_400_240,
-        3_110_976,
-        null,
-        null,
-        'segregate exports in the PGDAS-D',
-      ),
-      finding(
-        'R06',
-        null,
-        false,
-        null,
-        null,
-        null,
-        null,
-        'CNAE not on the monofásico list (F.3 step 5): no finding',
-      ),
-      finding(
-        'R04',
-        null,
-        false,
-        null,
-        null,
-        null,
-        null,
-        'IR already zero in 2026 and 2027 (F.3 step 6): no finding; UI shows T04-12',
-      ),
-      finding(
-        'R05-REC',
-        'estimated',
-        false,
-        null,
-        null,
-        { min: 3_978_768, max: 19_893_840 },
-        null,
-        '12 measured PAs × 3.315,64 to 60 PAs; without Selic; PA 10/2021 expires 23/11/2026',
-      ),
-      finding(
-        'R02',
-        'estimated',
-        false,
-        null,
-        null,
-        null,
-        111_170,
-        'jul/2026 distribution of 90.000: withheld 9.000,00 (DARF 1841); suggestion 2 × 45.000',
-      ),
-      finding(
-        'A01',
-        'confirmed',
-        false,
-        null,
-        null,
-        null,
-        null,
-        'Netflix (12×) and supermarket (1×) on the PJ card',
-      ),
-      finding('A02', null, false, null, null, null, null, 'does not fire: P0 = minimum wage'),
-      finding(
-        'R03',
-        null,
-        false,
-        null,
-        null,
-        null,
-        null,
-        'does not fire: RBT12 600.000, far from 2,88 mi',
-      ),
-    ],
-    expectedTotal: { next12m: cents(6_231_892), annualRegime: cents(7_400_628) },
+    expectedFindings: expectedFindings(),
+    total: {
+      savings12m: cents(6_231_892),
+      annualRegimeSavings: cents(7_400_628),
+      byConfidence: {
+        confirmed: cents(6_231_892),
+        estimated: cents(0),
+        depends_on_regulation: cents(0),
+      },
+      recoveryRange: [cents(3_978_768), cents(19_893_840)],
+    },
     videoNumbers: [
       { screen: 'analysis', testId: 'analysis/money-hero', cents: cents(6_231_892) },
       { screen: 'dashboard', testId: 'dashboard/money-hero', cents: cents(6_231_892) },
@@ -699,26 +630,130 @@ export function generateDevExportador(seed: number = DEV_EXPORTADOR_SEED): Gener
   return { data, answerKey };
 }
 
-function finding(
-  ruleId: AnswerKey['expectedFindings'][number]['ruleId'],
-  confidence: 'confirmed' | 'estimated' | null,
-  countsInTotal: boolean,
-  marginalValue12m: number | null,
-  annualRegimeValue: number | null,
-  range: { min: number; max: number } | null,
-  cashCost: number | null,
-  note: string,
-): AnswerKey['expectedFindings'][number] {
+const range = (min: number, max: number): [Cents, Cents] => [cents(min), cents(max)];
+
+function notFired(ruleId: ExpectedFinding['ruleId'], note: string): ExpectedFinding {
   return {
     ruleId,
-    confidence,
-    countsInTotal,
-    marginalValue12m: marginalValue12m === null ? null : cents(marginalValue12m),
-    annualRegimeValue: annualRegimeValue === null ? null : cents(annualRegimeValue),
-    range: range === null ? null : { min: cents(range.min), max: cents(range.max) },
-    cashCost: cashCost === null ? null : cents(cashCost),
+    fires: false,
+    type: null,
+    confidence: null,
+    countsInTotal: false,
+    marginalValue12m: null,
+    annualRegimeValue: null,
+    regimeFrom: null,
+    range: null,
+    byDestination: null,
+    deadline: null,
+    details: {},
     note,
   };
+}
+
+/** ENGINE-SPEC F.3 (engine run), F.4 (expected result), D.2, D.5/T05-09 and C.12.4. */
+function expectedFindings(): ExpectedFinding[] {
+  const base = {
+    fires: true,
+    marginalValue12m: null,
+    annualRegimeValue: null,
+    regimeFrom: null,
+    range: null,
+    byDestination: null,
+    deadline: null,
+  } as const;
+  return [
+    {
+      ...base,
+      ruleId: 'R01',
+      type: 'savings',
+      confidence: 'confirmed',
+      countsInTotal: true,
+      marginalValue12m: cents(2_831_652),
+      annualRegimeValue: cents(4_289_652),
+      regimeFrom: '2027-04',
+      details: {
+        start: '2026-12',
+        currentProLabore: 162_100,
+        proLaboreTarget: 226_000, // P* with the 1 p.p. margin (29% target)
+        proLaboreAt28: 176_000,
+        inssPartnerMonthly: 24_860,
+        cost12mS0: 10_923_972,
+        cost12mS1: 8_092_320,
+        regimeCostS1: 6_634_320,
+        bringForwardProLabore: 328_900, // trace only, outside the total
+        bringForwardExtraGain: 573_049,
+      },
+      note: 'pró-labore 1.621 → 2.260 from 2026-12; Anexo V → III from PA 2027-04 (F.3 step 3)',
+    },
+    {
+      ...base,
+      ruleId: 'R05',
+      type: 'savings',
+      confidence: 'confirmed',
+      countsInTotal: true,
+      marginalValue12m: cents(3_400_240),
+      annualRegimeValue: cents(3_110_976),
+      details: { start: '2026-12', cost12mS2: 4_692_080, regimeCostS2: 3_523_344 },
+      note: 'segregate exports in the PGDAS-D from PA 2026-12 (F.3 step 4; C.12.3)',
+    },
+    notFired('R06', 'CNAE not on the monofásico list (F.3 step 5)'),
+    notFired('R04', 'IR already zero in 2026 and 2027 (F.3 step 6); the UI shows T04-12'),
+    {
+      ...base,
+      ruleId: 'R05-REC',
+      type: 'recovery',
+      confidence: 'estimated',
+      countsInTotal: false,
+      range: range(3_978_768, 19_893_840),
+      byDestination: {
+        federal: range(1_943_868, 9_719_340),
+        municipal: range(2_034_900, 10_174_500),
+        state: range(0, 0),
+      },
+      deadline: '2026-11-23',
+      details: {
+        measuredPas: 12,
+        projectedPas: 48,
+        overpaymentPerPa: 331_564,
+        federalPerPa: 161_989,
+        issPerPa: 169_575,
+        oldestPa: '2021-10',
+        oldestPaPaymentDate: '2021-11-22', // projected: estimated by the due date (C.12.2)
+      },
+      note: 'without Selic; PA 10/2021 expires 23/11/2026 (T05-09, C.12.4, T12-02)',
+    },
+    {
+      ...base,
+      ruleId: 'R02',
+      type: 'alert',
+      confidence: 'estimated',
+      countsInTotal: false,
+      // D.2: marginalValue12m = Σ financialCost = 9.000 × (1,15^(10/12) − 1)
+      marginalValue12m: cents(111_170),
+      details: {
+        month: '2026-07',
+        grossDistribution: 9_000_000,
+        irrfWithheld: 900_000,
+        darfMonth: '2026-08',
+        dividendRefundMonth: '2027-06',
+        selicAnnual: '0.15',
+        suggestedSplit: 2,
+        suggestedMonthly: 4_500_000,
+      },
+      note: 'cash alert outside the total; distributions above the bookkeeping-free limit are information only (bookkeeping confirmed)',
+    },
+    {
+      ...base,
+      ruleId: 'A01',
+      type: 'risk',
+      confidence: 'confirmed',
+      countsInTotal: false,
+      details: { netflixCount: 12, supermarketCount: 1 },
+      note: 'Netflix (12×) and supermarket (1×) on the PJ card (E.7); no R$',
+    },
+    notFired('A02', 'P0 = minimum wage'),
+    notFired('R03', 'RBT12 600.000, far from 2,88 mi'),
+  ];
 }
 
 function series(pick: (row: (typeof F2_MONTHS)[number]) => number): Series {
@@ -731,7 +766,9 @@ function total(pick: (row: (typeof F2_MONTHS)[number]) => number): number {
   return F2_MONTHS.reduce((s, row) => s + pick(row), 0);
 }
 
-function expectedFacts(pjCnpj: string, pj: Draft[]): ExpectedFacts {
+function expectedFacts(pjCnpj: string, pj: Draft[], tx: Record<string, string[]>): ExpectedFacts {
+  const idsOf = (label: ClassificationLabel): string[] =>
+    pj.filter((d) => d.key.label === label).map((d) => d.tx.sourceId);
   const rbt12 = total((r) => r.fx);
   const fs12 = total((r) => r.grossClt + r.fgtsPaid + r.grossProLabore);
   const dasDates = new Map(
@@ -752,7 +789,12 @@ function expectedFacts(pjCnpj: string, pj: Draft[]): ExpectedFacts {
       uf: 'SP',
       openedOn: '2019-03-11',
     },
-    companyDetails: { subjectToFatorR: true, resellsMonofasico: false, hasFullBookkeeping: true },
+    companyDetails: {
+      subjectToFatorR: true,
+      baseAnexo: 'III',
+      resellsMonofasico: false,
+      hasFullBookkeeping: true,
+    },
     revenueByMarket: { domestic: series(() => 0), export: series((r) => r.fx) },
     cltPayroll: {
       grossPay: series((r) => r.grossClt),
@@ -812,6 +854,56 @@ function expectedFacts(pjCnpj: string, pj: Draft[]): ExpectedFacts {
       ],
       educationExpenses: [],
       pgblContributedThisYear: cents(0),
+      // pró-labore 19.452 + gross distributions 288.000 (F.2: "total income for the year < 600 mil");
+      // calendar 2026 with nov–dec projected as nov–dec/2025 gives the same (EXECUTION §9, 14/11).
+      projectedAnnualTotalIncome: cents(total((r) => r.grossProLabore + r.grossDistribution)),
+    },
+    provenance: {
+      'companyDetails.subjectToFatorR': {
+        origin: 'cnpj',
+        source: 'CNAE 6201-5/01: LC 123, art. 18, § 5º-M, II (ENGINE-SPEC E.4)',
+      },
+      'companyDetails.baseAnexo': {
+        origin: 'cnpj',
+        source:
+          'CNAE 6201-5/01: LC 123, art. 18, § 5º-D, IV (Anexo III; V below Fator R 28%, § 5º-M)',
+      },
+      'companyDetails.hasFullBookkeeping': {
+        origin: 'user',
+        source: 'question:full-bookkeeping',
+      },
+      'partner.worksInCompany': { origin: 'user', source: 'question:partner-works-in-company' },
+      'partner.grossProLabore': {
+        origin: 'user',
+        transactionIds: tx.proLabore ?? [],
+        source: 'question:pro-labore-gross',
+      },
+      'cltPayroll.grossPay': {
+        origin: 'user',
+        transactionIds: tx.payroll ?? [],
+        source: 'question:clt-payroll-gross',
+      },
+      'qualifications.exportResultAbroad': {
+        origin: 'user',
+        transactionIds: tx.fx ?? [],
+        source: 'question:export-qualification',
+      },
+      'qualifications.pgdasSegregatesExport': {
+        origin: 'derived',
+        transactionIds: [...idsOf('das_simples'), ...(tx.fx ?? [])],
+        source: 'C.3.7: 12 DAS paid = hypothesis V not segregated',
+      },
+      'qualifications.contributesToRgps': {
+        origin: 'derived',
+        transactionIds: [...idsOf('dctfweb'), ...(tx.proLabore ?? [])],
+        source:
+          'C.2 "there is INSS on the pró-labore/salary": INSS 11% (178,31) on the confirmed gross pró-labore, remitted in the monthly DCTFWeb',
+      },
+      'pfDetails.projectedAnnualTotalIncome': {
+        origin: 'derived',
+        transactionIds: [...(tx.proLabore ?? []), ...(tx.distribution ?? [])],
+        source: 'gross pró-labore (card) + gross distributions (net credit + DARF 1841)',
+      },
     },
     totals12m: {
       exportRevenue: cents(rbt12),
