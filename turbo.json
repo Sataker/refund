@@ -1,0 +1,8 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "tasks": {
+    "typecheck": { "dependsOn": ["^typecheck"], "outputs": [] },
+    "test": { "outputs": ["coverage/**"] },
+    "build": { "outputs": [".next/**", "!.next/cache/**"], "env": ["DATA_MODE", "NEXT_PUBLIC_*"] }
+  }
+}

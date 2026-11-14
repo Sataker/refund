@@ -1,0 +1,34 @@
+# Dependencies and builds
+node_modules/
+.next/
+.turbo/
+.vercel/
+out/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment (only .env.example is versioned)
+.env
+.env.*
+!.env.example
+
+# OS / editors
+.DS_Store
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Claude Code
+.claude/worktrees/
+.claude/settings.local.json
+
+# Decision D8 (PLAN §0): only code goes to GitHub.
+# Specs, research, pitch and history stay on Enzo's disk.
+/docs/
+/CLAUDE.md
+docs-privado/

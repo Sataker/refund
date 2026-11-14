@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Supply chain: no dependency install script runs (pnpm blocks builds unless allowed).
+allowBuilds:
+  sharp: false
+  unrs-resolver: false

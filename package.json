@@ -1,0 +1,37 @@
+{
+  "name": "refund",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
+    "dev": "pnpm --filter @refund/web dev",
+    "build": "pnpm --filter @refund/web build",
+    "lint": "biome ci .",
+    "format": "biome format --write .",
+    "typecheck": "turbo run typecheck",
+    "test": "vitest run --project unit --project integration --passWithNoTests",
+    "test:golden": "vitest run --project golden --passWithNoTests",
+    "e2e": "pnpm --filter @refund/web exec playwright test",
+    "deps": "depcruise apps packages --config .dependency-cruiser.cjs",
+    "guard": "node scripts/pii-guard.ts",
+    "fixtures:record": "node scripts/record-fixtures.ts",
+    "fixtures:index": "node scripts/generate-fixtures-index.ts",
+    "fixtures:rehash": "node scripts/rehash-fixtures.ts",
+    "personas:generate": "pnpm --filter @refund/personas generate",
+    "ai:record": "node scripts/record-ai.ts",
+    "freeze:check": "node scripts/freeze-check.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.7",
+    "@types/node": "24.19.2",
+    "@vitest/coverage-v8": "5.1.0",
+    "dependency-cruiser": "18.7.2",
+    "turbo": "2.11.11",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}

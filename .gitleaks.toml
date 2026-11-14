@@ -1,0 +1,9 @@
+title = "Refund gitleaks config"
+
+[extend]
+useDefault = true
+
+# The CI-only secrets in ci.yml are fixed, public, base64 of obvious phrases (INFRA-CI §2.1).
+[[allowlists]]
+description = "Public CI-only test secrets"
+paths = ['''^\.github/workflows/ci\.yml$''']
