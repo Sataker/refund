@@ -29,6 +29,8 @@ export function cnpjCheckDigits(base: string): string {
   return `${first}${second}`;
 }
 
+// `source: 'input'` is outside the list documented in ARCHITECTURE §4.3 (no provider is involved
+// in validating what the user typed); recorded in EXECUTION §9 (14/11).
 function invalid(message: string): Result<Cnpj, ProviderError> {
   return { ok: false, error: { code: 'INVALID', message, recoverable: false, source: 'input' } };
 }

@@ -7,13 +7,17 @@ describe('cnpjCheckDigits', () => {
     expect(cnpjCheckDigits('12ABC34501DE')).toBe('35');
   });
 
+  // Public control: the Receita's first alphanumeric CNPJ (news of 31/07/2026, research 03 §2.1),
+  // the only real-world vector of the new format; it is a company's public registry number, not PII.
   it('matches the first alphanumeric CNPJ issued (00.000.000/E08G-12)', () => {
     expect(cnpjCheckDigits('00000000E08G')).toBe('12');
   });
 
   it('keeps the classic numeric algorithm for digit-only CNPJs', () => {
-    // 11.222.333/0001-81 is the textbook example of the numeric algorithm.
-    expect(cnpjCheckDigits('112223330001')).toBe('81');
+    // Made-up 90.731.548/9998-94 (BrasilAPI and CNPJ.ws: 404 on 14/11/2026). By hand:
+    // Σ(9·5 + 0·4 + 7·3 + 3·2 + 1·9 + 5·8 + 4·7 + 8·6 + 9·5 + 9·4 + 9·3 + 8·2) = 321, 321 mod 11 = 2 → 9;
+    // with the 9 appended, Σ = 403, 403 mod 11 = 7 → 4.
+    expect(cnpjCheckDigits('907315489998')).toBe('94');
   });
 
   it('rejects a malformed base', () => {
@@ -28,7 +32,7 @@ describe('validateCnpj', () => {
     ['12.ABC.345/01DE-35'],
     ['12.abc.345/01de-35'],
     ['00.000.000/E08G-12'],
-    ['11.222.333/0001-81'],
+    ['90.731.548/9998-94'],
   ])('accepts %s and returns the canonical form', (input) => {
     const r = validateCnpj(input);
     expect(r.ok).toBe(true);
