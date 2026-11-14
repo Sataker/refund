@@ -165,18 +165,21 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # E4: migrations from scratch + reference seed, then Playwright @app and @security
-      # - run: pnpm --filter @refund/web exec playwright install --with-deps chromium
-      # - name: Migrations from scratch + reference seed
-      #   run: pnpm --filter @refund/db db:migrate && pnpm --filter @refund/db db:seed --profile=reference
+      - run: pnpm --filter @refund/web exec playwright install --with-deps chromium
+      - name: Migrations from scratch + reference seed
+        run: pnpm --filter @refund/db db:migrate && pnpm --filter @refund/db db:seed --profile=reference
       - name: Build
         run: pnpm --filter @refund/web build
-      - name: Health check against `next start`
+      - name: Health check (basic and deep) against `next start`
         run: |
           pnpm --filter @refund/web start > /tmp/next.log 2>&1 &
-          for i in $(seq 1 30); do curl -fsS http://localhost:3000/api/health && exit 0; sleep 2; done
-          cat /tmp/next.log; exit 1
-      # - name: E2E @app and @security
-      #   run: pnpm --filter @refund/web exec playwright test --project=app-chromium --project=security
+          for i in $(seq 1 30); do curl -fsS http://localhost:3000/api/health && break; sleep 2; done
+          curl -fsS 'http://localhost:3000/api/health?deep=1' | tee /tmp/deep.json
+          grep -q '"database":{"ok":true' /tmp/deep.json || { cat /tmp/next.log; exit 1; }
+          # Free port 3000: Playwright starts its own `next start` (webServer).
+          pkill -f next-server || true
+      - name: E2E @app and @security
+        run: pnpm --filter @refund/web exec playwright test --project=app-chromium --project=security --pass-with-no-tests
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
