@@ -126,6 +126,34 @@ describe('recorder', () => {
     expect(text).not.toContain('"qsa":');
   });
 
+  // Compliance review 14/11 (C1): an EI/MEI CNPJ is personal data, in the file name and in data.cnpj.
+  it('refuses to record a masked (EI/MEI) company', async () => {
+    const { files, write } = sink();
+    const provider: CnpjProvider = {
+      lookup: async (c) =>
+        sanitizeBrasilApiCompany({ ...raw, opcao_pelo_mei: true }, c, '2026-11-17T12:00:00.000Z'),
+    };
+    const r = await recording(provider, { dir: 'fx', source: 'brasilapi.cnpj' }, { write }).lookup(
+      cnpj,
+      { mode: 'live' },
+    );
+    expect(r).toMatchObject({ ok: false, error: { source: 'recorder', recoverable: false } });
+    expect(files).toEqual({});
+  });
+
+  // Code review 14/11 (LOW): an empty answer is not an error and is not recorded.
+  it('passes ok([]) and ok(null) through without recording', async () => {
+    const { files, write } = sink();
+    const provider = {
+      empty: async () => ({ ok: true as const, value: [] }),
+      none: async () => ({ ok: true as const, value: null }),
+    };
+    const wrapped = recording(provider, { dir: 'fx', source: 'pluggy.identity' }, { write });
+    expect(await wrapped.empty()).toEqual({ ok: true, value: [] });
+    expect(await wrapped.none()).toEqual({ ok: true, value: null });
+    expect(files).toEqual({});
+  });
+
   it('refuses an object that did not go through a whitelist (no raw response is ever written)', async () => {
     const { files, write } = sink();
     const rawProvider = { lookup: async () => ({ ok: true as const, value: raw }) };

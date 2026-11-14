@@ -51,6 +51,23 @@ describe('pii-guard rule 1: forbidden keys in JSON', () => {
   });
 });
 
+describe('pii-guard rule 1 in TypeScript demo data (code review 14/11)', () => {
+  it('fails on forbidden keys in .ts under personas/data and apps/web/src/demo', () => {
+    assert.deepEqual(
+      rules(scanText('packages/personas/data/x.ts', 'export const x = { qsa: [] };')),
+      ['forbidden-key'],
+    );
+    assert.deepEqual(
+      rules(scanText('apps/web/src/demo/y.tsx', "const p = { 'fullName': 'x', email: 'y' };")),
+      ['forbidden-key', 'forbidden-key'],
+    );
+  });
+
+  it('leaves ordinary source code alone', () => {
+    assert.deepEqual(scanText('packages/sources/src/x.ts', 'const o = { email: string };'), []);
+  });
+});
+
 describe('pii-guard rule 2: formatted CPF', () => {
   it('fails and masks the excerpt', () => {
     const findings = scanText('notes.md', `holder ${cpf}`);
@@ -125,6 +142,23 @@ describe('pii-guard rule 4: e-mail outside the allowed domains', () => {
     const exceptions: Exception[] = [{ value: email, file: '*', reason: '', source: 'test' }];
     assert.deepEqual(rules(scanText('a.md', email, { ...ctx, exceptions })), ['email']);
   });
+
+  // Code review 14/11 (LOW): an e-mail exception matched any address ending with it.
+  it('an e-mail exception covers that exact address only; a domain exception covers the domain', () => {
+    const listedEmail = ['ana', 'acme.test'].join('@');
+    const lookalike = ['maria.ana', 'acme.test'].join('@');
+    const byEmail = {
+      ...ctx,
+      exceptions: [{ value: listedEmail, file: '*', reason: 't', source: 't' }],
+    };
+    assert.deepEqual(scanText('a.md', listedEmail, byEmail), []);
+    assert.deepEqual(rules(scanText('a.md', lookalike, byEmail)), ['email']);
+    const byDomain = {
+      ...ctx,
+      exceptions: [{ value: 'acme.test', file: '*', reason: 't', source: 't' }],
+    };
+    assert.deepEqual(scanText('a.md', lookalike, byDomain), []);
+  });
 });
 
 describe('pii-guard rule 5: BR phone near a tel/phone/fone/celular key', () => {
@@ -144,6 +178,20 @@ describe('pii-guard rule 6: persona CNPJ not listed in personas/src/cnpjs.ts', (
     const file = 'packages/personas/data/x.json';
     assert.deepEqual(rules(scanText(file, `{ "cnpj": "${stray}" }`, ctx)), ['persona-cnpj']);
     assert.deepEqual(rules(scanText(file, `{ "mask": "${strayMasked}" }`, ctx)), ['persona-cnpj']);
+  });
+
+  // Compliance review 14/11 (C1): CNPJ fixtures may hold only persona CNPJs or listed organizations.
+  it('also covers packages/sources/fixtures/cnpj/**, with exceptions for listed organizations', () => {
+    const file = `packages/sources/fixtures/cnpj/${stray}.json`;
+    assert.deepEqual(rules(scanText(file, `{ "key": "${stray}" }`, ctx)), ['persona-cnpj']);
+    assert.deepEqual(scanText(file, `{ "key": "${listed}" }`, ctx), []);
+    const org: GuardContext = {
+      ...ctx,
+      exceptions: [
+        { value: stray, file, reason: 'public company used as live control', source: 't' },
+      ],
+    };
+    assert.deepEqual(scanText(file, `{ "key": "${stray}" }`, org), []);
   });
 
   it('passes a listed CNPJ, and the same CNPJ outside personas/data', () => {

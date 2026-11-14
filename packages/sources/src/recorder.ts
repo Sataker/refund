@@ -71,8 +71,15 @@ export function recording<P extends object>(
       writeFileSync(path, content);
     });
 
-  /** Writes the fixture; returns the refusal, or null when it was written. */
+  /** Writes the fixture; returns the refusal, or null when it was written (or there was nothing to write). */
   const record = (key: string, data: unknown): AnyResult | null => {
+    // An empty answer (no identity, no accounts) is not an error and is not worth a fixture.
+    if (data === null || data === undefined || (Array.isArray(data) && data.length === 0))
+      return null;
+    // An EI/MEI CNPJ identifies a person: it would land in the file name and in `data.cnpj` (C1).
+    if (typeof data === 'object' && (data as { masked?: unknown }).masked === true) {
+      return refuse('Gravação recusada: CNPJ de empresário individual ou MEI é dado pessoal.');
+    }
     const sanitization = sanitizationFor(data);
     if (!sanitization) return refuse('Gravação recusada: o objeto não passou pela whitelist.');
     const findings = detectPii(data);

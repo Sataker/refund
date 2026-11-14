@@ -2,6 +2,10 @@
 // recorder: the whitelist runs before anything is written, and `detectPii` refuses the recording if
 // anything personal is left. Calls the internet: never runs in CI.
 //
+// A masked (EI/MEI) company is refused by the recorder: its CNPJ identifies a person. Any other
+// organization CNPJ recorded under fixtures/cnpj/ must be listed in scripts/pii-exceptions.json with a
+// reason, or the PII guard (rule 6) fails.
+//
 // Usage:
 //   node scripts/record-fixtures.ts --source=cnpj --cnpj=<CNPJ> [--provider=brasilapi|cnpjws]
 //   node scripts/record-fixtures.ts --source=sgs --code=432 --from=YYYY-MM-DD --to=YYYY-MM-DD

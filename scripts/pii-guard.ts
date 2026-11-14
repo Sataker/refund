@@ -12,6 +12,7 @@ import { cnpjCheckDigits } from '../packages/sources/src/cnpj/validate.ts';
 import { mask } from '../packages/sources/src/pii/cpf.ts';
 import {
   detectPii,
+  FORBIDDEN_KEYS,
   findForbiddenKeys,
   scanText as scanPii,
 } from '../packages/sources/src/pii/detect.ts';
@@ -41,7 +42,17 @@ export interface GuardContext {
 
 const EXCEPTIONS_FILE = 'scripts/pii-exceptions.json';
 const PERSONA_CNPJS_FILE = 'packages/personas/src/cnpjs.ts';
-const PERSONA_DATA = 'packages/personas/data/';
+/**
+ * Rule 6 scope: persona data, and CNPJ fixtures (compliance C1). Only persona CNPJs, or organizations
+ * listed in pii-exceptions.json with a reason, may appear there.
+ */
+const CNPJ_SCOPES = ['packages/personas/data/', 'packages/sources/fixtures/cnpj/'];
+/** Rule 1 also over TypeScript data that ships with /demo (code review 14/11). */
+const TS_DATA_DIRS = ['packages/personas/data/', 'apps/web/src/demo/'];
+const FORBIDDEN_KEY_IN_TS = new RegExp(
+  `(?<![\\w$])["']?(${FORBIDDEN_KEYS.join('|')})["']?\\??\\s*:`,
+  'gi',
+);
 const BINARY_EXTENSIONS = new Set([
   '.pdf',
   '.png',
@@ -68,14 +79,19 @@ function fileMatches(pattern: string, file: string): boolean {
   return pattern === file;
 }
 
-/** An exception covers the exact value, or every e-mail of a domain listed as the value. */
+/**
+ * An exception covers the exact value; a value without `@` (a domain) also covers every e-mail of that
+ * domain and its subdomains. An e-mail exception never covers look-alikes ending with it.
+ */
 export function isExcepted(exceptions: readonly Exception[], file: string, raw: string): boolean {
   const value = raw.toLowerCase();
   return exceptions.some((e) => {
     if (typeof e.reason !== 'string' || e.reason.trim() === '') return false;
     if (!fileMatches(e.file, file)) return false;
     const allowed = String(e.value).toLowerCase();
-    return value === allowed || value.endsWith(`@${allowed}`) || value.endsWith(`.${allowed}`);
+    if (value === allowed) return true;
+    if (allowed.includes('@')) return false;
+    return value.endsWith(`@${allowed}`) || value.endsWith(`.${allowed}`);
   });
 }
 
@@ -119,13 +135,19 @@ export function scanText(file: string, text: string, ctx: GuardContext = EMPTY_C
     for (const f of findForbiddenKeys(text)) {
       findings.push({ file, line: at(f.index), rule: f.rule, excerpt: f.excerpt });
     }
+  } else if (TS_DATA_DIRS.some((d) => file.startsWith(d)) && /\.tsx?$/.test(file)) {
+    for (const m of text.matchAll(FORBIDDEN_KEY_IN_TS)) {
+      findings.push({ file, line: at(m.index), rule: 'forbidden-key', excerpt: `${m[1]}: …` });
+    }
   }
   const allow = (_rule: string, raw: string): boolean => isExcepted(ctx.exceptions, file, raw);
   for (const f of scanPii(text, { allow })) {
     findings.push({ file, line: at(f.index), rule: f.rule, excerpt: f.excerpt });
   }
   if (extname(file) === '.json') findings.push(...jsonFindings(file, text, findings, allow));
-  if (file.startsWith(PERSONA_DATA)) findings.push(...personaCnpjFindings(file, text, ctx));
+  if (CNPJ_SCOPES.some((d) => file.startsWith(d))) {
+    findings.push(...personaCnpjFindings(file, text, ctx));
+  }
   return findings;
 }
 
