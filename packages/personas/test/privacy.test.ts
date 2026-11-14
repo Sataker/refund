@@ -59,10 +59,15 @@ describe('hero persona: no real personal data (ARCHITECTURE §6.4, TESTS §3.3)'
     for (const d of cpfs) {
       expect(d.publicValue).toBeNull();
       expect(d.hmac).toBeNull();
-      expect(d.mask).toMatch(/^\*\*\*\.\d{3}\.\d{3}-\*\*$/);
+      expect(d.mask).toMatch(/^\*\*\*\.(\d{3}|\*{3})\.(\d{3}|\*{3})-\*\*$/);
     }
-    // holder, 2 employees and the psychologist
-    expect(new Set(cpfs.map((d) => d.mask)).size).toBe(4);
+    // Identity parties[] keep only the HMAC: fully hidden mask (ARCHITECTURE §6.2)
+    for (const i of data.items) {
+      for (const p of i.identity.partnerDocuments) expect(p.mask).toBe('***.***.***-**');
+    }
+    // holder, 2 employees and the psychologist (+ the fully hidden partner mask)
+    const partial = cpfs.filter((d) => d.mask !== '***.***.***-**');
+    expect(new Set(partial.map((d) => d.mask)).size).toBe(4);
   });
 
   it.each(files)('%s only contains CNPJs listed in cnpjs.ts, all valid', (f) => {

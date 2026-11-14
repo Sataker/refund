@@ -13,7 +13,7 @@ import {
   nthBusinessDay,
 } from '../calendar.ts';
 import { PERSONA_CNPJS } from '../cnpjs.ts';
-import { cnpjDocument, syntheticCpfDocument } from '../documents.ts';
+import { cnpjDocument, partnerDocument, syntheticCpfDocument } from '../documents.ts';
 import {
   COMPANY_NAMES,
   FOREIGN_CLIENT_NAMES,
@@ -519,7 +519,7 @@ export function generateDevExportador(seed: number = DEV_EXPORTADOR_SEED): Gener
           holder: 'PJ',
           document: pjDoc,
           economicActivities: [CNAE],
-          partnerDocuments: [holderCpf],
+          partnerDocuments: [partnerDocument(holderCpf)],
         },
         accounts: [
           {

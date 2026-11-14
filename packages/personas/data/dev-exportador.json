@@ -72,7 +72,7 @@
             "type": "CPF",
             "hmac": null,
             "publicValue": null,
-            "mask": "***.711.985-**"
+            "mask": "***.***.***-**"
           }
         ]
       },

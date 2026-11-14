@@ -29,6 +29,15 @@ export function syntheticCpfDocument(prng: Prng): ProtectedDocument {
   };
 }
 
+/** Identity `parties[]` keep only the HMAC: a fully hidden mask (ARCHITECTURE §6.2; same as @refund/sources `protectDocument(…, partner)`). */
+export function partnerDocument(doc: ProtectedDocument): ProtectedDocument {
+  return {
+    ...doc,
+    publicValue: null,
+    mask: doc.type === 'CPF' ? '***.***.***-**' : '**.***.***/****-**',
+  };
+}
+
 export function cnpjDocument(cnpj: Cnpj): ProtectedDocument {
   return { type: 'CNPJ', hmac: null, publicValue: cnpj, mask: formatCnpj(cnpj) };
 }
