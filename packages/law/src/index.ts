@@ -3,6 +3,7 @@ import dl1598 from '../articles/dl1598-1977.json' with { type: 'json' };
 import lc116 from '../articles/lc116-2003.json' with { type: 'json' };
 import lc118 from '../articles/lc118-2005.json' with { type: 'json' };
 import lc123 from '../articles/lc123-2006.json' with { type: 'json' };
+import lc214 from '../articles/lc214-2025.json' with { type: 'json' };
 import lc238 from '../articles/lc238-2026.json' with { type: 'json' };
 import lei810 from '../articles/lei810-1949.json' with { type: 'json' };
 import ctn from '../articles/lei5172-1966.json' with { type: 'json' };
@@ -17,6 +18,7 @@ import lei10637 from '../articles/lei10637-2002.json' with { type: 'json' };
 import lei10666 from '../articles/lei10666-2003.json' with { type: 'json' };
 import lei10833 from '../articles/lei10833-2003.json' with { type: 'json' };
 import lei11053 from '../articles/lei11053-2004.json' with { type: 'json' };
+import lei15191 from '../articles/lei15191-2025.json' with { type: 'json' };
 import lei15270 from '../articles/lei15270-2025.json' with { type: 'json' };
 import port13 from '../articles/port-mps-mf13-2026.json' with { type: 'json' };
 import res140 from '../articles/res-cgsn140-2018.json' with { type: 'json' };
@@ -41,6 +43,8 @@ export interface Provision {
   notes: readonly string[];
   /** CivilDate from which this wording produces effects, or null when no captured provision states it. */
   effectiveFrom: string | null;
+  /** Last CivilDate this wording produces effects, or null when no captured provision replaces or revokes it. */
+  effectiveUntil: string | null;
   url: string;
   /** CivilDate of the capture. */
   capturedAt: string;
@@ -78,6 +82,8 @@ const corpus: readonly Provision[] = [
   dl1598,
   lei10833,
   lei10637,
+  lc214,
+  lei15191,
 ].flat();
 
 const byId = new Map(corpus.map((p) => [p.id, p]));
@@ -98,6 +104,14 @@ export function regulation(id: string): RegulationWithProvisions | undefined {
 /** Every provision of the corpus, in catalog order. */
 export function all(): readonly Provision[] {
   return corpus;
+}
+
+/** Whether the wording is in force on `date` (CivilDate 'YYYY-MM-DD'; ISO dates compare as strings). */
+export function inForceOn(p: Provision, date: string): boolean {
+  return (
+    (p.effectiveFrom === null || p.effectiveFrom <= date) &&
+    (p.effectiveUntil === null || date <= p.effectiveUntil)
+  );
 }
 
 export { regulations };

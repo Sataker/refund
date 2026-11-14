@@ -1,5 +1,61 @@
 [
   {
+    "id": "res-cgsn190-2026/art1/res140-art21",
+    "regulation": "res-cgsn190-2026",
+    "provision": "art. 1º (art. 21 da Res. CGSN 140/2018)",
+    "label": "Res. CGSN 190/2026, art. 1º (art. 21 da Res. CGSN 140/2018)",
+    "text": "\"Art. 21.................................................................................................................\nII -.........................................................................................................................\na) RBT12: receita bruta acumulada nos doze meses antecedentes ao mês anterior ao do período de apuração; (Lei Complementar nº 123, de 2006, art. 18, caput e § 1º)\nIII - percentual efetivo de cada tributo o calculado mediante multiplicação da alíquota efetiva pelo percentual de repartição constante dos Anexos I a V desta Resolução, observando-se que o percentual efetivo máximo destinado ao ISS será de 5% (cinco por cento), e que eventual diferença será transferida, de forma proporcional, aos tributos federais e IBS da mesma faixa de receita bruta anual. (Lei Complementar nº 123, de 2006, art. 18, § 1º-B, inciso I)\nIV - O valor da RBT12, quando for superior ao limite da 5ª faixa de receita bruta anual prevista nos Anexos I a V desta Resolução, o percentual efetivo do ICMS, do ISS e do IBS será calculado mediante aplicação da fórmula {[(RBT12 × alíquota nominal da 5ª faixa) - (menos) a Parcela a Deduzir da 5ª Faixa]/RBT12} × o Percentual de Distribuição do ICMS, ISS e do IBS da 5ª faixa.\" (NR)",
+    "notes": [],
+    "effectiveFrom": "2027-01-01",
+    "effectiveUntil": null,
+    "url": "https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832",
+    "capturedAt": "2026-11-14",
+    "hash": "ba78fbd537543863be8c7db880f413308a0f778cdde80550e0bdc1397cd42461",
+    "sourceSha256": "55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40"
+  },
+  {
+    "id": "res-cgsn190-2026/art1/res140-art25",
+    "regulation": "res-cgsn190-2026",
+    "provision": "art. 1º (art. 25 da Res. CGSN 140/2018)",
+    "label": "Res. CGSN 190/2026, art. 1º (art. 25 da Res. CGSN 140/2018)",
+    "text": "\"Art. 25. O valor devido mensalmente pela ME ou EPP optante pelo Simples Nacional será determinado mediante aplicação das alíquotas efetivas calculadas na forma prevista nos arts. 21, 22 e 24 sobre a base de cálculo de que tratam os arts. 16 a 18. (Lei Complementar nº 123, de 2006, art. 3º, § 15, art. 18)\n§ 1º O contribuinte deverá considerar, destacadamente, para fim de cálculo e pagamento, as receitas decorrentes de:\nI - revenda de mercadorias e da venda de mercadorias industrializadas pelo contribuinte, que serão tributadas na forma prevista no Anexo I, observado o inciso II; (Lei Complementar nº 123, de 2006, art. 18, § 4º, inciso I)\nI-A - operações com os demais bens materiais, no caso em que incidem o IBS e a CBS, mas não incide o ICMS, que serão tributadas na forma do Anexo I desta Resolução, observado o disposto no inciso II, e sobre as quais deverá ser deduzida a parcela correspondente ao ICMS; (Lei Complementar nº 123, de 2006, art. 18, § 4º, inciso IX)\nII - venda de mercadorias industrializadas pelo contribuinte sujeitas ao IPI mantido nos termos do art. 126, inciso III, alínea \"a\", do Ato das Disposições Constitucionais Transitórias da Constituição Federal, de 1988, que serão tributadas na forma do Anexo II; (Lei Complementar nº 123, de 2006, art. 18, § 4º, inciso II)\nIII -........................................................................................................................\nl) cessão de uso e congêneres, de bens imóveis próprios com a finalidade de exploração de salões de festas, centro de convenções, escritórios virtuais, stands, quadras esportivas, estádios, ginásios, auditórios, casas de espetáculos, parques de diversões, canchas e congêneres, para realização de eventos ou negócios de qualquer natureza; e (Lei Complementar nº 123, de 2006, art. 17, inciso XV; art. 18, § 4º, inciso III)\nVIII - prestação do serviço de escritórios de serviços contábeis, que serão tributados na forma do Anexo III, desconsiderando-se o percentual relativo ao ISS, quando o imposto for fixado pela legislação municipal e recolhido diretamente ao Município em valor fixo nos termos do art. 34, observado o disposto no § 8º do art. 6º e no § 11 deste artigo; (Lei Complementar nº 123, de 2006, art. 18, § 5º-B, inciso XIV, § 22-A)\nX - operações com serviços e com bens imateriais, inclusive direitos, sobre as quais incidem o IBS e a CBS e não incidem o ISS e o ICMS, que serão tributadas na forma do Anexo III desta Resolução, e sobre as quais deverá ser deduzida a parcela correspondente ao ISS. (Lei Complementar nº 123, de 2006, art. 18, § 4º, inciso VIII).\n§ 3º A ME ou EPP deverá segregar as receitas decorrentes de exportação para o exterior, inclusive as vendas realizadas por meio de comercial exportadora ou sociedade de propósito específico, observado o disposto no § 7º do art. 18 e no art. 56 da Lei Complementar nº 123, de 2006, quando então serão desconsiderados, no cálculo do valor devido no âmbito do Simples Nacional, conforme o caso, os percentuais relativos ao IBS, à CBS, ao IPI, ao ICMS e ao ISS constantes dos Anexos I a V desta Resolução. (Lei Complementar nº 123, de 2006, art. 18, § 10, § 14 e § 14-A)\n§ 4º-B. A qualificação de uma operação como exportação de serviços por ao menos um dos tributos de que trata o art. 4º implica o reconhecimento dessa receita como exportação de serviços para fins do § 1º do art. 2º e no caput do art. 3º, devendo ser observadas as regras específicas de cada tributo na definição da respectiva incidência.\n§ 6º A ME ou EPP que proceda à importação, à industrialização ou à comercialização de produto sujeito à tributação concentrada ou à substituição tributária para efeitos de incidência do IBS e da CBS deve segregar a receita decorrente de sua venda e indicar a existência de tributação concentrada ou substituição tributária para os referidos tributos, de forma que serão desconsiderados, no cálculo do valor devido no âmbito do Simples Nacional, os percentuais a elas correspondentes. (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º; art. 18, § 4º-A, inciso I, § 12)\n§ 7º.......................................................................................................................\nI - a incidência do IBS e da CBS deverá ocorrer com observância do disposto na legislação específica; (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º; art. 18, § 4º-A, inciso I)\n§ 8º Em relação ao ICMS, ao IBS e à CBS: (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º; art. 13, § 6º, inciso I; art. 18, § 4º-A, inciso I)\nI - o substituído tributário, assim entendido o contribuinte que teve o imposto retido, e o contribuinte obrigado à antecipação com encerramento de tributação deverão segregar a receita correspondente como \"sujeita à substituição tributária ou ao recolhimento antecipado do ICMS, do IBS ou da CBS\", conforme o caso, quando então será desconsiderado, no cálculo do valor devido no âmbito do Simples Nacional, o percentual do ICMS, do IBS ou da CBS;\nII -......................................................................................................................\na) recolher o tributo sobre a operação própria pelo Simples Nacional e segregar a receita correspondente como \"não sujeita à substituição tributária e não sujeita ao recolhimento antecipado do ICMS, do IBS ou da CBS\"; e\n§ 10-A. Com relação às segregações de receitas sujeitas ou com ocorrência de imunidade da CBS ou do IBS, deverá ser observado o disposto no art. 30. (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º)\" (NR)",
+    "notes": [],
+    "effectiveFrom": "2027-01-01",
+    "effectiveUntil": null,
+    "url": "https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832",
+    "capturedAt": "2026-11-14",
+    "hash": "cd37687cc6e77b9c9c814ef9f10da178f4110916aab97e5600cb4921f3f537e8",
+    "sourceSha256": "55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40"
+  },
+  {
+    "id": "res-cgsn190-2026/art1/res140-art26",
+    "regulation": "res-cgsn190-2026",
+    "provision": "art. 1º (art. 26 da Res. CGSN 140/2018)",
+    "label": "Res. CGSN 190/2026, art. 1º (art. 26 da Res. CGSN 140/2018)",
+    "text": "\"Art. 26.................................................................................................................\nI - folha de salários, incluídos encargos, nos 12 (doze) meses antecedentes ao mês anterior ao período de apuração; e\nII - receita bruta total acumulada auferida nos mercados interno e externo nos 12 (doze) meses antecedentes ao mês anterior ao período de apuração.\n§ 1º Para efeito do disposto no inciso I do caput, considera-se folha de salários, incluídos encargos, o montante pago nos 12 (doze) meses antecedente ao mês anterior ao do período de apuração a título de remuneração a pessoas físicas decorrentes do trabalho e de pró-labore, acrescido do montante efetivamente recolhido a título de contribuição patronal previdenciária e para o Fundo de Garantia do Tempo de Serviço (FGTS). (Lei Complementar nº 123, de 2006, art. 18, § 24)\n§ 4º Na hipótese de a ME ou EPP ter mais de 2 (dois) meses e menos de 14 (quatorze) meses de atividade, adotar-se-ão, para a determinação da folha de salários anualizada, incluídos encargos, os mesmos critérios para a determinação da receita bruta total acumulada, estabelecidos no art. 22, no que couber. (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º)\n§ 5º.......................................................................................................................\nIV - FS12, a folha de salários dos 12 (doze) meses antecedentes ao mês anterior ao PA; e\nV - RBT12r, a receita bruta acumulada dos 12 (doze) meses antecedentes ao mês anterior ao PA, considerando conjuntamente as receitas brutas auferidas no mercado interno e aquelas decorrentes da exportação.\n§ 6º O fator \"r\" referente aos 2 (dois) primeiros meses de início de atividades será considerado 0,28 (vinte e oito centésimos). (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º)\n§ 7º Para o cálculo do fator \"r\" referente a período de apuração posterior ao segundo mês de início de atividades: (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º)\" (NR)",
+    "notes": [],
+    "effectiveFrom": "2027-01-01",
+    "effectiveUntil": null,
+    "url": "https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832",
+    "capturedAt": "2026-11-14",
+    "hash": "6007b4fc14424bd5a6136333885f27c2c698ed47d2e8cd088135bf5d49cd85ad",
+    "sourceSha256": "55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40"
+  },
+  {
+    "id": "res-cgsn190-2026/art8/xvi",
+    "regulation": "res-cgsn190-2026",
+    "provision": "art. 8º, XVI",
+    "label": "Res. CGSN 190/2026, art. 8º, XVI",
+    "text": "XVI - os §§ 4º e 4º-A do art. 25;",
+    "notes": [],
+    "effectiveFrom": "2027-01-01",
+    "effectiveUntil": null,
+    "url": "https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832",
+    "capturedAt": "2026-11-14",
+    "hash": "2cb7a49569f90c7ad2b6dcc71ea0ad323e208f2b794abc3befe8a1a799ea7903",
+    "sourceSha256": "55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40"
+  },
+  {
     "id": "res-cgsn190-2026/art9",
     "regulation": "res-cgsn190-2026",
     "provision": "art. 9º",
@@ -7,35 +63,10 @@
     "text": "Art. 9º Esta Resolução entra em vigor na data de sua publicação no Diário Oficial da União e produzirá efeitos a partir de 1º de janeiro de 2027.",
     "notes": [],
     "effectiveFrom": null,
+    "effectiveUntil": null,
     "url": "https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832",
     "capturedAt": "2026-11-14",
     "hash": "4384811b7114887e1977bef6b6ad5df1ab4e49db95343740d3288e06c6be69ec",
-    "sourceSha256": "55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40"
-  },
-  {
-    "id": "res-cgsn190-2026/art1/res140-art21",
-    "regulation": "res-cgsn190-2026",
-    "provision": "art. 1º (redação dada ao art. 21 da Res. CGSN 140/2018)",
-    "label": "Res. CGSN 190/2026, art. 1º",
-    "text": "\"Art. 21.................................................................................................................\nII -.........................................................................................................................\na) RBT12: receita bruta acumulada nos doze meses antecedentes ao mês anterior ao do período de apuração; (Lei Complementar nº 123, de 2006, art. 18, caput e § 1º)\nIII - percentual efetivo de cada tributo o calculado mediante multiplicação da alíquota efetiva pelo percentual de repartição constante dos Anexos I a V desta Resolução, observando-se que o percentual efetivo máximo destinado ao ISS será de 5% (cinco por cento), e que eventual diferença será transferida, de forma proporcional, aos tributos federais e IBS da mesma faixa de receita bruta anual. (Lei Complementar nº 123, de 2006, art. 18, § 1º-B, inciso I)\nIV - O valor da RBT12, quando for superior ao limite da 5ª faixa de receita bruta anual prevista nos Anexos I a V desta Resolução, o percentual efetivo do ICMS, do ISS e do IBS será calculado mediante aplicação da fórmula {[(RBT12 × alíquota nominal da 5ª faixa) - (menos) a Parcela a Deduzir da 5ª Faixa]/RBT12} × o Percentual de Distribuição do ICMS, ISS e do IBS da 5ª faixa.\" (NR)",
-    "notes": [],
-    "effectiveFrom": "2027-01-01",
-    "url": "https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832",
-    "capturedAt": "2026-11-14",
-    "hash": "ba78fbd537543863be8c7db880f413308a0f778cdde80550e0bdc1397cd42461",
-    "sourceSha256": "55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40"
-  },
-  {
-    "id": "res-cgsn190-2026/art1/res140-art26",
-    "regulation": "res-cgsn190-2026",
-    "provision": "art. 1º (redação dada ao art. 26 da Res. CGSN 140/2018)",
-    "label": "Res. CGSN 190/2026, art. 1º",
-    "text": "\"Art. 26.................................................................................................................\nI - folha de salários, incluídos encargos, nos 12 (doze) meses antecedentes ao mês anterior ao período de apuração; e\nII - receita bruta total acumulada auferida nos mercados interno e externo nos 12 (doze) meses antecedentes ao mês anterior ao período de apuração.\n§ 1º Para efeito do disposto no inciso I do caput, considera-se folha de salários, incluídos encargos, o montante pago nos 12 (doze) meses antecedente ao mês anterior ao do período de apuração a título de remuneração a pessoas físicas decorrentes do trabalho e de pró-labore, acrescido do montante efetivamente recolhido a título de contribuição patronal previdenciária e para o Fundo de Garantia do Tempo de Serviço (FGTS). (Lei Complementar nº 123, de 2006, art. 18, § 24)\n§ 4º Na hipótese de a ME ou EPP ter mais de 2 (dois) meses e menos de 14 (quatorze) meses de atividade, adotar-se-ão, para a determinação da folha de salários anualizada, incluídos encargos, os mesmos critérios para a determinação da receita bruta total acumulada, estabelecidos no art. 22, no que couber. (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º)\n§ 5º.......................................................................................................................\nIV - FS12, a folha de salários dos 12 (doze) meses antecedentes ao mês anterior ao PA; e\nV - RBT12r, a receita bruta acumulada dos 12 (doze) meses antecedentes ao mês anterior ao PA, considerando conjuntamente as receitas brutas auferidas no mercado interno e aquelas decorrentes da exportação.\n§ 6º O fator \"r\" referente aos 2 (dois) primeiros meses de início de atividades será considerado 0,28 (vinte e oito centésimos). (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º)\n§ 7º Para o cálculo do fator \"r\" referente a período de apuração posterior ao segundo mês de início de atividades: (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º)\" (NR)",
-    "notes": [],
-    "effectiveFrom": "2027-01-01",
-    "url": "https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832",
-    "capturedAt": "2026-11-14",
-    "hash": "6007b4fc14424bd5a6136333885f27c2c698ed47d2e8cd088135bf5d49cd85ad",
     "sourceSha256": "55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40"
   }
 ]

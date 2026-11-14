@@ -30,6 +30,12 @@
  * - `effectiveFrom`: date from which this wording produces effects, filled only when a captured provision states
  *   it (Lei 15.270/2025, art. 8º; Res. CGSN 190/2026, art. 9º; LC 238/2026, art. 10; Decreto 12.797/2025, arts. 1º
  *   and 2º; Portaria MPS/MF 13/2026). `null` means "in force on `capturedAt`; start date not asserted".
+ * - `effectiveUntil`: last day this wording produces effects, filled only when a captured provision replaces or
+ *   revokes it: Res. CGSN 140/2018, art. 25, §§ 3º, 4º and 4º-A, and art. 26 end on 2026-12-31 (Res. CGSN 190/2026,
+ *   art. 1º, art. 8º, XVI, and art. 9º). `null` means no end date in the corpus. LC 123/2006, art. 18-A, §§ 1º–2º
+ *   stay `null`: LC 238/2026 replaces them from 2028 only if the budget condition of its art. 3º is met.
+ * - Label of an excerpt adds the amended article: "Res. CGSN 190/2026, art. 1º (art. 26 da Res. CGSN 140/2018)".
+ *   Labels are unique.
  *
  * Capture: 2026-11-14, in the browser (Planalto blocks curl), by a deterministic extractor (no LLM chooses or
  * rewrites text); the extractor, the per-page captures and the SHA-256 check of every transcribed text are in
@@ -289,6 +295,26 @@ export const regulations: readonly Regulation[] = [
     date: '2002-12-30',
     url: 'https://www.planalto.gov.br/ccivil_03/leis/2002/l10637.htm',
     urn: 'urn:lex:br:federal:lei:2002-12-30;10637',
+    source: 'planalto',
+  },
+  {
+    id: 'lc214-2025',
+    short: 'LC 214/2025',
+    name: 'Lei Complementar nº 214 de 16/01/2025',
+    kind: 'lei_complementar',
+    date: '2025-01-16',
+    url: 'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm',
+    urn: 'urn:lex:br:federal:lei.complementar:2025-01-16;214',
+    source: 'planalto',
+  },
+  {
+    id: 'lei15191-2025',
+    short: 'Lei 15.191/2025',
+    name: 'Lei nº 15.191 de 11/08/2025',
+    kind: 'lei',
+    date: '2025-08-11',
+    url: 'https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/L15191.htm',
+    urn: 'urn:lex:br:federal:lei:2025-08-11;15191',
     source: 'planalto',
   },
 ];

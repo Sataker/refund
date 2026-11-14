@@ -13,9 +13,32 @@
       "(Incluído pela Lei nº 14.689, de 2023)"
     ],
     "effectiveFrom": null,
+    "effectiveUntil": null,
     "url": "https://www.planalto.gov.br/ccivil_03/leis/l9249.htm",
     "capturedAt": "2026-11-14",
     "hash": "945f4b6f31cfe127f3571c2dd783b6d0ca876a61095208a2d825cbdb0bc164cc",
+    "sourceSha256": "d1824559e31ff2a0bb513ad70ee127cdfc3e11f22f9d127a6563d1dfdc3adea9"
+  },
+  {
+    "id": "lei9249-1995/art15",
+    "regulation": "lei9249-1995",
+    "provision": "art. 15",
+    "label": "Lei 9.249/1995, art. 15",
+    "text": "Art. 15. A base de cálculo do imposto, em cada mês, será determinada mediante a aplicação do percentual de 8% (oito por cento) sobre a receita bruta auferida mensalmente, observado o disposto no art. 12 do Decreto-Lei no 1.598, de 26 de dezembro de 1977, deduzida das devoluções, vendas canceladas e dos descontos incondicionais concedidos, sem prejuízo do disposto nos arts. 30, 32, 34 e 35 da Lei no 8.981, de 20 de janeiro de 1995.\n§ 1º Nas seguintes atividades, o percentual de que trata este artigo será de:\nI - um inteiro e seis décimos por cento, para a atividade de revenda, para consumo, de combustível derivado de petróleo, álcool etílico carburante e gás natural;\nII - dezesseis por cento:\na) para a atividade de prestação de serviços de transporte, exceto o de carga, para o qual se aplicará o percentual previsto no caput deste artigo;\nb) para as pessoas jurídicas a que se refere o inciso III do art. 36 da Lei nº 8.981, de 20 de janeiro de 1995, observado o disposto nos §§ 1º e 2º do art. 29 da referida Lei;\nIII - trinta e dois por cento, para as atividades de:\na) prestação de serviços em geral, exceto a de serviços hospitalares e de auxílio diagnóstico e terapia, patologia clínica, imagenologia, anatomia patológica e citopatologia, medicina nuclear e análises e patologias clínicas, desde que a prestadora destes serviços seja organizada sob a forma de sociedade empresária e atenda às normas da Agência Nacional de Vigilância Sanitária – Anvisa;\nb) intermediação de negócios;\nc) administração, locação ou cessão de bens imóveis, móveis e direitos de qualquer natureza;\nd) prestação cumulativa e contínua de serviços de assessoria creditícia, mercadológica, gestão de crédito, seleção de riscos, administração de contas a pagar e a receber, compra de direitos creditórios resultantes de vendas mercantis a prazo ou de prestação de serviços (factoring).\ne) prestação de serviços de construção, recuperação, reforma, ampliação ou melhoramento de infraestrutura vinculados a contrato de concessão de serviço público.\nIV - 38,4% (trinta e oito inteiros e quatro décimos por cento), para as atividades de operação de empréstimo, de financiamento e de desconto de títulos de crédito realizadas por Empresa Simples de Crédito (ESC).\n§ 2º No caso de atividades diversificadas será aplicado o percentual correspondente a cada atividade.\n§ 3º As receitas provenientes de atividade incentivada não comporão a base de cálculo do imposto, na proporção do benefício a que a pessoa jurídica, submetida ao regime de tributação com base no lucro real, fizer jus.\n§ 4º O percentual de que trata este artigo também será aplicado sobre a receita financeira da pessoa jurídica que explore atividades imobiliárias relativas a loteamento de terrenos, incorporação imobiliária, construção de prédios destinados à venda, bem como a venda de imóveis construídos ou adquiridos para a revenda, quando decorrente da comercialização de imóveis e for apurada por meio de índices ou coeficientes previstos em contrato.",
+    "notes": [
+      "(Redação dada pela Lei nº 12.973, de 2014)",
+      "(Vigência)",
+      "(Vide Medida Provisória nº 232, de 2004)",
+      "(Redação dada pela Lei nº 11.727, de 2008)",
+      "(Incluído pela Lei nº 12.973, de 2014)",
+      "(Incluído pela Lei Complementar nº 167, de 2019)",
+      "(Incluído pela Lei nº 11.196, de 2005)"
+    ],
+    "effectiveFrom": null,
+    "effectiveUntil": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/l9249.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "4de25bf51ec51abc0133969ef9d5b1bd2bf20d82d4656beec8f85e0ff464c161",
     "sourceSha256": "d1824559e31ff2a0bb513ad70ee127cdfc3e11f22f9d127a6563d1dfdc3adea9"
   }
 ]

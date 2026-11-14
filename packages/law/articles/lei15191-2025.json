@@ -1,0 +1,30 @@
+[
+  {
+    "id": "lei15191-2025/art2",
+    "regulation": "lei15191-2025",
+    "provision": "art. 2º",
+    "label": "Lei 15.191/2025, art. 2º",
+    "text": "Art. 2º O art. 1º da Lei nº 11.482, de 31 de maio de 2007, passa a vigorar com as seguintes alterações:\n“Art. 1º...................................................................................................................................\nXI – a partir do mês de fevereiro do ano-calendário de 2024 até o mês de abril do ano-calendário de 2025:\nXII – a partir do mês de maio do ano-calendário de 2025:\nTabela Progressiva Mensal\nBase de Cálculo (R$) | Alíquota (%) | Parcela a Deduzir do IR (R$)\nAté 2.428,80 | 0 | 0\nDe 2.428,81 até 2.826,65 | 7,5 | 182,16\nDe 2.826,66 até 3.751,05 | 15 | 394,16\nDe 3.751,06 até 4.664,68 | 22,5 | 675,49\nAcima de 4.664,68 | 27,5 | 908,73\n..................................................................................................................................................... ” (NR)",
+    "notes": [],
+    "effectiveFrom": null,
+    "effectiveUntil": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/L15191.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "6494a63108ab0f42761feba4dd02ad89a5df56e66b9ad7460d2618f3ef97288a",
+    "sourceSha256": "dc266886878e79d4a92ca921c65f8c66f62cf178a473fa3b3ba93578d2c474a8"
+  },
+  {
+    "id": "lei15191-2025/art4",
+    "regulation": "lei15191-2025",
+    "provision": "art. 4º",
+    "label": "Lei 15.191/2025, art. 4º",
+    "text": "Art. 4º Esta Lei entra em vigor na data de sua publicação.",
+    "notes": [],
+    "effectiveFrom": null,
+    "effectiveUntil": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/L15191.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "2f4d3a28266b5bd41f54fcbaeff64f075e960cbaa2f4ddc0dbab8f0d383ee466",
+    "sourceSha256": "dc266886878e79d4a92ca921c65f8c66f62cf178a473fa3b3ba93578d2c474a8"
+  }
+]
