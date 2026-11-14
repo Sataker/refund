@@ -1,0 +1,13 @@
+{
+  "name": "@refund/law",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Curated legal corpus and lookup by ID.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  }
+}

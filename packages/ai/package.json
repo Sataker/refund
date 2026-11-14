@@ -1,0 +1,19 @@
+{
+  "name": "@refund/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "LlmPort implementations (gateway, recording, template) and guards.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@refund/engine": "workspace:*",
+    "@refund/law": "workspace:*",
+    "@refund/pipeline": "workspace:*",
+    "zod": "4.6.7"
+  }
+}

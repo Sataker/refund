@@ -1,0 +1,17 @@
+{
+  "name": "@refund/personas",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Seeded synthetic personas and answer keys.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@refund/engine": "workspace:*",
+    "@refund/sources": "workspace:*"
+  }
+}

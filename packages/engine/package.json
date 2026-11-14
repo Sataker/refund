@@ -1,0 +1,16 @@
+{
+  "name": "@refund/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure tax engine: rules, parameters, combined scenario, trace (ENGINE-SPEC).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "decimal.js": "10.6.0"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@refund/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Drizzle schema, migrations, client and repositories.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@refund/engine": "workspace:*",
+    "@refund/sources": "workspace:*"
+  }
+}
