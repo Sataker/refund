@@ -5,6 +5,8 @@ import type { Tax } from '../types.ts';
 import type { AnyParameterEntry, ParameterSource, SimplesAnexoTable } from './types.ts';
 
 const VERIFIED = '2026-11-12' as const;
+/** H.1 closed at the primary source (capture index: docs/conferencias/fontes-oficiais/E1-H1-fechamento.md). */
+const VERIFIED_H1 = '2026-11-14' as const;
 const FROM = '2026-01' as const;
 const PUBLISHED_THROUGH = '2026-12' as const;
 
@@ -469,9 +471,9 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
     value: p('0.10'),
     source: src('Lei 11.053/2004', 'art. 1º', SOURCE_URL.lei11053),
     effectiveFrom: FROM,
-    verifiedAt: VERIFIED,
-    status: '⚠️',
-    note: 'H.1 item 5: não relido na fonte primária. Fallback: 10% (tabela regressiva, prazo > 10 anos).',
+    verifiedAt: VERIFIED_H1,
+    status: 'verified',
+    note: 'H.1 item 5 fechado: art. 1º, VI ("10% ... prazo de acumulação superior a 10 anos"); retenção definitiva (§ 2º); regime optativo, opção até o benefício ou o 1º resgate (§ 6º, Lei 14.803/2024). Captura: lei-11053-2004-planalto.md.',
   },
 
   // ---------- A.2 INSS and minimum wage ----------
@@ -554,9 +556,9 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
       SOURCE_URL.lei8212,
     ),
     effectiveFrom: FROM,
-    verifiedAt: VERIFIED,
-    status: '⚠️',
-    note: 'H.1 item 7: § 5º-C (CPP fora do DAS no Anexo IV) não relido. Fallback: regra estável desde a LC 123; P0 sem persona no Anexo IV.',
+    verifiedAt: VERIFIED_H1,
+    status: 'verified',
+    note: 'H.1 item 7 fechado: LC 123, art. 18, § 5º-C (Anexo IV: CPP fora do DAS). Captura: lc-123-2006-planalto-extrato-h1.md.',
   },
   {
     key: 'minimumWage',
@@ -672,9 +674,9 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
       SOURCE_URL.resCgsn140,
     ),
     effectiveFrom: FROM,
-    verifiedAt: VERIFIED,
-    status: '⚠️',
-    note: 'H.1 item 2: ✅ no manual (Ex. 6); Res. 140 lida em cópia. Fallback: RBT12 separada por mercado (D11).',
+    verifiedAt: VERIFIED_H1,
+    status: 'verified',
+    note: 'H.1 item 2 fechado: Res. CGSN 140, art. 16, § 3º, II ("consideram-se separadamente, em bases distintas"). Captura: res-cgsn-140-2018-compilada.md.',
   },
   {
     key: 'simples.export.exclude',
@@ -699,9 +701,9 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
       SOURCE_URL.resCgsn140,
     ),
     effectiveFrom: FROM,
-    verifiedAt: VERIFIED,
-    status: '⚠️',
-    note: 'H.1 itens 2 e 8. Fallback: exigir confirmação do usuário (pergunta) e validação do contador.',
+    verifiedAt: VERIFIED_H1,
+    status: 'verified',
+    note: 'H.1 itens 2 e 8 fechados: Res. CGSN 140, art. 25, § 4º (ingresso de divisas; o § 4º-A dispensa o ingresso quando os recursos ficam no exterior, Lei 11.371); LC 116, art. 2º, I e parágrafo único; PN COSIT 1/2018 só pela ementa. Continua exigindo confirmação do usuário (pergunta) e validação do contador.',
   },
   {
     key: 'simples.monofasico.exclude',
@@ -727,15 +729,11 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
       ceilingWithTolerance: brl('5.760.000,00'),
       sublimitWithTolerance: brl('4.320.000,00'),
     },
-    source: src(
-      'LC 123/2006',
-      'art. 3º, §§ 9º, 9º-A e 10; art. 20, §§ 1º e 1º-A',
-      SOURCE_URL.lc123,
-    ),
+    source: src('LC 123/2006', 'art. 3º, §§ 9º e 9º-A; art. 20, §§ 1º e 1º-A', SOURCE_URL.lc123),
     effectiveFrom: FROM,
-    verifiedAt: VERIFIED,
-    status: '⚠️',
-    note: 'H.1 item 7: § 10 não relido. Fallback: regra estável (≤ 20%: efeitos no ano seguinte; > 20%: a partir do mês seguinte ao excesso).',
+    verifiedAt: VERIFIED_H1,
+    status: 'verified',
+    note: 'H.1 item 7 fechado com correção de citação: o "> 20% → a partir do mês seguinte" é do art. 3º, § 9º (com o § 9º-A para ≤ 20%); o § 10 trata do excesso no ano de início de atividade (EXECUTION §9). Captura: lc-123-2006-planalto-extrato-h1.md.',
   },
 
   // ---------- A.4 MEI ----------
@@ -773,9 +771,9 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
     value: { icms: brl('1,00'), iss: brl('5,00') },
     source: src('LC 123/2006', 'art. 18-A, § 3º, V', SOURCE_URL.lc123),
     effectiveFrom: FROM,
-    verifiedAt: VERIFIED,
-    status: '⚠️',
-    note: 'H.1 item 7: não relido. Fallback: valores fixos conhecidos; só afetam o R03 (alerta).',
+    verifiedAt: VERIFIED_H1,
+    status: 'verified',
+    note: 'H.1 item 7 fechado: LC 123, art. 18-A, § 3º, V, b e c. Captura: lc-123-2006-planalto-extrato-h1.md.',
   },
 
   // ---------- A.5 Dividends, deadlines and rates ----------
@@ -850,9 +848,9 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
       'isenção limitada à presunção do art. 15 da Lei 9.249 sobre a receita bruta, subtraído do valor devido no Simples; acima disso, só com escrituração que comprove o lucro',
     source: src('LC 123/2006', 'art. 14, caput, §§ 1º e 2º', SOURCE_URL.lc123),
     effectiveFrom: FROM,
-    verifiedAt: VERIFIED,
-    status: '⚠️',
-    note: 'H.1 item 6. Fallback: presunção × receita − IRPJ do DAS (REVISÃO M3), sinalizado como alerta.',
+    verifiedAt: VERIFIED_H1,
+    status: 'verified',
+    note: 'H.1 item 6 fechado: LC 123, art. 14, § 1º ("subtraído do valor devido na forma do Simples Nacional") e Res. CGSN 140, art. 145, § 1º ("relativo ao IRPJ"): usar presunção × receita − IRPJ do DAS. Continua como alerta, porque o texto da LC admite a leitura mais restritiva.',
   },
   {
     key: 'irpfm.threshold',
@@ -880,8 +878,8 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
     value: 5,
     source: src('CTN (Lei 5.172/1966)', 'art. 168, I; LC 118/2005, art. 3º', SOURCE_URL.ctn),
     effectiveFrom: FROM,
-    verifiedAt: VERIFIED,
-    status: '⚠️',
-    note: 'H.1 item 8: não relido. Fallback: regra estável (5 anos contados do pagamento).',
+    verifiedAt: VERIFIED_H1,
+    status: 'verified',
+    note: 'H.1 item 8 fechado: CTN, art. 168, I (5 anos da extinção do crédito) e LC 118, art. 3º (extinção no pagamento antecipado). Capturas: ctn-planalto.md e lc-118-2005-planalto.md.',
   },
 ];
