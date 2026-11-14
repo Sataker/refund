@@ -1,3 +1,4 @@
+import type { Cents, Confidence, Series, YearMonth } from '@refund/engine';
 import type {
   CivilDate,
   PublicCompany,
@@ -7,14 +8,9 @@ import type {
   SourceTransaction,
 } from '@refund/sources';
 
-// TODO(E1-merge): import type { Cents, YearMonth, Series } from '@refund/engine' (ARCHITECTURE §4.1–4.2).
-// Local copies with the same shape, because the engine types land in parallel (E1).
-export type Cents = number & { readonly __brand: 'Cents' };
-export type YearMonth =
-  `${number}-${'01' | '02' | '03' | '04' | '05' | '06' | '07' | '08' | '09' | '10' | '11' | '12'}`;
-export interface Series {
-  [m: YearMonth]: Cents;
-}
+// Engine types (ARCHITECTURE §4.1–4.2). @refund/personas may depend on @refund/engine for types only (§3.2),
+// so the runtime `cents()` helper below stays local.
+export type { Cents, Confidence, Series, YearMonth } from '@refund/engine';
 
 export const cents = (n: number): Cents => {
   if (!Number.isSafeInteger(n)) throw new RangeError(`invalid cents: ${n}`);
@@ -118,9 +114,6 @@ export interface AnswerKeyTransaction {
   /** What F.2 says about it (gross amount, accrual month…), for the reviewer. */
   note: string;
 }
-
-// TODO(E1-merge): import type { Confidence } from '@refund/engine' (ARCHITECTURE §4.2).
-export type Confidence = 'confirmed' | 'estimated' | 'depends_on_regulation';
 
 /** Same field names as `Total` (ARCHITECTURE §4.2): what `EngineResult.total` must equal. */
 export interface ExpectedTotal {
