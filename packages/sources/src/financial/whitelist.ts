@@ -2,7 +2,7 @@ import { formatCnae } from '../cnpj/whitelist.ts';
 import { markSanitized } from '../fixtures/sanitization.ts';
 import { isValidCpf } from '../pii/cpf.ts';
 import { protectDocument, syntheticDocument } from '../pii/document.ts';
-import { redactDescription, stripDocuments } from '../pii/redact.ts';
+import { containsCpf, redactDescription, stripDocuments } from '../pii/redact.ts';
 import { fail, ok } from '../result.ts';
 import type {
   CivilDate,
@@ -101,7 +101,7 @@ class DocumentProtector {
     this.options = options;
   }
 
-  protect(value: string | null | undefined, hidePublicValue = false): ProtectedDocument | null {
+  protect(value: string | null | undefined, partner = false): ProtectedDocument | null {
     const raw = (value ?? '').replace(/[.\-/\s]/g, '').toUpperCase();
     if (raw === '') return null;
     let doc = raw;
@@ -111,7 +111,7 @@ class DocumentProtector {
       doc = syntheticDocument(raw, type);
       this.replaced++;
     }
-    return protectDocument(doc, this.options.pepper, { hidePublicValue });
+    return protectDocument(doc, this.options.pepper, { partner });
   }
 }
 
@@ -168,6 +168,17 @@ export function sanitizePluggyAccount(
   );
 }
 
+/**
+ * Name of a CNPJ counterparty. An MEI/EI legal name is the owner's name followed by the CPF (CLAUDE.md,
+ * rule 4: masked), so a name that carries a CPF is dropped; a transaction gives no legal nature to
+ * check, so the CPF is the signal (code review 14/11, EXECUTION §9).
+ */
+function companyName(raw: string | null | undefined): string | null {
+  const name = (raw ?? '').trim();
+  if (name === '' || containsCpf(name)) return null;
+  return stripDocuments(name) || null;
+}
+
 function method(
   paymentMethod: string | null | undefined,
   isCard: boolean,
@@ -194,11 +205,11 @@ export function sanitizePluggyTransaction(
   let document = protector.protect(party?.documentNumber?.value);
   // The name of a person (CPF) never leaves; a company's (CNPJ) is public. Without a document we cannot
   // tell, so the name is dropped too.
-  let name = document?.type === 'CNPJ' ? stripDocuments(party?.name ?? '') || null : null;
+  let name = document?.type === 'CNPJ' ? companyName(party?.name) : null;
   if (!document && t.merchant?.cnpj) {
     document = protector.protect(t.merchant.cnpj);
     // merchant.businessName is kept only when there is a CNPJ (§6.2).
-    name = document ? stripDocuments(t.merchant.businessName ?? '') || null : null;
+    name = document ? companyName(t.merchant.businessName) : null;
   }
   const cnae = formatCnae(t.merchant?.cnae) ?? null;
 

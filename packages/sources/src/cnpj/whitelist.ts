@@ -10,8 +10,12 @@ import type { CivilDate, Cnpj, ProviderError, PublicCompany, Result } from '../t
 
 export const CNPJ_WHITELIST = 'cnpj@1';
 
-/** Legal natures whose legal name is a person's name: 2135 EI, 2305 EIRELI, 4014 Empresa Individual Imobiliária. */
-export const MASKED_LEGAL_NATURES: readonly string[] = ['2135', '2305', '4014'];
+/**
+ * Legal natures whose legal name is a person's name (ARCHITECTURE §6.2): 2135 Empresário (Individual),
+ * 2305 EIRELI, 4014 Empresa Individual Imobiliária; plus, from the code review (14/11), 2321 Sociedade
+ * Unipessoal de Advocacia and 4120 Produtor Rural (Pessoa Física).
+ */
+export const MASKED_LEGAL_NATURES: readonly string[] = ['2135', '2305', '4014', '2321', '4120'];
 export const MASKED_LEGAL_NAME = 'Empresário individual · nome oculto';
 
 const text = z.string().nullish();
@@ -138,13 +142,23 @@ function sameCnpj(raw: number | string | null | undefined, requested: Cnpj): boo
   return v === '' || v.padStart(14, '0') === requested;
 }
 
+/** Legal-nature code as 4 digits ("213-5" → "2135"), so a formatting variant cannot skip the mask. */
+export function legalNatureCode(value: number | string | null | undefined): string {
+  return String(value ?? '').replace(/\D/g, '');
+}
+
+/** True when the legal name is a person's name and must be masked. */
+export function mustMaskLegalName(natureCode: string, meiOptedIn: boolean): boolean {
+  return meiOptedIn || MASKED_LEGAL_NATURES.includes(legalNatureCode(natureCode));
+}
+
 function legalName(
   natureCode: string,
   meiOptedIn: boolean,
   razaoSocial: string | null | undefined,
   nomeFantasia: string | null | undefined,
 ): Pick<PublicCompany, 'displayLegalName' | 'displayTradeName' | 'masked'> {
-  if (MASKED_LEGAL_NATURES.includes(natureCode) || meiOptedIn) {
+  if (mustMaskLegalName(natureCode, meiOptedIn)) {
     return { displayLegalName: MASKED_LEGAL_NAME, displayTradeName: null, masked: true };
   }
   const trade = clean(nomeFantasia);
@@ -188,7 +202,7 @@ export function sanitizeBrasilApiCompany(
     return unexpected('brasilapi', 'campos obrigatórios ausentes');
   }
   const meiOptedIn = r.opcao_pelo_mei === true;
-  const natureCode = code(r.codigo_natureza_juridica);
+  const natureCode = legalNatureCode(r.codigo_natureza_juridica);
   const ibge = code(r.codigo_municipio_ibge);
 
   const company: PublicCompany = {
@@ -252,7 +266,7 @@ export function sanitizeCnpjWsCompany(
     return unexpected('cnpjws', 'campos obrigatórios ausentes');
   }
   const meiOptedIn = yes(r.simples?.mei);
-  const natureCode = code(r.natureza_juridica?.id);
+  const natureCode = legalNatureCode(r.natureza_juridica?.id);
   const porteCode = code(r.porte?.id).replace(/^0+/, '');
   const size: PublicCompany['size'] = meiOptedIn
     ? 'MEI'

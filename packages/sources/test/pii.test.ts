@@ -86,12 +86,23 @@ describe('protectDocument', () => {
     });
   });
 
-  it('a partner CNPJ can be hidden (HMAC + partial mask only)', () => {
-    const d = protectDocument(NUMERIC_CNPJ, pepper, { hidePublicValue: true });
-    expect(d?.publicValue).toBeNull();
-    expect(d?.hmac).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    expect(d?.mask).toMatch(/^\d{2}\.\d{3}\.\d{3}\/\*{4}-\*\*$/);
-    expect(protectDocument(NUMERIC_CNPJ, null, { hidePublicValue: true })?.hmac).toBeNull();
+  // Compliance review 14/11 (C3): partners keep only the HMAC (§6.2), not even a partial mask.
+  it('a partner document keeps only the HMAC: no public value, fully hidden mask', () => {
+    const cnpj = protectDocument(NUMERIC_CNPJ, pepper, { partner: true });
+    expect(cnpj).toEqual({
+      type: 'CNPJ',
+      hmac: hmacDocument(NUMERIC_CNPJ, pepper),
+      publicValue: null,
+      mask: '**.***.***/****-**',
+    });
+    const cpf = protectDocument(CPF, pepper, { partner: true });
+    expect(cpf).toEqual({
+      type: 'CPF',
+      hmac: hmacDocument(CPF, pepper),
+      publicValue: null,
+      mask: '***.***.***-**',
+    });
+    expect(protectDocument(NUMERIC_CNPJ, null, { partner: true })?.hmac).toBeNull();
   });
 
   it('returns null for something that is not a document', () => {

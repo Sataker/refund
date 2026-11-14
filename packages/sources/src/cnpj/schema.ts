@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { CivilDate, Cnpj, PublicCompany } from '../types.ts';
+import { MASKED_LEGAL_NAME, mustMaskLegalName } from './whitelist.ts';
 
 // Shape check of an already-sanitized `PublicCompany` read back from the cache or a fixture. `strict`
 // rejects any extra key: nothing outside the whitelist may come back in.
@@ -32,12 +33,18 @@ export const publicCompanySchema = z.strictObject({
   fetchedAt: z.string(),
 });
 
+/**
+ * Parses a company read back (cache, fixture) and re-applies the EI/MEI mask: the stored `masked` flag
+ * is not trusted, so a row written by older or buggy code cannot leak a person's name (fails closed).
+ */
 export function parsePublicCompany(value: unknown): PublicCompany | null {
   const r = publicCompanySchema.safeParse(value);
   if (!r.success) return null;
   const d = r.data;
+  const mask = d.masked || mustMaskLegalName(d.legalNature.code, d.mei.optedIn);
   return {
     ...d,
+    ...(mask ? { displayLegalName: MASKED_LEGAL_NAME, displayTradeName: null, masked: true } : {}),
     cnpj: d.cnpj as Cnpj,
     activityStartDate: d.activityStartDate as CivilDate,
     simples: {

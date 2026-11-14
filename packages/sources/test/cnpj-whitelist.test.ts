@@ -4,6 +4,7 @@ import {
   detectPii,
   formatCnae,
   MASKED_LEGAL_NAME,
+  parsePublicCompany,
   publicCompanySchema,
   sanitizationOf,
   sanitizeBrasilApiCompany,
@@ -199,6 +200,49 @@ describe('BrasilAPI whitelist (cnpj@1)', () => {
     expect(r.value.displayTradeName).toBeNull();
     expect(r.value.masked).toBe(true);
     expect(JSON.stringify(r.value)).not.toContain('JOAO');
+  });
+
+  // Code review 14/11 (LOW): masking must not fail open.
+  it.each([['213-5'], [' 2135 '], ['2321'], ['4120']])(
+    'legal nature %s is normalised to digits and masked',
+    (nature) => {
+      const r = sanitizeBrasilApiCompany(
+        brasilApi({ codigo_natureza_juridica: nature, razao_social: 'JOAO DA SILVA' }),
+        cnpj,
+        fetchedAt,
+      );
+      if (!r.ok) throw new Error('expected ok');
+      expect(r.value.legalNature.code).toMatch(/^\d{4}$/);
+      expect(r.value).toMatchObject({
+        masked: true,
+        displayLegalName: MASKED_LEGAL_NAME,
+        displayTradeName: null,
+      });
+    },
+  );
+
+  it('a company read back (cache, fixture) is re-masked when EI/MEI, whatever its masked flag says', () => {
+    const r = sanitizeBrasilApiCompany(brasilApi(), cnpj, fetchedAt);
+    if (!r.ok) throw new Error('expected ok');
+    const leakedEi = {
+      ...r.value,
+      legalNature: { code: '2135', description: 'Empresário (Individual)' },
+      displayLegalName: 'JOAO DA SILVA',
+      displayTradeName: 'JOAO DOCES',
+      masked: false,
+    };
+    expect(parsePublicCompany(leakedEi)).toMatchObject({
+      masked: true,
+      displayLegalName: MASKED_LEGAL_NAME,
+      displayTradeName: null,
+    });
+    const leakedMei = {
+      ...r.value,
+      mei: { optedIn: true, since: '2020-01-01', excludedAt: null },
+      masked: false,
+    };
+    expect(parsePublicCompany(leakedMei)?.masked).toBe(true);
+    expect(parsePublicCompany(r.value)).toEqual(r.value);
   });
 
   it('MEI opt-in sets size MEI and keeps its dates', () => {

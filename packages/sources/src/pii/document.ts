@@ -16,33 +16,38 @@ export function hmacDocument(doc: string, pepper: Uint8Array): string {
   return createHmac('sha256', pepper).update(canonical(doc)).digest('base64url');
 }
 
+/** Masks of a partner document: nothing of the number shows (§6.2 "HMAC only"; `mask` is not nullable). */
+export const HIDDEN_CPF_MASK = '***.***.***-**';
+export const HIDDEN_CNPJ_MASK = '**.***.***/****-**';
+
 /**
  * Builds a `ProtectedDocument` (ARCHITECTURE §4.3): a CPF keeps only HMAC (null without a pepper) and
- * mask, never the number; a CNPJ is public and stays in clear unless `hidePublicValue` (partners, §6.2).
+ * mask, never the number; a CNPJ is public and stays in clear. A `partner` document (Identity
+ * `parties[]`, §6.2) keeps only the HMAC: no public value and a fully hidden mask.
  * Returns null for a value that is neither a valid CPF nor a valid CNPJ.
  */
 export function protectDocument(
   value: string,
   pepper: Uint8Array | null,
-  options: { hidePublicValue?: boolean } = {},
+  options: { partner?: boolean } = {},
 ): ProtectedDocument | null {
   const doc = canonical(value);
+  const partner = options.partner === true;
   if (isValidCpf(doc)) {
     return {
       type: 'CPF',
       hmac: pepper ? hmacDocument(doc, pepper) : null,
       publicValue: null,
-      mask: maskCpf(doc),
+      mask: partner ? HIDDEN_CPF_MASK : maskCpf(doc),
     };
   }
   const cnpj = validateCnpj(doc);
   if (cnpj.ok) {
-    const hide = options.hidePublicValue === true;
     return {
       type: 'CNPJ',
-      hmac: hide && pepper ? hmacDocument(doc, pepper) : null,
-      publicValue: hide ? null : cnpj.value,
-      mask: hide ? `${formatCnpj(cnpj.value).slice(0, 11)}****-**` : formatCnpj(cnpj.value),
+      hmac: partner && pepper ? hmacDocument(doc, pepper) : null,
+      publicValue: partner ? null : cnpj.value,
+      mask: partner ? HIDDEN_CNPJ_MASK : formatCnpj(cnpj.value),
     };
   }
   return null;

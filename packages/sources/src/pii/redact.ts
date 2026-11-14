@@ -20,6 +20,12 @@ function isValidNumericCnpj(digits: string): boolean {
   return digits.slice(12) === cnpjCheckDigits(digits.slice(0, 12));
 }
 
+/** True when the text holds a formatted CPF, or a bare/partial/spaced one with valid check digits. */
+export function containsCpf(text: string): boolean {
+  if (new RegExp(FORMATTED_CPF.source).test(text)) return true;
+  return [...text.matchAll(LOOSE_CPF)].some((m) => isValidCpf(m[0].replace(/\D/g, '')));
+}
+
 /**
  * Replaces documents with `[doc]`: any formatted CPF or CNPJ (alphanumeric CNPJ included); bare,
  * partial or spaced CPFs (`\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2}`) and 14-digit runs when their

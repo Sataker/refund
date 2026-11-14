@@ -94,6 +94,34 @@ describe('Pluggy transaction whitelist (pluggy@1)', () => {
     );
   });
 
+  // Code review 14/11 (MEDIUM): an MEI's "company" name is a person's name followed by the CPF.
+  it('drops the name of a CNPJ counterparty when it carries a CPF (MEI/EI legal names)', () => {
+    const meiName = `JOAO DA SILVA ${CPF}`;
+    const viaPayment = sanitizePluggyTransaction(
+      pixOut({
+        type: 'CREDIT',
+        amount: 10,
+        description: `PIX RECEBIDO ${meiName}`,
+        paymentData: {
+          payer: { name: meiName, documentNumber: { type: 'CNPJ', value: NUMERIC_CNPJ } },
+        },
+      }),
+      { pepper },
+    );
+    if (!viaPayment.ok) throw new Error('expected ok');
+    expect(viaPayment.value.counterparty?.name).toBeNull();
+    expect(viaPayment.value.counterparty?.document?.publicValue).toBe(NUMERIC_CNPJ);
+    expect(JSON.stringify(viaPayment.value)).not.toContain(CPF);
+    const viaMerchant = sanitizePluggyTransaction(
+      pixOut({
+        paymentData: null,
+        merchant: { businessName: `${formatCpf(CPF)} MARIA SOUZA`, cnpj: NUMERIC_CNPJ, cnae: null },
+      }),
+      { pepper },
+    );
+    expect(viaMerchant.ok && viaMerchant.value.counterparty?.name).toBeNull();
+  });
+
   it('a CNPJ counterparty stays in clear with its name (credit: the payer)', () => {
     const r = sanitizePluggyTransaction(
       pixOut({ type: 'CREDIT', amount: 2000, description: 'PIX RECEBIDO ACME LTDA' }),
@@ -377,6 +405,7 @@ describe('Pluggy account, item and identity whitelists', () => {
     expect(r.value.partnerDocuments).toHaveLength(2);
     for (const p of r.value.partnerDocuments) {
       expect(p.publicValue).toBeNull();
+      expect(p.mask).toMatch(/^[*./-]+$/);
       expect(p.hmac).toMatch(/^[A-Za-z0-9_-]{43}$/);
     }
     const json = JSON.stringify(r.value);
