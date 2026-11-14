@@ -233,13 +233,28 @@ describe('ChainedSeries: SGS → external_cache → fixture', () => {
       },
     };
     const log = vi.fn();
+    const recordedLive = createEnvelope({
+      source: 'sgs.series',
+      key: '432-2026-11-01-2026-11-30',
+      origin: 'live',
+      recordedAt: '2026-11-17T12:00:00Z',
+      recordedBy: 'test',
+      sanitization: { whitelist: 'sgs@1', discardedFields: [], replacedDocuments: 0 },
+      data: [{ date: '2026-11-12', value: '13.75' }],
+    });
     const fromFixture = await new ChainedSeries({
       live: down,
       cache: broken,
-      replay: new ReplaySeries(),
+      replay: new ReplaySeries({ fixtures: [recordedLive] }),
     }).series(432, period, { mode: 'live', log });
-    expect(fromFixture).toEqual({ ok: true, value: [{ date: '2026-11-12', value: '15.00' }] });
+    expect(fromFixture).toEqual({ ok: true, value: [{ date: '2026-11-12', value: '13.75' }] });
     expect(log).toHaveBeenCalledWith('provider.failure', { source: 'sgs', code: 'TIMEOUT' });
+    // Code review 14/11 (LOW): in live mode a synthetic fixture (the hero's 15,00%) is never served.
+    const onlySynthetic = await new ChainedSeries({
+      live: down,
+      replay: new ReplaySeries(),
+    }).series(432, period, { mode: 'live' });
+    expect(onlySynthetic).toMatchObject({ ok: false, error: { code: 'TIMEOUT' } });
     expect(
       await new ChainedSeries({ live: down }).series(432, period, { mode: 'live' }),
     ).toMatchObject({

@@ -16,9 +16,12 @@ export function cnpjFrom(base: string): string {
   return `${base}${cnpjCheckDigits(base)}`;
 }
 
+// The bases 529982247 and 111444777 are the public didactic CPF examples found in every check-digit
+// tutorial; they are used here only as test vectors (compliance review 14/11, C2).
 export const CPF = cpfFrom('529982247');
 export const CPF_2 = cpfFrom('111444777');
-export const PERSONAL_EMAIL = ['joao.silva', 'gmail.com'].join('@');
+/** Outside the allowed domains, so it is "personal" for the detectors; `.test` is a reserved TLD. */
+export const PERSONAL_EMAIL = ['pessoa', 'provedor.test'].join('@');
 export const PHONE = `11${'98765'}${'4321'}`;
 /** Synthetic numeric CNPJ (made-up base). */
 export const NUMERIC_CNPJ = cnpjFrom('907315489998');

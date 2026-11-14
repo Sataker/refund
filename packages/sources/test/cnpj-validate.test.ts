@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { type Cnpj, cnpjCheckDigits, formatCnpj, validateCnpj } from '../src/index.ts';
+import { cnpjCheckDigits } from '../src/cnpj/validate.ts';
+import * as api from '../src/index.ts';
+import { type Cnpj, formatCnpj, validateCnpj } from '../src/index.ts';
+
+it('cnpjCheckDigits (throws) is not part of the public API', () => {
+  expect('cnpjCheckDigits' in api).toBe(false);
+});
 
 // Vectors from the official manual (docs/conferencias/fontes-oficiais/cnpj-alfanumerico-dv.md).
 describe('cnpjCheckDigits', () => {

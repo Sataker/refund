@@ -254,7 +254,7 @@ describe('detectPii and scanText', () => {
     ]);
     for (const f of findings) {
       expect(f.excerpt).not.toContain(CPF.slice(2, 9));
-      expect(f.excerpt).not.toContain('silva');
+      expect(f.excerpt).not.toContain('pessoa@');
     }
   });
 

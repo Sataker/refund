@@ -35,7 +35,8 @@ export function parseSeriesPoints(value: unknown): SeriesPoint[] | null {
 
 /**
  * Replay (ARCHITECTURE §5.3): the exact key, or any fixture of the same code whose period covers the
- * requested one (points filtered to the period). No I/O.
+ * requested one (points filtered to the period). No I/O. With a `live` context (fallback inside
+ * `ChainedSeries`), synthetic fixtures are skipped.
  */
 export class ReplaySeries implements SeriesProvider {
   private readonly fixtures: readonly unknown[];
@@ -46,11 +47,14 @@ export class ReplaySeries implements SeriesProvider {
   async series(
     code: SgsCode,
     period: Period,
-    _ctx: ProviderContext,
+    ctx: ProviderContext,
   ): Promise<Result<SeriesPoint[], ProviderError>> {
     for (const f of this.fixtures) {
-      const c = f as { source?: unknown; key?: unknown } | null;
+      const c = f as { source?: unknown; key?: unknown; origin?: unknown } | null;
       if (c?.source !== 'sgs.series' || typeof c.key !== 'string') continue;
+      // In live mode only recorded (`origin: 'live'`) data may stand in for SGS: a synthetic fixture
+      // (the hero's 15,00%) must never be shown as the rate of the day.
+      if (ctx.mode === 'live' && c.origin !== 'live') continue;
       const m = KEY.exec(c.key);
       if (!m || Number(m[1]) !== code) continue;
       if ((m[2] ?? '') > period.from || (m[3] ?? '') < period.to) continue;

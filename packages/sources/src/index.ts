@@ -4,7 +4,9 @@ export { ChainedCnpj, type ChainedCnpjOptions } from './cnpj/chain.ts';
 export { BrasilApiCnpj, CnpjWsCnpj, type LiveCnpjOptions } from './cnpj/live.ts';
 export { ReplayCnpj, type ReplayCnpjOptions } from './cnpj/replay.ts';
 export { parsePublicCompany, publicCompanySchema } from './cnpj/schema.ts';
-export { cnpjCheckDigits, formatCnpj, validateCnpj } from './cnpj/validate.ts';
+// `cnpjCheckDigits` stays internal: it throws on a malformed base, and nothing may throw across
+// packages (code review 14/11). Callers use `validateCnpj`, which returns a Result.
+export { formatCnpj, validateCnpj } from './cnpj/validate.ts';
 export {
   CNPJ_WHITELIST,
   formatCnae,
