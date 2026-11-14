@@ -1,0 +1,476 @@
+{
+  "source": {
+    "table": "EFD-Contribuições, Tabela 4.3.10 – Produtos sujeitos a alíquotas diferenciadas: incidência monofásica e por pauta (bebidas frias), CST 02 e 04",
+    "version": "1.25",
+    "updatedAt": "2026-03-30",
+    "url": "http://sped.rfb.gov.br/arquivo/show/1638",
+    "downloadUrl": "http://sped.rfb.gov.br/arquivo/download/1638",
+    "downloadedAt": "2026-11-14",
+    "sha256": "82441544f8ac556c26bdbc6193777e42afaeef797621ac5199df7a7b05cad917"
+  },
+  "scope": "Rows in force on 2026-11-14 that carry an NCM. Rows without an NCM (codes 105-108, 116, 150-153) and closed rows are left out. Codes 302 and 303 (auto parts) point to Annexes I and II of Lei 10.485/2002, which are not in the table and are not frozen yet (EXECUTION §9).",
+  "rows": [
+    {
+      "prefix": "27101259",
+      "monofasico": true,
+      "code": "101",
+      "group": "fuels",
+      "description": "Gasolinas, exceto gasolina de aviação",
+      "law": "Lei 9.718/1998, art. 4º"
+    },
+    {
+      "prefix": "27101921",
+      "monofasico": true,
+      "code": "102",
+      "group": "fuels",
+      "description": "Óleo diesel",
+      "law": "Lei 9.718/1998, art. 4º"
+    },
+    {
+      "prefix": "27111910",
+      "monofasico": true,
+      "code": "103",
+      "group": "fuels",
+      "description": "Gás liquefeito de petróleo (GLP)",
+      "law": "Lei 9.718/1998, art. 4º"
+    },
+    {
+      "prefix": "27101911",
+      "monofasico": true,
+      "code": "104",
+      "group": "fuels",
+      "description": "Querosene de aviação",
+      "law": "Lei 10.560/2002, art. 2º"
+    },
+    {
+      "prefix": "38260000",
+      "monofasico": true,
+      "code": "109",
+      "group": "fuels",
+      "description": "Biodiesel",
+      "law": "Lei 11.116/2005, art. 3º",
+      "note": "Only Ex 01 of 3826.00.00; the Ex cannot be told from the 8-digit NCM."
+    },
+    {
+      "prefix": "220710",
+      "monofasico": true,
+      "code": "112",
+      "group": "fuels",
+      "description": "Álcool, inclusive para fins carburantes",
+      "law": "Lei 9.718/1998, art. 5º (redação da LC 214/2025)"
+    },
+    {
+      "prefix": "2207201",
+      "monofasico": true,
+      "code": "112",
+      "group": "fuels",
+      "description": "Álcool, inclusive para fins carburantes",
+      "law": "Lei 9.718/1998, art. 5º (redação da LC 214/2025)"
+    },
+    {
+      "prefix": "22089000",
+      "monofasico": true,
+      "code": "112",
+      "group": "fuels",
+      "description": "Álcool, inclusive para fins carburantes",
+      "law": "Lei 9.718/1998, art. 5º (redação da LC 214/2025)",
+      "note": "Only Ex 01 of 2208.90.00; the Ex cannot be told from the 8-digit NCM."
+    },
+    {
+      "prefix": "3001",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "3003",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "3004",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "3002101",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "3002102",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "3002103",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "3002201",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "3002202",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "3006301",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "3006302",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "30029020",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "30029092",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "30029099",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "30051010",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "30066000",
+      "monofasico": true,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Produtos farmacêuticos",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "30039056",
+      "monofasico": false,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Exceção expressa da posição 30.03",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "30049046",
+      "monofasico": false,
+      "code": "201",
+      "group": "pharmaceuticals",
+      "description": "Exceção expressa da posição 30.04",
+      "law": "Lei 10.147/2000, art. 1º, I, a"
+    },
+    {
+      "prefix": "3303",
+      "monofasico": true,
+      "code": "202",
+      "group": "perfumery",
+      "description": "Perfumaria, toucador ou higiene pessoal",
+      "law": "Lei 10.147/2000, art. 1º, I, b"
+    },
+    {
+      "prefix": "3304",
+      "monofasico": true,
+      "code": "202",
+      "group": "perfumery",
+      "description": "Perfumaria, toucador ou higiene pessoal",
+      "law": "Lei 10.147/2000, art. 1º, I, b"
+    },
+    {
+      "prefix": "3305",
+      "monofasico": true,
+      "code": "202",
+      "group": "perfumery",
+      "description": "Perfumaria, toucador ou higiene pessoal",
+      "law": "Lei 10.147/2000, art. 1º, I, b"
+    },
+    {
+      "prefix": "3307",
+      "monofasico": true,
+      "code": "202",
+      "group": "perfumery",
+      "description": "Perfumaria, toucador ou higiene pessoal",
+      "law": "Lei 10.147/2000, art. 1º, I, b"
+    },
+    {
+      "prefix": "34012010",
+      "monofasico": true,
+      "code": "202",
+      "group": "perfumery",
+      "description": "Perfumaria, toucador ou higiene pessoal",
+      "law": "Lei 10.147/2000, art. 1º, I, b"
+    },
+    {
+      "prefix": "96032100",
+      "monofasico": true,
+      "code": "202",
+      "group": "perfumery",
+      "description": "Perfumaria, toucador ou higiene pessoal",
+      "law": "Lei 10.147/2000, art. 1º, I, b"
+    },
+    {
+      "prefix": "34011190",
+      "monofasico": true,
+      "code": "202",
+      "group": "perfumery",
+      "description": "Perfumaria, toucador ou higiene pessoal",
+      "law": "Lei 10.147/2000, art. 1º, I, b",
+      "note": "Except Ex 01 of 3401.11.90; the Ex cannot be told from the 8-digit NCM."
+    },
+    {
+      "prefix": "7309",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "731029",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "76129012",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "842481",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8429",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "84306990",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8432",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8433",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8434",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8435",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8436",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8437",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8701",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8702",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8703",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8704",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8705",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "8706",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "87162000",
+      "monofasico": true,
+      "code": "301",
+      "group": "vehicles",
+      "description": "Veículos automotores e máquinas agrícolas",
+      "law": "Lei 10.485/2002, art. 1º (redação da Lei 12.973/2014)"
+    },
+    {
+      "prefix": "4011",
+      "monofasico": true,
+      "code": "304",
+      "group": "tyres",
+      "description": "Pneumáticos novos e câmaras de ar",
+      "law": "Lei 10.485/2002, art. 5º"
+    },
+    {
+      "prefix": "4013",
+      "monofasico": true,
+      "code": "304",
+      "group": "tyres",
+      "description": "Pneumáticos novos e câmaras de ar",
+      "law": "Lei 10.485/2002, art. 5º"
+    },
+    {
+      "prefix": "21069010",
+      "monofasico": true,
+      "code": "411",
+      "group": "cold_beverages",
+      "description": "Preparações compostas para elaboração de bebida refrigerante",
+      "law": "Lei 13.097/2015, arts. 25 e 34",
+      "note": "Only Ex 02 of 2106.90.10; the Ex cannot be told from the 8-digit NCM."
+    },
+    {
+      "prefix": "2201",
+      "monofasico": true,
+      "code": "415",
+      "group": "cold_beverages",
+      "description": "Águas minerais e gaseificadas",
+      "law": "Lei 13.097/2015, arts. 25 e 34",
+      "note": "Except Ex 01 and Ex 02 of 2201.10.00; the Ex cannot be told from the 8-digit NCM."
+    },
+    {
+      "prefix": "2202",
+      "monofasico": true,
+      "code": "419",
+      "group": "cold_beverages",
+      "description": "Águas adicionadas de açúcar ou aromatizadas e outras bebidas não alcoólicas",
+      "law": "Lei 13.097/2015, arts. 25 e 34",
+      "note": "Except Ex 01 and Ex 02 of 2202.90.00 (Ex 03, special beers, is in); the Ex cannot be told from the 8-digit NCM."
+    },
+    {
+      "prefix": "2203",
+      "monofasico": true,
+      "code": "423",
+      "group": "cold_beverages",
+      "description": "Cervejas de malte",
+      "law": "Lei 13.097/2015, arts. 25 e 34"
+    }
+  ]
+}
