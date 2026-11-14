@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   all,
   article,
+  inForceOn,
   PACKAGE_NAME,
   type Provision,
   regulation,
@@ -14,7 +15,7 @@ const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const ID =
   /^[a-z0-9-]+\/(art\d+(-[a-z])?|anexo\d+)(\/(caput|pu|p\d+(-[a-z]+)?|[ivxlc]+|res140-art\d+))*$/;
 const UNIT =
-  /^(art\. \d+º?(-[A-Z])?(, (caput|§ \d+º?(-[A-Z]+)?|parágrafo único|[IVXLC]+))*|Anexo [IVX]+)$/;
+  /^(art\. \d+º?(-[A-Z])?(, (caput|§ \d+º?(-[A-Z]+)?|parágrafo único|[IVXLC]+))*|Anexo [IVX]+)( \(art\. \d+ da Res\. CGSN 140\/2018\))?$/;
 const REVOKED = /\(\s*revogad|^\s*revogad[oa]s?\s*[.;]?\s*$|<\s*\/?\s*(strike|s|del)\b/im;
 const DRAFTING_NOTE =
   /\(\s*(Reda[çc][ãa]o dada|Inclu[ií]d[oa]|Vide |Renumerad|Produ[çc][ãa]o de efeito|Vig[êe]ncia\))/i;
@@ -42,8 +43,8 @@ describe(PACKAGE_NAME, () => {
   const corpus = all();
 
   it('holds the closed list of provisions of every catalogued regulation', () => {
-    expect(regulations).toHaveLength(23);
-    expect(corpus).toHaveLength(104);
+    expect(regulations).toHaveLength(25);
+    expect(corpus).toHaveLength(111);
     for (const r of regulations)
       expect(regulation(r.id)?.provisions.length ?? 0).toBeGreaterThan(0);
     for (const p of corpus) expect(short.has(p.regulation)).toBe(true);
@@ -100,6 +101,14 @@ describe(PACKAGE_NAME, () => {
     expect(article('lei5172-1966/art168')?.label).toBe('CTN, art. 168');
     expect(article('lei9250-1995/art16-a/caput')?.label).toBe('Lei 9.250/1995, art. 16-A, caput');
     expect(article('lei10406-2002/art50')?.label).toBe('CC, art. 50');
+    expect(article('res-cgsn190-2026/art1/res140-art26')?.label).toBe(
+      'Res. CGSN 190/2026, art. 1º (art. 26 da Res. CGSN 140/2018)',
+    );
+  });
+
+  it('gives every provision a distinct label', () => {
+    const labels = corpus.map((p) => p.label);
+    expect(labels.filter((l, i) => labels.indexOf(l) !== i)).toEqual([]);
   });
 
   it('opens each text with the unit its id points to', () => {
@@ -117,6 +126,36 @@ describe(PACKAGE_NAME, () => {
     expect(article('lei9250-1995/art4/iii')?.effectiveFrom).toBeNull();
     expect(article('res-cgsn190-2026/art1/res140-art26')?.effectiveFrom).toBe('2027-01-01');
     expect(article('lc238-2026/art2')?.effectiveFrom).toBe('2027-01-01');
+    expect(article('res-cgsn190-2026/art1/res140-art25')?.effectiveFrom).toBe('2027-01-01');
+  });
+
+  it('ends a wording only when a captured provision replaces or revokes it', () => {
+    const ending = corpus.filter((p) => p.effectiveUntil !== null).map((p) => p.id);
+    expect(ending.sort()).toEqual([
+      'res-cgsn140-2018/art25/p3',
+      'res-cgsn140-2018/art25/p4',
+      'res-cgsn140-2018/art25/p4-a',
+      'res-cgsn140-2018/art26',
+    ]);
+    for (const p of corpus) {
+      if (p.effectiveUntil === null) continue;
+      expect(p.effectiveUntil).toBe('2026-12-31');
+      expect(p.effectiveFrom === null || p.effectiveFrom <= p.effectiveUntil).toBe(true);
+    }
+    expect(article('res-cgsn190-2026/art8/xvi')?.text).toBe('XVI - os §§ 4º e 4º-A do art. 25;');
+    expect(article('res-cgsn190-2026/art9')?.text).toContain('a partir de 1º de janeiro de 2027');
+  });
+
+  it('tells which wording is in force on a date', () => {
+    const p4 = article('res-cgsn140-2018/art25/p4') as Provision;
+    const new25 = article('res-cgsn190-2026/art1/res140-art25') as Provision;
+    expect(inForceOn(p4, '2026-12-31')).toBe(true);
+    expect(inForceOn(p4, '2027-01-01')).toBe(false);
+    expect(inForceOn(new25, '2026-12-31')).toBe(false);
+    expect(inForceOn(new25, '2027-01-01')).toBe(true);
+    expect(new25.text).toContain(
+      '§ 4º-B. A qualificação de uma operação como exportação de serviços',
+    );
   });
 
   it('carries the 2026 values that ENGINE-SPEC A reads from these provisions', () => {
@@ -135,6 +174,13 @@ describe(PACKAGE_NAME, () => {
     expect(text('port-mps-mf13-2026/anexo2')).toContain('de 4.354,28 até 8.475,55 | 14%');
     expect(text('lei9532-1997/art11')).toContain('12% (doze por cento)');
     expect(text('lei8212-1991/art30/p4')).toContain('quarenta e cinco por cento');
+    expect(text('lei15191-2025/art2')).toContain('Acima de 4.664,68 | 27,5 | 908,73');
+    expect(text('lei9249-1995/art15')).toContain(
+      'III - trinta e dois por cento, para as atividades de:',
+    );
+    expect(text('lc214-2025/art80')).toContain(
+      'fornecimento para residente ou domiciliado no exterior',
+    );
   });
 
   it('looks provisions and regulations up by id', () => {
