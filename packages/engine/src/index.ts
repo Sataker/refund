@@ -1,7 +1,8 @@
-// Public API of @refund/engine (ARCHITECTURE §4.2). analyze/recalculate/estimateByProfile arrive in E5/E8.
+// Public API of @refund/engine (ARCHITECTURE §4.2). estimateByProfile arrives in E8.
 export const PACKAGE_NAME = '@refund/engine';
-export const ENGINE_VERSION = '0.1.0';
 
+export { analyze, recalculate, rulesByRef } from './analyze.ts';
+export type { EngineErrorCode } from './errors.ts';
 export { brl, rate, roundToCents, sumCents } from './money.ts';
 export {
   legalRefOf,
@@ -39,6 +40,7 @@ export {
   type StartOfActivityRbt12,
   window,
 } from './primitives/simples.ts';
+export { formatBrl } from './rules/common.ts';
 export {
   addMonths,
   civilDate,
@@ -48,3 +50,4 @@ export {
   yearMonth,
 } from './time.ts';
 export * from './types.ts';
+export { ENGINE_VERSION } from './version.ts';
