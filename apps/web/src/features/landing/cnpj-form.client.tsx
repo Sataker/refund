@@ -3,10 +3,13 @@
 import { ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useId, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { cnpjHint, cnpjStatus, maskCnpj } from '@/lib/cnpj';
-import { cn } from '@/lib/utils';
+import { cx } from '@/lib/cx';
 import { ROUTES } from './routes';
+
+// Same look as <Button size="xl"> (components/ui/button.tsx), without cva/radix in the landing bundle.
+const PRIMARY_XL =
+  'inline-flex h-14 w-full shrink-0 items-center justify-center gap-2 rounded-md bg-primary px-6 text-base font-medium whitespace-nowrap text-primary-foreground transition-colors duration-(--dur-fast) hover:bg-primary/80 active:translate-y-px sm:w-auto';
 
 interface CnpjFormProps {
   /** Distinguishes the hero form from the final CTA (ids and test ids). */
@@ -48,7 +51,7 @@ export function CnpjForm({ id, className }: CnpjFormProps) {
       onSubmit={onSubmit}
       noValidate
       data-testid={`${id}/cnpj-form`}
-      className={cn('w-full max-w-xl', className)}
+      className={cx('w-full max-w-xl', className)}
     >
       <label htmlFor={`${id}-cnpj`} className="type-small mb-2 block font-medium text-foreground">
         CNPJ da sua empresa
@@ -71,20 +74,20 @@ export function CnpjForm({ id, className }: CnpjFormProps) {
           inputMode="text"
           aria-invalid={invalid}
           aria-describedby={hintId}
-          className={cn(
+          className={cx(
             'num h-14 w-full min-w-0 rounded-md sm:flex-1 border bg-surface px-4 font-mono text-lg text-foreground shadow-xs transition-colors duration-(--dur-fast) placeholder:text-subtle',
             invalid ? 'border-risk' : 'border-strong-border',
           )}
         />
-        <Button type="submit" size="xl" className="w-full sm:w-auto">
+        <button type="submit" className={PRIMARY_XL}>
           Ver quanto posso economizar
-          <ArrowRight data-icon="inline-end" strokeWidth={1.5} aria-hidden="true" />
-        </Button>
+          <ArrowRight className="size-4" strokeWidth={1.5} aria-hidden="true" />
+        </button>
       </div>
       <p
         id={hintId}
         aria-live="polite"
-        className={cn('type-small mt-2 min-h-5', error ? 'text-risk' : 'text-muted-foreground')}
+        className={cx('type-small mt-2 min-h-5', error ? 'text-risk' : 'text-muted-foreground')}
       >
         {error ?? 'Sem cadastro. Nesta versão, o botão abre a demo com dados sintéticos.'}
       </p>

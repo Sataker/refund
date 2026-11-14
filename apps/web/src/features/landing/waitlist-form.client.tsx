@@ -1,8 +1,6 @@
 'use client';
 
 import { type FormEvent, useId, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 /**
  * Waitlist (IDENTITY-AND-UI §5.12): interface only. E11 wires the server action; until then nothing typed
@@ -24,18 +22,21 @@ export function WaitlistForm() {
         Quer usar com a sua empresa? Entre na lista.
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Input
+        <input
           id={emailId}
           name="email"
           type="email"
           autoComplete="email"
           placeholder="voce@empresa.com.br"
           aria-describedby={noteId}
-          className="h-12 sm:flex-1"
+          className="h-12 w-full min-w-0 rounded-md border border-strong-border bg-surface px-3 text-base text-foreground transition-colors duration-(--dur-fast) placeholder:text-subtle sm:flex-1"
         />
-        <Button type="submit" size="lg" variant="outline">
+        <button
+          type="submit"
+          className="inline-flex h-12 shrink-0 items-center justify-center rounded-md border border-strong-border bg-surface px-5 text-base font-medium text-foreground transition-colors duration-(--dur-fast) hover:bg-muted active:translate-y-px"
+        >
           Entrar na lista
-        </Button>
+        </button>
       </div>
       <p id={noteId} aria-live="polite" className="type-small mt-2 text-muted-foreground">
         {submitted

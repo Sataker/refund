@@ -2,7 +2,7 @@
 
 import { Moon, Sun } from 'lucide-react';
 import { useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { cx } from '@/lib/cx';
 
 const STORAGE_KEY = 'refund-theme';
 
@@ -53,7 +53,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       data-testid="theme-toggle"
       aria-label="Alternar tema claro e escuro (atalho D)"
       title="Alternar tema (D)"
-      className={cn(
+      className={cx(
         'type-small inline-flex h-10 items-center gap-2 rounded-md border border-border bg-surface px-3 text-muted-foreground transition-colors duration-(--dur-fast) hover:border-strong-border hover:text-foreground',
         className,
       )}

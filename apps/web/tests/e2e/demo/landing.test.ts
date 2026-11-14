@@ -114,8 +114,10 @@ test.describe('landing @demo', () => {
     });
   }
 
-  test('landing screenshots (light and dark)', async ({ page }, testInfo) => {
-    for (const scheme of ['light', 'dark'] as const) {
+  for (const scheme of ['light', 'dark'] as const) {
+    test(`landing screenshot (${scheme})`, async ({ page }, testInfo) => {
+      // A full-page capture of the long mobile page at DPR 2.6 is slow on a busy machine.
+      test.setTimeout(90_000);
       await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
       await page.goto('/');
       await expect(page.locator('html')).toHaveClass(new RegExp(`\\b${scheme}\\b`));
@@ -124,6 +126,6 @@ test.describe('landing @demo', () => {
         path: testInfo.outputPath(`landing-${testInfo.project.name}-${scheme}.png`),
         fullPage: true,
       });
-    }
-  });
+    });
+  }
 });
