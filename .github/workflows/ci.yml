@@ -53,8 +53,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Vitest (unit + integration projects, with coverage and thresholds)
-        run: pnpm exec vitest run --project unit --project integration --coverage
+      - name: Vitest (unit + integration + golden, with coverage and thresholds)
+        # golden is included so the engine's coverage counts its oracle tests (TESTS §7.1)
+        run: pnpm exec vitest run --project unit --project integration --project golden --coverage
       # E12: complete demo in replay (fixtures and recordings cover everything)
       # - name: Complete demo in replay
       #   run: pnpm exec vitest run --project unit -t "demo complete"

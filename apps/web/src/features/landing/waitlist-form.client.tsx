@@ -27,7 +27,7 @@ export function WaitlistForm() {
           name="email"
           type="email"
           autoComplete="email"
-          placeholder="voce@empresa.com.br"
+          placeholder="voce@exemplo.com.br"
           aria-describedby={noteId}
           className="h-12 w-full min-w-0 rounded-md border border-strong-border bg-surface px-3 text-base text-foreground transition-colors duration-(--dur-fast) placeholder:text-subtle sm:flex-1"
         />
