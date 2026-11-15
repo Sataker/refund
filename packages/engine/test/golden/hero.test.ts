@@ -192,6 +192,19 @@ describe('hero: findings rule by rule (F.3)', () => {
     expect(measured.find((i) => i.pa === '2026-09')?.claimFrom).toBe('2027-01');
   });
 
+  it('C.1 item 4: the trace flags the 2027–2028 parameters not yet published (engine review of E5)', () => {
+    const steps = r.findings.flatMap((f) => f.trace);
+    const notes = steps.filter((s) => s.projectedNote !== undefined);
+    expect(notes.length).toBeGreaterThanOrEqual(1);
+    expect(notes.map((s) => s.projectedNote)).toContain(
+      'parâmetro de 2027 ainda não publicado; usado o de 2026',
+    );
+    const r01 = find(r, 'R01').trace.find((s) => s.id === 'R01.PROJECTED_PARAMETERS');
+    expect(r01?.inputs['inss.ceiling']?.value).toBe('2027-01 a 2028-12: usado o de 2026');
+    expect(r01?.inputs['irpf.annual.table']?.value).toBe('2027-12 a 2028-12: usado o de 2026');
+    expect(r01?.inputs.minimumWage).toBeUndefined(); // read at start = 2026-12, published
+  });
+
   it('INV-1: Σ marginals (countsInTotal) == total, 12 months and steady state', () => {
     const counted = r.findings.filter((f) => f.countsInTotal);
     expect(counted.map((f) => f.ruleId)).toEqual(['R01', 'R05']);

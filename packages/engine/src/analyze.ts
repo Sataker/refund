@@ -6,6 +6,7 @@ import { EngineError, toDomainError } from './errors.ts';
 import { canonicalJson, sha256Hex } from './hash.ts';
 import { ALL_PARAMETERS, OFFICIAL_SET_ID, PARAMETERS_VERSION, param } from './parameters/index.ts';
 import { inferPgdas, type PgdasInference } from './pgdas.ts';
+import { costReads, irMonths, projectedParametersStep } from './projected.ts';
 import { type Ctx, createCtx } from './projection.ts';
 import {
   appliesR01,
@@ -148,7 +149,13 @@ function runChain(
         const confidence: Confidence = isAssumption(ctx.facts.pfDetails)
           ? 'estimated'
           : 'confirmed';
-        findings.push(r04Finding(input, plan, gain.gain12m, gain.regimeGain, confidence));
+        const projected = projectedParametersStep('R04', [
+          ...costReads(ctx),
+          { key: 'irpf.pgbl.limit', months: irMonths(ctx) },
+        ]);
+        findings.push(
+          r04Finding(input, plan, gain.gain12m, gain.regimeGain, confidence, projected),
+        );
         cur = s4;
         dec = d4;
       }

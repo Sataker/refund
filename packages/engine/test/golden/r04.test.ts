@@ -160,6 +160,12 @@ describe('ENGINE-SPEC D.4 — R04', () => {
     expect(plan?.gain).toBeGreaterThan(0);
     expect(finding?.marginalValue12m).toBe(plan?.gain);
     expect(finding?.deadline).toBe('2026-12-30');
+    // C.1 item 4: the steady-state IR (2028) uses the 2026 table, flagged before the last step.
+    const projected = finding?.trace.find((s) => s.id === 'R04.PROJECTED_PARAMETERS');
+    expect(projected?.inputs['irpf.annual.table']?.value).toBe(
+      '2027-12 a 2028-12: usado o de 2026',
+    );
+    expect(finding?.trace.at(-1)?.id).toBe('R04.MARGINAL_12M');
     expect(finding?.title).toContain(`Aporte R$`);
     expect(r.value.total.savings12m).toBe(finding?.marginalValue12m);
     expect(r.value.total.annualRegimeSavings).toBe(finding?.annualRegimeValue);

@@ -16,6 +16,9 @@ export function formatBrl(c: Cents | number): string {
 /** '2027-04' → '04/2027'. */
 export const formatMonth = (m: YearMonth): string => `${m.slice(5, 7)}/${m.slice(0, 4)}`;
 
+/** `[step]` or `[]` (optional trace steps). */
+export const nonNull = <T>(x: T | null): T[] => (x === null ? [] : [x]);
+
 /** Order of each finding in the result (C.6: R01 → R05 → R06 → R04, then the findings outside the chain). */
 export const ORDER_OF = {
   R01: 1,

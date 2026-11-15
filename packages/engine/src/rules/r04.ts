@@ -6,7 +6,7 @@ import { annualIr } from '../primitives/irpf.ts';
 import { civilDate } from '../time.ts';
 import { step } from '../trace.ts';
 import { type Cents, cents, type Finding, type Rate, type Step, type YearMonth } from '../types.ts';
-import { base, formatBrl, ORDER_OF } from './common.ts';
+import { base, formatBrl, nonNull, ORDER_OF } from './common.ts';
 import { refsOf } from './refs.ts';
 
 export interface R04Input {
@@ -91,6 +91,7 @@ export function r04Finding(
   gain12m: Cents,
   regimeGain: Cents,
   confidence: Finding['confidence'],
+  projected: Step | null = null,
 ): Finding {
   const trace: Step[] = [
     step({
@@ -115,6 +116,7 @@ export function r04Finding(
       rounding: 'HALF_UP_CENT',
       parameter: param('irpf.pgbl.limit', `${input.year}-12` as YearMonth),
     }),
+    ...nonNull(projected),
     step({
       id: 'R04.MARGINAL_12M',
       label: 'Ganho real (diferimento: já descontada a provisão de IR no resgate)',

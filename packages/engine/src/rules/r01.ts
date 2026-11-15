@@ -2,6 +2,7 @@
 import { D, Dec, reais, roundToCents } from '../money.ts';
 import { param } from '../parameters/index.ts';
 import { displayFatorR, fatorR, window } from '../primitives/simples.ts';
+import { costReads, projectedParametersStep } from '../projected.ts';
 import { type Ctx, cltPayroll, revenue } from '../projection.ts';
 import {
   regimeCostModel,
@@ -19,7 +20,7 @@ import {
   type Step,
   type YearMonth,
 } from '../types.ts';
-import { base, formatBrl, formatMonth, ORDER_OF } from './common.ts';
+import { base, formatBrl, formatMonth, nonNull, ORDER_OF } from './common.ts';
 import { refsOf } from './refs.ts';
 
 /** Rounds reais UP to the cent (T01-16). */
@@ -336,6 +337,12 @@ export function r01Finding(i: R01FindingInput): Finding {
   const trace: Step[] = [
     ...plan.steps,
     ...paTable(prev, next, 'R01'),
+    ...nonNull(
+      projectedParametersStep('R01', [
+        ...costReads(i.ctx),
+        { key: 'minimumWage', months: [i.ctx.assumptions.start] },
+      ]),
+    ),
     step({
       id: 'R01.COST_12M_BEFORE',
       label: 'Custo nos próximos 12 meses, situação atual',
