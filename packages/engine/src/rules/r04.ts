@@ -135,7 +135,7 @@ export function r04Finding(
     ruleId: 'R04',
     order: ORDER_OF.R04,
     type: 'savings',
-    title: `Aporte R$ ${formatBrl(plan.contribution)} em PGBL até 30/12: R$ ${formatBrl(plan.cashBenefit)} a menos de IR agora; ganho real de R$ ${formatBrl(gain12m)} (diferimento)`,
+    title: `Aporte R$ ${formatBrl(plan.contribution)} em PGBL até 30/12: R$ ${formatBrl(plan.cashBenefit)} a menos de IR agora; ganho real de R$ ${formatBrl(plan.gain)} (diferimento)`,
     marginalValue12m: gain12m,
     annualRegimeValue: regimeGain,
     confidence,

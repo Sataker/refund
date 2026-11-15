@@ -145,7 +145,7 @@ function runChain(
       const d4: ScenarioDecisions = { ...dec, pgblContribution: { [year]: plan.contribution } };
       const s4 = simulate(ctx, 'S4', d4, s0Dec);
       const gain = gainOf(cur, s4);
-      if (gain.regimeGain >= THRESHOLD_OTHERS && gain.gain12m >= THRESHOLD_OTHERS) {
+      if (gain.regimeGain >= THRESHOLD_OTHERS) {
         const confidence: Confidence = isAssumption(ctx.facts.pfDetails)
           ? 'estimated'
           : 'confirmed';

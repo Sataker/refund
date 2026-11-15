@@ -5,6 +5,7 @@ import { resolveAssumptions } from '../../src/assumptions.ts';
 import { brl } from '../../src/money.ts';
 import { annualIr, monthlyIr } from '../../src/primitives/irpf.ts';
 import { createCtx } from '../../src/projection.ts';
+import { formatBrl } from '../../src/rules/common.ts';
 import { optimizerR04, type R04Input } from '../../src/rules/r04.ts';
 import { annualPf, deductibleHealth, fixedDeductions } from '../../src/scenario.ts';
 import type { Cents, Rate } from '../../src/types.ts';
@@ -169,5 +170,40 @@ describe('ENGINE-SPEC D.4 — R04', () => {
     expect(finding?.title).toContain(`Aporte R$`);
     expect(r.value.total.savings12m).toBe(finding?.marginalValue12m);
     expect(r.value.total.annualRegimeSavings).toBe(finding?.annualRegimeValue);
+  });
+
+  it('C.6/INV-2: R04 is thresholded on the steady-state gain only, not on the 12-month gain', () => {
+    // Analysis on 15/12/2026: the horizon starts in 2027-01 and holds no IR of 2026, so the 2026 PGBL has no
+    // 12-month effect, while the steady-state block repeats the yearly contribution (R04, D.4).
+    const f = syntheticFacts({
+      domestic: constant(brl('50.000,00')),
+      subjectToFatorR: false,
+      otherTaxableIncome: constant(brl('10.000,00')),
+      otherInss: constant(brl('988,09')),
+      analysisDate: '2026-12-15',
+    });
+    const r = analyze(f);
+    if (!r.ok) throw new Error(r.error.code);
+    const finding = r.value.findings.find((x) => x.ruleId === 'R04');
+    expect(finding?.countsInTotal).toBe(true);
+    expect(finding?.marginalValue12m).toBe(0);
+    expect(finding?.annualRegimeValue).toBeGreaterThanOrEqual(100);
+    expect(r.value.total.annualRegimeSavings).toBe(finding?.annualRegimeValue);
+    expect(r.value.total.savings12m).toBe(0);
+    // The title shows D.4 gain(a*), computed on the analysis year, not the chain's 12-month value.
+    const ctx = createCtx(f, resolveAssumptions(f));
+    const pf = annualPf(
+      ctx,
+      {
+        proLabore: brl('1.621,00'),
+        segregateExport: false,
+        segregateMonofasico: false,
+        pgblContribution: {},
+      },
+      2026,
+    );
+    const plan = r04('0,00', '0,00', { rt: pf.rt, fullDeductions: pf.fullDeductions });
+    expect(plan?.gain).toBeGreaterThan(0);
+    expect(finding?.title).toContain(`ganho real de R$ ${formatBrl(plan?.gain ?? 0)}`);
   });
 });
