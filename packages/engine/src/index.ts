@@ -1,4 +1,4 @@
-// Public API of @refund/engine (ARCHITECTURE §4.2). estimateByProfile arrives in E8.
+// Public API of @refund/engine (ARCHITECTURE §4.2).
 export const PACKAGE_NAME = '@refund/engine';
 
 export { analyze, recalculate, rulesByRef } from './analyze.ts';
@@ -40,6 +40,15 @@ export {
   type StartOfActivityRbt12,
   window,
 } from './primitives/simples.ts';
+export {
+  CNAE_ANEXO,
+  type CnaeAnexoRow,
+  cnaeAnexoRow,
+  estimateByProfile,
+  formatProfileRange,
+  NO_RANGE_MESSAGES,
+  rangeInThousands,
+} from './profile.ts';
 export { formatBrl } from './rules/common.ts';
 export {
   addMonths,

@@ -1,0 +1,541 @@
+// Profile-based estimate (ENGINE-SPEC C.11, decision D16): before the bank statement, the engine runs analyze() itself
+// (C.6) over synthetic facts built for a fixed grid of boundary scenarios and returns a range PER YEAR AT STEADY STATE.
+// There is no statistic and no "typical payroll": only the limits of the user's answers (C.11.2).
+import { analyze } from './analyze.ts';
+import { EngineError, toDomainError } from './errors.ts';
+import { D, reais, roundToCents } from './money.ts';
+import cnaeTable from './parameters/cnae-anexo.json' with { type: 'json' };
+import { PARAMETERS_VERSION, param } from './parameters/index.ts';
+import { inssPartner } from './primitives/inss.ts';
+import { formatBrl } from './rules/common.ts';
+import { R01_REFS } from './rules/r01.ts';
+import { R02_REFS } from './rules/r02.ts';
+import { R03_REFS } from './rules/r03.ts';
+import { R05_REFS } from './rules/r05.ts';
+import { R06_REFS } from './rules/r06.ts';
+import { REFS } from './rules/refs.ts';
+import {
+  addMonths,
+  civilDate,
+  compareYearMonth,
+  monthOfDate,
+  monthRange,
+  monthsBetween,
+} from './time.ts';
+import {
+  type Anexo,
+  type ApplicableRule,
+  type BoundaryScenario,
+  type Cents,
+  type CivilDate,
+  cents,
+  type EngineResult,
+  type Facts,
+  type LegalRef,
+  type NoRangeReason,
+  type ProfileAnswers,
+  type ProfileEstimate,
+  type Provenance,
+  type PublicProfile,
+  type Rate,
+  type Result,
+  type RevenueBracket,
+  type Series,
+  type VisibleAssumption,
+  type YearMonth,
+} from './types.ts';
+import { ENGINE_VERSION } from './version.ts';
+
+// ---------- CNAE × anexo table (ENGINE-SPEC E.4; C.11.8) ----------
+
+/** A row of `parameters/cnae-anexo.json`. Only `verified` rows get an estimate (C.11.5, item 4). */
+export interface CnaeAnexoRow {
+  cnae: string;
+  description: string;
+  baseAnexo: Anexo;
+  subjectToFatorR: boolean;
+  resellsMonofasico: boolean;
+  status: 'verified' | 'to_confirm';
+  source: string;
+}
+
+export const CNAE_ANEXO: readonly CnaeAnexoRow[] = cnaeTable as CnaeAnexoRow[];
+
+export const cnaeAnexoRow = (cnae: string): CnaeAnexoRow | undefined =>
+  CNAE_ANEXO.find((r) => r.cnae === cnae);
+
+// ---------- Grid (C.11.2) ----------
+
+/** Grid revenues in cents per month: lower limit · midpoint · upper limit. Brackets without a grid have no range. */
+const GRID_REVENUES: Partial<Record<RevenueBracket, readonly number[]>> = {
+  from_15k_to_30k: [1500000, 2250000, 3000000],
+  from_30k_to_60k: [3000000, 4500000, 6000000],
+  from_60k_to_150k: [6000000, 10500000, 15000000],
+  from_150k_to_300k: [15000000, 22500000, 30000000],
+};
+
+const FRACTIONS: Record<ProfileAnswers['receivesFromAbroad'], readonly string[]> = {
+  no: ['0'],
+  less_than_half: ['0', '0.25', '0.5'],
+  half_or_more: ['0.5', '0.75', '1'],
+  dont_know: ['0', '0.25', '0.5', '0.75', '1'],
+};
+
+/** Options where R03 is listed for a Simples company (C.11.6). */
+const R03_BRACKETS: readonly RevenueBracket[] = [
+  'from_150k_to_300k',
+  'from_300k_to_400k',
+  'above_400k',
+];
+
+/** C.11.4: 15% coverage margin, applied to the minimum only (the measured grid error was 10,0%). */
+const MINIMUM_MARGIN = '0.85';
+/** C.11.5, item 9: the same R$ 3.000 below which R01 is never recommended (D14). */
+const FLOOR = 300000;
+/** C.11.5, item 10: one order of magnitude. */
+const MAX_RATIO = 10;
+
+export interface GridPoint {
+  id: string;
+  monthlyRevenue: Cents;
+  exportFraction: Rate;
+  monthlyCltPayroll: Cents;
+}
+
+/**
+ * Monthly CLT payrolls of the grid (C.11.2): 0 · just below (0,28·R − SM − 1,00) · boundary (0,28·R − SM), only for a
+ * CNAE subject to the Fator R and an answer other than "no".
+ */
+function payrolls(
+  revenue: Cents,
+  employees: ProfileAnswers['hasEmployees'],
+  subject: boolean,
+  sm: Cents,
+) {
+  if (!subject || employees === 'no') return [cents(0)];
+  const boundary = roundToCents(reais(revenue).times('0.28')) - sm;
+  return [cents(0), cents(boundary - 100), cents(boundary)];
+}
+
+/** The grid in its fixed order: revenues × fractions × payrolls (INV-6: same answers, same ids). */
+export function profileGrid(
+  bracket: RevenueBracket,
+  answers: ProfileAnswers,
+  subjectToFatorR: boolean,
+  sm: Cents,
+): GridPoint[] {
+  const revenues = GRID_REVENUES[bracket] ?? [];
+  const out: GridPoint[] = [];
+  for (const r of revenues) {
+    for (const s of FRACTIONS[answers.receivesFromAbroad]) {
+      for (const f of payrolls(cents(r), answers.hasEmployees, subjectToFatorR, sm)) {
+        out.push({
+          id: `R${r}-S${s}-F${f}`,
+          monthlyRevenue: cents(r),
+          exportFraction: s as Rate,
+          monthlyCltPayroll: f,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+// ---------- Synthetic facts (C.11.3) ----------
+
+/**
+ * Complete facts of one boundary scenario (P1–P5, P7). The opening date never precedes the observed window: P8 says the
+ * range applies after the 1st year, so the scenario is the company already past its start of activity.
+ */
+export function syntheticFacts(
+  profile: PublicProfile,
+  row: CnaeAnexoRow,
+  c: GridPoint,
+  analysisDate: CivilDate,
+): Facts {
+  const analysisMonth = monthOfDate(analysisDate);
+  const start = addMonths(analysisMonth, 1);
+  const referenceMonth = addMonths(analysisMonth, -1);
+  const months = monthRange(addMonths(referenceMonth, -11), referenceMonth);
+  const sm = param('minimumWage', start).value;
+  const provenance: Provenance = { origin: 'default_assumption', source: `profile:C.11:${c.id}` };
+  const fact = <T>(value: T) => ({ value, provenance });
+  const each = (amount: Cents): Series =>
+    Object.fromEntries(months.map((m) => [m, amount])) as Series;
+
+  // P1: export = r2(s·R), domestic = R − export.
+  const exportAmount = roundToCents(reais(c.monthlyRevenue).times(c.exportFraction));
+  const domesticAmount = cents(c.monthlyRevenue - exportAmount);
+  // P5: RT = pró-labore; deductions = the partner INSS (11% × SM, below the ceiling in every month).
+  const partnerInss = inssPartner(sm, start);
+  const firstObserved = `${months[0] as YearMonth}-01` as CivilDate;
+  const openedOn =
+    compareYearMonth(monthOfDate(profile.activityStartDate), months[0] as YearMonth) < 0
+      ? profile.activityStartDate
+      : firstObserved;
+
+  const facts: Facts = {
+    referenceMonth,
+    analysisDate,
+    company: fact({
+      cnpj: profile.cnpj,
+      primaryCnae: profile.primaryCnae,
+      secondaryCnaes: [],
+      regime: 'SIMPLES' as const,
+      openedOn,
+      uf: profile.uf,
+    }),
+    monthlyRevenue: fact(each(c.monthlyRevenue)),
+    monthlyExportRevenue: fact(each(exportAmount)),
+    monthlyPayroll: fact(each(c.monthlyCltPayroll)),
+    monthlyProLabore: fact(each(sm)),
+    monthlyDistributions: fact({}),
+    pf: fact({
+      annualTaxableIncome: cents(12 * sm),
+      annualInssWithheld: cents(12 * partnerInss),
+      annualIrrfWithheld: cents(0),
+      medicalExpenses: cents(0),
+      educationExpenses: [],
+      dependents: 0,
+      pgblContributed: cents(0),
+    }),
+    assumptions: {},
+    companyDetails: fact({
+      subjectToFatorR: row.subjectToFatorR,
+      baseAnexo: row.baseAnexo,
+      resellsMonofasico: row.resellsMonofasico,
+      hasFullBookkeeping: false, // C.2 default
+    }),
+    revenueByMarket: { domestic: fact(each(domesticAmount)), export: fact(each(exportAmount)) },
+    // P3: same CLT payroll every month, charges and FGTS inside `f`.
+    cltPayroll: {
+      grossPay: fact(each(c.monthlyCltPayroll)),
+      fgtsPaid: fact(each(cents(0))),
+      cppOutsideDas: fact(each(cents(0))),
+    },
+    // P2: pró-labore of 1 minimum wage; the partner works in the company.
+    partner: {
+      worksInCompany: fact(true),
+      grossProLabore: fact(each(sm)),
+      distributions: fact([]),
+    },
+    // P4: not yet segregated; the DAS paid is unknown.
+    dasPaid: fact([]),
+    qualifications: {
+      pgdasSegregatesExport: fact('no' as const),
+      contributesToRgps: fact(true),
+    },
+    pfDetails: fact({
+      monthlyTaxableIncome: each(sm),
+      officialPensionDeductions: each(partnerInss),
+      dependents: 0,
+      healthExpenses: [],
+      educationExpenses: [],
+      pgblContributedThisYear: cents(0),
+      projectedAnnualTotalIncome: cents(12 * sm),
+    }),
+  };
+  if (exportAmount > 0) facts.qualifications.exportResultAbroad = fact(true);
+  return facts;
+}
+
+// ---------- Rules and assumptions shown with the estimate (C.11.3, C.11.6) ----------
+
+const RULE_TITLES: Record<ApplicableRule['ruleId'], string> = {
+  R01: 'Fator R: Anexo III ou V',
+  R05: 'Exportação de serviços',
+  R06: 'PIS e Cofins monofásicos',
+  R03: 'Limite de faturamento',
+  R02: 'Dividendos acima de R$ 50 mil por mês',
+};
+
+const firstRef = (refs: readonly LegalRef[]): LegalRef => refs[0] as LegalRef;
+
+function applicable(ruleId: ApplicableRule['ruleId'], why: string): ApplicableRule {
+  const refs = { R01: R01_REFS, R05: R05_REFS, R06: R06_REFS, R03: R03_REFS, R02: R02_REFS }[
+    ruleId
+  ];
+  return { ruleId, title: RULE_TITLES[ruleId], why, ref: firstRef(refs) };
+}
+
+const R03_MEI = () => applicable('R03', 'Seu faturamento está perto ou acima de um limite do MEI.');
+const R02_RULE = () =>
+  applicable(
+    'R02',
+    'Desde 2026, dividendo acima de R$ 50 mil por mês de uma mesma empresa tem 10% retidos na fonte.',
+  );
+
+/** C.11.6, in the table's order: R01, R05, R06, R03, R02. Each `ref` is the rule's first LegalRef. */
+function applicableRules(
+  row: CnaeAnexoRow,
+  answers: ProfileAnswers,
+  cnae: string,
+): ApplicableRule[] {
+  const out: ApplicableRule[] = [];
+  if (row.subjectToFatorR) {
+    out.push(
+      applicable(
+        'R01',
+        `Seu CNAE ${cnae} paga pelo Anexo III ou pelo V conforme a folha: com folha de 28% do faturamento ou mais, cai no III, que é bem mais barato.`,
+      ),
+    );
+  }
+  if (answers.receivesFromAbroad !== 'no') {
+    out.push(
+      applicable(
+        'R05',
+        // C.11.4: recovery (R05-REC) does not enter the estimate; the item only mentions it.
+        'Receita de cliente no exterior não paga PIS, Cofins nem ISS dentro do Simples, mas só se o contador separar no PGDAS-D. E talvez valores pagos a mais nos últimos 5 anos (só com o extrato).',
+      ),
+    );
+  }
+  if (row.resellsMonofasico) {
+    out.push(
+      applicable('R06', 'Você revende produtos em que PIS e Cofins já foram pagos pela indústria.'),
+    );
+  }
+  if (R03_BRACKETS.includes(answers.monthlyRevenueBracket)) {
+    out.push(applicable('R03', 'Seu faturamento está perto ou acima de um limite do Simples.'));
+  }
+  out.push(R02_RULE());
+  return out;
+}
+
+function visibleAssumptions(
+  profile: PublicProfile,
+  row: CnaeAnexoRow,
+  grid: readonly GridPoint[],
+  analysisDate: CivilDate,
+): VisibleAssumption[] {
+  const analysisMonth = monthOfDate(analysisDate);
+  const start = addMonths(analysisMonth, 1);
+  const sm = param('minimumWage', start).value;
+  const out: VisibleAssumption[] = [
+    {
+      id: 'P1',
+      text: 'Faturamento igual todo mês, no valor do cenário',
+      why: 'Resposta do usuário (limites da opção). A projeção pela média dos 12 meses repete o mesmo valor.',
+      type: 'answer',
+    },
+    {
+      id: 'P2',
+      text: `Pró-labore de 1 salário mínimo (R$ ${formatBrl(sm)})`,
+      why: 'Premissa conservadora: é o mínimo legal de quem trabalha na empresa (Lei 8.212, art. 12, V, "f", e Decreto 12.797/2025). Com o pró-labore no mínimo, a faixa não conta o ganho de reduzir um pró-labore maior.',
+      type: 'conservative',
+      ref: REFS['lei8212-1991/art12/v'],
+    },
+  ];
+  if (row.subjectToFatorR) {
+    out.push({
+      id: 'P3',
+      text: 'Folha CLT igual todo mês, com encargos e FGTS dentro',
+      why: 'Limites da grade, não estatística. Para o Fator R importa a soma da folha (LC 123, art. 18, § 24).',
+      type: 'grid_limit',
+      ref: REFS['lc123-2006/art18/p24'],
+    });
+  }
+  if (grid.some((c) => !D(c.exportFraction).isZero())) {
+    out.push({
+      id: 'P4',
+      text: 'A exportação ainda não é separada no PGDAS-D e é de serviço usufruído no exterior, com ingresso de divisas',
+      why: 'Premissa do "valor potencial": a faixa mede quanto as regras valem para quem ainda não as usa. Se o contador já separa, o extrato mostra isso pelo DAS pago e a regra sai. A confirmação da exportação continua obrigatória na análise.',
+      type: 'potential_value',
+      ref:
+        compareYearMonth(start, '2027-01') < 0
+          ? REFS['res-cgsn140-2018/art25/p4']
+          : REFS['res-cgsn190-2026/art1/res140-art25'],
+    });
+  }
+  out.push(
+    {
+      id: 'P5',
+      text: 'Sócio sem outra renda tributável, sem dependentes nem deduções, sem dividendos acima de R$ 50 mil por mês',
+      why: 'Sem um fato, não se supõe renda. Efeito: o IR do pró-labore novo pode estar subestimado.',
+      type: 'grid_limit',
+    },
+    {
+      id: 'P6',
+      text: 'Valor por ano em regime',
+      why: 'A rampa dos 12 primeiros meses depende do histórico mês a mês, que o perfil não tem. O valor em regime é o que se compara com a faixa.',
+      type: 'grid_limit',
+    },
+    {
+      id: 'P7',
+      text: 'Atividade no CNAE principal, no anexo da tabela oficial',
+      why: `CNAE ${row.cnae}: Anexo ${row.baseAnexo}${row.subjectToFatorR ? ', sujeito ao Fator R' : ''}. CNAE secundário não entra (a receita por atividade só aparece no extrato).`,
+      type: 'source',
+    },
+  );
+  if (monthsBetween(monthOfDate(profile.activityStartDate), analysisMonth) < 13) {
+    out.push({
+      id: 'P8',
+      text: 'Empresa aberta há menos de 13 meses: a faixa vale depois do 1º ano',
+      why: 'No começo da atividade, o Fator R e a receita de 12 meses são proporcionais.',
+      type: 'grid_limit',
+    });
+  }
+  return out;
+}
+
+// ---------- Aggregation (C.11.4) and reasons (C.11.5) ----------
+
+const shrink = (v: Cents): Cents => roundToCents(reais(v).times(MINIMUM_MARGIN));
+
+function runScenario(
+  profile: PublicProfile,
+  row: CnaeAnexoRow,
+  c: GridPoint,
+  analysisDate: CivilDate,
+  parameters: string | undefined,
+): Result<BoundaryScenario> {
+  const facts = syntheticFacts(profile, row, c, analysisDate);
+  const r = analyze(facts, parameters === undefined ? undefined : { parameters });
+  if (!r.ok) return r;
+  const res: EngineResult = r.value;
+  const total = res.total.annualRegimeSavings ?? cents(0);
+  const ruleValue = (ruleId: 'R01' | 'R05'): Cents => {
+    const f = res.findings.find((x) => x.ruleId === ruleId);
+    return f?.countsInTotal === true ? (f.annualRegimeValue ?? cents(0)) : cents(0);
+  };
+  const byRule = { R01: ruleValue('R01'), R05: ruleValue('R05') };
+  // INV-1 per scenario (C.11.4): R06 and R04 are null on these facts, so R01 + R05 must close the total.
+  if (byRule.R01 + byRule.R05 !== total) {
+    throw new EngineError('ENGINE_INTERNAL_ERROR', `INV-1 broken in profile scenario ${c.id}`);
+  }
+  return { ok: true, value: { ...c, annualRegimeTotal: total, byRule } };
+}
+
+function estimate(
+  profile: PublicProfile,
+  answers: ProfileAnswers,
+  options: { analysisDate: CivilDate; parameters?: string },
+): Result<ProfileEstimate> {
+  const analysisDate = civilDate(options.analysisDate);
+  const base = (rules: ApplicableRule[]) => ({
+    label: 'estimativa por perfil' as const,
+    rules,
+    assumptions: [] as VisibleAssumption[],
+    scenarios: [] as BoundaryScenario[],
+    engineVersion: ENGINE_VERSION,
+    parametersVersion: PARAMETERS_VERSION,
+  });
+  const noRange = (reason: NoRangeReason, rules: ApplicableRule[]) => ({
+    type: 'no_range' as const,
+    reason,
+    ...base(rules),
+  });
+  const ok = (value: ProfileEstimate): Result<ProfileEstimate> => ({ ok: true, value });
+
+  // C.11.5, fixed order; the first match wins.
+  if (!profile.isActive) return ok(noRange('COMPANY_NOT_ACTIVE', []));
+  if (profile.optedIntoMei) return ok(noRange('REGIME_MEI', [R03_MEI()]));
+  if (!profile.optedIntoSimples) return ok(noRange('REGIME_OUT_OF_SCOPE', []));
+  const row = cnaeAnexoRow(profile.primaryCnae);
+  if (
+    row === undefined ||
+    row.status !== 'verified' ||
+    row.baseAnexo === 'II' ||
+    row.baseAnexo === 'IV'
+  ) {
+    return ok(noRange('CNAE_OUT_OF_SCOPE', [R02_RULE()]));
+  }
+  const rules = applicableRules(row, answers, profile.primaryCnae);
+  const bracket = answers.monthlyRevenueBracket;
+  if (bracket === 'dont_know') return ok(noRange('REVENUE_NOT_PROVIDED', rules));
+  if (bracket === 'from_300k_to_400k') return ok(noRange('ABOVE_SUBLIMIT', rules));
+  if (bracket === 'above_400k') return ok(noRange('ABOVE_CEILING', rules));
+  if (!row.subjectToFatorR && answers.receivesFromAbroad === 'no') {
+    return ok(noRange('NO_RULE_WITH_VALUE', rules));
+  }
+  if (bracket === 'up_to_15k') return ok(noRange('MINIMUM_BELOW_FLOOR', rules));
+
+  const sm = param('minimumWage', addMonths(monthOfDate(analysisDate), 1)).value;
+  const grid = profileGrid(bracket, answers, row.subjectToFatorR, sm);
+  const scenarios: BoundaryScenario[] = [];
+  for (const c of grid) {
+    const r = runScenario(profile, row, c, analysisDate, options.parameters);
+    if (!r.ok) return r;
+    scenarios.push(r.value);
+  }
+  const totals = scenarios.map((s) => s.annualRegimeTotal);
+  const gridTotal: [Cents, Cents] = [cents(Math.min(...totals)), cents(Math.max(...totals))];
+  const total: [Cents, Cents] = [shrink(gridTotal[0]), gridTotal[1]];
+  const assumptions = visibleAssumptions(profile, row, grid, analysisDate);
+  const withRanges = (): ApplicableRule[] =>
+    rules.map((rule) => {
+      if (rule.ruleId !== 'R01' && rule.ruleId !== 'R05') return rule;
+      const id = rule.ruleId;
+      const values = scenarios.map((s) => s.byRule[id]);
+      const max = Math.max(...values);
+      if (max <= 0) return rule;
+      return { ...rule, range: [shrink(cents(Math.min(...values))), cents(max)] };
+    });
+
+  const shown = { assumptions, scenarios, gridTotal };
+  if (total[0] < FLOOR) {
+    return ok({ ...noRange('MINIMUM_BELOW_FLOOR', rules), ...shown });
+  }
+  if (total[1] > MAX_RATIO * total[0]) {
+    return ok({ ...noRange('RANGE_TOO_WIDE', withRanges()), ...shown });
+  }
+  return ok({
+    type: 'range',
+    unit: 'per_year_in_regime',
+    total,
+    ...base(withRanges()),
+    ...shown,
+  });
+}
+
+/**
+ * ARCHITECTURE §4.2 `estimateByProfile`, returning `Result` like `analyze` (no exception crosses the package).
+ * Pure and deterministic (INV-6): up to 45 analyze() calls.
+ */
+export function estimateByProfile(
+  profile: PublicProfile,
+  answers: ProfileAnswers,
+  options: { analysisDate: CivilDate; parameters?: string },
+): Result<ProfileEstimate> {
+  try {
+    return estimate(profile, answers, options);
+  } catch (e) {
+    return { ok: false, error: toDomainError(e) };
+  }
+}
+
+// ---------- Microcopy (C.11.7), user-visible, for the web app ----------
+
+/** Text of each "no range" reason; `{cnae}` is replaced by the CNAE (C.11.7). */
+export const NO_RANGE_MESSAGES: Record<NoRangeReason, string> = {
+  COMPANY_NOT_ACTIVE: 'Essa empresa não está ativa na Receita. Não há o que estimar.',
+  REGIME_MEI:
+    'No MEI o imposto é fixo por mês, então não há faixa de economia. O que vale acompanhar é o limite de faturamento.',
+  REGIME_OUT_OF_SCOPE: 'Por enquanto o Refund calcula empresas do Simples Nacional.',
+  CNAE_OUT_OF_SCOPE:
+    'Ainda não conferimos a sua atividade (CNAE {cnae}) na tabela oficial do Simples. Sem isso, não mostramos número.',
+  REVENUE_NOT_PROVIDED:
+    'Sem uma ideia do faturamento não dá para estimar. Você pode pular e ver o número exato com o extrato.',
+  ABOVE_SUBLIMIT:
+    'Acima de R$ 3,6 milhões por ano, ISS e ICMS saem do Simples e a conta muda. O número sai do extrato.',
+  ABOVE_CEILING:
+    'Acima de R$ 4,8 milhões por ano a empresa sai do Simples Nacional, e esse regime ainda não está no Refund.',
+  NO_RULE_WITH_VALUE:
+    'As regras que valem para você dependem de dados que só o extrato mostra. Preferimos não chutar um número.',
+  MINIMUM_BELOW_FLOOR:
+    'Com essas respostas, o valor pode ser perto de zero. O extrato mostra se vale a pena.',
+  RANGE_TOO_WIDE:
+    'Com essas respostas a faixa fica larga demais para ajudar. Responda as perguntas acima ou vá direto ao extrato.',
+};
+
+/** C.11.4 display: the minimum rounded DOWN and the maximum UP, to the thousand reais ([12, 91] for the hero). */
+export function rangeInThousands(total: readonly [Cents, Cents]): [number, number] {
+  return [Math.floor(total[0] / 100000), Math.ceil(total[1] / 100000)];
+}
+
+const grouped = (n: number): string => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+/** "de R$ 12 mil a R$ 91 mil" (C.11.7, the range sentence). */
+export function formatProfileRange(total: readonly [Cents, Cents]): string {
+  const [min, max] = rangeInThousands(total);
+  return `de R$ ${grouped(min)} mil a R$ ${grouped(max)} mil`;
+}

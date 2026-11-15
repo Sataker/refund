@@ -1,0 +1,38 @@
+[
+  {
+    "cnae": "6201-5/01",
+    "description": "Desenvolvimento de programas de computador sob encomenda",
+    "baseAnexo": "III",
+    "subjectToFatorR": true,
+    "resellsMonofasico": false,
+    "status": "verified",
+    "source": "LC 123/2006, art. 18, § 5º-D, IV (elaboração de programas de computadores → Anexo III) e § 5º-M, II (Fator R < 28% → Anexo V); texto em @refund/law lc123-2006/art18/p5-d e p5-m, verificado em 2026-11-14"
+  },
+  {
+    "cnae": "6201-5/02",
+    "description": "Web design",
+    "baseAnexo": "III",
+    "subjectToFatorR": true,
+    "resellsMonofasico": false,
+    "status": "verified",
+    "source": "LC 123/2006, art. 18, § 5º-D, VI (planejamento, confecção, manutenção e atualização de páginas eletrônicas → Anexo III) e § 5º-M, II (Fator R < 28% → Anexo V); texto em @refund/law lc123-2006/art18/p5-d e p5-m, verificado em 2026-11-14"
+  },
+  {
+    "cnae": "4771-7/01",
+    "description": "Comércio varejista de produtos farmacêuticos, sem manipulação de fórmulas",
+    "baseAnexo": "I",
+    "subjectToFatorR": false,
+    "resellsMonofasico": true,
+    "status": "verified",
+    "source": "Revenda de mercadorias → Anexo I (LC 123/2006, art. 18, § 4º, I; ENGINE-SPEC E.4); revenda monofásica de medicamentos (Lei 10.147/2000, arts. 1º e 2º; LC 123, art. 18, § 4º-A, I; ENGINE-SPEC E.5)"
+  },
+  {
+    "cnae": "8630-5/04",
+    "description": "Atividade odontológica",
+    "baseAnexo": "III",
+    "subjectToFatorR": true,
+    "resellsMonofasico": false,
+    "status": "to_confirm",
+    "source": "ENGINE-SPEC E.4: sujeita ao Fator R a confirmar; odontologia não aparece nos incisos capturados de LC 123, art. 18, §§ 5º-D e 5º-I (EXECUTION §9, E1/E8)"
+  }
+]
