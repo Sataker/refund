@@ -2,6 +2,8 @@ import type { Instrumentation } from 'next';
 
 // ARCHITECTURE §10.1: every unhandled server error becomes one redacted `level:'error'` JSON line with
 // the route and the digest (and a row in refund.system_events when the database is already open).
+// The route logged is Next's template (`/r/[token]`), never the real path: that would put the
+// report's bearer token in the logs.
 export const onRequestError: Instrumentation.onRequestError = async (err, request, context) => {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
   const { logger } = await import('@/server/log.ts');
@@ -14,10 +16,9 @@ export const onRequestError: Instrumentation.onRequestError = async (err, reques
       digest,
       method: request.method,
       routeType: context.routeType,
-      routePath: context.routePath,
     },
     {
-      route: request.path.split('?')[0],
+      route: context.routePath,
       requestId: headerValue(request.headers['x-vercel-id']),
     },
   );
