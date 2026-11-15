@@ -13,5 +13,9 @@
   "dependencies": {
     "@refund/engine": "workspace:*",
     "@refund/sources": "workspace:*"
+  },
+  "devDependencies": {
+    "@refund/law": "workspace:*",
+    "@refund/personas": "workspace:*"
   }
 }

@@ -348,6 +348,13 @@ importers:
       '@refund/sources':
         specifier: workspace:*
         version: link:../sources
+    devDependencies:
+      '@refund/law':
+        specifier: workspace:*
+        version: link:../law
+      '@refund/personas':
+        specifier: workspace:*
+        version: link:../personas
 
   packages/sources:
     dependencies:
