@@ -1,6 +1,6 @@
 // Rule-level legal references, aligned with the @refund/law corpus ids (EXECUTION §9, E1/E8 row). Generated once
 // from packages/law/articles/*.json (label, url, capturedAt, sourceSha256); the engine cannot import @refund/law
-// (ARCHITECTURE §3.3, rule 1). E8 adds the test in packages/law/test that every id below exists in the corpus.
+// (ARCHITECTURE §3.3, rule 1). test/golden/law-refs.test.ts checks every id below against the corpus files.
 import type { LegalRef } from '../types.ts';
 
 const ref = (id: string, label: string, url: string, captureSha256: string): LegalRef => ({
@@ -294,6 +294,102 @@ export const REFS = {
     'LC 123/2006, art. 14',
     'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
     'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
+  ),
+  'lei15191-2025/art2': ref(
+    'lei15191-2025/art2',
+    'Lei 15.191/2025, art. 2º',
+    'https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/L15191.htm',
+    'dc266886878e79d4a92ca921c65f8c66f62cf178a473fa3b3ba93578d2c474a8',
+  ),
+  'lei9250-1995/art4/iii': ref(
+    'lei9250-1995/art4/iii',
+    'Lei 9.250/1995, art. 4º, III',
+    'https://www.planalto.gov.br/ccivil_03/leis/l9250.htm',
+    '7ae1cbfc64537d9bc4329223a9f25099ed35c52d8b5d3234e03db4b4b0eeaac5',
+  ),
+  'port-mps-mf13-2026/art2': ref(
+    'port-mps-mf13-2026/art2',
+    'Portaria Interministerial MPS/MF 13/2026, art. 2º',
+    'https://www.in.gov.br/web/dou/-/portaria-interministerial-mps/mf-n-13-de-9-de-janeiro-de-2026-680382603',
+    '98885d28277593554e53f70cd48c0331187e7079fc599db4e5954a3b05780615',
+  ),
+  'port-mps-mf13-2026/anexo2': ref(
+    'port-mps-mf13-2026/anexo2',
+    'Portaria Interministerial MPS/MF 13/2026, Anexo II',
+    'https://www.in.gov.br/web/dou/-/portaria-interministerial-mps/mf-n-13-de-9-de-janeiro-de-2026-680382603',
+    '98885d28277593554e53f70cd48c0331187e7079fc599db4e5954a3b05780615',
+  ),
+  'lei8212-1991/art22/iii': ref(
+    'lei8212-1991/art22/iii',
+    'Lei 8.212/1991, art. 22, III',
+    'https://www.planalto.gov.br/ccivil_03/leis/l8212cons.htm',
+    '09224fdf72e6338d34559ee8d7857e8483590772c4ebd38bf5d70dabb02474e5',
+  ),
+  'dec12797-2025/art1': ref(
+    'dec12797-2025/art1',
+    'Decreto 12.797/2025, art. 1º',
+    'https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/decreto/d12797.htm',
+    '4a389230d6bbb63a53a6d7878a29973d282d2a36c162849374c15de57d22987b',
+  ),
+  'res-cgsn190-2026/art1/res140-art21': ref(
+    'res-cgsn190-2026/art1/res140-art21',
+    'Res. CGSN 190/2026, art. 1º (art. 21 da Res. CGSN 140/2018)',
+    'https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832',
+    '55e08836cba4b3afc78bcd6deb86d9548b9048dd803ee22c3f839c23d487ae40',
+  ),
+  'lc123-2006/art3/caput': ref(
+    'lc123-2006/art3/caput',
+    'LC 123/2006, art. 3º, caput',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
+  ),
+  'lc123-2006/art3/p9': ref(
+    'lc123-2006/art3/p9',
+    'LC 123/2006, art. 3º, § 9º',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
+  ),
+  'lc123-2006/art18-a/p1': ref(
+    'lc123-2006/art18-a/p1',
+    'LC 123/2006, art. 18-A, § 1º',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
+  ),
+  'lc123-2006/art18-a/p7': ref(
+    'lc123-2006/art18-a/p7',
+    'LC 123/2006, art. 18-A, § 7º',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
+  ),
+  'lc123-2006/art18-a/p3/v': ref(
+    'lc123-2006/art18-a/p3/v',
+    'LC 123/2006, art. 18-A, § 3º, V',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
+  ),
+  'lc238-2026/art1': ref(
+    'lc238-2026/art1',
+    'LC 238/2026, art. 1º',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp238.htm',
+    'db45d70ffb3f470021593c56545b4f503d2f0e90ed6c5e2261a70e8f355da6ad',
+  ),
+  'lc238-2026/art2': ref(
+    'lc238-2026/art2',
+    'LC 238/2026, art. 2º',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp238.htm',
+    'db45d70ffb3f470021593c56545b4f503d2f0e90ed6c5e2261a70e8f355da6ad',
+  ),
+  'lei9250-1995/art16-a/caput': ref(
+    'lei9250-1995/art16-a/caput',
+    'Lei 9.250/1995, art. 16-A, caput',
+    'https://www.planalto.gov.br/ccivil_03/leis/l9250.htm',
+    '7ae1cbfc64537d9bc4329223a9f25099ed35c52d8b5d3234e03db4b4b0eeaac5',
+  ),
+  'res-cgsn140-2018/art40/p3': ref(
+    'res-cgsn140-2018/art40/p3',
+    'Res. CGSN 140/2018, art. 40, § 3º',
+    'https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/92278/visao/vigente',
+    '51aed0b74a4d8d97ee0158c6c9cca5f14658369b42e07cb345e31007818ec442',
   ),
 } as const satisfies Record<string, LegalRef>;
 

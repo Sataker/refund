@@ -37,7 +37,7 @@ describe('monthlyIr (C.3.1)', () => {
       'R01.IR.2026-03',
     ]);
     expect(r.steps.at(-1)?.result.value).toBe(r.ir);
-    expect(r.steps[2]?.ref?.url).toContain('L15270');
+    expect(r.steps[2]?.ref?.id).toBe('lei9250-1995/art3-a'); // art. 3º-A, wording of Lei 15.270
     expect(r.steps[0]?.label).toBe('Base com deduções legais');
   });
 

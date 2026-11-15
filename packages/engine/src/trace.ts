@@ -28,7 +28,8 @@ export function step(spec: StepSpec): Step {
   };
   if (spec.month !== undefined) out.month = spec.month;
   if (spec.parameter !== undefined) {
-    out.ref = legalRefOf(spec.parameter);
+    const ref = legalRefOf(spec.parameter);
+    if (ref !== undefined) out.ref = ref;
     if (spec.parameter.projected) out.projectedNote = projectedNote(spec.parameter, spec.month);
   }
   return out;

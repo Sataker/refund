@@ -4,13 +4,8 @@ import { compareYearMonth } from '../time.ts';
 import type { LegalRef, YearMonth } from '../types.ts';
 import { PARAMETERS_2026 } from './2026.ts';
 import { PARAMETERS_2027 } from './2027.ts';
-import type {
-  AnyParameterEntry,
-  ParameterEntry,
-  ParameterKey,
-  ParameterLookup,
-  ParameterSource,
-} from './types.ts';
+import { parameterRef } from './legal-refs.ts';
+import type { AnyParameterEntry, ParameterEntry, ParameterKey, ParameterLookup } from './types.ts';
 
 export type * from './types.ts';
 
@@ -71,30 +66,13 @@ export function paramOrNull<K extends ParameterKey>(
   return inForce ? param(key, month) : null;
 }
 
-const slug = (s: string): string =>
-  s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[º°ª]/g, '')
-    .replace(/§+/g, 'par')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
 /**
- * LegalRef of a parameter, used by the trace steps (C.10). The id convention `<regulation>#<provision>` (slugs) is
- * provisional: E8 checks every engine ref against @refund/law and aligns it with the corpus id convention.
+ * LegalRef of a parameter record, used by the trace steps (C.10): a provision of @refund/law or a captured non-law
+ * source (`legal-refs.ts`); undefined when the record's source was not captured (never a made-up id, CLAUDE.md rule 3).
  */
 export function legalRefOf(lookup: {
-  source: ParameterSource;
-  verifiedAt: LegalRef['verifiedAt'];
-}): LegalRef {
-  const { regulation, provision, url } = lookup.source;
-  return {
-    id: `${slug(regulation)}#${slug(provision)}`,
-    label: `${regulation}, ${provision}`,
-    url,
-    verifiedAt: lookup.verifiedAt,
-    type: 'regulation',
-  };
+  key: ParameterKey;
+  effectiveFrom: YearMonth;
+}): LegalRef | undefined {
+  return parameterRef(lookup.key, lookup.effectiveFrom);
 }

@@ -244,14 +244,22 @@ describe('parameter sets and legal refs', () => {
     expect(PARAMETERS_VERSION).toMatch(/^\d{4}\.\d{2}\.\d{2}$/);
   });
 
-  it('builds the LegalRef of a parameter (provisional id convention, aligned with @refund/law in E8)', () => {
-    const ref = legalRefOf(param('simples.fatorR.limit', '2026-06'));
-    expect(ref).toEqual({
-      id: 'lc-123-2006-redacao-da-lc-155-2016#art-18-par-5-j-e-5-m',
-      label: 'LC 123/2006 (redação da LC 155/2016), art. 18, §§ 5º-J e 5º-M',
+  it('cites a parameter by its @refund/law provision (CLAUDE.md rule 3; engine review of E5)', () => {
+    expect(legalRefOf(param('simples.fatorR.limit', '2026-06'))).toEqual({
+      id: 'lc123-2006/art18/p5-j',
+      label: 'LC 123/2006, art. 18, § 5º-J',
       url: 'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
-      verifiedAt: '2026-11-12',
+      verifiedAt: '2026-11-14',
       type: 'regulation',
+      captureSha256: 'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
     });
+    // The window has one provision per period (D4): LC 123, § 5º-K up to 12/2026; Res. CGSN 190 from 01/2027.
+    expect(legalRefOf(param('simples.fatorR.window', '2026-12'))?.id).toBe('lc123-2006/art18/p5-k');
+    expect(legalRefOf(param('simples.fatorR.window', '2027-01'))?.id).toBe(
+      'res-cgsn190-2026/art1/res140-art26',
+    );
+    // A non-law source is a 'procedure' ref, never a made-up law id; an uncaptured law gives no ref.
+    expect(legalRefOf(param('simples.calculation', '2026-06'))?.type).toBe('procedure');
+    expect(legalRefOf(param('calendar.nationalHolidays', '2026-06'))).toBeUndefined();
   });
 });
