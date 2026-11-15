@@ -253,8 +253,9 @@ const isOwnAccount = (t: NormalizedTransaction, ctx: RuleContext): boolean =>
   documentKey(t.counterparty.document.publicValue) === ctx.identity.cnpj;
 
 /**
- * E9 review H1b: refunds, returns and redemptions are not revenue on their own. For now they go to a card with the
- * category undecided ("yes" = revenue); Enzo may decide to exclude them automatically: change only this function.
+ * D21 (PLAN §18, 15/11; E9 review H1b): refunds, returns, reimbursements and redemptions never count as revenue on
+ * their own: a card asks "Isso foi receita da empresa?" with the category undecided ("yes" = revenue, "no" =
+ * excluded) and they move no number until answered. Credits from the company's own CNPJ: `isOwnAccount`.
  */
 export function reversalCredit(t: NormalizedTransaction, ctx: RuleContext): RuleHit | null {
   if (!RX_REVERSAL.test(t.description)) return null;

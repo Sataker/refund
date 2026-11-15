@@ -142,9 +142,10 @@ function textOf(
     case 'reversal':
       return {
         type: 'transaction',
-        text: `Estes créditos de estorno, devolução ou resgate (${n}, ${sum} no total) são receita da empresa?`,
+        // D21 (PLAN §18): "yes" = revenue, "no" = excluded.
+        text: 'Isso foi receita da empresa?',
         options: [
-          { value: 'yes', label: 'Sim, é receita' },
+          { value: 'yes', label: `Sim, os ${sum} foram receita` },
           { value: 'no', label: 'Não, é dinheiro que voltou' },
         ],
       };
