@@ -18,6 +18,17 @@ const ENGINE_FORBIDDEN: Array<[RegExp, string]> = [
   [/\bconsole\./, 'engine-uses-console'],
 ];
 
+// The pipeline does no I/O and reads no clock either (ARCHITECTURE §3.3, rule 3): time comes from the injected
+// AnalysisClock, so only `new Date(<timestamp>)` formatting is allowed, never `Date.now()` or `new Date()`.
+const PIPELINE_FORBIDDEN: Array<[RegExp, string]> = [
+  [/\bDate\.now\b/, 'pipeline-uses-Date.now'],
+  [/\bnew\s+Date\s*\(\s*\)/, 'pipeline-uses-new-Date()'],
+  [/\bMath\.random\b/, 'pipeline-uses-Math.random'],
+  [/\bfetch\s*\(/, 'pipeline-uses-fetch'],
+  [/\bprocess\./, 'pipeline-uses-process'],
+  [/\bconsole\./, 'pipeline-uses-console'],
+];
+
 function stripComments(code: string): string {
   return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 }
@@ -33,6 +44,11 @@ export function checkFile(file: string, source: string): Violation[] {
   }
   if (file.startsWith('packages/engine/src/')) {
     for (const [pattern, rule] of ENGINE_FORBIDDEN) {
+      if (pattern.test(code)) violations.push({ file, rule });
+    }
+  }
+  if (file.startsWith('packages/pipeline/src/')) {
+    for (const [pattern, rule] of PIPELINE_FORBIDDEN) {
       if (pattern.test(code)) violations.push({ file, rule });
     }
   }
