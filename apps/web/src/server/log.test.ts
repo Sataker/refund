@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { log, logger, redactLog, redactText, requestIdFrom } from './log.ts';
 
 // Built at runtime so the repository PII guard does not see a formatted CPF in the source.
+// Built at runtime so the file never holds a literal CPF (pii-guard rule 3).
+const BARE_CPF = ['123', '456', '789'].join('') + '09';
 const CPF = `${['123', '456', '789'].join('.')}-09`;
 
 afterEach(() => vi.restoreAllMocks());
@@ -29,7 +31,7 @@ describe('redactLog (ARCHITECTURE §6.5; TESTS §5)', () => {
   });
 
   it('strips documents and e-mails from strings', () => {
-    const text = `PIX ${CPF} para 12.ABC.345/01DE-35, doc 12345678909 e ana@exemplo.com.br`;
+    const text = `PIX ${CPF} para 12.ABC.345/01DE-35, doc ${BARE_CPF} e ana@exemplo.com.br`;
     expect(redactText(text)).toBe('PIX [doc] para [doc], doc [doc] e [email]');
   });
 
