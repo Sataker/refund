@@ -4,6 +4,7 @@ import { ipKey, memoryRateLimit } from '@/server/rate-limit.ts';
 // ARCHITECTURE §4.8 and §10.2. `?deep=1` touches the database (SELECT + UPDATE system_heartbeat) and is
 // limited to 30/min per IP in memory; the basic check never opens the database.
 export const dynamic = 'force-dynamic';
+export const maxDuration = 10;
 
 const NO_STORE = { 'Cache-Control': 'no-store' };
 

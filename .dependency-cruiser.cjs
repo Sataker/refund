@@ -64,6 +64,8 @@ module.exports = {
     },
     doNotFollow: { path: 'node_modules' },
     tsPreCompilationDeps: true,
-    exclude: { path: ['\\.next/', 'node_modules/', '\\.d\\.ts$'] },
+    exclude: {
+      path: ['\\.next/', 'node_modules/', '\\.d\\.ts$', 'playwright-report/', 'test-results/'],
+    },
   },
 };
