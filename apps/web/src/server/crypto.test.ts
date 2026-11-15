@@ -34,6 +34,16 @@ describe('AES-256-GCM (ARCHITECTURE §9.3)', () => {
     expect(decrypt('v1.a.b', KEY)).toBeNull();
     expect(decrypt(`${token}.x`, KEY)).toBeNull();
   });
+
+  it('rejects a truncated tag and an IV that is not 12 bytes (GCM forgery surface)', () => {
+    const [v, iv, tag, ct] = encrypt('segredo', KEY).split('.') as [string, string, string, string];
+    const shortTag = Buffer.from(tag, 'base64url').subarray(0, 4).toString('base64url');
+    expect(decrypt([v, iv, shortTag, ct].join('.'), KEY)).toBeNull();
+    const longIv = Buffer.concat([Buffer.from(iv, 'base64url'), Buffer.alloc(4)]).toString(
+      'base64url',
+    );
+    expect(decrypt([v, longIv, tag, ct].join('.'), KEY)).toBeNull();
+  });
 });
 
 describe('HMAC, hashes and tokens', () => {

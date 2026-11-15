@@ -57,10 +57,12 @@ export function serverSecrets(): Secrets | null {
 }
 
 const VERSION = 'v1';
+const IV_BYTES = 12;
+const TAG_BYTES = 16;
 
 export function encrypt(plain: string, key: Buffer): string {
-  const iv = randomBytes(12);
-  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const iv = randomBytes(IV_BYTES);
+  const cipher = createCipheriv('aes-256-gcm', key, iv, { authTagLength: TAG_BYTES });
   const ciphertext = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
   return [VERSION, iv, tag, ciphertext]
@@ -73,9 +75,13 @@ export function decrypt(token: string, key: Buffer): string | null {
   const [version, iv, tag, ciphertext, ...rest] = token.split('.');
   if (version !== VERSION || !iv || !tag || ciphertext === undefined || rest.length > 0)
     return null;
+  const ivBytes = Buffer.from(iv, 'base64url');
+  const tagBytes = Buffer.from(tag, 'base64url');
+  // GCM accepts truncated tags (down to 4 bytes) unless told otherwise: pin both lengths.
+  if (ivBytes.length !== IV_BYTES || tagBytes.length !== TAG_BYTES) return null;
   try {
-    const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(iv, 'base64url'));
-    decipher.setAuthTag(Buffer.from(tag, 'base64url'));
+    const decipher = createDecipheriv('aes-256-gcm', key, ivBytes, { authTagLength: TAG_BYTES });
+    decipher.setAuthTag(tagBytes);
     return Buffer.concat([
       decipher.update(Buffer.from(ciphertext, 'base64url')),
       decipher.final(),
