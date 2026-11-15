@@ -22,6 +22,8 @@ export interface Classified {
   cardId: string | null;
   classification: Classification;
   detail: AnswerDetail;
+  /** What a "yes" gives when the rule left the category undecided (refund/redemption credits). */
+  confirmAs?: Category;
 }
 
 export type AnswerValue = QuestionAnswer['value'];
@@ -44,6 +46,7 @@ export function initial(
       label: hit.label,
       cardId: hit.cardId,
       detail: {},
+      ...(hit.confirmAs === undefined ? {} : { confirmAs: hit.confirmAs }),
       classification: {
         transactionId: tx.id,
         category: hit.category,
@@ -113,8 +116,18 @@ function applyAnswer(c: Classified, cardId: string, value: AnswerValue): boolean
   const kind = cardId.split(':')[0];
   switch (kind) {
     case CARD.proLaboreGross:
-      if (isNo(value)) decide(c, 'unclassified', 'rejected', 'Você disse que não é pró-labore');
-      else if (
+      // E9 review M2: not pró-labore → the transfer still went to the holder: it joins the distribution card.
+      if (isNo(value)) {
+        c.cardId = CARD.distribution;
+        c.label = 'distribution';
+        c.classification = {
+          ...c.classification,
+          category: 'profit_distribution',
+          ruleId: 'distribution',
+          status: 'pending_confirmation',
+          reason: 'Você disse que não é pró-labore: é distribuição de lucros?',
+        };
+      } else if (
         isYes(value) ||
         (typeof value === 'number' && Number.isSafeInteger(value) && value > 0)
       )
@@ -130,6 +143,21 @@ function applyAnswer(c: Classified, cardId: string, value: AnswerValue): boolean
       else decide(c, 'unclassified', 'rejected', 'Você disse que não é isso');
       return true;
     }
+    case 'reversal':
+      if (isYes(value))
+        decide(c, c.confirmAs ?? 'service_revenue', 'confirmed', 'Receita, segundo você');
+      else if (isNo(value))
+        decide(c, 'unclassified', 'confirmed', 'Estorno, devolução ou resgate: não é receita');
+      else return false;
+      return true;
+    case 'das':
+      // E9 review H3: which payment is the DAS of this PA; 'all' = DAS plus a complementary DAS.
+      if (value === 'all' || value === c.tx.id)
+        decide(c, 'das_tax', 'confirmed', 'DAS confirmado por você');
+      else if (typeof value === 'string' && value !== '')
+        decide(c, 'unclassified', 'rejected', 'Não é o DAS deste período');
+      else return false;
+      return true;
     case 'partner-transfer':
       if (value === 'distribution')
         decide(c, 'profit_distribution', 'confirmed', 'Distribuição de lucros, segundo você');
@@ -200,11 +228,15 @@ export function applyUserInput(
   confirmations: readonly Pick<Classification, 'transactionId' | 'category'>[],
 ): Set<string> {
   const answered = new Set<string>();
-  for (const c of classified) {
-    if (c.cardId === null) continue;
-    const value = answers.get(c.cardId);
-    if (value !== undefined && applyAnswer(c, c.cardId, value)) answered.add(c.cardId);
-  }
+  // The pró-labore card first: a "no" moves its transfers into the distribution card (M2), answered next.
+  const apply = (c: Classified) => {
+    if (c.cardId === null) return;
+    const id = c.cardId;
+    const value = answers.get(id);
+    if (value !== undefined && applyAnswer(c, id, value)) answered.add(id);
+  };
+  for (const c of classified) if (c.cardId === CARD.proLaboreGross) apply(c);
+  for (const c of classified) if (c.cardId !== CARD.proLaboreGross) apply(c);
   const byId = new Map(classified.map((c) => [c.tx.id, c]));
   for (const conf of confirmations) {
     const c = byId.get(conf.transactionId);
@@ -220,6 +252,10 @@ export function feedsFacts(c: Classified): boolean {
   return (
     s === 'pending_confirmation' &&
     c.classification.origin === 'rule' &&
-    c.label !== 'health_to_confirm'
+    !WAIT_FOR_ANSWER.has(c.label ?? '') &&
+    !(c.cardId?.startsWith('das:') ?? false)
   );
 }
+
+/** Rule suggestions that move nothing until answered: deductions, refund credits, and DAS with a twin (H3). */
+const WAIT_FOR_ANSWER = new Set(['health_to_confirm', 'reversal_credit']);

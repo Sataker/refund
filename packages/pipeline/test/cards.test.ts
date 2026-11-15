@@ -177,11 +177,20 @@ describe('payroll, export, revenue and contribution cards', () => {
     ).toBe(true);
   });
 
-  it('a single gross payroll number applies to the months with salary', () => {
+  it('the gross payroll is a per-month Series; a single number or junk months are not an answer (H2)', () => {
     const list = classify(salaries(), {});
-    const f = facts(list, { [CARD.payrollGross]: 1_020_000 });
-    expect(f.cltPayroll.grossPay.value['2026-10']).toBe(1_020_000);
-    expect(f.cltPayroll.grossPay.value['2026-06']).toBe(0);
+    const single = facts(list, { [CARD.payrollGross]: 1_020_000 });
+    expect(single.cltPayroll.grossPay.provenance.origin).toBe('default_assumption');
+    expect(single.cltPayroll.grossPay.value['2026-10']).toBe(454_868);
+    const junk = facts(list, { [CARD.payrollGross]: { '2026-13': 1, x: 2, '2026-10': -5 } });
+    expect(junk.cltPayroll.grossPay.provenance.origin).toBe('default_assumption');
+    const series = facts(list, {
+      [CARD.payrollGross]: { '2026-10': 1_020_000, '2026-07': 2_210_000 },
+    });
+    expect(series.cltPayroll.grossPay.value['2026-10']).toBe(1_020_000);
+    expect(series.cltPayroll.grossPay.value['2026-07']).toBe(2_210_000);
+    expect(series.cltPayroll.grossPay.value['2026-06']).toBe(0);
+    expect(series.cltPayroll.grossPay.provenance.origin).toBe('user');
   });
 
   it('export "no": still revenue, domestic market, qualification false', () => {

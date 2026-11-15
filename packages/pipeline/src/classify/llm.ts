@@ -92,7 +92,13 @@ export async function boundedCall<T>(
     timer = setTimeout(() => resolve(fallback), timeoutMs);
   });
   try {
-    return await Promise.race([call().catch(() => fallback), expired]);
+    // Promise.resolve().then(call): a port that throws synchronously also lands in the fallback (code review #1).
+    return await Promise.race([
+      Promise.resolve()
+        .then(call)
+        .catch(() => fallback),
+      expired,
+    ]);
   } finally {
     clearTimeout(timer);
   }

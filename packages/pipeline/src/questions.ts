@@ -3,7 +3,7 @@
 import { type Cents, type Facts, formatBrl } from '@refund/engine';
 import type { AnswerValue, Classified } from './classify/index.ts';
 import { CARD } from './classify/rules.ts';
-import { estimateGrossProLabore } from './facts.ts';
+import { estimateGrossProLabore, payrollSeriesAnswer } from './facts.ts';
 import type { Category, ConfirmationQuestion } from './types.ts';
 
 const YES_NO = [
@@ -48,7 +48,7 @@ function textOf(
   cardId: string,
   list: readonly Classified[],
 ): Omit<ConfirmationQuestion, 'id' | 'transactionIds' | 'estimatedImpact'> {
-  const [kind, ,] = cardId.split(':');
+  const [kind, rest] = cardId.split(':');
   const n = list.length;
   const sum = brl(impactOf(list));
   const latest = [...list].sort((a, b) => (a.tx.date < b.tx.date ? 1 : -1))[0];
@@ -139,6 +139,30 @@ function textOf(
         text: `Os créditos deste pagador (${n}, ${sum} no total) são receita da empresa?`,
         options: YES_NO,
       };
+    case 'reversal':
+      return {
+        type: 'transaction',
+        text: `Estes créditos de estorno, devolução ou resgate (${n}, ${sum} no total) são receita da empresa?`,
+        options: [
+          { value: 'yes', label: 'Sim, é receita' },
+          { value: 'no', label: 'Não, é dinheiro que voltou' },
+        ],
+      };
+    case 'das': {
+      const pa = `${(rest ?? '').slice(5, 7)}/${(rest ?? '').slice(0, 4)}`;
+      const byDate = [...list].sort((a, b) => (a.tx.date < b.tx.date ? -1 : 1));
+      return {
+        type: 'transaction',
+        text: `Achamos ${n} pagamentos de DAS para o período ${pa}. Qual deles é o DAS?`,
+        options: [
+          ...byDate.map((c) => ({
+            value: c.tx.id,
+            label: `Só o de ${brl(c.tx.amountCents)} pago em ${c.tx.date.slice(8, 10)}/${c.tx.date.slice(5, 7)}/${c.tx.date.slice(0, 4)}`,
+          })),
+          { value: 'all', label: 'Todos (DAS complementar)' },
+        ],
+      };
+    }
     case 'contribution':
       return {
         type: 'transaction',
@@ -182,14 +206,15 @@ export function buildQuestions(
     });
   }
   const open = (id: string) => !ctx.answers.has(id);
+  const payrollOpen = payrollSeriesAnswer(ctx.answers.get(CARD.payrollGross)) === null;
   const salaries = classified.filter(
     (c) => c.classification.category === 'salary' && c.classification.status !== 'rejected',
   );
-  if (salaries.length > 0 && open(CARD.payrollGross)) {
+  if (salaries.length > 0 && payrollOpen) {
     questions.push({
       id: CARD.payrollGross,
       type: 'assumption',
-      text: 'Qual é a folha bruta mensal (relatório do contador)?',
+      text: 'Qual foi a folha bruta paga em cada mês (com 13º e férias)?',
       transactionIds: salaries.map((c) => c.tx.id),
       options: [
         { value: 'other', label: 'Informar valores' },

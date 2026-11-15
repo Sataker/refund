@@ -6,13 +6,16 @@ import { deductionClass, isHealthCompany, isRegularSchool } from './cnae.ts';
 import {
   amountClusters,
   counterpartyKey,
+  documentKey,
   type HolderIdentity,
   isCpfCounterparty,
   isRecurring,
+  lastMonths,
   pairSameHolder,
   sameCpf,
 } from './identity.ts';
 import {
+  accrualMonth,
   darfCode,
   PERSONAL_MCC,
   PHARMACY_MCC,
@@ -27,6 +30,7 @@ import {
   RX_LOAN,
   RX_PENSION,
   RX_PERSONAL,
+  RX_REVERSAL,
 } from './regex.ts';
 
 /** ENGINE-SPEC E.2/E.3 labels (what E.8 accuracy is measured on), plus the pipeline's own deterministic ids. */
@@ -57,7 +61,10 @@ export type Label =
   | 'same_holder'
   | 'holder_transfer'
   | 'jcp'
-  | 'bank_fee';
+  | 'bank_fee'
+  // E9 review: a transfer between two accounts of the company itself (H1a) and a refund/redemption credit (H1b).
+  | 'own_account'
+  | 'reversal_credit';
 
 /** Cards of E.2/E.3 (stable ids: the next run reuses the answer). */
 export const CARD = {
@@ -75,6 +82,9 @@ export const CARD = {
   revenue: (k: string) => `revenue:${k}`,
   contribution: (k: string) => `contribution:${k}`,
   llm: (category: Category, k: string) => `llm:${category}:${k}`,
+  reversal: (k: string) => `reversal:${k}`,
+  /** Two or more DAS for the same PA (E9 review H3): which one is the DAS? */
+  das: (pa: YearMonth) => `das:${pa}`,
 } as const;
 
 export interface RuleHit {
@@ -84,6 +94,8 @@ export interface RuleHit {
   /** The card that confirms it; null = applies directly (E.3 "Confirmation: no"). */
   cardId: string | null;
   reason: string;
+  /** The category a "yes" on the card gives when the suggestion is undecided (`unclassified`). */
+  confirmAs?: Category;
 }
 
 export interface RuleContext {
@@ -102,6 +114,10 @@ const hit = (
   cardId: string | null = null,
 ): RuleHit => ({ label, category, confidence, cardId, reason });
 
+/** A PIX/TED/DOC to a counterparty the bank identified is a payment to someone, never a tax guide. */
+const toIdentifiedPayee = (t: NormalizedTransaction): boolean =>
+  TRANSFER_METHODS.has(t.method) && t.counterparty?.document != null;
+
 const TRANSFER_METHODS = new Set(['PIX', 'TED', 'DOC']);
 const RECEIPT_METHODS = new Set(['PIX', 'TED', 'DOC', 'BOLETO']);
 
@@ -109,7 +125,9 @@ function taxPayment(t: NormalizedTransaction): RuleHit | null {
   const d = t.description;
   if (RX_DAS_MEI.test(d)) return hit('das_mei', 'das_tax', 0.98, 'DAS do MEI');
   if (t.holder === 'PJ') {
-    if (RX_DAS.test(d)) return hit('das_simples', 'das_tax', 0.98, 'DAS do Simples Nacional');
+    // E9 review H3: "DAS" is also a Portuguese article ("REI DAS COXINHAS", "MARIA DAS GRACAS").
+    if (RX_DAS.test(d) && t.method !== 'CARD' && !toIdentifiedPayee(t))
+      return hit('das_simples', 'das_tax', 0.98, 'DAS do Simples Nacional');
     if (darfCode(d, '1841'))
       return hit('darf_irrf_dividends', 'darf_tax', 0.97, 'DARF 1841: IRRF sobre lucros');
     if (darfCode(d, '0561') || darfCode(d, '0588'))
@@ -125,8 +143,8 @@ function taxPayment(t: NormalizedTransaction): RuleHit | null {
   } else if (darfCode(d, '0190')) {
     return hit('carne_leao', 'darf_tax', 0.97, 'DARF 0190: carnê-leão');
   }
-  // E.3: GPS never on a card payment ("GPS TRACKER LTDA") and never the DCTFWeb DARF.
-  if (RX_GPS.test(d) && !RX_DCTFWEB.test(d) && t.method !== 'CARD') {
+  // E.3: GPS only as a boleto ("GPS TRACKER LTDA" by card or Pix is not INSS), never the DCTFWeb DARF.
+  if (RX_GPS.test(d) && !RX_DCTFWEB.test(d) && t.method === 'BOLETO') {
     return hit('gps_inss', 'inss_charge', 0.9, 'Guia da Previdência Social (INSS)');
   }
   return null;
@@ -224,11 +242,61 @@ export function applyRules(
   classifyEmployees(txs, ctx, hits);
   classifyRecurringPfPix(txs, ctx, hits);
   flagLargeDomesticRevenue(txs, hits);
+  flagDuplicateDas(txs, hits);
   return hits;
+}
+
+/** E9 review H1a: the company's own account at another bank (counterparty CNPJ = the company's). */
+const isOwnAccount = (t: NormalizedTransaction, ctx: RuleContext): boolean =>
+  t.holder === 'PJ' &&
+  t.counterparty?.document?.type === 'CNPJ' &&
+  documentKey(t.counterparty.document.publicValue) === ctx.identity.cnpj;
+
+/**
+ * E9 review H1b: refunds, returns and redemptions are not revenue on their own. For now they go to a card with the
+ * category undecided ("yes" = revenue); Enzo may decide to exclude them automatically: change only this function.
+ */
+export function reversalCredit(t: NormalizedTransaction, ctx: RuleContext): RuleHit | null {
+  if (!RX_REVERSAL.test(t.description)) return null;
+  return {
+    ...hit(
+      'reversal_credit',
+      'unclassified',
+      0.9,
+      'Estorno, devolução ou resgate: é receita?',
+      CARD.reversal(counterpartyKey(t)),
+    ),
+    confirmAs: ctx.revenueCategory,
+  };
+}
+
+/** E9 review H3: two DAS for one PA are never silently merged or overwritten; a card asks which one. */
+function flagDuplicateDas(txs: readonly NormalizedTransaction[], hits: Map<string, RuleHit>): void {
+  const byPa = new Map<YearMonth, NormalizedTransaction[]>();
+  for (const t of txs) {
+    if (hits.get(t.id)?.label !== 'das_simples') continue;
+    const pa = accrualMonth(t.description, t.month);
+    byPa.set(pa, [...(byPa.get(pa) ?? []), t]);
+  }
+  for (const [pa, list] of byPa) {
+    if (list.length < 2) continue;
+    for (const t of list) {
+      const h = hits.get(t.id);
+      if (h !== undefined) hits.set(t.id, { ...h, cardId: CARD.das(pa) });
+    }
+  }
 }
 
 function single(t: NormalizedTransaction, ctx: RuleContext, fromHolder: boolean): RuleHit | null {
   const d = t.description;
+  if (isOwnAccount(t, ctx)) {
+    return hit(
+      'own_account',
+      'same_holder_transfer',
+      0.99,
+      'Transferência entre contas da própria empresa',
+    );
+  }
   if (t.direction === 'outflow') {
     const tax = taxPayment(t);
     if (tax !== null) return tax;
@@ -256,6 +324,8 @@ function single(t: NormalizedTransaction, ctx: RuleContext, fromHolder: boolean)
     return hit('loan_received', 'unclassified', 0.95, 'Empréstimo recebido (fora da receita)');
   }
   if (t.holder === 'PF') return null;
+  const reversal = reversalCredit(t, ctx);
+  if (reversal !== null) return reversal;
   if (fromHolder || sameCpf(t, ctx.identity)) {
     return hit(
       'partner_contribution',
@@ -336,15 +406,27 @@ function classifyHolderTransfers(
     cluster.some(
       (t) => payrollTaxMonths.has(t.month) || payrollTaxMonths.has(addMonths(t.month, 1)),
     );
-  const recurring = amountClusters(regular, 0.02).filter((c) =>
-    isRecurring(c, ctx.referenceMonth, 0.02),
-  );
-  const ranked = [...recurring].sort(
-    (a, b) =>
-      Number(withPayrollTax(b)) - Number(withPayrollTax(a)) ||
-      (a[0]?.amountCents ?? 0) - (b[0]?.amountCents ?? 0),
-  );
-  const proLabore = new Set((ranked[0] ?? []).map((t) => t.id));
+  // E9 review M1: the pró-labore follows the minimum wage, which changes every January, so the ±2% clusters are
+  // built per calendar year. In the reference year the E.2 test applies (≥ 3 of the last 4 months); in an earlier
+  // year of the window the cluster must be paid in ≥ min(3, months of that year in the window) months.
+  const window = new Set(lastMonths(ctx.referenceMonth, 12));
+  const referenceYear = ctx.referenceMonth.slice(0, 4);
+  const proLabore = new Set<string>();
+  for (const year of new Set(regular.map((t) => t.month.slice(0, 4)))) {
+    const inYear = regular.filter((t) => t.month.startsWith(year));
+    const monthsInWindow = [...window].filter((m) => m.startsWith(year)).length;
+    const eligible = amountClusters(inYear, 0.02).filter((c) =>
+      year === referenceYear
+        ? isRecurring(c, ctx.referenceMonth, 0.02)
+        : new Set(c.map((t) => t.month)).size >= Math.min(3, Math.max(1, monthsInWindow)),
+    );
+    const ranked = [...eligible].sort(
+      (a, b) =>
+        Number(withPayrollTax(b)) - Number(withPayrollTax(a)) ||
+        (a[0]?.amountCents ?? 0) - (b[0]?.amountCents ?? 0),
+    );
+    for (const t of ranked[0] ?? []) proLabore.add(t.id);
+  }
   for (const t of regular) {
     hits.set(
       t.id,

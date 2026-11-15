@@ -1,4 +1,6 @@
 // ENGINE-SPEC E.3 and E.7 patterns, applied to the normalized description (E.1.5): flag `u`, no `i`.
+import { addMonths, type YearMonth } from '@refund/engine';
+
 export const RX_DAS = /\b(DAS|PGDAS|SIMPLES ?NAC(IONAL)?|DOC(UMENTO)? ARRECAD(ACAO)? SIMPLES)\b/u;
 export const RX_DAS_MEI = /\b(DAS ?MEI|PGMEI|SIMEI)\b/u;
 export const RX_DARF = /\bDARF\b/u; // + revenue code: 1841, 0561, 0588, 0190
@@ -42,3 +44,17 @@ export const RX_JCP = /\b(JCP|JUROS S(OBRE)? ?(O )?CAP(ITAL)? PROPRIO)\b/u;
 /** "PA 07/2026" / "COMP 10/2025" in a tax payment description: the accrual month it settles. */
 export const RX_ACCRUAL =
   /\b(?:PA|COMP|COMPETENCIA|PER(?:IODO)?(?: DE)? APURACAO)\s*(\d{2})\/(\d{4})\b/u;
+
+/** The accrual month written in a tax payment ("PA 07/2026"), else the month before the payment. */
+export function accrualMonth(description: string, paidIn: YearMonth): YearMonth {
+  const m = RX_ACCRUAL.exec(description);
+  if (m === null) return addMonths(paidIn, -1);
+  return `${m[2]}-${m[1]}` as YearMonth;
+}
+
+/**
+ * Credits that give money back rather than earn it (E9 review H1b): refunds, returns, reimbursements, redemptions and
+ * investment income. Not E.3; they never enter revenue without a card.
+ */
+export const RX_REVERSAL =
+  /\b(ESTORNO\w*|DEVOL\w*|REEMBOLSO\w*|RESGATE\w*|APLICACAO|APLIC|RENDIMENTO\w*|REND)\b/u;

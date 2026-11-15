@@ -19,7 +19,7 @@ import {
 import type { PublicCompany } from '@refund/sources';
 import { cnaeTaxProfile, resellsMonofasico } from './classify/cnae.ts';
 import { type AnswerValue, type Classified, feedsFacts, isNo, isYes } from './classify/index.ts';
-import { RX_ACCRUAL } from './classify/regex.ts';
+import { accrualMonth } from './classify/regex.ts';
 import { CARD } from './classify/rules.ts';
 import type { Category } from './types.ts';
 
@@ -49,6 +49,25 @@ export const regimeOf = (company: PublicCompany): Facts['company']['value']['reg
   return 'OTHER';
 };
 
+/**
+ * The gross payroll card takes the gross paid in each month (cash basis, 13º and vacation included; E9 review H2).
+ * A single number is not an answer: it cannot carry the 13º and the vacation.
+ */
+export function payrollSeriesAnswer(value: AnswerValue | undefined): Record<string, number> | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const out: Record<string, number> = {};
+  for (const [m, v] of Object.entries(value)) {
+    if (
+      /^\d{4}-(0[1-9]|1[0-2])$/.test(m) &&
+      typeof v === 'number' &&
+      Number.isSafeInteger(v) &&
+      v >= 0
+    )
+      out[m] = v;
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
 export interface FactsInput {
   classified: readonly Classified[];
   answers: ReadonlyMap<string, AnswerValue>;
@@ -73,12 +92,7 @@ const add = (s: Series, m: YearMonth, amount: number): void => {
 
 const total = (s: Series): number => Object.values(s).reduce((a, b) => a + b, 0);
 
-/** The accrual month written in a tax payment ("PA 07/2026"), else the month before the payment. */
-export function accrualMonth(description: string, paidIn: YearMonth): YearMonth {
-  const m = RX_ACCRUAL.exec(description);
-  if (m === null) return addMonths(paidIn, -1);
-  return `${m[2]}-${m[1]}` as YearMonth;
-}
+export { accrualMonth };
 
 const of = (ids: string[], source?: string): Provenance => ({
   origin: 'open_finance',
@@ -123,26 +137,14 @@ export function buildFacts(input: FactsInput): Result<Facts, FactsError> {
 
   // ---------- CLT payroll (cash): gross from the card (E.2), FGTS from the statement ----------
   const salaries = byCategory('salary');
-  const payrollAnswer = answers.get(CARD.payrollGross);
+  const payrollAnswer = payrollSeriesAnswer(answers.get(CARD.payrollGross));
   const grossPay = series(observed);
   let grossPayProvenance: Provenance;
-  if (typeof payrollAnswer === 'object' && payrollAnswer !== null) {
+  if (payrollAnswer !== null) {
     for (const m of observed) {
       const v = payrollAnswer[m];
-      if (typeof v === 'number' && Number.isSafeInteger(v) && v >= 0) grossPay[m] = v as Cents;
+      if (v !== undefined) grossPay[m] = v as Cents;
     }
-    grossPayProvenance = {
-      origin: 'user',
-      source: `question:${CARD.payrollGross}`,
-      transactionIds: ids(salaries),
-    };
-  } else if (
-    typeof payrollAnswer === 'number' &&
-    Number.isSafeInteger(payrollAnswer) &&
-    payrollAnswer >= 0
-  ) {
-    for (const m of observed)
-      if (salaries.some((c) => c.tx.month === m)) grossPay[m] = payrollAnswer as Cents;
     grossPayProvenance = {
       origin: 'user',
       source: `question:${CARD.payrollGross}`,
@@ -219,14 +221,23 @@ export function buildFacts(input: FactsInput): Result<Facts, FactsError> {
   for (const d of distributions) add(distributionSeries, d.month, d.grossAmount);
 
   // ---------- DAS paid (C.3.7 inference reads it) ----------
-  const dasPayments = inWindow.filter((c) => c.label === 'das_simples');
-  const dasPaid: DasPayment[] = dasPayments
-    .map((c) => ({
-      pa: accrualMonth(c.tx.description, c.tx.month),
-      amount: c.tx.amountCents as Cents,
-      paymentDate: c.tx.date,
-    }))
-    .sort((a, b) => compareYearMonth(a.pa, b.pa) || (a.paymentDate < b.paymentDate ? -1 : 1));
+  // One entry per PA. Two payments reach here only when the user said both are DAS (DAS + complementary DAS,
+  // E9 review H3): they add up; while the "das:<pa>" card is open, neither feeds the facts.
+  const dasPayments = inWindow.filter(
+    (c) => c.label === 'das_simples' && c.classification.category === 'das_tax',
+  );
+  const byPa = new Map<YearMonth, DasPayment>();
+  for (const c of dasPayments) {
+    const pa = accrualMonth(c.tx.description, c.tx.month);
+    const prev = byPa.get(pa);
+    byPa.set(pa, {
+      pa,
+      amount: ((prev?.amount ?? 0) + c.tx.amountCents) as Cents,
+      paymentDate:
+        prev !== undefined && prev.paymentDate > c.tx.date ? prev.paymentDate : c.tx.date,
+    });
+  }
+  const dasPaid: DasPayment[] = [...byPa.values()].sort((a, b) => compareYearMonth(a.pa, b.pa));
 
   // ---------- Qualifications ----------
   const qualifications: Facts['qualifications'] = {
