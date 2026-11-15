@@ -176,7 +176,7 @@ describe('without answers (first run)', () => {
     expect(f.partner.grossProLabore.provenance).toMatchObject({ origin: 'default_assumption' });
     expect(f.partner.grossProLabore.value).toEqual(expected.partner.grossProLabore); // net ÷ 0,89 = 1.621,00
     expect(f.cltPayroll.grossPay.provenance.origin).toBe('default_assumption');
-    expect(sumSeries(f.cltPayroll.grossPay.value)).toBeLessThan(expected.totals12m.grossCltPay);
+    expect(sumSeries(f.cltPayroll.grossPay.value)).toBe(expected.totals12m.grossCltPay); // D22: FGTS ÷ 0,08
     expect(f.qualifications.exportResultAbroad).toBeUndefined();
     expect(f.partner.worksInCompany).toMatchObject({
       value: false,

@@ -68,6 +68,9 @@ export function payrollSeriesAnswer(value: AnswerValue | undefined): Record<stri
   return Object.keys(out).length > 0 ? out : null;
 }
 
+/** FGTS ÷ 0,08 = FGTS × 12,5, in integer cents rounded half-up (no float). */
+export const fgtsToGross = (fgts: number): number => Math.floor((fgts * 25 + 1) / 2);
+
 export interface FactsInput {
   classified: readonly Classified[];
   answers: ReadonlyMap<string, AnswerValue>;
@@ -139,7 +142,7 @@ export function buildFacts(input: FactsInput): Result<Facts, FactsError> {
   const salaries = byCategory('salary');
   const payrollAnswer = payrollSeriesAnswer(answers.get(CARD.payrollGross));
   const grossPay = series(observed);
-  let grossPayProvenance: Provenance;
+  let grossPayProvenance: Provenance = { origin: 'default_assumption' };
   if (payrollAnswer !== null) {
     for (const m of observed) {
       const v = payrollAnswer[m];
@@ -150,18 +153,22 @@ export function buildFacts(input: FactsInput): Result<Facts, FactsError> {
       source: `question:${CARD.payrollGross}`,
       transactionIds: ids(salaries),
     };
-  } else {
-    // Without the card the net in the statement is only a lower bound of the gross payroll (E.2): an assumption.
-    for (const c of salaries) add(grossPay, c.tx.month, c.tx.amountCents);
-    grossPayProvenance = {
-      origin: 'default_assumption',
-      source: 'statement net salaries (gross payroll card pending)',
-      transactionIds: ids(salaries),
-    };
   }
   const fgtsPayments = byCategory('fgts_charge');
   const fgts = series(observed);
   for (const c of fgtsPayments) add(fgts, c.tx.month, c.tx.amountCents);
+  if (payrollAnswer === null) {
+    // D22 (PLAN §18, 15/11): until the per-month card is answered, gross pay = FGTS paid ÷ 0,08 in each month (FGTS is
+    // 8% of the remuneration, Lei 8.036/1990, art. 15; not in @refund/law yet, so a documented assumption). Same cash
+    // month as the FGTS payment; the 12-month sum is exact (hero: 10.880,00 ÷ 0,08 = 136.000,00), the month of the 13º
+    // follows the FGTS column of F.2 (EXECUTION §9, 14/11 13º-timing row).
+    for (const m of observed) grossPay[m] = fgtsToGross(fgts[m] ?? 0) as Cents;
+    grossPayProvenance = {
+      origin: 'default_assumption',
+      source: 'D22: FGTS paid ÷ 0,08 (Lei 8.036/1990, art. 15); gross payroll card pending',
+      transactionIds: uniq([...ids(fgtsPayments), ...ids(salaries)]),
+    };
+  }
 
   // ---------- Pró-labore (cash): gross from the card, else the E.2 estimate ----------
   const proLaborePayments = byCategory('pro_labore');

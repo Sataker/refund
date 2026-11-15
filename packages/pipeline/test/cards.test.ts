@@ -181,7 +181,8 @@ describe('payroll, export, revenue and contribution cards', () => {
     const list = classify(salaries(), {});
     const single = facts(list, { [CARD.payrollGross]: 1_020_000 });
     expect(single.cltPayroll.grossPay.provenance.origin).toBe('default_assumption');
-    expect(single.cltPayroll.grossPay.value['2026-10']).toBe(454_868);
+    // D22: no FGTS paid in this synthetic case → no default payroll (the net is never payroll, E.2).
+    expect(single.cltPayroll.grossPay.value['2026-10']).toBe(0);
     const junk = facts(list, { [CARD.payrollGross]: { '2026-13': 1, x: 2, '2026-10': -5 } });
     expect(junk.cltPayroll.grossPay.provenance.origin).toBe('default_assumption');
     const series = facts(list, {
