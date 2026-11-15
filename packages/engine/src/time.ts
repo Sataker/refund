@@ -29,16 +29,29 @@ export function daysInMonth(year: number, month: number): number {
   return [4, 6, 9, 11].includes(month) ? 30 : 31;
 }
 
+// Month arithmetic runs in the engine's inner loops (slider recalculation budget, ARCHITECTURE §11.1): the parsed
+// index of each month string is memoized; the regex still validates every new string once.
+const INDEX = new Map<string, number>();
+const MONTHS = new Map<number, YearMonth>();
+
 function toIndex(m: YearMonth): number {
+  const hit = INDEX.get(m);
+  if (hit !== undefined) return hit;
   const parsed = YEAR_MONTH.exec(m);
   if (!parsed) throw new RangeError(`invalid year-month: ${m}`);
-  return Number(parsed[1]) * 12 + (Number(parsed[2]) - 1);
+  const i = Number(parsed[1]) * 12 + (Number(parsed[2]) - 1);
+  INDEX.set(m, i);
+  return i;
 }
 
 function fromIndex(i: number): YearMonth {
+  const hit = MONTHS.get(i);
+  if (hit !== undefined) return hit;
   const year = Math.floor(i / 12);
   const month = (i % 12) + 1;
-  return yearMonth(`${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}`);
+  const m = yearMonth(`${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}`);
+  MONTHS.set(i, m);
+  return m;
 }
 
 export const yearOf = (m: YearMonth): number => Math.floor(toIndex(m) / 12);

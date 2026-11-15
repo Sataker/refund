@@ -28,6 +28,19 @@ export const ALL_PARAMETERS: readonly AnyParameterEntry[] = [
  * (e.g. the 2027 IR table): the trace then says "parâmetro de 2027 ainda não publicado; usado o de 2026".
  */
 export function param<K extends ParameterKey>(key: K, month: YearMonth): ParameterLookup<K> {
+  // The parameter tables are constants, so a lookup is a pure function of (key, month): memoized for the slider
+  // recalculation budget (ARCHITECTURE §11.1) and the profile grid (C.11.8).
+  const memoKey = `${key}|${month}`;
+  const hit = LOOKUPS.get(memoKey);
+  if (hit !== undefined) return hit as ParameterLookup<K>;
+  const lookup = lookupParam(key, month);
+  LOOKUPS.set(memoKey, lookup);
+  return lookup;
+}
+
+const LOOKUPS = new Map<string, ParameterLookup<ParameterKey>>();
+
+function lookupParam<K extends ParameterKey>(key: K, month: YearMonth): ParameterLookup<K> {
   let found: ParameterEntry<K> | undefined;
   for (const entry of ALL_PARAMETERS) {
     if (entry.key !== key) continue;

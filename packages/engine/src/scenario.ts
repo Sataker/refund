@@ -259,24 +259,47 @@ export function regimeCostModel(ctx: Ctx, base: Omit<ScenarioDecisions, 'proLabo
   };
   const year = yearOf((pas[0] as (typeof pas)[number]).pa);
   const contribution = base.pgblContribution[ctx.analysisYear] ?? cents(0);
+  // PAs with the same FS12 without pró-labore, RBT12 and Fator R rules share the anexo for any P: one Fator R per
+  // group. Months with the same INSS parameters share the partner INSS. The PF's other income does not depend on P.
+  const anexoGroups = new Map<string, { pa: YearMonth; fs12: Cents; rbt: Cents; idx: number[] }>();
+  pas.forEach(({ pa, inputs }, i) => {
+    const key = [
+      inputs.fs12,
+      inputs.rbt12.total,
+      param('simples.fatorR.formula', pa).effectiveFrom,
+      param('simples.fatorR.limit', pa).effectiveFrom,
+    ].join('|');
+    const g = anexoGroups.get(key);
+    if (g === undefined)
+      anexoGroups.set(key, { pa, fs12: inputs.fs12, rbt: inputs.rbt12.total, idx: [i] });
+    else g.idx.push(i);
+  });
+  const inssGroups = new Map<string, { pa: YearMonth; count: number }>();
+  for (const { pa } of pas) {
+    const key = `${param('inss.ceiling', pa).effectiveFrom}|${param('inss.proLabore.rate', pa).effectiveFrom}`;
+    const g = inssGroups.get(key);
+    if (g === undefined) inssGroups.set(key, { pa, count: 1 });
+    else g.count += 1;
+  }
+  const other = pfOver(
+    ctx,
+    pas.map((x) => x.pa),
+    () => cents(0),
+  );
   return (p: Cents): Cost => {
     let das = 0;
-    let inss = 0;
     let cpp = 0;
-    pas.forEach(({ pa, inputs }, i) => {
-      const fr = company.subjectToFatorR
-        ? fatorRValue(cents(inputs.fs12 + 12 * p), inputs.rbt12.total, pa)
-        : null;
-      const anexo = anexoForPa(fr, company, pa);
-      das += dasAt(i, anexo);
-      inss += inssPartner(p, pa);
-      cpp += cppOutsideDas(p, anexo, pa);
-    });
-    const pf = pfOver(
-      ctx,
-      pas.map((x) => x.pa),
-      () => p,
-    );
+    for (const g of anexoGroups.values()) {
+      const fr = company.subjectToFatorR ? fatorRValue(cents(g.fs12 + 12 * p), g.rbt, g.pa) : null;
+      const anexo = anexoForPa(fr, company, g.pa);
+      for (const i of g.idx) {
+        das += dasAt(i, anexo);
+        cpp += cppOutsideDas(p, anexo, (pas[i] as (typeof pas)[number]).pa);
+      }
+    }
+    let inss = 0;
+    for (const g of inssGroups.values()) inss += g.count * inssPartner(p, g.pa);
+    const pf = { rt: cents(other.rt + 12 * p), inss: cents(other.inss + inss) };
     const ir = irOf(ctx, year, pf.rt, pf.inss, contribution);
     const prov = provision(ctx, contribution);
     return {
