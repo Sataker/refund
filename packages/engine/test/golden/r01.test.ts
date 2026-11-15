@@ -120,6 +120,8 @@ describe('ENGINE-SPEC D.1 — R01', () => {
       'Reduza o pró-labore para R$ 1.621,00/mês: R$ 32.892,34 a menos de IR e INSS por ano',
     );
     expect(f.tradeoffs.some((t) => t.includes('aposentadoria'))).toBe(true);
+    // C.7.4 only applies when the ramp crosses into Anexo III; reducing the pró-labore has no alternative.
+    expect(f.trace.some((s) => s.id.startsWith('R01.EARLY_ALTERNATIVE'))).toBe(false);
   });
 
   it('T01-10: partner works and P0 = 0 → S0 regularized at 1.621; no savings from paying the minimum', () => {

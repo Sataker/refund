@@ -205,6 +205,34 @@ describe('hero: findings rule by rule (F.3)', () => {
     expect(r01?.inputs.minimumWage).toBeUndefined(); // read at start = 2026-12, published
   });
 
+  it('C.7.4 "antecipar folha" (F.3 step 3): 3.289,00 in 12/2026 → III from 2027-02; +5.730,49, trace only', () => {
+    const f = find(r, 'R01');
+    const p = f.trace.find((s) => s.id === 'R01.EARLY_ALTERNATIVE.P_MONTH1');
+    expect(p?.result.value).toBe(328900);
+    expect(p?.month).toBe('2026-12');
+    expect(p?.inputs.firstPa?.value).toBe('2027-02');
+    expect(p?.inputs.fs12Needed?.value).toBe(16800000); // 146.880 + 11 × 1.621 + 3.289 = 168.000,00
+    const gain = f.trace.find((s) => s.id === 'R01.EARLY_ALTERNATIVE.EXTRA_GAIN');
+    expect(gain?.inputs.dasSaved?.value).toBe(584368); // 2 × 2.921,84
+    expect(gain?.inputs.extraInss?.value).toBe(11319);
+    expect(gain?.inputs.extraIr?.value).toBe(0);
+    expect(gain?.result.value).toBe(573049);
+    expect(gain?.label).toContain('só é lícito se corresponder a trabalho efetivo do mês');
+    // Outside the total: the chain numbers stay the F.4 ones and the last step is still the marginal value.
+    expect(f.marginalValue12m).toBe(2831652);
+    expect(f.trace.at(-1)?.id).toBe('R01.MARGINAL_12M');
+  });
+
+  it('C.4: R05 asks to segregate the PAs between the statement and `start` (10 and 11/2026), text only', () => {
+    const f = find(r, 'R05');
+    const s = f.trace.find((x) => x.id === 'R05.PAS_BEFORE_START');
+    expect(s?.result.value).toBe(
+      'Peça ao contador para já segregar o PGDAS-D de outubro e novembro de 2026: esses PAs não entram na economia nem na recuperação.',
+    );
+    expect(s?.inputs.pas?.value).toBe('2026-10, 2026-11');
+    expect(f.trace.at(-1)?.id).toBe('R05.MARGINAL_12M');
+  });
+
   it('INV-1: Σ marginals (countsInTotal) == total, 12 months and steady state', () => {
     const counted = r.findings.filter((f) => f.countsInTotal);
     expect(counted.map((f) => f.ruleId)).toEqual(['R01', 'R05']);

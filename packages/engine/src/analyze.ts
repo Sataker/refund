@@ -10,6 +10,7 @@ import { costReads, irMonths, projectedParametersStep } from './projected.ts';
 import { type Ctx, createCtx } from './projection.ts';
 import {
   appliesR01,
+  earlyAlternativeSteps,
   gainOf,
   optimizerR01,
   R01_REFS,
@@ -28,6 +29,7 @@ import {
   segregationStatus,
 } from './rules/r05.ts';
 import { annualPf, type ScenarioDecisions, type Simulation, simulate } from './scenario.ts';
+import { addMonths, monthRange } from './time.ts';
 import {
   type Confidence,
   cents,
@@ -36,6 +38,7 @@ import {
   type Finding,
   type Result,
   type Total,
+  type YearMonth,
 } from './types.ts';
 import { ENGINE_VERSION } from './version.ts';
 
@@ -60,6 +63,14 @@ function confidenceR01(facts: Facts): Confidence {
     facts.revenueByMarket.export,
   ].some(isAssumption);
   return assumed ? 'estimated' : 'confirmed';
+}
+
+/** PAs after the last DAS of the statement and before `start` (C.4: no DAS paid yet). */
+function pendingPas(ctx: Ctx): YearMonth[] {
+  const paid = ctx.facts.dasPaid.value.map((p) => p.pa).sort();
+  const last = paid.at(-1);
+  if (last === undefined) return [];
+  return monthRange(addMonths(last, 1), addMonths(ctx.assumptions.start, -1));
 }
 
 interface Chain {
@@ -117,13 +128,27 @@ function runChain(
     const gain = gainOf(cur, s2);
     const recommended = gain.regimeGain >= THRESHOLD_OTHERS;
     r05SwitchedOff = !recommended;
-    const f = r05Finding(ctx, cur, s2, gain, recommended, confidenceR05(ctx, inference));
+    const f = r05Finding(
+      ctx,
+      cur,
+      s2,
+      gain,
+      recommended,
+      confidenceR05(ctx, inference),
+      pendingPas(ctx),
+    );
     f.trace = [...inference.steps, ...f.trace];
     findings.push(f);
     if (recommended) {
       cur = { ...s2 };
       dec = d2;
     }
+  }
+
+  // C.7.4: the "antecipar folha" alternative of R01, against the chain after R05 (F.3); trace only.
+  const r01 = findings.find((f) => f.ruleId === 'R01');
+  if (r01?.countsInTotal === true) {
+    r01.trace.splice(r01.trace.length - 1, 0, ...earlyAlternativeSteps(ctx, cur, s0Dec));
   }
 
   // 3) R06: monofásico, E8 (returns null until then; S3 = S2).

@@ -29,6 +29,8 @@ import {
 /** What a scenario decides (C.2 `Decisions`, with the pró-labore as one constant value from `start`, C.7.1). */
 export interface ScenarioDecisions {
   proLabore: Cents; // from `start` on
+  /** C.7.4 "antecipar folha" only (trace, never in the total): the pró-labore of the month `start`. */
+  firstMonthProLabore?: Cents;
   segregateExport: boolean;
   segregateMonofasico: boolean;
   /** New PGBL contribution per calendar year (R04); the steady-state block repeats the analysis year's one. */
@@ -68,8 +70,11 @@ export const regimePas = (ctx: Ctx): YearMonth[] => {
 };
 
 /** Pró-labore of the scenario in month `m`: the decision from `start`, the current one before. */
-export const proLaboreAt = (ctx: Ctx, d: ScenarioDecisions, m: YearMonth): Cents =>
-  compareYearMonth(m, ctx.assumptions.start) >= 0 ? d.proLabore : currentProLabore(ctx, m);
+export function proLaboreAt(ctx: Ctx, d: ScenarioDecisions, m: YearMonth): Cents {
+  const vs = compareYearMonth(m, ctx.assumptions.start);
+  if (vs === 0 && d.firstMonthProLabore !== undefined) return d.firstMonthProLabore;
+  return vs >= 0 ? d.proLabore : currentProLabore(ctx, m);
+}
 
 const sumOver = (months: YearMonth[], f: (m: YearMonth) => number): Cents =>
   sumCents(months.map((m) => cents(f(m))));

@@ -80,6 +80,57 @@ function removedShares(pa: YearMonth): string {
     .join(', ');
 }
 
+const MONTH_NAMES = [
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
+];
+
+/** "outubro e novembro de 2026", "dezembro de 2026 e janeiro de 2027". */
+export function monthNames(pas: readonly YearMonth[]): string {
+  const named = pas.map((m, i) => {
+    const name = MONTH_NAMES[Number(m.slice(5)) - 1] as string;
+    const next = pas[i + 1];
+    return next === undefined || next.slice(0, 4) !== m.slice(0, 4)
+      ? `${name} de ${m.slice(0, 4)}`
+      : name;
+  });
+  return named.length <= 1
+    ? (named[0] ?? '')
+    : `${named.slice(0, -1).join(', ')} e ${named.at(-1) as string}`;
+}
+
+/**
+ * C.4: the PAs after the statement's last DAS and before `start` have no DAS paid yet; they count neither as savings
+ * nor as recovery, and the finding asks to segregate them already (text only).
+ */
+function pendingStep(pas: readonly YearMonth[]): Step[] {
+  if (pas.length === 0) return [];
+  return [
+    step({
+      id: 'R05.PAS_BEFORE_START',
+      label: 'PAs ainda sem DAS pago, antes do início da projeção',
+      formula: 'não entram na economia dos próximos 12 meses nem na recuperação (ENGINE-SPEC C.4)',
+      inputs: { pas: { value: pas.join(', '), unit: 'text' } },
+      result: {
+        value: `Peça ao contador para já segregar o PGDAS-D de ${monthNames(pas)}: esses PAs não entram na economia nem na recuperação.`,
+        unit: 'text',
+      },
+      rounding: 'NONE',
+      month: pas[0] as YearMonth,
+    }),
+  ];
+}
+
 export function r05Finding(
   ctx: Ctx,
   prev: Simulation,
@@ -87,6 +138,7 @@ export function r05Finding(
   gain: ChainGain,
   recommended: boolean,
   confidence: Finding['confidence'],
+  pendingPas: readonly YearMonth[] = [],
 ): Finding {
   const value12m = recommended ? gain.gain12m : cents(0);
   const regimeValue = recommended ? gain.regimeGain : cents(0);
@@ -109,6 +161,7 @@ export function r05Finding(
   });
   const trace: Step[] = [
     ...perPa,
+    ...pendingStep(pendingPas),
     step({
       id: 'R05.REGIME_GAIN',
       label: 'Economia por ano em regime',

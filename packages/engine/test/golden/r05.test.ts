@@ -4,6 +4,7 @@ import { analyze } from '../../src/analyze.ts';
 import { claimFrom, claimUntil, dasDueDate, isBusinessDay, weekday } from '../../src/calendar.ts';
 import { brl } from '../../src/money.ts';
 import { dasByMarket, dasForPa } from '../../src/primitives/simples.ts';
+import { monthNames } from '../../src/rules/r05.ts';
 import type { Cents, EngineResult, Facts, Finding } from '../../src/types.ts';
 import { constant, HERO_DAS_PAID, heroFacts, OBSERVED, syntheticFacts } from './fixtures/facts.ts';
 
@@ -225,5 +226,14 @@ describe('ENGINE-SPEC D.5 — R05 and R05-REC', () => {
       syntheticFacts({ domestic: constant(brl('50.000,00')), exportResultAbroad: true }),
     );
     expect(r.findings.find((x) => x.ruleId === 'R05')).toBeUndefined();
+  });
+
+  it('C.4 text: month names of the pending PAs, across a year change', () => {
+    expect(monthNames(['2026-10', '2026-11'])).toBe('outubro e novembro de 2026');
+    expect(monthNames(['2026-11', '2026-12', '2027-01'])).toBe(
+      'novembro, dezembro de 2026 e janeiro de 2027',
+    );
+    expect(monthNames(['2027-03'])).toBe('março de 2027');
+    expect(monthNames([])).toBe('');
   });
 });

@@ -1,5 +1,5 @@
 // R01: PF+PJ optimizer, Fator R and pró-labore (ENGINE-SPEC D.1, C.7; decisions D2, D13, D14).
-import { D, Dec, reais, roundToCents } from '../money.ts';
+import { ceilToCents, D, type Dec, reais, roundToCents } from '../money.ts';
 import { param } from '../parameters/index.ts';
 import { displayFatorR, fatorR, window } from '../primitives/simples.ts';
 import { costReads, projectedParametersStep } from '../projected.ts';
@@ -9,6 +9,7 @@ import {
   regimeStart,
   type ScenarioDecisions,
   type Simulation,
+  simulate,
 } from '../scenario.ts';
 import { monthRange } from '../time.ts';
 import { step } from '../trace.ts';
@@ -24,10 +25,7 @@ import { base, formatBrl, formatMonth, nonNull, ORDER_OF } from './common.ts';
 import { refsOf } from './refs.ts';
 
 /** Rounds reais UP to the cent (T01-16). */
-const ceilCent = (x: Dec): Cents => {
-  const c = x.times(100).toDecimalPlaces(0, Dec.ROUND_CEIL);
-  return cents(c.toNumber());
-};
+const ceilCent = ceilToCents;
 
 export interface R01Plan {
   rbt: Cents; // total steady-state RBT12 (C.4)
@@ -256,6 +254,60 @@ export function paTable(prev: Simulation, next: Simulation, prefix: string): Ste
     );
   });
   return out;
+}
+
+/**
+ * C.7.4 "antecipar folha" (D.1 `earlyAlternative`): the pró-labore of the month `start` that takes the FS12 of the
+ * first PA whose window contains `start` to 28%, and its extra gain over the scenario `cur` (the chain after R05,
+ * F.3). Trace only, never in the total; zero safety margin.
+ */
+export function earlyAlternativeSteps(ctx: Ctx, cur: Simulation, s0: ScenarioDecisions): Step[] {
+  const start = ctx.assumptions.start;
+  const steady = (cur.regime[0] as Simulation['regime'][number]).anexo;
+  const first = cur.all.find((r) => r.windowTo >= start);
+  if (!ctx.facts.companyDetails.value.subjectToFatorR || steady !== 'III') return [];
+  if (first === undefined || first.anexo === 'III') return [];
+  const limit = param('simples.fatorR.limit', first.pa);
+  const needed = ceilToCents(D(limit.value).times(reais(first.rbt12.total)));
+  const extra = needed - first.fs12;
+  if (extra <= 0) return [];
+  const pMonth1 = cents(cur.decisions.proLabore + extra);
+  const alt = simulate(ctx, cur.id, { ...cur.decisions, firstMonthProLabore: pMonth1 }, s0);
+  const dasSaved = cents(cur.cost12m.das - alt.cost12m.das);
+  const extraInss = cents(alt.cost12m.inssPartner - cur.cost12m.inssPartner);
+  const extraIr = cents(alt.cost12m.irpfAdjustment - cur.cost12m.irpfAdjustment);
+  return [
+    step({
+      id: 'R01.EARLY_ALTERNATIVE.P_MONTH1',
+      label: `Alternativa: pró-labore de ${formatMonth(start)} que leva o Fator R do PA ${formatMonth(first.pa)} a 28%`,
+      formula:
+        'pró-labore recomendado + (0,28 × RBT12 do PA − FS12 do PA), arredondado para cima ao centavo',
+      inputs: {
+        firstPa: { value: first.pa, unit: 'text' },
+        fs12Before: { value: first.fs12, unit: 'cents' },
+        fs12Needed: { value: needed, unit: 'cents' },
+        proLabore: { value: cur.decisions.proLabore, unit: 'cents' },
+      },
+      result: { value: pMonth1, unit: 'cents' },
+      rounding: 'NONE',
+      month: start,
+      parameter: limit,
+    }),
+    step({
+      id: 'R01.EARLY_ALTERNATIVE.EXTRA_GAIN',
+      label:
+        'Ganho extra de antecipar a folha (fora do total): só é lícito se corresponder a trabalho efetivo do mês; margem zero de segurança',
+      formula: 'DAS a menos − INSS a mais − IR do ajuste a mais, nos próximos 12 meses',
+      inputs: {
+        dasSaved: { value: dasSaved, unit: 'cents' },
+        extraInss: { value: extraInss, unit: 'cents' },
+        extraIr: { value: extraIr, unit: 'cents' },
+      },
+      result: { value: cents(cur.cost12m.total - alt.cost12m.total), unit: 'cents' },
+      rounding: 'NONE',
+      month: start,
+    }),
+  ];
 }
 
 export interface ChainGain {

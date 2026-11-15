@@ -25,6 +25,10 @@ export function rateOf(x: Dec): Rate {
 /** Rounds reais to the cent, half-up (ENGINE-SPEC `r2`). */
 export const r2 = (x: Dec): Dec => x.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
+/** Rounds reais UP to the cent and converts (P_target, T01-16; C.7.4). */
+export const ceilToCents = (reais: Dec): Cents =>
+  toCents(reais.toDecimalPlaces(2, Decimal.ROUND_CEIL));
+
 /** Truncates to `places` decimals (display of the Fator R, OR-SN-11). */
 export const truncate = (x: Dec, places: number): Dec =>
   x.toDecimalPlaces(places, Decimal.ROUND_DOWN);
