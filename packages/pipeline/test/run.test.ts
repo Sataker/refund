@@ -107,23 +107,27 @@ describe('event order (ARCHITECTURE §4.4, locked)', () => {
     expect(events.at(-1)).toMatchObject({ type: 'end', status: 'completed' });
   });
 
-  it('without answers: the 9 F.2 cards come after the summary, by estimated impact, and the run awaits them', async () => {
+  it('without answers: the 9 F.2 cards come after the summary, by effect on the total (D23), and the run awaits them', async () => {
     const { events, result } = await run();
     const tags = events.map(tag);
     const first = tags.indexOf('question');
     expect(tags.slice(first - 1, first)).toEqual(['stage:classification:completed']);
     expect(tags.slice(first + 9, first + 10)).toEqual(['stage:facts:started']);
     const questions = events.flatMap((e) => (e.type === 'question' ? [e.question] : []));
+    // D23: by effect on the total (export 34.002,40; pró-labore; payroll), then ties by money moved, then id.
     expect(questions.map((q) => q.id.split(':')[0])).toEqual([
       'export-qualification',
-      'monthly-distribution',
-      'clt-payroll-gross',
-      'clt-employee',
-      'clt-employee',
       'pro-labore-gross',
+      'clt-payroll-gross',
+      'monthly-distribution',
+      'clt-employee',
+      'clt-employee',
       'health',
       'full-bookkeeping',
       'partner-works-in-company',
+    ]);
+    expect(questions.map((q) => q.estimatedImpact)).toEqual([
+      3400240, 2765472, 2364108, 0, 0, 0, 0, 0, 0,
     ]);
     const impacts = questions.map((q) => q.estimatedImpact ?? -1);
     expect(impacts).toEqual([...impacts].sort((a, b) => b - a));

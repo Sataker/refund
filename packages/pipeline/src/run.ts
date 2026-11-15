@@ -27,6 +27,7 @@ import {
 import { boundedCall, DEFAULT_LLM_TIMEOUT_MS } from './classify/llm.ts';
 import type { AnalysisEvent, AnalysisStage, FindingDto, TotalDto } from './events.ts';
 import { buildFacts, parameterMonth, regimeOf } from './facts.ts';
+import { rankByEffect } from './impact.ts';
 import { normalizeTransaction } from './normalize.ts';
 import { defaultWait, delayBefore } from './pace.ts';
 import type { ExplanationOutput } from './ports.ts';
@@ -316,6 +317,8 @@ export async function* runAnalysis(
     const classified = txs.map((t) =>
       initial(t, hits.get(t.id), verdicts.get(t.id), leftovers.length > 0),
     );
+    // Before any answer: the what-ifs of D23 replay the answers on a copy of this.
+    const pristine = structuredClone(classified);
     const answers = new Map<string, AnswerValue>(
       (input.answers ?? []).map((a) => [a.questionId, a.value]),
     );
@@ -338,7 +341,28 @@ export async function* runAnalysis(
     });
 
     // ---------- 4. Questions, by estimated impact ----------
-    const questions: ConfirmationQuestion[] = buildQuestions(classified, { regime, answers });
+    const analysisDate = deps.clock.today();
+    const engineOptions =
+      deps.parameterSet === undefined ? undefined : { parameters: deps.parameterSet };
+    const open = buildQuestions(classified, { regime, answers });
+    const questions: ConfirmationQuestion[] =
+      open.length === 0
+        ? open
+        : rankByEffect(open, classified, answers, (what) => {
+            const list = structuredClone(pristine);
+            applyUserInput(list, what, input.confirmations);
+            const f = buildFacts({
+              classified: list,
+              answers: what,
+              company: input.company,
+              referenceMonth: input.referenceMonth,
+              analysisDate,
+              userAssumptions: input.userAssumptions,
+            });
+            if (!f.ok) return null;
+            const r = analyze(f.value, engineOptions);
+            return r.ok ? r.value.total.savings12m : null;
+          });
     result.questions = questions;
     for (const question of questions) yield await paced({ type: 'question', question });
     const endStatus = questions.length > 0 ? 'awaiting_confirmation' : 'completed';
@@ -355,7 +379,7 @@ export async function* runAnalysis(
       answers,
       company: input.company,
       referenceMonth: input.referenceMonth,
-      analysisDate: deps.clock.today(),
+      analysisDate,
       userAssumptions: input.userAssumptions,
     });
     if (!built.ok) {
@@ -380,10 +404,7 @@ export async function* runAnalysis(
       status: 'started',
       label: 'Aplicando as regras',
     });
-    const engine = analyze(
-      facts,
-      deps.parameterSet === undefined ? undefined : { parameters: deps.parameterSet },
-    );
+    const engine = analyze(facts, engineOptions);
     if (!engine.ok) {
       yield await paced({
         type: 'error',
