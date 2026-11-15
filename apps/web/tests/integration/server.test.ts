@@ -1,12 +1,12 @@
 import { createMemoryDb, type DbHandle, schema } from '@refund/db';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { decrypt, hashEmail, type Secrets } from '@/server/crypto.ts';
-import { migrationsFolder } from '@/server/db.ts';
+import { migrationsFolder, resetDb } from '@/server/db.ts';
 import { consumeQuotaWith } from '@/server/entitlements.ts';
 import { rateLimit } from '@/server/rate-limit.ts';
 import { type CookieJar, resolveSession } from '@/server/session.ts';
 import { SESSION_COOKIE } from '@/server/session-cookie.ts';
-import { joinWaitlistWith } from '@/server/waitlist.ts';
+import { joinWaitlist, joinWaitlistWith } from '@/server/waitlist.ts';
 
 // TESTS §4: quotas, rate limit, session and the waitlist action against PGlite.
 
@@ -122,6 +122,21 @@ describe('anonymous session (ARCHITECTURE §9.2)', () => {
     const deps = { db: h.db, secret: secrets.session };
     expect((await resolveSession(jar('abc.def'), deps)).ok).toBe(false);
   });
+
+  it('a database failure becomes UNAVAILABLE, never an exception out of the action', async () => {
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const broken = {
+      insert: () => {
+        throw new Error('Failed query: insert …');
+      },
+    } as unknown as DbHandle['db'];
+    const res = await resolveSession(
+      jar(),
+      { db: broken, secret: secrets.session },
+      { create: true },
+    );
+    expect(res).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+  });
 });
 
 describe('joinWaitlist (E4)', () => {
@@ -173,5 +188,26 @@ describe('joinWaitlist (E4)', () => {
     }
     expect(results.slice(0, 5).every((r) => r.ok)).toBe(true);
     expect(results[5]).toMatchObject({ ok: false, error: { code: 'RATE_LIMITED' } });
+  });
+
+  it('database unreachable → UNAVAILABLE (logged), not an exception', async () => {
+    const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('DATABASE_URL', 'postgres://refund:refund@127.0.0.1:1/refund');
+    vi.stubEnv('DB_SSL', 'disable');
+    vi.stubEnv('SESSION_SECRET', 's'.repeat(32));
+    vi.stubEnv('ENCRYPTION_KEY', Buffer.alloc(32, 5).toString('base64'));
+    vi.stubEnv('PII_PEPPER', 'p'.repeat(32));
+    try {
+      const res = await joinWaitlist(
+        { email: 'c@exemplo.com.br', hasCnpj: true, consent: true },
+        new Headers({ 'x-forwarded-for': '203.0.113.60' }),
+      );
+      expect(res).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+      expect(stderr.mock.calls.map(String).join('')).not.toContain('c@exemplo.com.br');
+    } finally {
+      vi.unstubAllEnvs();
+      await resetDb();
+    }
   });
 });

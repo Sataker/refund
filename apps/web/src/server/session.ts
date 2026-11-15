@@ -3,6 +3,7 @@ import { type Db, ensureAnonymousUser } from '@refund/db';
 import { cookies } from 'next/headers';
 import { serverSecrets } from './crypto.ts';
 import { getDb } from './db.ts';
+import { logger } from './log.ts';
 import { type ActionResult, fail, ok } from './result.ts';
 import {
   newSession,
@@ -14,6 +15,8 @@ import {
 // ARCHITECTURE §9.2 and ADR-008: anonymous session. The proxy mints `rf_sid` on the first visit to
 // /app/**; the users row is created lazily by the first server action (getSession). WorkOS joins in
 // E18 when the `login` capability exists.
+
+const UNAVAILABLE = 'Não conseguimos abrir sua sessão agora. Tente de novo em instantes.';
 
 export interface CookieJar {
   get(name: string): { value: string } | undefined;
@@ -42,7 +45,12 @@ export async function resolveSession(
     jar.set(SESSION_COOKIE, fresh.value, SESSION_COOKIE_OPTIONS);
     payload = fresh.payload;
   }
-  await ensureAnonymousUser(deps.db, payload.userId);
+  try {
+    await ensureAnonymousUser(deps.db, payload.userId);
+  } catch (err) {
+    logger.error('session.error', { error: err });
+    return fail('UNAVAILABLE', UNAVAILABLE);
+  }
   return ok({ userId: payload.userId });
 }
 
@@ -51,7 +59,13 @@ export async function getSession(
   options: { create?: boolean } = {},
 ): Promise<ActionResult<Session>> {
   const secrets = serverSecrets();
-  const handle = secrets ? await getDb() : null;
+  let handle: Awaited<ReturnType<typeof getDb>> = null;
+  try {
+    handle = secrets ? await getDb() : null;
+  } catch (err) {
+    logger.error('session.error', { error: err });
+    return fail('UNAVAILABLE', UNAVAILABLE);
+  }
   if (!secrets || !handle) {
     return fail('NOT_CONFIGURED', 'O modo ao vivo não está ativo neste deploy. Veja a demo.');
   }

@@ -66,11 +66,11 @@ export async function joinWaitlist(
   const capability = requireCapability('database');
   if (!capability.ok) return capability;
   const secrets = serverSecrets();
-  const handle = secrets ? await getDb() : null;
-  if (!secrets || !handle) {
-    return fail('NOT_CONFIGURED', 'O modo ao vivo não está ativo neste deploy. Veja a demo.');
-  }
   try {
+    const handle = secrets ? await getDb() : null;
+    if (!secrets || !handle) {
+      return fail('NOT_CONFIGURED', 'O modo ao vivo não está ativo neste deploy. Veja a demo.');
+    }
     return await joinWaitlistWith(input, { db: handle.db, secrets, headers });
   } catch (err) {
     logger.error('waitlist.error', { error: err });
