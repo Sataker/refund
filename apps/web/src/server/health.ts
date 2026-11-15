@@ -12,9 +12,11 @@ import { getDb } from './db.ts';
 import { readEnv } from './env.ts';
 import { logger } from './log.ts';
 
-// ARCHITECTURE §10.2 (ADR-011). failed (503): deep and the configured database is unreachable or its
-// migrations diverge from the bundled journal. degraded (200): a malformed variable, a database
-// configured without its secrets, or the database above 400 MB (SCHEMA §7).
+// ARCHITECTURE §10.2 (ADR-011). failed (503): deep and the configured database is unreachable or has
+// FEWER migrations than the bundled journal (the build expects a column that is not there).
+// degraded (200): a malformed variable, a database configured without its secrets, the database
+// AHEAD of the build (the normal window of SCHEMA §4.1: migrate before the merge, additive only),
+// or the database above 400 MB (SCHEMA §7).
 
 export const DB_SIZE_ALERT_BYTES = 400 * 1024 * 1024;
 
@@ -24,7 +26,12 @@ export interface DatabaseCheck {
   driver?: DbHandle['driver'];
   migrations?: { applied: number; expected: number };
   heartbeat?: string;
-  reason?: 'not_configured' | 'missing_secrets' | 'unreachable' | 'migrations_diverge';
+  reason?:
+    | 'not_configured'
+    | 'missing_secrets'
+    | 'unreachable'
+    | 'migrations_behind'
+    | 'migrations_ahead';
 }
 
 export interface HealthReport extends BasicHealth {
@@ -63,18 +70,20 @@ export async function checkDatabase(
     const applied = await appliedMigrations(handle.db);
     const size = await databaseSizeBytes(handle.db);
     const migrations = { applied, expected: EXPECTED_MIGRATIONS };
-    const diverge = applied !== EXPECTED_MIGRATIONS;
+    const behind = applied < EXPECTED_MIGRATIONS;
+    const ahead = applied > EXPECTED_MIGRATIONS;
     const check: DatabaseCheck = {
-      ok: !diverge,
+      ok: !behind,
       ms: ms(),
       driver: handle.driver,
       migrations,
       heartbeat: seen.toISOString(),
-      ...(diverge ? { reason: 'migrations_diverge' as const } : {}),
+      ...(behind ? { reason: 'migrations_behind' as const } : {}),
+      ...(ahead ? { reason: 'migrations_ahead' as const } : {}),
     };
-    const status: HealthStatus = diverge
+    const status: HealthStatus = behind
       ? 'failed'
-      : size > DB_SIZE_ALERT_BYTES
+      : ahead || size > DB_SIZE_ALERT_BYTES
         ? 'degraded'
         : 'ok';
     return { check, status };

@@ -1,6 +1,8 @@
+import { createMemoryDb } from '@refund/db';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GET } from '@/app/api/health/route.ts';
-import { resetDb } from '@/server/db.ts';
+import { migrationsFolder, resetDb } from '@/server/db.ts';
+import { checkDatabase } from '@/server/health.ts';
 
 // ARCHITECTURE §10.2; TESTS §4 "deep health with and without a database".
 
@@ -87,6 +89,33 @@ describe('GET /api/health', () => {
     expect(body.problems).toEqual([{ name: 'ENCRYPTION_KEY', reason: expect.any(String) }]);
     expect(body.checks.database.reason).toBe('missing_secrets');
     expect(JSON.stringify(body)).not.toContain(bad);
+  });
+
+  it('migrations: database behind the build → failed; ahead (migrate before merge) → degraded', async () => {
+    const folder = migrationsFolder();
+    if (!folder) throw new Error('migrations folder not found');
+    const h = await createMemoryDb({ migrationsFolder: folder });
+    try {
+      const ahead = await checkDatabase(async () => h);
+      expect(ahead.status).toBe('ok');
+
+      await h.db.execute(
+        `INSERT INTO "drizzle"."__drizzle_migrations" (hash, created_at) VALUES ('next', 9999999999999)`,
+      );
+      const newer = await checkDatabase(async () => h);
+      expect(newer.status).toBe('degraded');
+      expect(newer.check).toMatchObject({ ok: true, reason: 'migrations_ahead' });
+
+      await h.db.execute(
+        `DELETE FROM "drizzle"."__drizzle_migrations" WHERE created_at >= (SELECT max(created_at) - 1 FROM "drizzle"."__drizzle_migrations" WHERE hash <> 'next')`,
+      );
+      const behind = await checkDatabase(async () => h);
+      expect(behind.status).toBe('failed');
+      expect(behind.check).toMatchObject({ ok: false, reason: 'migrations_behind' });
+      expect(behind.check.migrations?.applied).toBeLessThan(behind.check.migrations?.expected ?? 0);
+    } finally {
+      await h.close();
+    }
   });
 
   it('deep is limited to 30/min per IP', async () => {
