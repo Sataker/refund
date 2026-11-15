@@ -1,6 +1,6 @@
 // E9 review findings (engine review H1–H3, M1, M2; code review #1, #3, #4), each one a reviewer probe turned into
 // a test. The hero's four numbers must not move.
-import type { CivilDate } from '@refund/engine';
+import { addMonths, type CivilDate, monthRange, type YearMonth } from '@refund/engine';
 import type { PersonaData } from '@refund/personas';
 import type { SourceTransaction } from '@refund/sources';
 import { describe, expect, it } from 'vitest';
@@ -222,9 +222,8 @@ describe('H3: DAS only from a tax payment, and two DAS for one PA are flagged', 
     expect(second.result.engineResult?.total).toMatchObject(HERO);
   });
 
-  it('hero + boleto "CASA DAS TINTAS" in sep/26: two DAS for PA 2026-08 → a card, never an overwrite', async () => {
-    let probeId = '';
-    const add = (d: PersonaData) => {
+  it('hero + boleto "CASA DAS TINTAS" in sep/26: the payment with the DAS marker wins, no card (re-review #2)', async () => {
+    const { second } = await mutatedHero((d) => {
       const a = pjAccount(d);
       a.transactions.push(
         extra(a.account.sourceId, {
@@ -240,16 +239,34 @@ describe('H3: DAS only from a tax payment, and two DAS for one PA are flagged', 
           },
         }),
       );
-      probeId = transactionId(a.account.sourceId, 'probe-das2');
+    });
+    expect(second.result.questions.some((q) => q.id.startsWith('das:'))).toBe(false);
+    expect(second.result.facts?.dasPaid.value).toHaveLength(12);
+    expect(second.result.engineResult?.total).toMatchObject(HERO);
+  });
+
+  it('two marked DAS for one PA (DAS + complementary) stay ambiguous → a card, never an overwrite', async () => {
+    let complementId = '';
+    const add = (d: PersonaData) => {
+      const a = pjAccount(d);
+      a.transactions.push(
+        extra(a.account.sourceId, {
+          sourceId: 'probe-das3',
+          date: '2026-09-28',
+          amountCents: -120000,
+          description: 'PAGAMENTO DAS - SIMPLES NACIONAL PA 08/2026',
+          method: 'BOLETO',
+        }),
+      );
+      complementId = transactionId(a.account.sourceId, 'probe-das3');
     };
     const { second } = await mutatedHero(add);
     const card = second.result.questions.find((q) => q.id === 'das:2026-08');
     expect(card?.transactionIds).toHaveLength(2);
     expect(card?.options.map((o) => o.value)).toContain('all');
     const pa = second.result.facts?.dasPaid.value.filter((d) => d.pa === '2026-08') ?? [];
-    expect(pa.every((d) => d.amount === 892500)).toBe(true);
-    expect(pa.length).toBeLessThanOrEqual(1);
-    const realDas = card?.transactionIds.find((id) => id !== probeId) ?? '';
+    expect(pa).toHaveLength(0);
+    const realDas = card?.transactionIds.find((id) => id !== complementId) ?? '';
     const answered = await mutatedHero(add, { 'das:2026-08': realDas });
     expect(answered.second.result.facts?.dasPaid.value).toHaveLength(12);
     expect(answered.second.result.engineResult?.total).toMatchObject(HERO);
@@ -397,4 +414,33 @@ describe('code review #3/#4: the catch-all keeps the stage, the real status, and
     const b = await drain(runAnalysis({ ...heroInput(), accounts: undefined as never }, deps()));
     expect(b.events.map((e) => e.type)).toEqual(['error', 'end']);
   });
+});
+
+describe('re-review #1: the reference year early in the calendar keeps its pró-labore', () => {
+  const holder = { description: 'PIX ENVIADO [pessoa]', cpf: '***.711.985-**', hmac: 'h' };
+  const ctx = (referenceMonth: YearMonth) =>
+    ruleContext({
+      referenceMonth,
+      identity: { cpfHmac: 'h', cnpj: COMPANY_CNPJ, pfConnected: true },
+    });
+  // Minimum-wage pró-labore: 1.442,69 net in 2026, 1.527,00 net from January 2027; distributions of 18.000,00.
+  const scenario = (referenceMonth: YearMonth) => {
+    const months = monthRange(addMonths(referenceMonth, -11), referenceMonth);
+    return months.flatMap((m) => [
+      tx({ ...holder, amountCents: m < '2027-01' ? 144269 : 152700, date: `${m}-07` as CivilDate }),
+      tx({ ...holder, amountCents: 1800000, date: `${m}-08` as CivilDate }),
+    ]);
+  };
+  it.each(['2027-01', '2027-02', '2027-03', '2026-10'] as YearMonth[])(
+    'reference %s: every monthly 1.4–1.5 mil transfer is pró-labore, every 18.000 a distribution',
+    (ref) => {
+      const list = scenario(ref);
+      const hits = applyRules(list, ctx(ref));
+      for (const t of list) {
+        expect(hits.get(t.id)?.label, `${t.date} ${t.amountCents}`).toBe(
+          t.amountCents === 1800000 ? 'distribution' : 'pro_labore',
+        );
+      }
+    },
+  );
 });

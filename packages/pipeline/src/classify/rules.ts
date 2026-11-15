@@ -271,7 +271,13 @@ export function reversalCredit(t: NormalizedTransaction, ctx: RuleContext): Rule
   };
 }
 
-/** E9 review H3: two DAS for one PA are never silently merged or overwritten; a card asks which one. */
+/** "SIMPLES NACIONAL", "PGDAS" or an accrual month ("PA 08/2026"): what a real DAS guide prints. */
+const RX_DAS_MARKER = /\b(SIMPLES ?NAC(IONAL)?|PGDAS)\b|\bPA \d{2}\/\d{4}\b/u;
+
+/**
+ * E9 review H3: two DAS for one PA are never silently merged or overwritten. When exactly one of them has a DAS
+ * marker it wins; otherwise a card asks which one.
+ */
 function flagDuplicateDas(txs: readonly NormalizedTransaction[], hits: Map<string, RuleHit>): void {
   const byPa = new Map<YearMonth, NormalizedTransaction[]>();
   for (const t of txs) {
@@ -281,6 +287,12 @@ function flagDuplicateDas(txs: readonly NormalizedTransaction[], hits: Map<strin
   }
   for (const [pa, list] of byPa) {
     if (list.length < 2) continue;
+    // Only one carries an explicit DAS marker: that one is the DAS; the others leave the DAS rule (re-review #2).
+    const marked = list.filter((t) => RX_DAS_MARKER.test(t.description));
+    if (marked.length === 1) {
+      for (const t of list) if (t !== marked[0]) hits.delete(t.id);
+      continue;
+    }
     for (const t of list) {
       const h = hits.get(t.id);
       if (h !== undefined) hits.set(t.id, { ...h, cardId: CARD.das(pa) });
@@ -416,8 +428,10 @@ function classifyHolderTransfers(
   for (const year of new Set(regular.map((t) => t.month.slice(0, 4)))) {
     const inYear = regular.filter((t) => t.month.startsWith(year));
     const monthsInWindow = [...window].filter((m) => m.startsWith(year)).length;
+    // A reference year with < 4 months in the window (reference Jan–Mar) cannot hold "3 of the last 4": it gets
+    // the same min(3, months of the year) test as earlier years (engine re-review #1).
     const eligible = amountClusters(inYear, 0.02).filter((c) =>
-      year === referenceYear
+      year === referenceYear && monthsInWindow >= 4
         ? isRecurring(c, ctx.referenceMonth, 0.02)
         : new Set(c.map((t) => t.month)).size >= Math.min(3, Math.max(1, monthsInWindow)),
     );
