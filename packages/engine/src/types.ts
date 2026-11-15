@@ -134,6 +134,19 @@ export interface Facts {
     pgblContributedThisYear: Cents;
     projectedAnnualTotalIncome: Cents; // includes exempt income and dividends (IRPFM, R02)
   }>;
+  /**
+   * [CONTRACT proposal, E8] Outflows of the PJ account or card classified as personal (`personal_expense_in_pj`,
+   * ENGINE-SPEC E.7): the input of alert A01 (D.7). Optional: absent = no such transaction was found.
+   */
+  personalExpensesInPj?: Fact<PersonalExpense[]>;
+}
+
+/** One PJ outflow classified as a personal expense (ENGINE-SPEC E.7 → A01). */
+export interface PersonalExpense {
+  transactionId: string;
+  month: YearMonth;
+  amount: Cents;
+  merchant: string; // normalized merchant name (a company; never a person)
 }
 
 /** ENGINE-SPEC C.2 names the extended facts `EngineFacts`; ARCHITECTURE §4.2 merged the extensions into `Facts`. */

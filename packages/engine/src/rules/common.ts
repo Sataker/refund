@@ -27,6 +27,9 @@ export const ORDER_OF = {
   R04: 4,
   'R05-REC': 5,
   R02: 6,
+  R03: 7,
+  A01: 8,
+  A02: 9,
 } as const;
 
 export type FindingBase = Pick<

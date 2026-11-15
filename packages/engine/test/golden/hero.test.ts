@@ -155,6 +155,24 @@ describe('hero: findings rule by rule (F.3)', () => {
     expect(r.findings.find((f) => f.ruleId === 'R04')).toBeUndefined();
   });
 
+  it('A01 (F.3, F.4): Netflix 12× and supermarket 1× on the PJ card; risk, confirmed, outside the total', () => {
+    const f = find(r, 'A01');
+    expect(f.type).toBe('risk');
+    expect(f.confidence).toBe('confirmed');
+    expect(f.countsInTotal).toBe(false);
+    expect(f.marginalValue12m).toBe(0);
+    const netflix = f.trace.find((s) => s.label.startsWith('NETFLIX'));
+    const market = f.trace.find((s) => s.label.startsWith('SUPERMERCADO'));
+    expect(netflix?.inputs.count?.value).toBe(12);
+    expect(market?.inputs.count?.value).toBe(1);
+    expect(f.trace.at(-1)?.inputs.total?.value).toBe(148320); // answer key personalOnPjCard
+  });
+
+  it('R03 and A02 do not fire (F.3: RBT12 600.000, far from 2,88 mi; P0 = minimum wage)', () => {
+    expect(r.findings.find((f) => f.ruleId === 'R03')).toBeUndefined();
+    expect(r.findings.find((f) => f.ruleId === 'A02')).toBeUndefined();
+  });
+
   it('R05-REC (T05-09): 12 measured + 48 projected, RFB up to 97.193,40, city hall up to 101.745,00', () => {
     const f = find(r, 'R05-REC');
     expect(f.type).toBe('recovery');
@@ -243,7 +261,8 @@ describe('hero: findings rule by rule (F.3)', () => {
   });
 
   it('findings sorted by order; every finding cites corpus-style refs and closes its trace', () => {
-    expect(r.findings.map((f) => f.ruleId)).toEqual(['R01', 'R05', 'R05-REC', 'R02']);
+    // F.4 table: R01, R05 (in the total), R05-REC, R02 and A01 (outside it); R03 and A02 do not fire (F.3).
+    expect(r.findings.map((f) => f.ruleId)).toEqual(['R01', 'R05', 'R05-REC', 'R02', 'A01']);
     for (const f of r.findings) {
       expect(f.refs.length).toBeGreaterThan(0);
       for (const ref of f.refs) expect(ref.id).toMatch(/^[a-z0-9-]+\/[a-z0-9/-]+$/);

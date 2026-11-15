@@ -204,6 +204,22 @@ export function heroFacts(assumptions: Facts['assumptions'] = HERO_ASSUMPTIONS):
     { amount: 780000 as Cents, cnaeOrProfession: '6550-2/00', beneficiary: 'holder' },
     { amount: 960000 as Cents, cnaeOrProfession: 'psychologist', beneficiary: 'holder' },
   ];
+  // F.2 "Personal PJ card": Netflix 55,90 every month and a supermarket 812,40 in mar/2026 (answer key: 13
+  // `personal_in_pj` transactions, personalOnPjCard 1.483,20). Ids are fixture ids, not pipeline ids.
+  f.personalExpensesInPj = fact([
+    ...OBSERVED.map((month) => ({
+      transactionId: `fixture-netflix-${month}`,
+      month,
+      amount: 5590 as Cents,
+      merchant: 'NETFLIX',
+    })),
+    {
+      transactionId: 'fixture-supermarket-2026-03',
+      month: '2026-03' as YearMonth,
+      amount: 81240 as Cents,
+      merchant: 'SUPERMERCADO',
+    },
+  ]);
   return f;
 }
 

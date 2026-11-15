@@ -114,7 +114,7 @@ export function dasUnder(
   inputs: PaInputs,
   anexo: Anexo,
   segregateExport: boolean,
-  stepPrefix?: string,
+  options: { stepPrefix?: string; segregateMonofasico?: boolean } = {},
 ) {
   const input: Parameters<typeof dasForPa>[0] = {
     pa,
@@ -123,7 +123,13 @@ export function dasUnder(
     export: { revenue: revenue(ctx, 'export', pa), rbt12: inputs.rbt12.export },
     segregateExport,
   };
-  if (stepPrefix !== undefined) input.stepPrefix = stepPrefix;
+  if (options.stepPrefix !== undefined) input.stepPrefix = options.stepPrefix;
+  // D.6: PIS/Cofins only on revenue × (1 − monofasicoPct); the share has no default (R06 only runs with it).
+  const pct = ctx.assumptions.monofasicoPct;
+  if (options.segregateMonofasico === true && pct !== undefined) {
+    input.segregateMonofasico = true;
+    input.monofasicoPct = pct;
+  }
   return dasForPa(input);
 }
 
@@ -132,7 +138,9 @@ export function simulatePa(ctx: Ctx, d: ScenarioDecisions, pa: YearMonth): PaRes
   const inputs = paInputs(ctx, pa, (m) => proLaboreAt(ctx, d, m));
   const fr = company.subjectToFatorR ? fatorR(inputs.fs12, inputs.rbt12.total, pa).value : null;
   const anexo = anexoForPa(fr, company, pa);
-  const das = dasUnder(ctx, pa, inputs, anexo, d.segregateExport);
+  const das = dasUnder(ctx, pa, inputs, anexo, d.segregateExport, {
+    segregateMonofasico: d.segregateMonofasico,
+  });
   const p = proLaboreAt(ctx, d, pa);
   const inss = inssPartner(p, pa);
   return {
@@ -252,7 +260,9 @@ export function regimeCostModel(ctx: Ctx, base: Omit<ScenarioDecisions, 'proLabo
     let v = dasCache.get(key);
     if (v === undefined) {
       const { pa, inputs } = pas[i] as (typeof pas)[number];
-      v = dasUnder(ctx, pa, inputs, anexo, base.segregateExport).das;
+      v = dasUnder(ctx, pa, inputs, anexo, base.segregateExport, {
+        segregateMonofasico: base.segregateMonofasico,
+      }).das;
       dasCache.set(key, v);
     }
     return v;
