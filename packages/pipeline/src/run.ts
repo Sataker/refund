@@ -25,7 +25,7 @@ import {
   toLlmInput,
 } from './classify/index.ts';
 import { boundedCall, DEFAULT_LLM_TIMEOUT_MS } from './classify/llm.ts';
-import type { AnalysisEvent, FindingDto, TotalDto } from './events.ts';
+import type { AnalysisEvent, AnalysisStage, FindingDto, TotalDto } from './events.ts';
 import { buildFacts, parameterMonth, regimeOf } from './facts.ts';
 import { normalizeTransaction } from './normalize.ts';
 import { defaultWait, delayBefore } from './pace.ts';
@@ -173,16 +173,28 @@ export async function* runAnalysis(
   input: AnalysisInput,
   deps: AnalysisDeps,
 ): AsyncGenerator<AnalysisEvent, PipelineResult, void> {
-  const t0 = deps.clock.now();
-  const pace = deps.pace ?? 'instant';
-  const wait = deps.wait ?? defaultWait;
-  const timeoutMs = deps.llmTimeoutMs ?? DEFAULT_LLM_TIMEOUT_MS;
+  const pace = deps?.pace ?? 'instant';
+  const wait = deps?.wait ?? defaultWait;
+  const timeoutMs = deps?.llmTimeoutMs ?? DEFAULT_LLM_TIMEOUT_MS;
   let findingsSent = 0;
+  // The stage in progress, carried by the catch-all error (code review #3).
+  let stage: AnalysisStage | undefined;
   const paced = async <E extends AnalysisEvent>(e: E): Promise<E> => {
+    if (e.type === 'stage' && e.status === 'started') stage = e.stage;
     const ms = delayBefore(pace, e, findingsSent);
     if (ms > 0) await wait(ms);
     return e;
   };
+  /** The clock is a port: a clock that throws or returns garbage never breaks the run (code review #4). */
+  const safeNow = (): number | null => {
+    try {
+      const v = deps.clock.now();
+      return Number.isFinite(v) ? v : null;
+    } catch {
+      return null;
+    }
+  };
+  let t0: number | null = null;
 
   const result: PipelineResult = {
     engineResult: null,
@@ -199,31 +211,36 @@ export async function* runAnalysis(
   const finish = async (
     status: 'completed' | 'awaiting_confirmation',
   ): Promise<Extract<AnalysisEvent, { type: 'end' }>> => {
-    result.metrics.durationMs = Math.max(0, deps.clock.now() - t0);
+    const now = safeNow();
+    result.metrics.durationMs = t0 === null || now === null ? 0 : Math.max(0, now - t0);
     return paced({
       type: 'end',
-      analysisId: input.analysisId,
+      analysisId: String(input?.analysisId ?? ''),
       status,
       durationMs: result.metrics.durationMs,
     });
   };
 
-  const accounts = new Map<string, SourceAccount>(input.accounts.map((a) => [a.sourceId, a]));
-  yield await paced({
-    type: 'start',
-    analysisId: input.analysisId,
-    origin: input.analysisId.startsWith('demo:') ? 'demo' : 'live',
-    ...(input.persona === undefined ? {} : { persona: input.persona }),
-    accounts: {
-      pf: input.accounts.filter((a) => a.holder === 'PF').length,
-      pj: input.accounts.filter((a) => a.holder === 'PJ').length,
-    },
-    engineVersion: ENGINE_VERSION,
-    parametersVersion: PARAMETERS_VERSION,
-    startedAt: new Date(t0).toISOString(),
-  });
-
   try {
+    // ---------- 1. Start (inside the try: a bad clock or input becomes an error event, never a throw) ----------
+    const started = deps.clock.now();
+    t0 = started;
+    const accounts = new Map<string, SourceAccount>(input.accounts.map((a) => [a.sourceId, a]));
+    yield await paced({
+      type: 'start',
+      analysisId: input.analysisId,
+      origin: input.analysisId.startsWith('demo:') ? 'demo' : 'live',
+      ...(input.persona === undefined ? {} : { persona: input.persona }),
+      accounts: {
+        pf: input.accounts.filter((a) => a.holder === 'PF').length,
+        pj: input.accounts.filter((a) => a.holder === 'PJ').length,
+      },
+      engineVersion: ENGINE_VERSION,
+      parametersVersion: PARAMETERS_VERSION,
+      // The only Date in the pipeline: formats the injected clock's timestamp (scripts/lint-conventions.ts).
+      startedAt: new Date(started).toISOString(),
+    });
+
     // ---------- 2. Normalization ----------
     yield await paced({
       type: 'stage',
@@ -446,8 +463,9 @@ export async function* runAnalysis(
       code: 'PIPELINE_FAILED',
       message: 'A análise parou no meio. Mostramos o que já achamos; tente de novo.',
       recoverable: true,
+      ...(stage === undefined ? {} : { stage }),
     });
-    yield await finish('completed');
+    yield await finish(result.questions.length > 0 ? 'awaiting_confirmation' : 'completed');
     return result;
   }
 }
