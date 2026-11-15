@@ -27,13 +27,17 @@ import lei15270 from '../../../law/articles/lei15270-2025.json' with { type: 'js
 import port13 from '../../../law/articles/port-mps-mf13-2026.json' with { type: 'json' };
 import res140 from '../../../law/articles/res-cgsn140-2018.json' with { type: 'json' };
 import res190 from '../../../law/articles/res-cgsn190-2026.json' with { type: 'json' };
-import { analyze, rulesByRef } from '../../src/analyze.ts';
+import { analyze } from '../../src/analyze.ts';
+import { brl } from '../../src/money.ts';
 import { ALL_PARAMETERS, legalRefOf } from '../../src/parameters/index.ts';
 import { PROCEDURE_REFS } from '../../src/parameters/legal-refs.ts';
+import { estimateByProfile } from '../../src/profile.ts';
+import { RULE_REFS, type RuleId, refsOfRule, rulesByRef } from '../../src/ref-index.ts';
 import { REFS } from '../../src/rules/refs.ts';
 import { daysInMonth } from '../../src/time.ts';
-import type { LegalRef, Step, YearMonth } from '../../src/types.ts';
-import { heroFacts } from './fixtures/facts.ts';
+import type { Cents, Facts, LegalRef, Step, YearMonth } from '../../src/types.ts';
+import { constant, fact, heroFacts, syntheticFacts } from './fixtures/facts.ts';
+import { HERO_PROFILE } from './fixtures/profile.ts';
 
 interface Provision {
   id: string;
@@ -120,7 +124,9 @@ describe('legal references exist in @refund/law (CLAUDE.md rule 3)', () => {
 
   it('every rule ref, every rulesByRef key and every parameter ref is valid', () => {
     for (const ref of Object.values(REFS)) checkRef(ref);
-    for (const id of Object.keys(rulesByRef)) expect(corpus.has(id), id).toBe(true);
+    for (const id of Object.keys(rulesByRef)) {
+      expect(corpus.has(id) || procedures.has(id), id).toBe(true);
+    }
     for (const e of ALL_PARAMETERS) {
       const ref = legalRefOf(e);
       if (ref !== undefined) checkRef(ref, e.effectiveFrom);
@@ -129,5 +135,112 @@ describe('legal references exist in @refund/law (CLAUDE.md rule 3)', () => {
 
   it('the old provisional convention (<regulation>#<provision>) no longer appears in law refs', () => {
     for (const s of steps) if (s.ref?.type === 'regulation') expect(s.ref.id).not.toContain('#');
+  });
+});
+
+// E8: the full cross-check (EXECUTION §9, E1/E8 row): every reference the engine can emit, not only the hero's.
+// (TESTS §2.3 places INV-5 in packages/law/test; outside E8's scope, so it runs here against the corpus files.)
+describe('every engine reference exists in the corpus (INV-5, all rules)', () => {
+  it('RULE_REFS and refsOfRule (metadata + parameter refs) of every rule are valid', () => {
+    for (const ruleId of Object.keys(RULE_REFS) as RuleId[]) {
+      expect(RULE_REFS[ruleId].length, ruleId).toBeGreaterThan(0);
+      for (const ref of refsOfRule(ruleId)) checkRef(ref);
+    }
+    // A parameter change reaches the rules that read it: the annual IR table feeds R01 and R04.
+    expect(rulesByRef['rfb-tributacao-2026#tabela-anual']).toEqual(
+      expect.arrayContaining(['R01', 'R04']),
+    );
+  });
+
+  const scenarios: Record<string, Facts> = (() => {
+    const pharmacy = syntheticFacts({
+      domestic: constant(brl('50.000,00')),
+      subjectToFatorR: false,
+      baseAnexo: 'I',
+      assumptions: {
+        monofasicoPct: { value: '0.4', origin: 'user', editable: true, source: 'slider' },
+      },
+    });
+    pharmacy.companyDetails.value.resellsMonofasico = true;
+    const pharmacyNoPct = syntheticFacts({
+      domestic: constant(brl('50.000,00')),
+      subjectToFatorR: false,
+      baseAnexo: 'I',
+    });
+    pharmacyNoPct.companyDetails.value.resellsMonofasico = true;
+    const mei = syntheticFacts({ regime: 'MEI', domestic: constant(brl('8.100,00')) });
+    const large = syntheticFacts({ domestic: constant(brl('250.000,00')), subjectToFatorR: false });
+    const a02 = syntheticFacts({
+      domestic: constant(brl('50.000,00')),
+      proLabore: constant(0 as Cents),
+      distributions: [
+        {
+          month: '2026-10',
+          payerCnpj: 'RFTEST00000100',
+          grossAmount: brl('20.000,00'),
+          irrfWithheld: 0 as Cents,
+          profitThrough2025Approved: false,
+        },
+      ],
+    });
+    const pgbl = syntheticFacts({
+      domestic: constant(brl('60.000,00')),
+      cltGross: constant(brl('15.000,00')),
+      proLabore: constant(brl('3.000,00')),
+      otherTaxableIncome: constant(brl('12.000,00')),
+    });
+    pgbl.personalExpensesInPj = fact([
+      { transactionId: 't', month: '2026-05', amount: 5590 as Cents, merchant: 'NETFLIX' },
+    ]);
+    return { pharmacy, pharmacyNoPct, mei, large, a02, pgbl };
+  })();
+
+  for (const [name, facts] of Object.entries(scenarios)) {
+    it(`${name}: every step ref is in force in its month and every finding ref exists`, () => {
+      const res = analyze(facts);
+      if (!res.ok) throw new Error(res.error.code);
+      expect(res.value.findings.length).toBeGreaterThan(0);
+      for (const f of res.value.findings) {
+        for (const ref of f.refs) checkRef(ref);
+        for (const s of f.trace) if (s.ref !== undefined) checkRef(s.ref, s.month);
+      }
+    });
+  }
+
+  it('the rules found across these scenarios cover R01–R06, R05-REC, R02, R03, A01 and A02', () => {
+    const seen = new Set<string>();
+    for (const facts of [heroFacts(), ...Object.values(scenarios)]) {
+      const res = analyze(facts);
+      if (res.ok) for (const f of res.value.findings) seen.add(f.ruleId);
+    }
+    expect([...seen].sort()).toEqual(
+      ['A01', 'A02', 'R01', 'R02', 'R03', 'R04', 'R05', 'R05-REC', 'R06'].sort(),
+    );
+  });
+
+  it('profile-based estimate: every applicable-rule ref and every assumption ref exists', () => {
+    for (const answers of [
+      {
+        monthlyRevenueBracket: 'from_150k_to_300k',
+        hasEmployees: 'yes',
+        receivesFromAbroad: 'dont_know',
+      },
+      {
+        monthlyRevenueBracket: 'dont_know',
+        hasEmployees: 'yes',
+        receivesFromAbroad: 'half_or_more',
+      },
+    ] as const) {
+      for (const profile of [
+        HERO_PROFILE,
+        { ...HERO_PROFILE, primaryCnae: '4771-7/01' },
+        { ...HERO_PROFILE, optedIntoMei: true },
+      ]) {
+        const r = estimateByProfile(profile, answers, { analysisDate: '2026-11-12' });
+        if (!r.ok) throw new Error(r.error.code);
+        for (const rule of r.value.rules) checkRef(rule.ref);
+        for (const a of r.value.assumptions) if (a.ref !== undefined) checkRef(a.ref);
+      }
+    }
   });
 });

@@ -1,7 +1,7 @@
 // Public API of @refund/engine (ARCHITECTURE §4.2).
 export const PACKAGE_NAME = '@refund/engine';
 
-export { analyze, recalculate, rulesByRef } from './analyze.ts';
+export { analyze, recalculate } from './analyze.ts';
 export type { EngineErrorCode } from './errors.ts';
 export { brl, rate, roundToCents, sumCents } from './money.ts';
 export {
@@ -49,6 +49,13 @@ export {
   NO_RANGE_MESSAGES,
   rangeInThousands,
 } from './profile.ts';
+export {
+  RULE_PARAMETERS,
+  RULE_REFS,
+  type RuleId,
+  refsOfRule,
+  rulesByRef,
+} from './ref-index.ts';
 export { formatBrl } from './rules/common.ts';
 export {
   addMonths,

@@ -1,13 +1,14 @@
 // Boundary of analyze()/recalculate(): Result with stable codes, never an exception (CLAUDE.md; EXECUTION §9, E5),
 // assumption validation (ARCHITECTURE §4.2: unknown key = validation error) and the hashes (INV-6).
 import { describe, expect, it } from 'vitest';
-import { analyze, recalculate, rulesByRef } from '../src/analyze.ts';
+import { analyze, recalculate } from '../src/analyze.ts';
 import { resolveAssumptions } from '../src/assumptions.ts';
 import { addYears, isBusinessDay, nextBusinessDay } from '../src/calendar.ts';
 import { EngineError, toDomainError } from '../src/errors.ts';
 import { canonicalJson, sha256Hex } from '../src/hash.ts';
 import { brl } from '../src/money.ts';
 import { paramOrNull } from '../src/parameters/index.ts';
+import { rulesByRef } from '../src/ref-index.ts';
 import { formatBrl } from '../src/rules/common.ts';
 import type { Facts } from '../src/types.ts';
 import { constant, heroFacts, syntheticFacts } from './golden/fixtures/facts.ts';

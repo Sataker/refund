@@ -8,29 +8,26 @@ import { ALL_PARAMETERS, OFFICIAL_SET_ID, PARAMETERS_VERSION, param } from './pa
 import { inferPgdas, type PgdasInference } from './pgdas.ts';
 import { costReads, irMonths, projectedParametersStep } from './projected.ts';
 import { type Ctx, createCtx } from './projection.ts';
-import { A01_REFS, A02_REFS, a01Finding, a02Finding } from './rules/alerts.ts';
+import { a01Finding, a02Finding } from './rules/alerts.ts';
 import {
   appliesR01,
   earlyAlternativeSteps,
   gainOf,
   optimizerR01,
-  R01_REFS,
   r01Finding,
   thresholdR01,
 } from './rules/r01.ts';
-import { R02_REFS, r02Finding } from './rules/r02.ts';
-import { R03_REFS, r03MeiFinding, r03SimplesFinding } from './rules/r03.ts';
-import { optimizerR04, R04_REFS, r04Finding } from './rules/r04.ts';
+import { r02Finding } from './rules/r02.ts';
+import { r03MeiFinding, r03SimplesFinding } from './rules/r03.ts';
+import { optimizerR04, r04Finding } from './rules/r04.ts';
 import {
   confidenceR05,
   eligibleR05,
-  R05_REFS,
-  REC_REFS,
   r05Finding,
   r05RecFinding,
   segregationStatus,
 } from './rules/r05.ts';
-import { appliesR06, R06_REFS, r06Finding, r06QuestionFinding } from './rules/r06.ts';
+import { appliesR06, r06Finding, r06QuestionFinding } from './rules/r06.ts';
 import { annualPf, type ScenarioDecisions, type Simulation, simulate } from './scenario.ts';
 import { addMonths, monthRange } from './time.ts';
 import {
@@ -329,25 +326,3 @@ export function recalculate(
 ): Result<EngineResult> {
   return analyze({ ...facts, assumptions }, options);
 }
-
-/** LegalRef.id → rules that cite it (ARCHITECTURE §4.2; the "law changed" flow). */
-export const rulesByRef: Record<string, string[]> = (() => {
-  const out: Record<string, string[]> = {};
-  const add = (ruleId: string, refs: readonly { id: string }[]) => {
-    for (const r of refs) {
-      const list = out[r.id] ?? [];
-      if (!list.includes(ruleId)) list.push(ruleId);
-      out[r.id] = list;
-    }
-  };
-  add('R01', R01_REFS);
-  add('R05', R05_REFS);
-  add('R05-REC', REC_REFS);
-  add('R06', R06_REFS);
-  add('R04', R04_REFS);
-  add('R02', R02_REFS);
-  add('R03', R03_REFS);
-  add('A01', A01_REFS);
-  add('A02', A02_REFS);
-  return out;
-})();
