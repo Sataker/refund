@@ -5,6 +5,7 @@
 // (d) every seal citation exists in @refund/law.
 import type { Cents, Finding, YearMonth } from '@refund/engine';
 import { article } from '@refund/law';
+import type { SourceTransaction } from '@refund/sources';
 import { describe, expect, it } from 'vitest';
 import { groupOf, SEAL_TABLE } from '../src/financial-view.ts';
 import {
@@ -17,6 +18,7 @@ import {
   type GroupLine,
   type HolderView,
   type NormalizedTransaction,
+  normalizeTransactions,
   ratioBps,
 } from '../src/index.ts';
 import { monthly, tx } from './build.ts';
@@ -695,6 +697,16 @@ describe('seal table (ENGINE-SPEC E.9.2)', () => {
     ).toEqual([]);
   });
 
+  it('the citation is refs[0] of the FIRST finding by order, never borrowed from a later one', () => {
+    const das = { ruleId: 'das_simples' } as const;
+    const r05 = finding('R05', 'savings', { refs: [ref('lc123-2006/art18/p4-a')] });
+    const r01 = finding('R01', 'savings');
+    expect(sealsFor('das_tax', [r05, r01], das)).toMatchObject([
+      { kind: 'lower_tax', ruleIds: ['R01', 'R05'], ref: { id: 'lc123-2006/art18/p5-j' } },
+    ]);
+    expect(sealsFor('das_tax', [r05, finding('R01', 'savings', { refs: [] })], das)).toEqual([]);
+  });
+
   it('the table has no generates_credit row (D27)', () => {
     expect(SEAL_TABLE.some((r) => r.kind === 'generates_credit')).toBe(false);
   });
@@ -817,6 +829,80 @@ describe('seal table (ENGINE-SPEC E.9.2)', () => {
         }
       }
     }
+  });
+});
+
+// ---------- review fixes (16/11) ----------
+
+describe('installments and unique anchors', () => {
+  it('an installment purchase is neither a subscription nor a duplicate', () => {
+    const p = {
+      method: 'CARD' as const,
+      description: 'LOJA MOVEIS',
+      name: 'LOJA MOVEIS',
+      amountCents: 30_000,
+    };
+    const parcels = monthly(4, '2026-10', p).map((t, i) => ({
+      ...t,
+      installment: { number: i + 1, total: 10 },
+    }));
+    const twin = { ...tx({ ...p, date: '2026-10-08' }), installment: { number: 5, total: 10 } };
+    const all = [...parcels, twin];
+    const v = view({
+      transactions: all,
+      classifications: all.map((t) => classified(t, 'operating_expense')),
+    });
+    expect((v.pj as HolderView).recurring).toEqual([]);
+    expect((v.pj as HolderView).duplicates).toEqual([]);
+    // Without the installment, the same series is a subscription.
+    const plain = monthly(4, '2026-10', p);
+    const w = view({
+      transactions: plain,
+      classifications: plain.map((t) => classified(t, 'operating_expense')),
+    });
+    expect((w.pj as HolderView).recurring).toHaveLength(1);
+  });
+
+  it('normalization keeps the source installment', () => {
+    const data = heroInput();
+    const src = (data.transactions as SourceTransaction[])[0];
+    if (src === undefined) throw new Error('no transaction');
+    const [n] = normalizeTransactions(data.accounts, [
+      { ...src, installment: { number: 2, total: 3 } },
+    ]);
+    expect(n?.installment).toEqual({ number: 2, total: 3 });
+  });
+
+  it('a group with lines in both directions gets "-entradas"/"-saidas" slugs; the others keep theirs', () => {
+    const out = tx({ date: '2026-10-02', amountCents: 10_000 });
+    const back = tx({ date: '2026-10-03', amountCents: 4000, direction: 'inflow' });
+    const das = tx({ date: '2026-10-04', amountCents: 500, description: 'DAS' });
+    const v = view({
+      transactions: [out, back, das],
+      classifications: [
+        classified(out, 'same_holder_transfer', { ruleId: 'same_holder' }),
+        classified(back, 'same_holder_transfer', { ruleId: 'same_holder' }),
+        classified(das, 'das_tax', { ruleId: 'das_simples' }),
+      ],
+    });
+    const slugs = (v.pj as HolderView).groups.map((g) => [g.groupId, g.direction, g.slug]);
+    expect(slugs).toEqual([
+      ['holder_transfer', 'inflow', 'entre-voce-e-a-empresa-entradas'],
+      ['holder_transfer', 'outflow', 'entre-voce-e-a-empresa-saidas'],
+      ['das', 'outflow', 'das'],
+    ]);
+    const all = [...(v.pj as HolderView).groups].map((g) => g.slug);
+    expect(new Set(all).size).toBe(all.length);
+  });
+});
+
+describe('the run and the view see the same transactions', () => {
+  it('financialViewOfRun counts exactly the run’s normalized transactions', () => {
+    const total = [heroView.pj, heroView.pf].reduce(
+      (a, h) => a + (h?.groups.reduce((b, g) => b + g.count, 0) ?? 0),
+      0,
+    );
+    expect(total).toBe(hero.result.metrics.transactions);
   });
 });
 

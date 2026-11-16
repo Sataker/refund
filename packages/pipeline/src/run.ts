@@ -12,7 +12,7 @@ import {
   type Total,
   type YearMonth,
 } from '@refund/engine';
-import { redactDescription, type SourceAccount, type SourceTransaction } from '@refund/sources';
+import { redactDescription, type SourceTransaction } from '@refund/sources';
 import { cnaeTaxProfile } from './classify/cnae.ts';
 import { holderIdentity } from './classify/identity.ts';
 import {
@@ -28,7 +28,7 @@ import { boundedCall, DEFAULT_LLM_TIMEOUT_MS } from './classify/llm.ts';
 import type { AnalysisEvent, AnalysisStage, FindingDto, TotalDto } from './events.ts';
 import { buildFacts, parameterMonth, regimeOf } from './facts.ts';
 import { rankByEffect } from './impact.ts';
-import { normalizeTransaction } from './normalize.ts';
+import { Normalizer } from './normalize.ts';
 import { defaultWait, delayBefore } from './pace.ts';
 import type { ExplanationOutput } from './ports.ts';
 import { buildQuestions } from './questions.ts';
@@ -226,7 +226,6 @@ export async function* runAnalysis(
     // ---------- 1. Start (inside the try: a bad clock or input becomes an error event, never a throw) ----------
     const started = deps.clock.now();
     t0 = started;
-    const accounts = new Map<string, SourceAccount>(input.accounts.map((a) => [a.sourceId, a]));
     yield await paced({
       type: 'start',
       analysisId: input.analysisId,
@@ -250,17 +249,12 @@ export async function* runAnalysis(
       label: 'Lendo as transações',
     });
     const known = Array.isArray(input.transactions) ? input.transactions.length : null;
-    const byId = new Map<string, NormalizedTransaction>();
-    const originals = new Map<string, SourceTransaction>();
+    const normalizer = new Normalizer(input.accounts);
     let read = 0;
     for await (const page of pages(input.transactions)) {
       for (const tx of page) {
         read += 1;
-        const n = normalizeTransaction(tx, accounts);
-        if (n.ok && !byId.has(n.value.id)) {
-          byId.set(n.value.id, n.value);
-          originals.set(n.value.id, tx);
-        }
+        normalizer.add(tx);
         if (read % PROGRESS_EVERY === 0) {
           yield await paced({
             type: 'stage',
@@ -272,11 +266,9 @@ export async function* runAnalysis(
         }
       }
     }
-    const txs = [...byId.values()].sort((a, b) =>
-      a.date < b.date ? -1 : a.date > b.date ? 1 : a.id < b.id ? -1 : 1,
-    );
+    const txs = normalizer.result();
     result.metrics.transactions = txs.length;
-    yield await paced({ type: 'transaction_sample', items: sampleOf(txs, originals) });
+    yield await paced({ type: 'transaction_sample', items: sampleOf(txs, normalizer.originals) });
     yield await paced({
       type: 'stage',
       stage: 'normalization',
@@ -310,7 +302,9 @@ export async function* runAnalysis(
       leftovers.length === 0
         ? new Map()
         : await classifyWithLlm(
-            leftovers.map((t) => toLlmInput(t, originals.get(t.id)?.description ?? t.description)),
+            leftovers.map((t) =>
+              toLlmInput(t, normalizer.originals.get(t.id)?.description ?? t.description),
+            ),
             deps.llm,
             timeoutMs,
           );

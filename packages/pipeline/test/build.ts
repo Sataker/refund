@@ -42,6 +42,7 @@ export function tx(p: TxInput = {}): NormalizedTransaction {
         : { document: doc, name: p.name ?? null, cnae: p.cnae ?? null },
     sourceCategory: null,
     mcc: p.mcc ?? null,
+    installment: p.installment ?? null,
   };
 }
 

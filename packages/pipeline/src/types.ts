@@ -24,6 +24,8 @@ export interface NormalizedTransaction {
   counterparty: SourceTransaction['counterparty'];
   sourceCategory: string | null;
   mcc: string | null;
+  /** [CONTRACT addition, E14b] Card installment ("3 de 10"); the financial view keeps installments out of "recorrentes". */
+  installment: SourceTransaction['installment'];
 }
 
 export interface Classification {

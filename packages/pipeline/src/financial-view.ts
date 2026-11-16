@@ -98,7 +98,7 @@ export interface MonthValue {
 
 export interface GroupLine {
   groupId: FinancialGroupId;
-  slug: string; // PT, URL anchor: '#grupo-das'
+  slug: string; // PT, URL anchor: '#grupo-das'; unique per holder ('-entradas'/'-saidas' when both directions exist)
   label: string; // PT-BR
   holder: 'PF' | 'PJ';
   direction: 'inflow' | 'outflow';
@@ -385,8 +385,9 @@ function sealsOf(
     const linked = findings
       .filter((f) => row.ruleIds.includes(f.ruleId) && row.when(f))
       .sort((a, b) => a.order - b.order);
-    const ref = linked.find((f) => f.refs[0] !== undefined)?.refs[0];
-    if (linked.length === 0 || ref === undefined) continue;
+    // E.9.2: the citation is refs[0] of the first finding by order; no ref there, no seal (never a borrowed one).
+    const ref = linked[0]?.refs[0];
+    if (ref === undefined) continue;
     seals.set(row.kind, { kind: row.kind, ruleIds: linked.map((f) => f.ruleId), ref });
   }
   const deduction = DEDUCTIBLE[groupId];
@@ -505,12 +506,12 @@ function biggestOutflows(outflows: readonly Row[]): ChargeRow[] {
 
 /**
  * "Assinaturas e cobranças recorrentes": same counterparty key and amount ±2%, in ≥ 3 of the last 4 months (E.2).
- * Taxes, payroll, the owner's money and own transfers are not subscriptions.
+ * Taxes, payroll, the owner's money, own transfers and installment purchases ("3 de 10") are not subscriptions.
  */
 function recurring(outflows: readonly Row[], referenceMonth: YearMonth): ChargeRow[] {
   const byCounterparty = new Map<string, Row[]>();
   for (const r of outflows) {
-    if (NOT_RECURRING.has(r.groupId)) continue;
+    if (NOT_RECURRING.has(r.groupId) || r.tx.installment != null) continue;
     const k = `${r.groupId}:${counterpartyKey(r.tx)}`;
     byCounterparty.set(k, [...(byCounterparty.get(k) ?? []), r]);
   }
@@ -583,7 +584,7 @@ function duplicates(
   }
   const byCharge = new Map<string, Row[]>();
   for (const r of outflows) {
-    if (OWN_TRANSFERS.has(r.groupId) || flagged.has(r.tx.id)) continue;
+    if (OWN_TRANSFERS.has(r.groupId) || flagged.has(r.tx.id) || r.tx.installment != null) continue;
     const k = `${r.tx.accountId}:${counterpartyKey(r.tx)}:${r.tx.amountCents}`;
     byCharge.set(k, [...(byCharge.get(k) ?? []), r]);
   }
@@ -717,6 +718,15 @@ function holderView(
   }));
   const inGroups = groupLines(inflows, months, inflow12m, input.findings, input.referenceMonth);
   const outGroups = groupLines(outflows, months, outflow12m, input.findings, input.referenceMonth);
+  // One group can have lines in both directions (e.g. "Entre você e a empresa"): the anchors must stay unique per
+  // holder, so a colliding slug gets its direction (#grupo-<slug>-entradas / -saidas).
+  const both = new Set(
+    inGroups.filter((g) => outGroups.some((o) => o.groupId === g.groupId)).map((g) => g.groupId),
+  );
+  for (const g of [...inGroups, ...outGroups]) {
+    if (both.has(g.groupId))
+      g.slug = `${g.slug}-${g.direction === 'inflow' ? 'entradas' : 'saidas'}`;
+  }
   const last = monthly.at(-1) as HolderView['monthly'][number];
   const prev = monthly.at(-2) as HolderView['monthly'][number];
   return {

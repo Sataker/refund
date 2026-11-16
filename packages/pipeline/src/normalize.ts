@@ -55,25 +55,51 @@ export function normalizeTransaction(
       counterparty: tx.counterparty,
       sourceCategory: tx.sourceCategory,
       mcc: tx.mcc,
+      installment: tx.installment ?? null,
     },
   };
 }
 
 /**
- * The run's normalization over an array (same rules as `runAnalysis`: invalid rows dropped, first id wins, sorted by
- * date then id). The financial view needs the transactions themselves, which `PipelineResult` does not carry.
+ * The run's normalization, shared by `runAnalysis` (page by page) and `normalizeTransactions` (an array), so the
+ * financial view and the run can never see different transactions: invalid rows dropped, first id wins, sorted by
+ * date then id.
  */
+export class Normalizer {
+  readonly #accounts: ReadonlyMap<string, SourceAccount>;
+  readonly #byId = new Map<string, NormalizedTransaction>();
+  readonly #originals = new Map<string, SourceTransaction>();
+
+  constructor(accounts: readonly SourceAccount[]) {
+    this.#accounts = new Map(accounts.map((a) => [a.sourceId, a]));
+  }
+
+  add(tx: SourceTransaction): void {
+    const n = normalizeTransaction(tx, this.#accounts);
+    if (n.ok && !this.#byId.has(n.value.id)) {
+      this.#byId.set(n.value.id, n.value);
+      this.#originals.set(n.value.id, tx);
+    }
+  }
+
+  /** The source row of a normalized id (the run's masked sample reads the original description). */
+  get originals(): ReadonlyMap<string, SourceTransaction> {
+    return this.#originals;
+  }
+
+  result(): NormalizedTransaction[] {
+    return [...this.#byId.values()].sort((a, b) =>
+      a.date < b.date ? -1 : a.date > b.date ? 1 : a.id < b.id ? -1 : 1,
+    );
+  }
+}
+
+/** `runAnalysis`'s normalization over an array (`PipelineResult` does not carry the transactions). */
 export function normalizeTransactions(
   accounts: readonly SourceAccount[],
   transactions: readonly SourceTransaction[],
 ): NormalizedTransaction[] {
-  const byAccount = new Map(accounts.map((a) => [a.sourceId, a]));
-  const byId = new Map<string, NormalizedTransaction>();
-  for (const tx of transactions) {
-    const n = normalizeTransaction(tx, byAccount);
-    if (n.ok && !byId.has(n.value.id)) byId.set(n.value.id, n.value);
-  }
-  return [...byId.values()].sort((a, b) =>
-    a.date < b.date ? -1 : a.date > b.date ? 1 : a.id < b.id ? -1 : 1,
-  );
+  const n = new Normalizer(accounts);
+  for (const tx of transactions) n.add(tx);
+  return n.result();
 }
