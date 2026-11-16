@@ -147,6 +147,18 @@ describe('stripDocuments', () => {
       'TED [doc]',
     ],
     ['CNPJ glued to a letter', () => 'REF12.ABC.345/01DE-35', 'REF[doc]'],
+    // Code review 16/11 (E10, HIGH): "-" and "/" separators, one digit at a time.
+    [
+      'dash separators',
+      (c: string) => `CPF ${c.slice(0, 3)}-${c.slice(3, 6)}-${c.slice(6, 9)}-${c.slice(9)}`,
+      'CPF [doc]',
+    ],
+    [
+      'slash separators',
+      (c: string) => `CPF ${c.slice(0, 3)}/${c.slice(3, 6)}/${c.slice(6, 9)}-${c.slice(9)}`,
+      'CPF [doc]',
+    ],
+    ['one digit at a time', (c: string) => `CPF ${c.split('').join(' ')}`, 'CPF [doc]'],
   ])('removes a CPF %s', (_label, build, expected) => {
     expect(stripDocuments(build(CPF))).toBe(expected);
   });
@@ -277,6 +289,9 @@ describe('detectPii and scanText', () => {
       `REF${formatCpf(CPF)}X`,
       `TED ${CPF.slice(0, 9)}-${CPF.slice(9)}`,
       `TED ${spaced}`,
+      `CPF ${CPF.slice(0, 3)}-${CPF.slice(3, 6)}-${CPF.slice(6, 9)}-${CPF.slice(9)}`,
+      `CPF ${CPF.slice(0, 3)}/${CPF.slice(3, 6)}/${CPF.slice(6, 9)}-${CPF.slice(9)}`,
+      `CPF ${CPF.split('').join(' ')}`,
     ]) {
       expect(scanText(text).map((f) => f.rule)).toEqual(['formatted-cpf']);
     }

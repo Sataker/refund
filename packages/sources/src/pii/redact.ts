@@ -8,7 +8,9 @@ const DOC = '[doc]';
 // Look-around is digit-based only: a document glued to letters ("PIX REF529.…") is still a document.
 const FORMATTED_CPF = /(?<!\d)\d{3}\.\d{3}\.\d{3}-\d{2}(?!\d)/g;
 /** Bare, partial (`…-NN`) or spaced CPF; replaced only when the check digits are valid. */
-const LOOSE_CPF = /(?<!\d)\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2}(?!\d)/g;
+const LOOSE_CPF = /(?<!\d)\d{3}[.\s/-]?\d{3}[.\s/-]?\d{3}[.\s/-]?\d{2}(?!\d)/g;
+/** One digit at a time ("5 2 9 9 8 …", "5-2-9-…"), reported or replaced only with valid check digits. */
+const SPREAD_CPF = /(?<!\d)\d(?:[\s./-]\d){10}(?!\d)/g;
 // No look-behind: an alphanumeric CNPJ may start with letters, and over-redacting is the safe side.
 const FORMATTED_CNPJ =
   /[0-9A-Za-z]{2}\.[0-9A-Za-z]{3}\.[0-9A-Za-z]{3}\/[0-9A-Za-z]{4}-\d{2}(?!\d)/g;
@@ -23,19 +25,22 @@ function isValidNumericCnpj(digits: string): boolean {
 /** True when the text holds a formatted CPF, or a bare/partial/spaced one with valid check digits. */
 export function containsCpf(text: string): boolean {
   if (new RegExp(FORMATTED_CPF.source).test(text)) return true;
-  return [...text.matchAll(LOOSE_CPF)].some((m) => isValidCpf(m[0].replace(/\D/g, '')));
+  return [...text.matchAll(LOOSE_CPF), ...text.matchAll(SPREAD_CPF)].some((m) =>
+    isValidCpf(m[0].replace(/\D/g, '')),
+  );
 }
 
 /**
  * Replaces documents with `[doc]`: any formatted CPF or CNPJ (alphanumeric CNPJ included); bare,
- * partial or spaced CPFs (`\d{3}[.\s]?\d{3}[.\s]?\d{3}[-\s]?\d{2}`) and 14-digit runs when their
- * check digits are valid.
+ * partial or separated CPFs (`\d{3}[.\s/-]?\d{3}[.\s/-]?\d{3}[.\s/-]?\d{2}`, or one digit at a time) and
+ * 14-digit runs when their check digits are valid (code review 16/11: "-" and "/" separators).
  */
 export function stripDocuments(text: string): string {
   return text
     .replace(FORMATTED_CNPJ, DOC)
     .replace(FORMATTED_CPF, DOC)
     .replace(LOOSE_CPF, (m) => (isValidCpf(m.replace(/\D/g, '')) ? DOC : m))
+    .replace(SPREAD_CPF, (m) => (isValidCpf(m.replace(/\D/g, '')) ? DOC : m))
     .replace(CNPJ_RUN, (run) => (isValidNumericCnpj(run) ? DOC : run));
 }
 
