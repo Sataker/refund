@@ -8,9 +8,12 @@ export {
   type ExplanationVerdict,
   findingNumericGuard,
   guardExplanation,
+  guardTemplate,
+  LEAD_ONLY,
   type NumericGuardResult,
   numericGuard,
   type SlotVerdict,
+  secondCheck,
   slotGuard,
 } from './guards/index.ts';
 export { type AiBudget, type AiTask, DEFAULT_BUDGET, MODELS } from './models.ts';
@@ -33,6 +36,7 @@ export { type RecordingItem, type Recordings, recordingsSchema } from './schemas
 export { buildSlots, renderSlots, type SlotInfo, type Slots, slotInfo } from './slots.ts';
 export {
   type Audience,
+  leadSource,
   safeTemplateOutput,
   TEMPLATE_VERSION,
   templateExplanation,

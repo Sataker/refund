@@ -74,8 +74,11 @@ describe('gateway explain (AI SDK 7, mocked model)', () => {
     await port.explain(inputOf('R01'));
     const prompt = promptText(model.doGenerateCalls[0] as never);
     expect(prompt).toContain('<slots>');
-    expect(prompt).toContain('"value": "R$ 28.316,52"');
-    expect(prompt).toContain('"value": "R$ 42.896,52"');
+    expect(prompt).toContain('<lead>Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses');
+    expect(prompt).toContain('"value": "R$ 2.260,00"');
+    // The headline slots are only in the lead (code review 16/11).
+    expect(prompt).not.toContain('"marginalValue12m"');
+    expect(prompt).not.toContain('"annualRegimeValue"');
     expect(prompt).toContain('"proLaboreTarget"');
     expect(prompt).toContain('"margin": "1%"');
     expect(prompt).toContain('LC 123/2006, art. 18, § 5º-J');
@@ -152,8 +155,10 @@ describe('gateway explain (AI SDK 7, mocked model)', () => {
 
   it('a recording is replayed before any call', async () => {
     const input = inputOf('R05');
-    const text = 'Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses.';
-    const source = 'Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}.';
+    const source = 'O custo cai de {{costBefore}} para {{costAfter}}.';
+    const text =
+      'Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D. ' +
+      'O custo cai de R$ 80.923,20 para R$ 46.920,80.';
     const recordings: Recordings = {
       $format: 'refund.ai-recording/v1',
       persona: 'dev-exportador',

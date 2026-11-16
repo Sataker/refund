@@ -6,7 +6,7 @@ import type {
   LlmClassificationOutput,
   LlmPort,
 } from '@refund/pipeline';
-import { guardExplanation } from './guards/index.ts';
+import { guardExplanation, guardTemplate } from './guards/index.ts';
 import { CLASSIFY_PROMPT_VERSION, EXPLAIN_PROMPT_VERSION } from './prompts/index.ts';
 import { recordingKey, stableStringify } from './replay.ts';
 import type { ExplainOutput, RecordingItem, Recordings } from './schemas.ts';
@@ -50,7 +50,7 @@ export function capturingPort(): { port: LlmPort; captured: Captured } {
 /** The deterministic template as a recording item (origin 'template'): /demo is complete before any model run. */
 export function templateItem(input: ExplanationInput, recordedAt: string): RecordingItem {
   const { source } = templateSource(input.finding, input.audience);
-  const verdict = guardExplanation(source, input.finding);
+  const verdict = guardTemplate(source, input.finding);
   return {
     task: 'explain',
     ruleId: input.finding.ruleId,
@@ -73,7 +73,7 @@ export function gatewayExplainItem(
   recordedAt: string,
 ): RecordingItem {
   const source = output.text.trim();
-  const verdict = guardExplanation(source, input.finding);
+  const verdict = guardExplanation(source, input.finding, input.audience);
   return {
     task: 'explain',
     ruleId: input.finding.ruleId,

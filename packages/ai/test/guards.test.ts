@@ -4,13 +4,15 @@ import {
   citationGuard,
   findingNumericGuard,
   guardExplanation,
+  guardTemplate,
   numericGuard,
+  secondCheck,
   slotGuard,
 } from '../src/guards/index.ts';
 import { mentions } from '../src/guards/numeric.ts';
 import { asInteger, atPrecision, parseMachine, parsePtBr, shift } from '../src/guards/ptbr.ts';
 import { createLlmPort, renderSlots, templateExplanation, templateSource } from '../src/index.ts';
-import { POISONED, REAL_EXPLANATIONS } from './fixtures/explanations.ts';
+import { ACCEPTED, POISONED, REAL_EXPLANATIONS } from './fixtures/explanations.ts';
 import { findingsOf, heroRuns } from './hero.ts';
 
 let answered: Finding[];
@@ -284,7 +286,7 @@ describe('guards on the hero (TESTS §3.5)', () => {
     for (const f of all)
       for (const audience of ['owner', 'accountant'] as const) {
         const { source } = templateSource(f, audience);
-        const v = guardExplanation(source, f);
+        const v = guardTemplate(source, f);
         expect(v.ok, `${f.ruleId} ${audience} ${v.problems.join(', ')}`).toBe(true);
         expect(v.rendered).toBe(templateExplanation(f, audience));
       }
@@ -299,6 +301,37 @@ describe('guards on the hero (TESTS §3.5)', () => {
       expect(ok).toBe(false);
     },
   );
+
+  it.each(ACCEPTED)('accepted (fuzz3): $text', ({ ruleId, text }) => {
+    expect(guardExplanation(text, finding(ruleId)).ok).toBe(true);
+  });
+
+  it('a model text follows the lead our code writes (accountant voice too)', () => {
+    const r01 = finding('R01');
+    const v = guardExplanation('Valor confirmado, dentro da lei.', r01, 'accountant');
+    expect(v.rendered).toBe(
+      'A empresa pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei, subindo o pró-labore do sócio para R$ 2.260,00 por mês. Valor confirmado, dentro da lei.',
+    );
+    const rec = guardExplanation('O prazo vai até {{deadline}}.', finding('R05-REC'));
+    expect(rec.rendered).toMatch(
+      /^Nos 12 meses do extrato, a empresa pagou R\$ 39\.787,68 a mais\./,
+    );
+  });
+
+  it('the second check refuses a rendered text with a number outside the trace', () => {
+    const r01 = finding('R01');
+    expect(secondCheck('Você paga R$ 1,00.', r01)).toEqual({
+      ok: false,
+      guards: { numeric: 'failed', citation: 'ok' },
+      problems: ['R$ 1,00'],
+      rendered: null,
+    });
+    expect(secondCheck('Conforme a Lei 1.234.', r01)).toMatchObject({
+      ok: false,
+      guards: { numeric: 'ok', citation: 'failed' },
+    });
+    expect(secondCheck('Você paga R$ 28.316,52.', r01).ok).toBe(true);
+  });
 
   it('renderSlots refuses a name it has no value for', () => {
     expect(renderSlots('{{nope}}', {})).toBeNull();

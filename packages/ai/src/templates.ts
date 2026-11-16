@@ -68,7 +68,7 @@ function action({ f, audience, has }: Ctx): string | null {
   return null;
 }
 
-function savings(ctx: Ctx): string[] {
+function savings(ctx: Ctx): Parts {
   const { f, audience, has } = ctx;
   const out: string[] = [];
   const can = audience === 'owner' ? 'Você pode pagar' : 'A empresa pode pagar';
@@ -85,6 +85,7 @@ function savings(ctx: Ctx): string[] {
   } else {
     out.push('Este achado não muda o total dos próximos {{horizon}}.');
   }
+  const lead = out.splice(0, out.length);
 
   if (has('annualRegimeValue')) {
     if (f.ruleId === 'R01' && has('regimeFrom') && has('regimeAnexo'))
@@ -109,10 +110,10 @@ function savings(ctx: Ctx): string[] {
         ? 'Somada aos ajustes acima, esta mudança leva o custo dos próximos {{horizon}} de {{costBefore}} para {{costAfter}}.'
         : 'Somando os impostos da empresa e os do sócio, o custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}.',
     );
-  return out;
+  return { lead, rest: out };
 }
 
-function recovery({ f, has }: Ctx): string[] {
+function recovery({ f, has }: Ctx): Parts {
   const out: string[] = [];
   const range = stepOf(f, `${f.ruleId}.RANGE`);
   const max = resultCents(range);
@@ -130,6 +131,7 @@ function recovery({ f, has }: Ctx): string[] {
         : 'A empresa pode ter pago de {{rangeMin}} a {{rangeMax}} a mais, para recuperar (estimativa).',
     );
   }
+  const lead = out.splice(0, out.length);
   const d = f.byDestination;
   if (d !== undefined) {
     const from = [
@@ -147,19 +149,60 @@ function recovery({ f, has }: Ctx): string[] {
     out.push(
       'Há prazo: o mês mais antigo só pode ser pedido até {{deadline}}; depois dessa data, esse mês não pode mais ser pedido.',
     );
-  return out;
+  return { lead, rest: out };
 }
 
-function alert({ f, has }: Ctx): string[] {
+function alert({ f, has }: Ctx): Parts {
   if (has('withheld') && has('distributed') && has('financialCost') && has('monthsWaiting'))
-    return [
-      'Os {{withheld}} de IR retidos na distribuição de {{distributed}} de {{withholdingMonth}} só voltam na declaração de {{returnYear}}: ' +
-        `são {{monthsWaiting}} de dinheiro parado, que custam {{financialCost}}${has('selicRate') ? ' com a Selic de {{selicRate}} ao ano' : ''}.`,
-      'É um alerta e não entra no total de economia.',
-    ];
+    return {
+      rest: [],
+      lead: [
+        'Os {{withheld}} de IR retidos na distribuição de {{distributed}} de {{withholdingMonth}} só voltam na declaração de {{returnYear}}: ' +
+          `são {{monthsWaiting}} de dinheiro parado, que custam {{financialCost}}${has('selicRate') ? ' com a Selic de {{selicRate}} ao ano' : ''}.`,
+        'É um alerta e não entra no total de economia.',
+      ],
+    };
   const out = ['Isto é um alerta e não entra no total de economia.'];
   if (f.marginalValue12m !== 0) out.push('O efeito calculado é de {{marginalValue12m}}.');
-  return out;
+  return { lead: out, rest: [] };
+}
+
+interface Parts {
+  /** The headline value and its meaning: written by our code for the model path too (ADR-016). */
+  lead: string[];
+  rest: string[];
+}
+
+const RISK_LEAD = 'Isso parece economia, mas é risco e não entra no total. Não recomendamos.';
+
+function ctxOf(finding: Finding, audience: Audience): { ctx: Ctx; slots: Slots } {
+  const slots = buildSlots(finding);
+  const allowed = new Set(Object.keys(slots));
+  return {
+    slots,
+    ctx: {
+      f: finding,
+      audience,
+      has: (s) => allowed.has(s),
+      clean: (s) => slotGuard(s, allowed).ok,
+    },
+  };
+}
+
+function parts(ctx: Ctx): Parts {
+  if (ctx.f.type === 'savings') return savings(ctx);
+  if (ctx.f.type === 'recovery') return recovery(ctx);
+  if (ctx.f.type === 'alert') return alert(ctx);
+  return { lead: [RISK_LEAD], rest: [] };
+}
+
+/**
+ * The lead sentence(s) of an explanation, slotted: the headline value with its meaning ("Você pode pagar
+ * {{marginalValue12m}} a menos nos próximos {{horizon}}…"). Our code writes it for every origin; a model only writes
+ * what follows, so it can never put a headline number in the wrong sense (ADR-016).
+ */
+export function leadSource(finding: Finding, audience: Audience = 'owner'): string {
+  return curlyQuotes(parts(ctxOf(finding, audience).ctx).lead.join(' '));
 }
 
 /** The template as slotted text and the slots that fill it. */
@@ -167,46 +210,37 @@ export function templateSource(
   finding: Finding,
   audience: Audience = 'owner',
 ): { source: string; slots: Slots } {
-  const slots = buildSlots(finding);
-  const allowed = new Set(Object.keys(slots));
-  const ctx: Ctx = {
-    f: finding,
-    audience,
-    has: (s) => allowed.has(s),
-    clean: (s) => slotGuard(s, allowed).ok,
-  };
-  const parts: string[] = [];
+  const { ctx, slots } = ctxOf(finding, audience);
+  const out: string[] = [];
   const doNot = finding.doNot.find(ctx.clean);
 
+  const { lead, rest } = parts(ctx);
+  out.push(...lead);
   if (finding.type === 'risk') {
-    parts.push('Isso parece economia, mas é risco e não entra no total. Não recomendamos.');
-    if (doNot !== undefined) parts.push(sentence(doNot));
-    parts.push('Veja por quê em “Ver cálculo”.');
-    return { source: curlyQuotes(parts.join(' ')), slots };
+    if (doNot !== undefined) out.push(sentence(doNot));
+    out.push('Veja por quê em “Ver cálculo”.');
+    return { source: curlyQuotes(out.join(' ')), slots };
   }
-
-  if (finding.type === 'savings') parts.push(...savings(ctx));
-  else if (finding.type === 'recovery') parts.push(...recovery(ctx));
-  else parts.push(...alert(ctx));
+  out.push(...rest);
 
   // A recovery already says "estimativa" beside its range.
   if (!(finding.type === 'recovery' && finding.confidence === 'estimated'))
-    parts.push(confidence(ctx));
+    out.push(confidence(ctx));
 
   // The engine's main tradeoff, only if it holds no number and no citation.
   const tradeoff = finding.tradeoffs[0];
   if (tradeoff !== undefined && ctx.clean(tradeoff))
-    parts.push(sentence(`Contrapartida: ${continueSentence(tradeoff)}`));
-  if (doNot !== undefined) parts.push(sentence(doNot));
+    out.push(sentence(`Contrapartida: ${continueSentence(tradeoff)}`));
+  if (doNot !== undefined) out.push(sentence(doNot));
 
   if (audience === 'accountant') {
     if (finding.refs.length > 0)
-      parts.push(`Base legal: ${finding.refs.map((_, i) => `{{ref:${i}}}`).join('; ')}.`);
-    parts.push('O cálculo completo, passo a passo, está no relatório.');
+      out.push(`Base legal: ${finding.refs.map((_, i) => `{{ref:${i}}}`).join('; ')}.`);
+    out.push('O cálculo completo, passo a passo, está no relatório.');
   } else {
-    parts.push('A conta e a lei estão em “Ver cálculo”.');
+    out.push('A conta e a lei estão em “Ver cálculo”.');
   }
-  return { source: curlyQuotes(parts.join(' ')), slots };
+  return { source: curlyQuotes(out.join(' ')), slots };
 }
 
 /** The deterministic explanation of a finding (pt-BR), rendered. */

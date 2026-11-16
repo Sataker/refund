@@ -10,7 +10,7 @@ import type {
   LlmPort,
 } from '@refund/pipeline';
 import devExportador from '../recordings/dev-exportador.json' with { type: 'json' };
-import { guardExplanation } from './guards/index.ts';
+import { guardExplanation, guardTemplate } from './guards/index.ts';
 import type { AiTask } from './models.ts';
 import { CLASSIFY_PROMPT_VERSION, EXPLAIN_PROMPT_VERSION } from './prompts/index.ts';
 import { type RecordingItem, type Recordings, recordingsSchema } from './schemas.ts';
@@ -86,7 +86,10 @@ export function findClassification(recordings: Recordings, input: LlmClassificat
  * 'template', so the UI never labels it as the model's text.
  */
 export function replayExplanation(item: ExplainItem, input: ExplanationInput): ExplanationOutput {
-  const verdict = guardExplanation(item.output.source, input.finding);
+  const verdict =
+    item.origin === 'template'
+      ? guardTemplate(item.output.source, input.finding)
+      : guardExplanation(item.output.source, input.finding, input.audience);
   if (!verdict.ok || verdict.rendered === null) return safeTemplateOutput(input, verdict.guards);
   return {
     text: verdict.rendered,

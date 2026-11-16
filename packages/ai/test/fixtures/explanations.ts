@@ -1,10 +1,11 @@
-// TESTS §3.5 "false positives", in the slotted form a model must now write (ADR-016): numbers and citations only as
-// {{placeholders}}. Hand-written stand-ins until `pnpm ai:record` produces real ones; guards.test.ts also runs every
-// gateway-recorded text it finds.
+// TESTS §3.5 "false positives", in the form a model must now write (ADR-016): our code writes the lead sentence with
+// the headline value; the model writes only what follows it, with numbers and citations as {{placeholders}} and
+// without the lead-only slots (marginalValue12m, annualRegimeValue, rangeMin, rangeMax). Hand-written stand-ins until
+// `pnpm ai:record` produces real ones.
 export const REAL_EXPLANATIONS: { ruleId: string; text: string }[] = [
   {
     ruleId: 'R01',
-    text: 'Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}} aumentando seu pró-labore de {{proLaboreCurrent}} para {{proLaboreTarget}} por mês. Com isso, a folha de pagamento passa a pesar mais em relação ao faturamento (o Fator R) e a empresa vai para o {{regimeAnexo}} a partir de {{regimeFrom}} ({{ref:3}}).',
+    text: 'Para isso, o pró-labore sobe de {{proLaboreCurrent}} para {{proLaboreTarget}} por mês. Com a folha de pagamento pesando mais em relação ao faturamento (o Fator R), a empresa vai para o {{regimeAnexo}} a partir de {{regimeFrom}} ({{ref:3}}).',
   },
   {
     ruleId: 'R01',
@@ -12,39 +13,33 @@ export const REAL_EXPLANATIONS: { ruleId: string; text: string }[] = [
   },
   {
     ruleId: 'R01',
-    text: 'Depois que o regime se acomoda, a economia fica em {{annualRegimeValue}} por ano, a partir de {{regimeFrom}}.',
+    text: 'A mudança vale a partir de {{regimeFrom}}, quando a empresa passa para o {{regimeAnexo}}.',
   },
   {
     ruleId: 'R01',
     text: 'O custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}, já somando DAS, INSS do sócio e IR.',
   },
-  {
-    ruleId: 'R01',
-    text: 'Valor confirmado: você pode pagar {{marginalValue12m}} a menos, dentro da lei.',
-  },
+  { ruleId: 'R01', text: 'Valor confirmado, dentro da lei.' },
   {
     ruleId: 'R01',
     text: 'Pró-labore recomendado de {{proLaboreTarget}} para o Fator R atingir o mínimo do {{regimeAnexo}} a partir de {{regimeFrom}} ({{ref:3}}; {{ref:5}}; {{ref:7}}).',
   },
-  {
-    ruleId: 'R01',
-    text: 'O INSS do sócio sobe um pouco, mas a conta já desconta isso: são {{marginalValue12m}} a menos nos próximos {{horizon}}.',
-  },
+  { ruleId: 'R01', text: 'O INSS do sócio sobe um pouco, mas a conta já desconta isso.' },
   {
     ruleId: 'R01',
     text: 'Pagando o pró-labore de {{ proLaboreTarget }} todo mês, com o INSS recolhido, a empresa passa para uma tabela mais barata do Simples.',
   },
   {
     ruleId: 'R01',
-    text: 'A regra olha a folha dos {{horizon}} anteriores; por isso a economia começa em {{regimeFrom}} e soma {{marginalValue12m}} nos próximos {{horizon}}.',
+    text: 'A regra olha a folha dos {{horizon}} anteriores; por isso a economia começa em {{regimeFrom}}.',
   },
   {
     ruleId: 'R05',
-    text: 'Sua receita vem de clientes no exterior, e exportação de serviço não paga PIS, Cofins nem ISS no Simples ({{ref:3}}). Declarando essa receita como exportação no PGDAS-D, a declaração mensal do Simples, você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}.',
+    text: 'Sua receita vem de clientes no exterior, e exportação de serviço não paga PIS, Cofins nem ISS no Simples ({{ref:3}}). Basta declarar essa receita como exportação no PGDAS-D, a declaração mensal do Simples.',
   },
   {
     ruleId: 'R05',
-    text: 'Com a empresa já no {{regimeAnexo}}, segregar a exportação vale {{annualRegimeValue}} por ano.',
+    text: 'Com a empresa já no {{regimeAnexo}}, segregar a exportação continua valendo nos anos seguintes.',
   },
   {
     ruleId: 'R05',
@@ -54,13 +49,10 @@ export const REAL_EXPLANATIONS: { ruleId: string; text: string }[] = [
     ruleId: 'R05',
     text: 'A CBS e o IBS também saem do DAS de quem exporta serviço consumido lá fora ({{ref:13}}).',
   },
-  {
-    ruleId: 'R05',
-    text: 'Segregando a exportação, a economia é de {{marginalValue12m}} em {{horizon}} ({{ref:5}}).',
-  },
+  { ruleId: 'R05', text: 'Segregar a exportação é o que a regra prevê ({{ref:5}}).' },
   {
     ruleId: 'R05-REC',
-    text: 'Nos {{measuredMonths}} do extrato, a empresa pagou {{measured}} a mais, para recuperar. Se o mesmo padrão valeu nos {{projectedMonths}} anteriores, chega a {{rangeMax}} ({{ref:7}}).',
+    text: 'A diferença vem de a exportação não ter sido segregada: nos {{measuredMonths}} do extrato foram {{measured}} a mais ({{ref:7}}).',
   },
   {
     ruleId: 'R05-REC',
@@ -68,21 +60,29 @@ export const REAL_EXPLANATIONS: { ruleId: string; text: string }[] = [
   },
   {
     ruleId: 'R05-REC',
-    text: 'A faixa vai de {{rangeMin}} a {{rangeMax}}, sem a correção pela Selic, e não entra no total de economia.',
+    text: 'O topo da faixa supõe o mesmo padrão nos {{projectedMonths}} anteriores, sem a correção pela Selic, e não entra no total de economia.',
   },
   {
     ruleId: 'R02',
     text: 'Em {{withholdingMonth}} a empresa distribuiu {{distributed}} e reteve {{withheld}} de IR ({{ref:0}}). Esse dinheiro volta na declaração de {{returnYear}}, mas fica parado {{monthsWaiting}}: com a Selic de {{selicRate}} ao ano, isso custa {{financialCost}}.',
   },
-  {
-    ruleId: 'R02',
-    text: 'É um alerta e não entra no total de economia: o custo do dinheiro parado é de {{financialCost}}.',
-  },
+  { ruleId: 'R02', text: 'O custo do dinheiro parado é de {{financialCost}}.' },
   {
     ruleId: 'R02',
     text: 'Retenção de {{withheld}} sobre {{distributed}} distribuídos em {{withholdingMonth}} ({{ref:0}}), compensada no ajuste anual ({{ref:2}}).',
   },
 ];
+
+/** Code review 16/11 (fuzz3): continuations the slot guard must accept. */
+export const ACCEPTED: { ruleId: string; text: string }[] = [
+  'Você paga menos, dentro da lei.',
+  'Você paga menos, a conta e a lei estão em Ver cálculo.',
+  'Conforme {{ref:0}}.',
+  'Você paga o primeiro e o segundo pró-labore.',
+  'Conforme a regra do Simples Nacional, a Receita aceita.',
+  'Pague {{proLaboreTarget}} em vez de {{proLaboreCurrent}}.',
+  'Conforme o Fator R do Simples.',
+].map((text) => ({ ruleId: 'R01', text }));
 
 const Z = '​';
 const SH = '­';
@@ -254,5 +254,62 @@ export const POISONED: {
     'Você pode pagar {{marginalValue12m}} a menos em {{bonusValue}}.',
     'Você pode pagar {{marginalValue12m} a menos.',
     'Você pode pagar {{marginalValue12m}} a menos (ver Мinistério).',
+  ].map((text) => ({ ruleId: 'R01', text, guard: 'citation' as const, slotOnly: true })),
+  // Code review 16/11 (fuzz3): lead-only slots, look-alike letters, the anexo, slang and promises.
+  ...[
+    'Você paga menos, dentro da lei doze.',
+    'Você paga {{marginalValue12m}} a menos em {{horizon}}, dentro da lei.',
+    'Você paga {{ marginalValue12m }} a menos.',
+    'Você paga {{{marginalValue12m}}} a menos.',
+    'Você paga {{marginalValue12m}a menos.',
+    'Você paga {{rangeMax}} a menos.',
+    'Você paga {{annualRegimeValue}} por ano.',
+    'Você economiza quınhentos reaıs por mês.',
+    'Você economiza trınta mıl.',
+    'Você economiza um real por mês.',
+    'Você economiza um conto por mês.',
+    'Você economiza uns trocados, umas centenas.',
+    'Conforme o dispositivo da norma complementar cento e vinte e três.',
+    'Você paga uma fração, cerca de um quinto.',
+    `Você paga {{marginal${Z}Value12m}}.`,
+    'Você paga ｛｛proLaboreTarget｝｝ a menos.',
+    'Você paga {{costBefore}} vezes dois.',
+    'Você paga {{marginalValue12m}} somado a {{costAfter}}.',
+    'A taxa cai pela metade.',
+    'Você paga uma dúzia de vezes.',
+    'Você paga sessenta e cinco reais.',
+    'Você paga cinco paus.',
+    'Pague onze vırgula três.',
+    'Você economiza vinte-e-oito.',
+    'O resultado é garantido.',
+    'Com garantia de economia.',
+    'Com isso, você vai economizar.',
+    'Você paga {{costBefore}} a menos em {{horizon}}.',
+    'Você economiza {{costAfter}} por ano.',
+  ].map((text) => ({ ruleId: 'R01', text, guard: 'numeric' as const, slotOnly: true })),
+  {
+    ruleId: 'R05-REC',
+    text: 'Você pode pagar {{rangeMax}} a menos nos próximos {{horizon}}, garantido.',
+    guard: 'numeric',
+    slotOnly: true,
+  },
+  ...[
+    'A empresa fica no anexo v.',
+    'A empresa vai do anexo v para o anexo iii.',
+    'A empresa fica no Anexo Iii.',
+    'Conforme a leı do bem.',
+    'Conforme o artıgo dezoıto.',
+    'Conforme a łei complementar.',
+    'Conforme o décimo oitavo artigo.',
+    'Conforme a norma complementar do Simples.',
+    'Conforme a súmula do Carf.',
+    'Conforme a jurisprudência do Supremo.',
+    'Conforme a Receita, na consulta pública Cosit.',
+    'Conforme o RIR.',
+    'Conforme a lei.',
+    'Conforme a Lei.',
+    'Siga a lei; dentro da lei.',
+    'Você paga {{ref:99}}.',
+    'Conforme {{ref: 0}}.',
   ].map((text) => ({ ruleId: 'R01', text, guard: 'citation' as const, slotOnly: true })),
 ];

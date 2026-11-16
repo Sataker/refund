@@ -219,7 +219,7 @@ export function gatewayPort(options: GatewayOptions): LlmPort {
       options,
     );
     if (!res.ok) return safeTemplateOutput(input);
-    const verdict = guardExplanation(res.value.text, input.finding);
+    const verdict = guardExplanation(res.value.text, input.finding, input.audience);
     if (!verdict.ok || verdict.rendered === null) {
       options.log?.({
         event: 'ai.guard_failed',

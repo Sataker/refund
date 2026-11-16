@@ -49,16 +49,18 @@ describe('pnpm ai:record building blocks', () => {
       promptVersion: 'template@3',
       guards: { numeric: 'ok', citation: 'ok' },
     });
-    const text = 'Você pode pagar {{marginalValue12m}} a menos ({{ref:3}}). ';
+    const text = 'Exportação de serviço não paga PIS, Cofins nem ISS no Simples ({{ref:3}}). ';
     expect(gatewayExplainItem(input, { text }, 'm', 'T')).toEqual({
       task: 'explain',
       ruleId: 'R05',
       origin: 'gateway',
-      promptVersion: 'explain@3',
+      promptVersion: 'explain@4',
       model: 'm',
       recordedAt: 'T',
       output: {
-        text: 'Você pode pagar R$ 34.002,40 a menos (LC 123/2006, art. 18, § 14).',
+        text:
+          'Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D. ' +
+          'Exportação de serviço não paga PIS, Cofins nem ISS no Simples (LC 123/2006, art. 18, § 14).',
         source: text.trim(),
       },
       guards: { numeric: 'ok', citation: 'ok' },

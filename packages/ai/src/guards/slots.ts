@@ -12,9 +12,9 @@ export interface SlotVerdict {
   problems: string[];
 }
 
-// Letters allowed: ASCII, Latin-1 and Latin Extended-A (Portuguese and its neighbours). Cyrillic "а" or Greek "ο"
-// that look like Latin letters are refused, and so are ª and º ("nº", "1º").
-const LETTER_OK = /^[A-Za-zÀ-ÖØ-öø-ÿĀ-ſ]$/u;
+// Letters allowed: ASCII and the Portuguese accented set only. Look-alikes ("ı", "ł", Cyrillic "а", Greek "ο") fail,
+// and so do ª and º ("nº", "1º"). Code review 16/11: Latin Extended-A let "quınhentos" through.
+const LETTER_OK = /^[A-Za-záâãàçéêíóôõúüÁÂÃÀÇÉÊÍÓÔÕÚÜ]$/u;
 // Format (zero-width, soft hyphen, bidi), private-use and control characters other than line breaks and tabs.
 const INVISIBLE = /[\p{Cf}\p{Co}\p{Cs}]/u;
 /** C0 and C1 control characters other than tab and line breaks. */
@@ -34,7 +34,7 @@ const NUMBER_WORDS = new Set(
   ).split(' '),
 );
 const MONEY_WORDS = new Set(
-  'reais dolar dolares euro euros brl usd eur centavo centavos porcento percentual percentuais pp'.split(
+  'reais dolar dolares euro euros brl usd eur centavo centavos conto contos pau paus porcento percentual percentuais pp'.split(
     ' ',
   ),
 );
@@ -42,7 +42,8 @@ const DESIGNATORS = new Set(
   (
     'art arts artigo artigos paragrafo paragrafos inciso incisos inc alinea alineas caput lei leis lc decreto ' +
     'decretos dec mp emenda ec constituicao constitucional cf codigo clt sumula tema convenio portaria port res ' +
-    'resolucao in normativa rir cgsn cosit ctn stf stj carf re resp adi adin adc ado adpf regulamento estatuto'
+    'resolucao in normativa rir cgsn cosit ctn stf stj carf re resp adi adin adc ado adpf regulamento estatuto ' +
+    'anexo anexos complementar jurisprudencia supremo tribunal acordao'
   ).split(' '),
 );
 const PHRASES =
@@ -50,6 +51,12 @@ const PHRASES =
 /** Fixed phrases the explanation copy uses, with "lei" in its plain sense (no law is named). */
 const SAFE_PHRASES =
   /(?<![\p{L}])(?:dentro da lei(?=\s*(?:[,.;:)]|$))|a conta e a lei(?=\s+estao(?![\p{L}])))/gu;
+/** Promises (IDENTITY-AND-UI §2.4) and "um real" (an amount in words). */
+const PROMISES = /(?<![\p{L}])(?:garantid[oa]s?|garantia|voce vai economizar)(?![\p{L}])/u;
+const ONE_REAL = /(?<![\p{L}])(?:um|uns)\s+rea(?:l|is)(?![\p{L}])/u;
+/** A roman numeral in any case right after "anexo", "art." or "inciso" ("anexo v", "Anexo Iii"). */
+const ROMAN_AFTER =
+  /(?<![\p{L}])(?:anexos?|art(?:igo)?s?|incisos?|inc)\.?\s+[ivxlcdm]+(?![\p{L}])/iu;
 // Uppercase and standalone ("XVIII", "V"); a letter after a hyphen is a name part ("PGDAS-D").
 const ROMAN = /(?<![\p{L}-])[IVXLCDM]{1,7}(?![\p{L}])/u;
 
@@ -69,6 +76,8 @@ export function slotGuard(text: string, allowed: ReadonlySet<string>): SlotVerdi
   // Ordinal indicators would become "o"/"a" under NFKC ("nº", "1º"): refused before it.
   if (/[ºª°]/.test(text)) both('ordinal or degree sign');
   const normalized = text.normalize('NFKC');
+  // Full-width braces or other compatibility forms: the guard and the renderer must read the same text.
+  if (text.normalize('NFC') !== normalized) both('compatibility character');
   for (const ch of normalized.match(/\p{L}/gu) ?? [])
     if (!LETTER_OK.test(ch)) {
       both(`letter outside Latin: ${ch}`);
@@ -93,8 +102,16 @@ export function slotGuard(text: string, allowed: ReadonlySet<string>): SlotVerdi
     problems.push('§');
   }
   if (ROMAN.test(rest)) both('roman numeral');
+  if (ROMAN_AFTER.test(rest)) {
+    citation = true;
+    problems.push('roman numeral after a legal word');
+  }
 
   const folded = fold(rest).replace(SAFE_PHRASES, ' ');
+  if (PROMISES.test(folded) || ONE_REAL.test(folded)) {
+    numeric = true;
+    problems.push('promise or amount in words');
+  }
   if (PHRASES.test(folded)) {
     const isPercent = /cento|percentua/.test(folded);
     if (isPercent) numeric = true;

@@ -131,8 +131,11 @@ describe('recording port', () => {
 
   it('a gateway recording replays with origin "recording" and its model', async () => {
     const input = r01();
-    const text = 'Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses.';
-    const source = 'Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}.';
+    // The lead is ours; the recording holds only the model's continuation.
+    const source = 'Para isso, o pró-labore sobe para {{proLaboreTarget}} por mês.';
+    const text =
+      'Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei, subindo seu pró-labore para R$ 2.260,00 por mês. ' +
+      'Para isso, o pró-labore sobe para R$ 2.260,00 por mês.';
     const recordings = withItem(recordingKey('explain', input), {
       task: 'explain',
       ruleId: 'R01',
