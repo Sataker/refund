@@ -7,6 +7,11 @@ import { expect, test } from '../fixtures.ts';
 // directly; here the UI label "Ativa" is asserted (EXECUTION §9, row "TESTS A2 'ativa'").
 
 const HERO_CNPJ = 'RF.DEV.001/0001-58';
+
+/** Today in Brasília time, 'YYYY-MM-DD' (the server's `analysisDate`). */
+function todayBrt(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+}
 const PRESUMIDO_CNPJ = 'RF.PRE.S01/0001-37';
 const UNKNOWN_CNPJ = 'RF.NON.E01/0001-22';
 
@@ -59,9 +64,18 @@ test.describe('first-access track @app', () => {
 
     const range = page.getByTestId('profile-range');
     await expect(range).toContainText(/de R\$ \d+ mil a R\$ \d+ mil por ano/);
-    const min = Number(await range.getAttribute('data-cents-min'));
-    const max = Number(await range.getAttribute('data-cents-max'));
-    expect(Number.isSafeInteger(min) && Number.isSafeInteger(max) && min < max).toBe(true);
+    // ENGINE-SPEC C.11.10 hero values. The server uses today in BRT as `analysisDate`; they hold while
+    // the steady state is 2028 and the minimum wage of the month after the analysis is 2026's, i.e.
+    // through 30/11/2026. From December (freeze, final) only the shape is checked (EXECUTION §9, E11).
+    if (todayBrt() <= '2026-11-30') {
+      await expect(range).toHaveAttribute('data-cents-min', '1246338');
+      await expect(range).toHaveAttribute('data-cents-max', '9077928');
+      await expect(range).toContainText('de R$ 12 mil a R$ 91 mil por ano');
+    } else {
+      const min = Number(await range.getAttribute('data-cents-min'));
+      const max = Number(await range.getAttribute('data-cents-max'));
+      expect(Number.isSafeInteger(min) && Number.isSafeInteger(max) && min < max).toBe(true);
+    }
     await expect(page.getByText('estimativa por perfil')).toBeVisible();
     await expect(page.getByTestId('applicable-R01')).toBeVisible();
     await expect(page.getByTestId('applicable-R05')).toBeVisible();
@@ -69,6 +83,8 @@ test.describe('first-access track @app', () => {
 
     await page.getByTestId('see-exact-number').click();
     await expect(page).toHaveURL(/\/permissoes$/);
+    // Compliance C2: the consent screen says this is Pluggy's sandbox, no real bank.
+    await expect(page.getByTestId('sandbox-notice')).toContainText('nenhum banco real é conectado');
     await page.getByTestId('give-consent').click();
     await expect(page).toHaveURL(/\/conta-pj$/);
 
@@ -87,6 +103,13 @@ test.describe('first-access track @app', () => {
     await page.getByTestId('track-continue').click();
     await expect(page).toHaveURL(/\/app$/);
     await expect(page.getByRole('heading', { name: 'Tudo pronto para a análise.' })).toBeVisible();
+
+    // Compliance C2/C3: "Desconectar" on the final screen; the last one also withdraws the consent,
+    // so the track goes back to the permissions step.
+    await page.getByRole('button', { name: 'Desconectar: Sua conta pessoal' }).click();
+    await expect(page).toHaveURL(/\/conta-pf$/);
+    await page.goto('/app');
+    await expect(page).toHaveURL(/\/conta-pf$/);
   });
 
   test('A8: without PLUGGY_CLIENT_ID the real-bank button is absent and the persona takes over', async ({

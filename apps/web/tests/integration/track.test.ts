@@ -4,7 +4,6 @@ import { estimateByProfile, type ProfileAnswers } from '@refund/engine';
 import {
   type CnpjProvider,
   detectPii,
-  type FinancialProvider,
   findForbiddenKeys,
   PersonaFinancial,
   type SourceItem,
@@ -21,10 +20,14 @@ import {
   connectSampleWith,
   createConnectTokenWith,
   getConnectionStatusWith,
+  type PluggyPort,
+  REVOKE_PENDING,
   recordConsentWith,
+  refreshPluggyConnection,
   registerPluggyItemWith,
   revokeConnectionWith,
   SAMPLE_DATA,
+  SANDBOX_ONLY,
   TERMS_VERSION,
 } from '@/server/connection/connections.ts';
 import { syncConnection } from '@/server/connection/sync.ts';
@@ -222,26 +225,54 @@ describe('lookupCnpj + estimateByRevenue (ARCHITECTURE §4.7; E11 definition of 
     expect(JSON.stringify(bad)).not.toMatch(/stack|at .*\.ts/);
   });
 
-  it('live data: 3 lookups per day per IP, the 4th → RATE_LIMITED (07 §3.5); replay is not counted', async () => {
+  it('live data: 5 lookups per day per session + IP, only valid CNPJs count; replay is not counted (M4)', async () => {
     const userId = await newUser();
     const live: CnpjProvider = {
       lookup: async () => ({ ok: true, value: REPLAY_COMPANIES[0] as never }),
     };
     const ip = new Headers({ 'x-forwarded-for': '203.0.113.99' });
     const deps = () => companyDeps({ dataMode: 'live', provider: live, headers: ip });
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 6; i++) {
+      // Typos (bad check digit) never spend the daily lookups.
+      expect(
+        await lookupCnpjWith(userId, { cnpj: 'RFDEV001000159', context: 'live' }, deps()),
+      ).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
+    }
+    for (let i = 0; i < 5; i++) {
       expect((await lookupCnpjWith(userId, { cnpj: HERO, context: 'live' }, deps())).ok).toBe(true);
     }
     expect(await lookupCnpjWith(userId, { cnpj: HERO, context: 'live' }, deps())).toMatchObject({
       ok: false,
       error: { code: 'RATE_LIMITED' },
     });
+    // Another juror behind the same NAT has their own 5.
+    const other = await newUser();
+    expect((await lookupCnpjWith(other, { cnpj: HERO, context: 'live' }, deps())).ok).toBe(true);
     const replay = () => companyDeps({ headers: ip });
     for (let i = 0; i < 5; i++) {
       expect((await lookupCnpjWith(userId, { cnpj: HERO, context: 'live' }, replay())).ok).toBe(
         true,
       );
     }
+  });
+
+  it('live data: a coarse 50 per day per IP stops rotating sessions (M4)', async () => {
+    const live: CnpjProvider = {
+      lookup: async () => ({ ok: true, value: REPLAY_COMPANIES[0] as never }),
+    };
+    const ip = new Headers({ 'x-forwarded-for': '203.0.113.98' });
+    const deps = () => companyDeps({ dataMode: 'live', provider: live, headers: ip });
+    for (let u = 0; u < 10; u++) {
+      const userId = await newUser();
+      for (let i = 0; i < 5; i++) {
+        expect((await lookupCnpjWith(userId, { cnpj: HERO, context: 'live' }, deps())).ok).toBe(
+          true,
+        );
+      }
+    }
+    expect(
+      await lookupCnpjWith(await newUser(), { cnpj: HERO, context: 'live' }, deps()),
+    ).toMatchObject({ ok: false, error: { code: 'RATE_LIMITED' } });
   });
 
   it('a provider outage maps to UNAVAILABLE with a human message', async () => {
@@ -263,6 +294,36 @@ describe('lookupCnpj + estimateByRevenue (ARCHITECTURE §4.7; E11 definition of 
 });
 
 describe('first-access track state (D19; ARCHITECTURE §13)', () => {
+  it('track actions share a per-session limit: the 121st in the hour → RATE_LIMITED (M3)', async () => {
+    const userId = await newUser();
+    await lookupCnpjWith(userId, { cnpj: HERO, context: 'live' }, companyDeps());
+    await confirmCompanyWith(h.db, userId);
+    // confirm spent 1 of the 120 (the lookup ran on the fixed test date: another window).
+    for (let i = 0; i < 119; i++) {
+      expect(
+        (await saveAnswerWith(h.db, userId, { step: 'faturamento', value: 'from_30k_to_60k' })).ok,
+      ).toBe(true);
+    }
+    expect(
+      await saveAnswerWith(h.db, userId, { step: 'faturamento', value: 'from_30k_to_60k' }),
+    ).toMatchObject({ ok: false, error: { code: 'RATE_LIMITED' } });
+    expect(await markEstimateSeenWith(h.db, userId)).toMatchObject({
+      ok: false,
+      error: { code: 'RATE_LIMITED' },
+    });
+    // The next hour frees it.
+    expect(
+      (
+        await saveAnswerWith(
+          h.db,
+          userId,
+          { step: 'faturamento', value: 'from_30k_to_60k' },
+          Date.now() + 3_600_000,
+        )
+      ).ok,
+    ).toBe(true);
+  });
+
   it('answers are saved per step, conditional steps follow the company, the user resumes', async () => {
     const userId = await newUser();
     expect(currentStep((await loadTrack(h.db, userId)).progress)).toBe('cnpj');
@@ -375,6 +436,63 @@ describe('consent and the sample-data fallback (A2, A11)', () => {
     }
   });
 
+  it('recordConsent is idempotent per session and terms version (M3)', async () => {
+    const userId = await newUser();
+    await heroThroughEstimate(userId);
+    const a = await recordConsentWith(
+      { scopes: [...CONSENT_SCOPES], termsVersion: TERMS_VERSION },
+      connDeps(userId),
+    );
+    const b = await recordConsentWith(
+      { scopes: [...CONSENT_SCOPES], termsVersion: TERMS_VERSION },
+      connDeps(userId),
+    );
+    if (!a.ok || !b.ok) throw new Error('consent failed');
+    expect(b.value.consentId).toBe(a.value.consentId);
+    const mine = (await h.db.select().from(schema.consents)).filter((c) => c.userId === userId);
+    expect(mine).toHaveLength(1);
+  });
+
+  it('the connection carries its consent; revoking the last one withdraws the consent (C3)', async () => {
+    const userId = await newUser();
+    await heroThroughEstimate(userId);
+    await consent(userId);
+    const pj = await connectSampleWith({ holder: 'PJ' }, connDeps(userId));
+    const pf = await connectSampleWith({ holder: 'PF' }, connDeps(userId));
+    if (!pj.ok || !pf.ok) throw new Error('connect failed');
+    const [consentRow] = (await h.db.select().from(schema.consents)).filter(
+      (c) => c.userId === userId,
+    );
+    const conns = (await h.db.select().from(schema.connections)).filter((c) => c.userId === userId);
+    expect(conns.every((c) => c.consentId === consentRow?.id)).toBe(true);
+
+    await revokeConnectionWith({ connectionId: pj.value.connectionId }, connDeps(userId));
+    expect((await loadTrack(h.db, userId)).progress.consented).toBe(true);
+    await revokeConnectionWith({ connectionId: pf.value.connectionId }, connDeps(userId));
+    const after = await loadTrack(h.db, userId);
+    expect(after.progress.consented).toBe(false);
+    expect(currentStep(after.progress)).toBe('permissoes');
+    expect(await connectSampleWith({ holder: 'PJ' }, connDeps(userId))).toMatchObject({
+      ok: false,
+      error: { code: 'CONSENT_REQUIRED' },
+    });
+    const left = (await h.db.select().from(schema.accounts)).filter(
+      (a) => a.connectionId === pj.value.connectionId || a.connectionId === pf.value.connectionId,
+    );
+    expect(left).toEqual([]);
+  });
+
+  it("after 'Não é minha empresa' the old company's PJ account no longer completes conta-pj", async () => {
+    const userId = await newUser();
+    await heroThroughEstimate(userId);
+    await consent(userId);
+    await connectSampleWith({ holder: 'PJ' }, connDeps(userId));
+    expect((await loadTrack(h.db, userId)).progress.pj?.status).toBe('active');
+    await rejectCompanyWith(h.db, userId);
+    await lookupCnpjWith(userId, { cnpj: PRESUMIDO, context: 'live' }, companyDeps());
+    expect((await loadTrack(h.db, userId)).progress.pj).toBeNull();
+  });
+
   it('skipping the PF account ends the track with only the PJ', async () => {
     const userId = await newUser();
     await heroThroughEstimate(userId);
@@ -411,15 +529,22 @@ describe('consent and the sample-data fallback (A2, A11)', () => {
 });
 
 /** Pluggy stand-in: the persona's data behind an item whose owner and status the test controls. */
-function fakePluggy(owner: string, status: SourceItem['status'] = 'UPDATED') {
+function fakePluggy(
+  owner: string,
+  status: SourceItem['status'] = 'UPDATED',
+  options: { sandbox?: boolean; revokeFails?: boolean } = {},
+) {
   const persona = new PersonaFinancial(SAMPLE_DATA);
   const pjItem = SAMPLE_DATA.items.find((i) => i.holder === 'PJ');
   // A fresh Pluggy item id per test (an item belongs to one user: item_id_hash is unique).
   const itemId = randomUUID();
   const source = (id: string) => (id === itemId ? (pjItem?.item.sourceId as string) : id);
-  const calls = { revoke: 0, token: 0 };
-  const provider: FinancialProvider = {
+  const calls = { revoke: 0, token: 0, accounts: 0 };
+  const provider: PluggyPort = {
     name: 'pluggy',
+    async sandboxConnectorIds() {
+      return { ok: true, value: [0, 2] };
+    },
     async createConnectToken(clientUserId) {
       calls.token += 1;
       return { ok: true, value: { accessToken: `tok-${clientUserId}`, expiresAt: 'x' } };
@@ -427,15 +552,32 @@ function fakePluggy(owner: string, status: SourceItem['status'] = 'UPDATED') {
     async getItem(id, ctx) {
       const r = await persona.getItem(source(id), ctx);
       return r.ok
-        ? { ok: true, value: { ...r.value, sourceId: id, clientUserId: owner, status } }
+        ? {
+            ok: true,
+            value: {
+              ...r.value,
+              sourceId: id,
+              clientUserId: owner,
+              status,
+              connector: { ...r.value.connector, sandbox: options.sandbox ?? true },
+            },
+          }
         : r;
     },
-    listAccounts: (id, ctx) => persona.listAccounts(source(id), ctx),
+    listAccounts: (id, ctx) => {
+      calls.accounts += 1;
+      return persona.listAccounts(source(id), ctx);
+    },
     listTransactions: (id, period, ctx) => persona.listTransactions(id, period, ctx),
     getIdentity: (id, ctx) => persona.getIdentity(id, ctx),
     async revokeItem() {
       calls.revoke += 1;
-      return { ok: true, value: undefined };
+      return options.revokeFails
+        ? {
+            ok: false,
+            error: { code: 'UNAVAILABLE', source: 'pluggy', message: 'x', recoverable: true },
+          }
+        : { ok: true, value: undefined };
     },
   };
   return { provider, itemId, calls };
@@ -462,6 +604,7 @@ describe('Pluggy connection (ARCHITECTURE §2.4; TESTS §4 "Pluggy connection")'
         connectToken: `tok-${userId}`,
         includeSandbox: true,
         connectorTypes: ['BUSINESS_BANK'],
+        connectorIds: [0, 2],
       },
     });
     expect(
@@ -516,6 +659,112 @@ describe('Pluggy connection (ARCHITECTURE §2.4; TESTS §4 "Pluggy connection")'
     expect(left).toEqual([]);
   });
 
+  it('a real (non-sandbox) bank item is deleted at Pluggy and never stored (C1)', async () => {
+    const userId = await newUser();
+    await heroThroughEstimate(userId);
+    await consent(userId);
+    const fake = fakePluggy(userId, 'UPDATED', { sandbox: false });
+    const r = await registerPluggyItemWith(
+      { itemId: fake.itemId, holder: 'PJ' },
+      connDeps(userId, { pluggy: fake.provider }),
+    );
+    expect(r).toMatchObject({ ok: false, error: { code: 'FORBIDDEN', message: SANDBOX_ONLY } });
+    expect(fake.calls.revoke).toBe(1);
+    const hash = hmac(fake.itemId, secrets.pepper);
+    expect((await h.db.select().from(schema.connections)).some((c) => c.itemIdHash === hash)).toBe(
+      false,
+    );
+  });
+
+  it('without the sandbox connector list the widget is not offered (C1)', async () => {
+    const userId = await newUser();
+    await heroThroughEstimate(userId);
+    await consent(userId);
+    const fake = fakePluggy(userId);
+    const noList: PluggyPort = {
+      ...fake.provider,
+      async sandboxConnectorIds() {
+        return { ok: true, value: [] };
+      },
+    };
+    expect(
+      await createConnectTokenWith({ holder: 'PJ' }, connDeps(userId, { pluggy: noList })),
+    ).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+    expect(fake.calls.token).toBe(0);
+  });
+
+  it('a failed revoke at Pluggy keeps the encrypted item id, flagged for retry (M2)', async () => {
+    const userId = await newUser();
+    await heroThroughEstimate(userId);
+    await consent(userId);
+    const fake = fakePluggy(userId, 'UPDATED', { revokeFails: true });
+    const deps = connDeps(userId, { pluggy: fake.provider });
+    const reg = await registerPluggyItemWith({ itemId: fake.itemId, holder: 'PJ' }, deps);
+    if (!reg.ok) throw new Error(reg.error.code);
+    await getConnectionStatusWith({ connectionId: reg.value.connectionId }, deps);
+    expect(await revokeConnectionWith({ connectionId: reg.value.connectionId }, deps)).toEqual({
+      ok: true,
+      value: undefined,
+    });
+    const [row] = (await h.db.select().from(schema.connections)).filter(
+      (c) => c.id === reg.value.connectionId,
+    );
+    expect(row?.status).toBe('revoked');
+    expect(row?.errorCode).toBe(REVOKE_PENDING);
+    expect(decrypt(row?.itemIdEncrypted as string, secrets.encryption)).toBe(fake.itemId);
+    const left = (await h.db.select().from(schema.accounts)).filter(
+      (a) => a.connectionId === reg.value.connectionId,
+    );
+    expect(left).toEqual([]);
+  });
+
+  it('an unfinished attempt replaced by a new item is deleted at Pluggy too (C6)', async () => {
+    const userId = await newUser();
+    await heroThroughEstimate(userId);
+    await consent(userId);
+    const first = fakePluggy(userId, 'UPDATING');
+    const a = await registerPluggyItemWith(
+      { itemId: first.itemId, holder: 'PJ' },
+      connDeps(userId, { pluggy: first.provider }),
+    );
+    if (!a.ok) throw new Error(a.error.code);
+    const second = fakePluggy(userId);
+    const b = await registerPluggyItemWith(
+      { itemId: second.itemId, holder: 'PJ' },
+      connDeps(userId, { pluggy: second.provider }),
+    );
+    expect(b.ok).toBe(true);
+    expect(second.calls.revoke).toBe(1);
+    const [old] = (await h.db.select().from(schema.connections)).filter(
+      (c) => c.id === a.value.connectionId,
+    );
+    expect(old?.status).toBe('revoked');
+    expect(old?.itemIdEncrypted).toBeNull();
+  });
+
+  it('a claimed sync is not started twice (polling + webhook; M3)', async () => {
+    const userId = await newUser();
+    await heroThroughEstimate(userId);
+    await consent(userId);
+    const fake = fakePluggy(userId);
+    const reg = await registerPluggyItemWith(
+      { itemId: fake.itemId, holder: 'PJ' },
+      connDeps(userId, { pluggy: fake.provider }),
+    );
+    if (!reg.ok) throw new Error(reg.error.code);
+    const [row] = (await h.db.select().from(schema.connections)).filter(
+      (c) => c.id === reg.value.connectionId,
+    );
+    if (!row) throw new Error('no row');
+    const deps = { db: h.db, secrets, provider: fake.provider, nowMs: NOW };
+    const [x, y] = await Promise.all([
+      refreshPluggyConnection(row, deps),
+      refreshPluggyConnection(row, deps),
+    ]);
+    expect([x, y].sort()).toEqual(['active', 'syncing']);
+    expect(fake.calls.accounts).toBe(1);
+  });
+
   it("registerPluggyItem with another user's clientUserId → FORBIDDEN", async () => {
     const userId = await newUser();
     await heroThroughEstimate(userId);
@@ -547,7 +796,7 @@ describe('Pluggy connection (ARCHITECTURE §2.4; TESTS §4 "Pluggy connection")'
 describe('Pluggy webhook (ARCHITECTURE §4.9; ADR-010)', () => {
   const SECRET = 'w'.repeat(64);
   const CLIENT = '11111111-2222-4333-8444-555555555555';
-  const verifier = pluggyVerifier({ secret: SECRET, clientId: CLIENT });
+  const verifier = pluggyVerifier({ secret: SECRET, clientId: CLIENT, pepper: secrets.pepper });
   const request = (body: string, secret: string | null = SECRET) =>
     new Request('https://example.test/api/webhooks/pluggy', {
       method: 'POST',
@@ -574,7 +823,11 @@ describe('Pluggy webhook (ARCHITECTURE §4.9; ADR-010)', () => {
       (await receiveWebhook(verifier, request(`${payload('ev-v6', 'x')}}`), deps, processed))
         .status,
     ).toBe(400);
-    const unconfigured = pluggyVerifier({ secret: undefined, clientId: CLIENT });
+    const unconfigured = pluggyVerifier({
+      secret: undefined,
+      clientId: CLIENT,
+      pepper: secrets.pepper,
+    });
     expect(
       (await receiveWebhook(unconfigured, request(payload('ev-v7', 'x')), deps, processed)).status,
     ).toBe(401);
@@ -611,13 +864,35 @@ describe('Pluggy webhook (ARCHITECTURE §4.9; ADR-010)', () => {
       (e) => e.eventId === 'ev-sync-1',
     );
     expect(event?.status).toBe('processed');
-    // Only ids are stored (ADR-010: minimal payload).
-    expect(Object.keys(event?.payload as object).sort()).toEqual([
-      'event',
-      'eventId',
-      'itemId',
-      'triggeredBy',
-    ]);
+    // Minimal payload (ADR-010); the item id, which gives access to the data, only as an HMAC (M1).
+    expect(event?.payload).toEqual({
+      event: 'item/updated',
+      eventId: 'ev-sync-1',
+      triggeredBy: 'SYNC',
+      itemIdHash: hmac(fake.itemId, secrets.pepper),
+    });
+    expect(JSON.stringify(event?.payload)).not.toContain(fake.itemId);
+  });
+
+  it('a body over 64 KB → 413, nothing recorded', async () => {
+    const big = JSON.stringify({
+      event: 'item/updated',
+      eventId: 'ev-big',
+      itemId: 'x',
+      clientId: CLIENT,
+      pad: 'x'.repeat(65 * 1024),
+    });
+    const res = await receiveWebhook(
+      verifier,
+      request(big),
+      { db: h.db, defer: () => {} },
+      async () => 'ignored',
+    );
+    expect(res.status).toBe(413);
+    const events = (await h.db.select().from(schema.webhookEvents)).filter(
+      (e) => e.eventId === 'ev-big',
+    );
+    expect(events).toEqual([]);
   });
 
   it('an event for an unknown item is recorded and ignored', async () => {
