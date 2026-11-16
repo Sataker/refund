@@ -1,4 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // node:crypto for the recording key (ARCHITECTURE §5.4) and AbortSignal.timeout for the gateway (§4.5).
+    "types": ["node"]
+  },
   "include": ["src", "test"]
 }

@@ -15,5 +15,9 @@
     "@refund/law": "workspace:*",
     "@refund/pipeline": "workspace:*",
     "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@refund/personas": "workspace:*",
+    "@refund/sources": "workspace:*"
   }
 }

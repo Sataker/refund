@@ -290,6 +290,13 @@ importers:
       zod:
         specifier: 4.6.7
         version: 4.6.7
+    devDependencies:
+      '@refund/personas':
+        specifier: workspace:*
+        version: link:../personas
+      '@refund/sources':
+        specifier: workspace:*
+        version: link:../sources
 
   packages/db:
     dependencies:
