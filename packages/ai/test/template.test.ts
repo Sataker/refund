@@ -55,7 +55,7 @@ describe('templateExplanation (hero, ENGINE-SPEC F.3)', () => {
     );
     expect(text).toContain('não entra no total de economia');
     expect(text).toContain('até 23/11/2026');
-    expect(text).toContain('É uma estimativa');
+    expect(text).not.toContain('É uma estimativa'); // "(estimativa)" is already beside the range
   });
 
   it('R02: an alert outside the total with its trace value', () => {

@@ -18,7 +18,7 @@ export function parsePtBr(raw: string): Exact | null {
   return { mantissa, scale: frac.length };
 }
 
-/** A machine decimal from the trace ("0.2772", "-12.5", 0.15). */
+/** A machine decimal from the trace ("0.2772", "-12.5", 0.15), as its absolute value (the guards compare sizes). */
 export function parseMachine(value: string | number): Exact | null {
   const s = typeof value === 'number' ? String(value) : value.trim();
   const m = /^-?(\d+)(?:\.(\d+))?$/.exec(s);
@@ -58,6 +58,17 @@ export function atPrecision(x: Exact, digits: number): { trunc: number; round: n
   const trunc = Math.trunc(x.mantissa / div);
   const rest = x.mantissa - trunc * div;
   return { trunc, round: rest * 2 >= div ? trunc + 1 : trunc };
+}
+
+/** A machine rate as a PT-BR percentage ("0.1125" → "11,25%"), exactly; null when it is not a plain decimal. */
+export function formatPercent(rate: string | number): string | null {
+  const r = parseMachine(rate);
+  if (r === null) return null;
+  const { mantissa, scale } = shift(r, 2);
+  const padded = String(mantissa).padStart(scale + 1, '0');
+  const int = padded.slice(0, padded.length - scale);
+  const frac = padded.slice(padded.length - scale).replace(/0+$/, '');
+  return `${int}${frac === '' ? '' : `,${frac}`}%`;
 }
 
 /** Folds accents and case for keyword matching ("milhões" → "milhoes"). */

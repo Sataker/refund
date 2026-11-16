@@ -163,7 +163,9 @@ export function templateExplanation(finding: Finding, audience: Audience = 'owne
     default:
       parts.push('Isso parece economia, mas é risco. Não recomendamos.');
   }
-  if (finding.type !== 'risk') parts.push(confidenceSentence(finding));
+  // A recovery already says "(estimativa)" next to its range.
+  const saidEstimate = finding.type === 'recovery' && finding.confidence === 'estimated';
+  if (finding.type !== 'risk' && !saidEstimate) parts.push(confidenceSentence(finding));
 
   // Only the engine's main tradeoff: a later one may speak about the opposite move (R01's "pró-labore menor").
   const tradeoff = finding.tradeoffs[0];
@@ -183,6 +185,27 @@ export function templateExplanation(finding: Finding, audience: Audience = 'owne
     parts.push('Valide com seu contador antes de agir.');
   }
   return parts.join(' ');
+}
+
+/**
+ * The port's last resort: the template, or, if even the finding is malformed, its title (what the pipeline shows
+ * before any explanation). Never throws.
+ */
+export function safeTemplateOutput(
+  input: ExplanationInput,
+  guards?: ExplanationOutput['guards'],
+): ExplanationOutput {
+  try {
+    return templateOutput(input.finding, input.audience, guards);
+  } catch {
+    const title = (input as { finding?: { title?: unknown } } | undefined)?.finding?.title;
+    return {
+      text: typeof title === 'string' && title !== '' ? title : 'Veja o cálculo em “Ver cálculo”.',
+      origin: 'template',
+      guards: guards ?? { numeric: 'not_applied', citation: 'not_applied' },
+      promptVersion: TEMPLATE_VERSION,
+    };
+  }
 }
 
 /** The template as an `ExplanationOutput`; `guards` records why it is being shown (a failed guard, or none). */
