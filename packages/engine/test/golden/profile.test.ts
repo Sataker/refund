@@ -52,13 +52,15 @@ function expectNoRange(e: ProfileEstimate, reason: string) {
   if (e.type === 'no_range') expect(e.reason).toBe(reason);
 }
 
-// C.11.9 blocks of the 30–60 grid (hero answers): every cell of the table, by scenario id and rule.
+// C.11.9 blocks of the 30–60 grid (hero answers): every cell of the table, by scenario id and rule. Values as
+// corrected on 15/11 (C.11.9 †): manual item 12 (every decimal place), D12 and the LC 214 annexes in the 2028 steady state.
+// E.g. e = 55.260/540.000 at precision 34: 45.000 × e = 4.604,999…, and × the CSLL share rounds to 161,175 → 161,18.
 const JUST = { 3000000: 677800, 4500000: 1097800, 6000000: 1517800 } as const;
-const R01_LIM = { 3000000: '28.942,68', 4500000: '39.544,92', 6000000: '50.146,68' } as const;
+const R01_LIM = { 3000000: '28.942,68', 4500000: '39.544,68', 6000000: '50.146,68' } as const;
 const R05_III = {
-  3000000: ['14.662,80', '14.932,08', '15.201,36'],
-  4500000: ['23.751,96', '28.308,84', '27.132,60'],
-  6000000: ['32.841,36', '40.632,72', '39.063,96'],
+  3000000: ['14.662,80', '14.931,96', '15.201,36'],
+  4500000: ['23.752,20', '28.309,20', '27.132,72'],
+  6000000: ['32.841,36', '40.632,60', '39.063,96'],
 } as const;
 const R05_V = {
   4500000: ['22.260,24', '31.061,40', '35.441,16'],
@@ -83,27 +85,6 @@ for (const r of [3000000, 4500000, 6000000] as const) {
   });
 }
 
-/**
- * Cells the engine does not reproduce, with the engine's value (EXECUTION §9, E8 row of 15/11). A = repeating
- * effective rate at precision 34; B = 2027–2028 CBS/IBS split rounded per tax in the 2028 steady state.
- */
-const DIVERGENT_CELLS: Record<string, { engine: string; cause: 'A' | 'B' }> = {
-  'R3000000-S0.75-F677900|R05': { engine: '14.931,96', cause: 'B' },
-  'R3000000-S0.75-F677800|R05': { engine: '14.931,96', cause: 'B' },
-  'R3000000-S0.75-F0|R05': { engine: '14.931,96', cause: 'B' },
-  'R4500000-S0.5-F1097900|R05': { engine: '23.752,20', cause: 'A' },
-  'R4500000-S0.5-F1097800|R01': { engine: '39.544,68', cause: 'A' },
-  'R4500000-S0.5-F1097800|R05': { engine: '23.752,20', cause: 'A' },
-  'R4500000-S0.75-F1097900|R05': { engine: '28.309,20', cause: 'A' },
-  'R4500000-S0.75-F1097800|R01': { engine: '39.544,68', cause: 'A' },
-  'R4500000-S0.75-F1097800|R05': { engine: '28.309,20', cause: 'A' },
-  'R4500000-S1-F1097900|R05': { engine: '27.132,72', cause: 'A' },
-  'R4500000-S1-F1097800|R01': { engine: '39.544,68', cause: 'A' },
-  'R4500000-S1-F1097800|R05': { engine: '27.132,72', cause: 'A' },
-  'R6000000-S0.75-F1517900|R05': { engine: '40.632,60', cause: 'A' },
-  'R6000000-S0.75-F1517800|R05': { engine: '40.632,60', cause: 'A' },
-};
-
 const cellValue = (id: string, r: 'R01' | 'R05') =>
   estimate().scenarios.find((s) => s.id === id)?.byRule[r];
 
@@ -119,25 +100,24 @@ describe('ENGINE-SPEC C.11.10 — profile-based estimate', () => {
   it('T11-02: hero from_15k_to_30k → MINIMUM_BELOW_FLOOR; grid maximum 44.144,04; 27 scenarios', () => {
     const e = estimate({ monthlyRevenueBracket: 'from_15k_to_30k' });
     expectNoRange(e, 'MINIMUM_BELOW_FLOOR');
-    expect(e.type === 'no_range' && e.gridTotal && e.gridTotal[1]).toBe(brl('44.144,04'));
+    expect(e.type === 'no_range' && e.gridTotal).toEqual([brl('2.651,28'), brl('44.144,04')]);
     expect(e.scenarios).toHaveLength(27);
     // Maximum (30.000; 1; just below) = 28.942,68 + 15.201,36.
     const max = e.scenarios.find((s) => s.id === 'R3000000-S1-F677800');
     expect(max?.byRule).toEqual({ R01: brl('28.942,68'), R05: brl('15.201,36') });
-    // The minimum scenario is (15.000; 0,5; boundary); 0,85 × it < 3.000 either way (§9 divergence below).
+    // Minimum (15.000; 0,5; boundary): 12 × (900,00 − 679,06) in the 2028 tables (CBS 69,44 + IBS 0,77).
     const min = e.scenarios.find((s) => s.id === 'R1500000-S0.5-F257900');
-    expect(e.type === 'no_range' && e.gridTotal && e.gridTotal[0]).toBe(min?.annualRegimeTotal);
+    expect(min?.annualRegimeTotal).toBe(brl('2.651,28'));
     expect(ids(e.rules)).toEqual(['R01', 'R05', 'R02']);
     expect(e.rules.every((r) => r.range === undefined)).toBe(true);
   });
 
-  it('T11-03: HERO from_30k_to_60k → minimum 12.463,38 (0,85 × 14.662,80); 27 scenarios; per-rule ranges', () => {
+  it('T11-03: HERO from_30k_to_60k → [12.463,38; 90.779,28] ("de R$ 12 mil a R$ 91 mil")', () => {
     const e = estimate();
     expect(e.type).toBe('range');
     if (e.type !== 'range') return;
-    expect(e.total[0]).toBe(1246338);
-    expect(e.gridTotal[0]).toBe(brl('14.662,80'));
-    expect(e.total[1]).toBe(e.gridTotal[1]);
+    expect(e.total).toEqual([1246338, 9077928]);
+    expect(e.gridTotal).toEqual([brl('14.662,80'), brl('90.779,28')]);
     expect(e.label).toBe('estimativa por perfil');
     expect(e.unit).toBe('per_year_in_regime');
     expect(e.scenarios).toHaveLength(27);
@@ -147,10 +127,10 @@ describe('ENGINE-SPEC C.11.10 — profile-based estimate', () => {
     // Minimum (30.000; 0,5; boundary): R05_III only.
     const min = e.scenarios.find((s) => s.id === 'R3000000-S0.5-F677900');
     expect(min?.byRule).toEqual({ R01: 0, R05: brl('14.662,80') });
-    // The maximum is the scenario (60.000; 0,75; just below), with R01lim = 50.146,68.
+    // Maximum (60.000; 0,75; just below): R01lim 50.146,68 + R05_III 12 × (6.630,00 − 3.243,95) = 40.632,60.
     const max = e.scenarios.find((s) => s.id === 'R6000000-S0.75-F1517800');
-    expect(max?.annualRegimeTotal).toBe(e.gridTotal[1]);
-    expect(max?.byRule.R01).toBe(brl('50.146,68'));
+    expect(max?.byRule).toEqual({ R01: brl('50.146,68'), R05: brl('40.632,60') });
+    expect(max?.annualRegimeTotal).toBe(brl('90.779,28'));
     expect(ids(e.rules)).toEqual(['R01', 'R05', 'R02']);
     expect(rule(e, 'R01')?.range).toEqual([0, brl('50.146,68')]);
     expect(rule(e, 'R05')?.range).toEqual([brl('12.463,38'), brl('48.480,72')]);
@@ -162,14 +142,11 @@ describe('ENGINE-SPEC C.11.10 — profile-based estimate', () => {
     expect(e.total[1] <= 10 * e.total[0]).toBe(true);
   });
 
-  it('T11-03: C.11.9 blocks reproduced to the cent (every cell outside the §9 divergence list)', () => {
-    let n = 0;
+  it('T11-03: C.11.9 blocks reproduced to the cent (54 cells)', () => {
     for (const c of BLOCK_CELLS) {
-      if (DIVERGENT_CELLS[`${c.id}|${c.rule}`] !== undefined) continue;
       expect(cellValue(c.id, c.rule), `${c.id} ${c.rule}`).toBe(brl(c.expected));
-      n += 1;
     }
-    expect(n).toBe(BLOCK_CELLS.length - Object.keys(DIVERGENT_CELLS).length);
+    expect(BLOCK_CELLS).toHaveLength(54);
   });
 
   it('T11-04: hero from_60k_to_150k → [25.918,61; 221.467,44]', () => {
@@ -183,7 +160,9 @@ describe('ENGINE-SPEC C.11.10 — profile-based estimate', () => {
   it('T11-05: hero from_150k_to_300k → [71.664,28; 419.090,76]; R03 listed without value', () => {
     const e = estimate({ monthlyRevenueBracket: 'from_150k_to_300k' });
     expectRange(e, '71.664,28', '419.090,76');
+    // Maximum (300.000; 0,75; just below), DAS_III(300.000) = 52.530,01 in the 2028 tables (D12).
     const max = e.scenarios.find((s) => s.id === 'R30000000-S0.75-F8237800');
+    expect(max?.byRule).toEqual({ R01: brl('131.578,68'), R05: brl('287.512,08') });
     expect(max?.annualRegimeTotal).toBe(brl('419.090,76'));
     expect(e.scenarios.find((s) => s.id === 'R15000000-S0.5-F0')?.annualRegimeTotal).toBe(
       brl('84.310,92'),
@@ -213,16 +192,11 @@ describe('ENGINE-SPEC C.11.10 — profile-based estimate', () => {
     expect(e.scenarios).toHaveLength(0);
   });
 
-  it('T11-09: employees and abroad dont_know → 45 scenarios; minimum 0 at (30.000; 0; boundary)', () => {
+  it('T11-09: employees and abroad dont_know → 45 scenarios; gridTotal [0; 90.779,28]', () => {
     const e = estimate({ hasEmployees: 'dont_know', receivesFromAbroad: 'dont_know' });
     expectNoRange(e, 'MINIMUM_BELOW_FLOOR');
     expect(e.scenarios).toHaveLength(45);
-    expect(e.type === 'no_range' && e.gridTotal && e.gridTotal[0]).toBe(0);
-    // Same maximum scenario as T11-03 (the grid holds 0,75 and "just below").
-    const hero = estimate();
-    expect(e.type === 'no_range' && e.gridTotal && e.gridTotal[1]).toBe(
-      hero.type === 'range' ? hero.gridTotal[1] : -1,
-    );
+    expect(e.type === 'no_range' && e.gridTotal).toEqual([0, brl('90.779,28')]);
     expect(e.scenarios.find((s) => s.id === 'R3000000-S0-F677900')?.annualRegimeTotal).toBe(0);
   });
 
@@ -290,50 +264,6 @@ describe('ENGINE-SPEC C.11.10 — profile-based estimate', () => {
     const e = estimate({}, { isActive: false });
     expectNoRange(e, 'COMPANY_NOT_ACTIVE');
     expect(e.rules).toEqual([]);
-  });
-});
-
-// ---------- Divergences from the C.11.10 expected values (EXECUTION §9, E8 row of 15/11) ----------
-// The spec values stay as written (CLAUDE.md rule 11). Each `it.fails` passes only while the engine still differs from
-// the spec, so the day the spec owner settles the triage (or the engine changes) it turns red and must be revisited.
-// Cause A: a repeating effective rate (e.g. 55.260/540.000): decimal.js at precision 34 (C.1) rounds `45.000 × e` to
-//          4.605,000…, so CSLL = 161,18 (the exact-fraction value of manual item 12), not the spec's 161,17.
-// Cause B: the steady-state block is 2028; the 2027–2028 tables split PIS + Cofins into CBS + IBS, each rounded
-//          per tax (D12), which moves the domestic DAS by R$ 0,01 against the 2026 split used in C.11.9.
-describe('C.11.10 values the engine does not reproduce (§9 triage pending; spec values unchanged)', () => {
-  it.fails('T11-02: gridTotal [2.651,40; 44.144,04] (cause B; engine minimum 2.651,28)', () => {
-    const e = estimate({ monthlyRevenueBracket: 'from_15k_to_30k' });
-    expect(e.type === 'no_range' && e.gridTotal).toEqual([brl('2.651,40'), brl('44.144,04')]);
-  });
-
-  it.fails('T11-03: total [1246338; 9077940] cents (cause A; engine maximum 9077928)', () => {
-    const e = estimate();
-    expect(e.type === 'range' && e.total).toEqual([1246338, 9077940]);
-  });
-
-  it.fails('T11-03: maximum scenario R05_III(60.000; 0,75) = 40.632,72 (cause A; engine 40.632,60)', () => {
-    const max = estimate().scenarios.find((s) => s.id === 'R6000000-S0.75-F1517800');
-    expect(max?.byRule).toEqual({ R01: brl('50.146,68'), R05: brl('40.632,72') });
-  });
-
-  for (const c of BLOCK_CELLS) {
-    const key = `${c.id}|${c.rule}`;
-    const d = DIVERGENT_CELLS[key];
-    if (d === undefined) continue;
-    it.fails(`T11-03 C.11.9 block ${key} = ${c.expected} (cause ${d.cause}; engine ${d.engine})`, () => {
-      expect(cellValue(c.id, c.rule)).toBe(brl(c.expected));
-    });
-  }
-
-  it.fails('T11-05: maximum split R01 131.578,80 / R05 287.511,96 (cause B; the total 419.090,76 matches)', () => {
-    const e = estimate({ monthlyRevenueBracket: 'from_150k_to_300k' });
-    const max = e.scenarios.find((s) => s.id === 'R30000000-S0.75-F8237800');
-    expect(max?.byRule).toEqual({ R01: brl('131.578,80'), R05: brl('287.511,96') });
-  });
-
-  it.fails('T11-09: gridTotal [0; 90.779,40] (cause A; engine maximum 90.779,28)', () => {
-    const e = estimate({ hasEmployees: 'dont_know', receivesFromAbroad: 'dont_know' });
-    expect(e.type === 'no_range' && e.gridTotal).toEqual([0, brl('90.779,40')]);
   });
 });
 
