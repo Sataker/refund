@@ -53,8 +53,12 @@ const R05_DO_NOT = [
   'A partir do PA 01/2027: não tire a CBS e o IBS de serviço cujo adquirente ou destinatário está no Brasil ou que é consumido aqui (LC 214, art. 80, § 1º-A).',
   'Não peça a restituição sem antes retificar o PGDAS-D.',
 ];
+// R05 is about the months ahead (nothing is amended there); R05-REC amends past PGDAS-D (E10 UX review, M6).
 const R05_TRADEOFFS = [
-  'Ao retificar, o município pode questionar o ISS. Guarde contratos, invoices e contratos de câmbio; o contador precisa validar.',
+  'A prefeitura pode questionar o ISS dessa receita. Guarde os contratos, as faturas emitidas ao cliente e os contratos de câmbio.',
+];
+const REC_TRADEOFFS = [
+  'Ao retificar, a prefeitura pode questionar o ISS. Guarde os contratos, as faturas emitidas ao cliente e os contratos de câmbio; o contador precisa validar.',
 ];
 
 export const R05_REFS = refsOf([
@@ -368,7 +372,7 @@ export function r05RecFinding(ctx: Ctx, inference: PgdasInference): Finding | nu
     trace: steps,
     refs: REC_REFS,
     doNot: R05_DO_NOT,
-    tradeoffs: R05_TRADEOFFS,
+    tradeoffs: REC_TRADEOFFS,
     countsInTotal: false,
     recoveryItems: items,
     assumptionsUsed: [

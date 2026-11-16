@@ -54,7 +54,11 @@ describe('templateExplanation (hero, ENGINE-SPEC F.3; product review 16/11)', ()
     expect(text).toContain(
       'Somada aos ajustes acima, esta mudança leva o custo dos próximos 12 meses de R$ 80.923,20 para R$ 46.920,80.',
     );
-    expect(text).toContain('Contrapartida: ao retificar, o município pode questionar o ISS.');
+    // R05 is about the months ahead: no "ao retificar" (E10 UX review, M6).
+    expect(text).toContain(
+      'Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os contratos, as faturas emitidas ao cliente e os contratos de câmbio.',
+    );
+    expect(text).not.toContain('invoices');
     expect(text).toContain('Não peça a restituição sem antes retificar o PGDAS-D.');
   });
 
