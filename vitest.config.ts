@@ -22,7 +22,7 @@ export default defineConfig({
       provider: 'v8',
       reportsDirectory: 'coverage',
       include: ['packages/*/src/**', 'apps/web/src/**'],
-      // TESTS §7.1. @refund/ai/guards (95/90) enters with E10.
+      // TESTS §7.1.
       thresholds: {
         'packages/engine/src/**': { lines: 95, branches: 90 },
         'packages/pipeline/src/**': { lines: 85, branches: 80 },
@@ -30,6 +30,7 @@ export default defineConfig({
         'packages/sources/src/**/whitelist.ts': { lines: 90, branches: 85 },
         'packages/sources/src/pii/**': { lines: 90, branches: 85 },
         'packages/sources/src/cnpj/validate.ts': { lines: 90, branches: 85 },
+        'packages/ai/src/guards/**': { lines: 95, branches: 90 },
       },
     },
     projects: [

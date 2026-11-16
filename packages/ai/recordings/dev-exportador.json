@@ -4,21 +4,6 @@
   "engineVersion": "0.2.0",
   "parametersVersion": "2026.11.14",
   "items": {
-    "sha256:02edad5358057524f6d4359bb8b25d6acddc8f25ed78f6a3d606f120c6ca8faf": {
-      "task": "explain",
-      "ruleId": "R01",
-      "origin": "template",
-      "promptVersion": "template@3",
-      "recordedAt": "2026-11-16T14:50:39.610Z",
-      "output": {
-        "text": "Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei, subindo seu pró-labore para R$ 2.260,00 por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples (Anexo III) a partir de abril de 2027; depois, são R$ 42.896,52 a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20. Estimativa: depende de premissas que podem ser revistas. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”.",
-        "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, subindo seu pró-labore para {{proLaboreTarget}} por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples ({{regimeAnexo}}) a partir de {{regimeFrom}}; depois, são {{annualRegimeValue}} a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}. Estimativa: depende de premissas que podem ser revistas. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”."
-      },
-      "guards": {
-        "numeric": "ok",
-        "citation": "ok"
-      }
-    },
     "sha256:03364d658b5ad08926efb05b6e97265b7836f3e7d50234dcbcdb48168190f636": {
       "task": "explain",
       "ruleId": "R05",
@@ -34,12 +19,27 @@
         "citation": "ok"
       }
     },
-    "sha256:7183edfb7f019e24d2eae8d485158d01b9da5e9f28755cd831e073f4c0860530": {
+    "sha256:4e46ecc0914a603c58bfe025e85ad9818680d45f6cbfa31a360951cef55bd88b": {
       "task": "explain",
       "ruleId": "R01",
       "origin": "template",
       "promptVersion": "template@3",
-      "recordedAt": "2026-11-16T14:50:39.610Z",
+      "recordedAt": "2026-11-16T14:58:53.505Z",
+      "output": {
+        "text": "Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei, subindo seu pró-labore para R$ 2.260,00 por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples (Anexo III) a partir de abril de 2027; depois, são R$ 42.896,52 a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20. Estimativa: depende de premissas que podem ser revistas. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”.",
+        "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, subindo seu pró-labore para {{proLaboreTarget}} por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples ({{regimeAnexo}}) a partir de {{regimeFrom}}; depois, são {{annualRegimeValue}} a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}. Estimativa: depende de premissas que podem ser revistas. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”."
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
+    },
+    "sha256:9c3d79f19625d32d4a4632f5f187ebf093298a362271f0fcb588f92e59026474": {
+      "task": "explain",
+      "ruleId": "R01",
+      "origin": "template",
+      "promptVersion": "template@3",
+      "recordedAt": "2026-11-16T14:58:53.505Z",
       "output": {
         "text": "Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei, subindo seu pró-labore para R$ 2.260,00 por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples (Anexo III) a partir de abril de 2027; depois, são R$ 42.896,52 a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”.",
         "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, subindo seu pró-labore para {{proLaboreTarget}} por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples ({{regimeAnexo}}) a partir de {{regimeFrom}}; depois, são {{annualRegimeValue}} a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”."
