@@ -2,7 +2,8 @@ import 'server-only';
 import { type EnvProblem, type ParsedEnv, readEnv } from './env.ts';
 import { type ActionResult, fail, ok } from './result.ts';
 
-// ARCHITECTURE §4.10. Derived from env only; the Pluggy probe (ADR-012) joins in E11.
+// ARCHITECTURE §4.10. Derived from env only; the Pluggy probe (ADR-012) is applied on top of
+// `pluggy` by financial/availability.ts (`pluggyAvailable`, 10-min cache).
 
 export interface Capabilities {
   /** DATABASE_URL && SESSION_SECRET && ENCRYPTION_KEY && PII_PEPPER. */
@@ -13,7 +14,7 @@ export interface Capabilities {
   liveData: boolean;
   /** AI_GATEWAY_API_KEY || VERCEL_OIDC_TOKEN. */
   ai: boolean;
-  /** PLUGGY_CLIENT_ID && PLUGGY_CLIENT_SECRET && liveData (the probe arrives in E11). */
+  /** PLUGGY_CLIENT_ID && PLUGGY_CLIENT_SECRET && liveData (+ probe: `pluggyAvailable`). */
   pluggy: boolean;
   /** RESEND_API_KEY && RESEND_FROM. */
   email: boolean;
