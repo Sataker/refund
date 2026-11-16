@@ -109,13 +109,32 @@ export async function setAssumption(
     });
 }
 
-export async function hasActiveConsent(db: Db, userId: string): Promise<boolean> {
+/** The session's consent in force (not withdrawn), newest first. */
+export async function activeConsent(
+  db: Db,
+  userId: string,
+): Promise<{ id: string; termsVersion: string } | null> {
   const [row] = await db
-    .select({ id: consents.id })
+    .select({ id: consents.id, termsVersion: consents.termsVersion })
     .from(consents)
     .where(and(eq(consents.userId, userId), isNull(consents.revokedAt)))
+    .orderBy(desc(consents.grantedAt))
     .limit(1);
-  return row !== undefined;
+  return row ?? null;
+}
+
+export async function hasActiveConsent(db: Db, userId: string): Promise<boolean> {
+  return (await activeConsent(db, userId)) !== null;
+}
+
+/** Withdraws every consent in force (LGPD art. 8, § 5º: as easy to withdraw as to give). */
+export async function withdrawConsents(db: Db, userId: string): Promise<number> {
+  const rows = await db
+    .update(consents)
+    .set({ revokedAt: new Date() })
+    .where(and(eq(consents.userId, userId), isNull(consents.revokedAt)))
+    .returning({ id: consents.id });
+  return rows.length;
 }
 
 export async function insertConsent(
@@ -127,16 +146,23 @@ export async function insertConsent(
   return row.id;
 }
 
-/** Latest connection per holder that was not revoked, with its transaction count. */
+/**
+ * Latest connection per holder that was not revoked, with its transaction count. A PJ connection
+ * only counts for the track's current company: after "Não é minha empresa" the old company's bank
+ * account no longer completes `conta-pj` (code review E11).
+ */
 export async function liveConnections(
   db: Db,
   userId: string,
+  companyId: string | null,
 ): Promise<{ PJ: ConnectionSummary | null; PF: ConnectionSummary | null }> {
-  const rows = await db
-    .select()
-    .from(connections)
-    .where(and(eq(connections.userId, userId), isNull(connections.revokedAt)))
-    .orderBy(desc(connections.createdAt));
+  const rows = (
+    await db
+      .select()
+      .from(connections)
+      .where(and(eq(connections.userId, userId), isNull(connections.revokedAt)))
+      .orderBy(desc(connections.createdAt))
+  ).filter((r) => r.holder === 'PF' || r.companyId === companyId);
   const out: { PJ: ConnectionSummary | null; PF: ConnectionSummary | null } = {
     PJ: null,
     PF: null,
@@ -212,7 +238,7 @@ export async function loadTrack(db: Db, userId: string): Promise<TrackSnapshot> 
   // Sequential on purpose: two tiny indexed reads; one connection per render keeps the pooler
   // (transaction mode, §9.5) and the local PGlite socket shim happy.
   const consented = await hasActiveConsent(db, userId);
-  const conns = await liveConnections(db, userId);
+  const conns = await liveConnections(db, userId, company.id);
   const c = company.company;
   return {
     company,

@@ -8,7 +8,7 @@ import {
   PersonaFinancial,
   type SourceItem,
 } from '@refund/sources';
-import { and, eq, isNull, ne } from 'drizzle-orm';
+import { and, eq, isNull, lt, ne, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { type ConnectionStatus, nextAfter, stepPath } from '@/features/track/steps.ts';
 import type { Capabilities } from '../capabilities.ts';
@@ -18,12 +18,14 @@ import { markPluggyDown, pluggyAvailable, pluggyProvider } from '../financial/av
 import { logger } from '../log.ts';
 import { clientIp, rateLimit } from '../rate-limit.ts';
 import { type ActionResult, fail, ok } from '../result.ts';
+import { pollLimit, trackLimit } from '../track/limits.ts';
 import {
-  hasActiveConsent,
+  activeConsent,
   insertConsent,
   loadTrack,
   trackCompany,
   transactionCount,
+  withdrawConsents,
 } from '../track/state.ts';
 import { syncConnection } from './sync.ts';
 
@@ -32,6 +34,13 @@ import { syncConnection } from './sync.ts';
 
 const { connections, accounts } = schema;
 
+/** The Pluggy client as used here: the provider plus the sandbox-only connector list (C1). */
+export type PluggyPort = FinancialProvider & {
+  sandboxConnectorIds?(ctx: {
+    mode: 'live';
+  }): Promise<{ ok: true; value: number[] } | { ok: false; error: { code: string } }>;
+};
+
 export interface ConnectionDeps {
   db: Db;
   userId: string;
@@ -39,7 +48,7 @@ export interface ConnectionDeps {
   caps: Capabilities;
   headers: Headers;
   /** Injectable in tests (replay/fake Pluggy); defaults to the process client when configured. */
-  pluggy?: FinancialProvider | null;
+  pluggy?: PluggyPort | null;
   nowMs?: number;
 }
 
@@ -50,6 +59,8 @@ export const CONSENT_SCOPES = ['accounts', 'transactions', 'identity', 'public_c
 export const CONNECT_RATE = { limit: 10, windowMs: 60 * 60_000 } as const;
 
 const CONSENT_FIRST = 'Antes de conectar, confirme o que vamos ler na tela anterior.';
+const NO_COMPANY = 'Comece pelo CNPJ da sua empresa.';
+export const SANDBOX_ONLY = 'Só o sandbox da Pluggy nesta versão. Nenhum banco real é conectado.';
 const NOT_YOURS = 'Essa conexão não é desta sessão.';
 const holderSchema = z.enum(['PF', 'PJ']);
 
@@ -62,36 +73,51 @@ export async function recordConsentWith(
   input: unknown,
   deps: ConnectionDeps,
 ): Promise<ActionResult<{ consentId: string; next: string }>> {
+  const limited = await trackLimit(deps.db, deps.userId, deps.nowMs);
+  if (!limited.ok) return limited;
   const parsed = consentInput.safeParse(input);
   if (!parsed.success) return fail('INVALID_INPUT', 'Não conseguimos registrar o consentimento.');
-  const consentId = await insertConsent(deps.db, {
-    userId: deps.userId,
-    scopes: [...new Set(parsed.data.scopes)],
-    termsVersion: parsed.data.termsVersion,
-    ipHash: hmac(clientIp(deps.headers), deps.secrets.pepper),
-  });
-  logger.info('consent.recorded', { termsVersion: parsed.data.termsVersion });
+  // Idempotent per session and terms version: a second tap does not add a consent row.
+  const current = await activeConsent(deps.db, deps.userId);
+  const consentId =
+    current?.termsVersion === parsed.data.termsVersion
+      ? current.id
+      : await insertConsent(deps.db, {
+          userId: deps.userId,
+          scopes: [...new Set(parsed.data.scopes)],
+          termsVersion: parsed.data.termsVersion,
+          ipHash: hmac(clientIp(deps.headers), deps.secrets.pepper),
+        });
+  if (consentId !== current?.id) {
+    logger.info('consent.recorded', { termsVersion: parsed.data.termsVersion });
+  }
   const { progress } = await loadTrack(deps.db, deps.userId);
   return ok({ consentId, next: stepPath(nextAfter('permissoes', progress)) });
 }
 
-async function connectGuard(deps: ConnectionDeps): Promise<ActionResult<void>> {
+/** Rate limit + consent in force; returns the consent the new connection is tied to. */
+async function connectGuard(deps: ConnectionDeps): Promise<ActionResult<{ consentId: string }>> {
   const limited = await rateLimit(
     { key: `connect:u:${deps.userId}`, ...CONNECT_RATE },
     deps.db,
     deps.nowMs,
   );
   if (!limited.ok) return limited;
-  if (!(await hasActiveConsent(deps.db, deps.userId))) {
-    return fail('CONSENT_REQUIRED', CONSENT_FIRST);
-  }
-  return ok(undefined);
+  const consent = await activeConsent(deps.db, deps.userId);
+  if (!consent) return fail('CONSENT_REQUIRED', CONSENT_FIRST);
+  return ok({ consentId: consent.id });
 }
 
 type ConnectionRow = typeof connections.$inferSelect;
 
-async function activeOf(db: Db, userId: string, holder: 'PF' | 'PJ'): Promise<ConnectionRow[]> {
-  return db
+/** The holder's connections in force; a PJ one only for the track's current company. */
+async function activeOf(
+  db: Db,
+  userId: string,
+  holder: 'PF' | 'PJ',
+  companyId: string | null,
+): Promise<ConnectionRow[]> {
+  const rows = await db
     .select()
     .from(connections)
     .where(
@@ -101,21 +127,56 @@ async function activeOf(db: Db, userId: string, holder: 'PF' | 'PJ'): Promise<Co
         isNull(connections.revokedAt),
       ),
     );
+  return holder === 'PJ' ? rows.filter((r) => r.companyId === companyId) : rows;
+}
+
+/** Marker on a revoked row whose Pluggy item could not be deleted yet (retried by the cron, §9). */
+export const REVOKE_PENDING = 'REVOKE_PENDING';
+
+/**
+ * Ends a connection: deletes the item at Pluggy, the copied accounts and transactions here (LGPD
+ * minimization, ARCHITECTURE §9.6) and keeps the row as `revoked` (audit of when). If Pluggy cannot
+ * delete the item now, the encrypted item id is KEPT and the row is flagged REVOKE_PENDING, so the
+ * deletion can be retried instead of being lost (code review E11, M2).
+ */
+async function retireConnection(deps: ConnectionDeps, row: ConnectionRow): Promise<void> {
+  let pending = false;
+  if (row.provider === 'pluggy' && row.itemIdEncrypted) {
+    const itemId = decrypt(row.itemIdEncrypted, deps.secrets.encryption);
+    const provider = configuredPluggy(deps);
+    const r =
+      itemId && provider?.revokeItem ? await provider.revokeItem(itemId, { mode: 'live' }) : null;
+    pending = !r?.ok;
+    if (pending)
+      logger.warn('pluggy.revoke_failed', { code: r?.ok === false ? r.error.code : 'NO_CLIENT' });
+  }
+  await deps.db.transaction(async (tx) => {
+    await tx.delete(accounts).where(eq(accounts.connectionId, row.id));
+    await tx
+      .update(connections)
+      .set({
+        status: 'revoked',
+        revokedAt: new Date(),
+        ...(pending ? { errorCode: REVOKE_PENDING } : { itemIdEncrypted: null }),
+      })
+      .where(eq(connections.id, row.id));
+  });
 }
 
 /** Retires the holder's unfinished attempts so the new connection is the one the track reads. */
-async function retireUnfinished(db: Db, userId: string, holder: 'PF' | 'PJ'): Promise<void> {
-  await db
-    .update(connections)
-    .set({ status: 'revoked', revokedAt: new Date() })
+async function retireUnfinished(deps: ConnectionDeps, holder: 'PF' | 'PJ'): Promise<void> {
+  const rows = await deps.db
+    .select()
+    .from(connections)
     .where(
       and(
-        eq(connections.userId, userId),
+        eq(connections.userId, deps.userId),
         eq(connections.holder, holder),
         isNull(connections.revokedAt),
         ne(connections.status, 'active'),
       ),
     );
+  for (const row of rows) await retireConnection(deps, row);
 }
 
 // ---------- Fallback A11: the synthetic persona takes over (ADR-012) ----------
@@ -139,20 +200,22 @@ export async function connectSampleWith(
   const parsed = sampleInput.safeParse(input);
   if (!parsed.success) return fail('INVALID_INPUT', 'Escolha a conta da empresa ou a pessoal.');
   const { holder } = parsed.data;
-  const existing = (await activeOf(deps.db, deps.userId, holder)).find(
+  const company = holder === 'PJ' ? await trackCompany(deps.db, deps.userId) : null;
+  if (holder === 'PJ' && !company) return fail('FORBIDDEN', NO_COMPANY);
+  const existing = (await activeOf(deps.db, deps.userId, holder, company?.id ?? null)).find(
     (c) => c.status === 'active',
   );
   if (existing) return ok(await statusOf(deps.db, existing));
 
   const item = SAMPLE_DATA.items.find((i) => i.holder === holder);
   if (!item) return fail('NOT_FOUND', 'Não há dados de exemplo para essa conta.');
-  await retireUnfinished(deps.db, deps.userId, holder);
-  const company = holder === 'PJ' ? await trackCompany(deps.db, deps.userId) : null;
+  await retireUnfinished(deps, holder);
   const [row] = await deps.db
     .insert(connections)
     .values({
       userId: deps.userId,
       companyId: company?.id ?? null,
+      consentId: guard.value.consentId,
       provider: 'persona',
       holder,
       connectorName: item.item.connector.name.slice(0, 120),
@@ -203,14 +266,14 @@ export const connectTokenInput = z.object({ holder: holderSchema });
 const PLUGGY_OFF =
   'A conexão com banco real não está disponível agora. Use os dados de exemplo para seguir.';
 
-async function availablePluggy(deps: ConnectionDeps): Promise<FinancialProvider | null> {
+async function availablePluggy(deps: ConnectionDeps): Promise<PluggyPort | null> {
   if (deps.pluggy !== undefined) return deps.pluggy;
   return (await pluggyAvailable(deps.caps, deps.secrets, deps.nowMs))
     ? pluggyProvider(deps.caps, deps.secrets)
     : null;
 }
 
-function configuredPluggy(deps: ConnectionDeps): FinancialProvider | null {
+function configuredPluggy(deps: ConnectionDeps): PluggyPort | null {
   return deps.pluggy !== undefined ? deps.pluggy : pluggyProvider(deps.caps, deps.secrets);
 }
 
@@ -218,17 +281,27 @@ export async function createConnectTokenWith(
   input: unknown,
   deps: ConnectionDeps,
 ): Promise<
-  ActionResult<{ connectToken: string; includeSandbox: boolean; connectorTypes: string[] }>
+  ActionResult<{
+    connectToken: string;
+    includeSandbox: boolean;
+    connectorTypes: string[];
+    connectorIds: number[];
+  }>
 > {
   const provider = await availablePluggy(deps);
-  if (!provider?.createConnectToken) return fail('NOT_CONFIGURED', PLUGGY_OFF);
+  if (!provider?.createConnectToken || !provider.sandboxConnectorIds) {
+    return fail('NOT_CONFIGURED', PLUGGY_OFF);
+  }
   const guard = await connectGuard(deps);
   if (!guard.ok) return guard;
   const parsed = connectTokenInput.safeParse(input);
   if (!parsed.success) return fail('INVALID_INPUT', 'Escolha a conta da empresa ou a pessoal.');
   const { holder } = parsed.data;
+  const company = holder === 'PJ' ? await trackCompany(deps.db, deps.userId) : null;
+  if (holder === 'PJ' && !company) return fail('FORBIDDEN', NO_COMPANY);
   // §8.2 `free`: one PF + one PJ connection (the plan catalog arrives in E14).
-  if ((await activeOf(deps.db, deps.userId, holder)).some((c) => c.status === 'active')) {
+  const live = await activeOf(deps.db, deps.userId, holder, company?.id ?? null);
+  if (live.some((c) => c.status === 'active')) {
     return fail(
       'PLAN_LIMIT',
       `Você já conectou a conta ${holder === 'PJ' ? 'da empresa' : 'pessoal'}.`,
@@ -236,6 +309,12 @@ export async function createConnectTokenWith(
         upgrade: { resource: 'connections', suggestedPlan: 'business', url: '/app/plano' },
       },
     );
+  }
+  // Compliance C1: the widget lists only the sandbox connectors; without that list, no widget.
+  const sandbox = await provider.sandboxConnectorIds({ mode: 'live' });
+  if (!sandbox.ok || sandbox.value.length === 0) {
+    markPluggyDown(deps.nowMs);
+    return fail('UNAVAILABLE', PLUGGY_OFF);
   }
   const token = await provider.createConnectToken(deps.userId, { mode: 'live' });
   if (!token.ok) {
@@ -247,12 +326,14 @@ export async function createConnectTokenWith(
     connectToken: token.value.accessToken,
     includeSandbox: true,
     connectorTypes: holder === 'PJ' ? ['BUSINESS_BANK'] : ['PERSONAL_BANK'],
+    connectorIds: sandbox.value,
   });
 }
 
 export const registerInput = z.object({
   itemId: z.uuid(),
   holder: holderSchema,
+  // Accepted for the §4.7 contract and ignored: the PJ account is tied to the track's company.
   companyCnpj: z.string().trim().max(32).optional(),
 });
 
@@ -274,6 +355,12 @@ export async function registerPluggyItemWith(
     logger.warn('pluggy.item_foreign', { holder });
     return fail('FORBIDDEN', NOT_YOURS);
   }
+  // Compliance C1: a real (non-sandbox) bank is deleted at Pluggy at once and never stored.
+  if (!item.value.connector.sandbox) {
+    const r = provider.revokeItem ? await provider.revokeItem(itemId, { mode: 'live' }) : null;
+    logger.warn('pluggy.item_not_sandbox', { holder, revoked: r?.ok === true });
+    return fail('FORBIDDEN', SANDBOX_ONLY);
+  }
   const itemIdHash = hmac(itemId, deps.secrets.pepper);
   const [known] = await deps.db
     .select({ id: connections.id, userId: connections.userId })
@@ -286,12 +373,14 @@ export async function registerPluggyItemWith(
       : fail('FORBIDDEN', NOT_YOURS);
   }
   const company = holder === 'PJ' ? await trackCompany(deps.db, deps.userId) : null;
-  await retireUnfinished(deps.db, deps.userId, holder);
+  if (holder === 'PJ' && !company) return fail('FORBIDDEN', NO_COMPANY);
+  await retireUnfinished(deps, holder);
   const [row] = await deps.db
     .insert(connections)
     .values({
       userId: deps.userId,
       companyId: company?.id ?? null,
+      consentId: guard.value.consentId,
       provider: 'pluggy',
       holder,
       itemIdEncrypted: encrypt(itemId, deps.secrets.encryption),
@@ -332,6 +421,9 @@ function pluggyStatus(item: SourceItem): ConnectionStatus | 'sync' {
   return 'syncing';
 }
 
+/** A sync claimed less than this long ago is not started again. */
+export const SYNC_CLAIM_MS = 60_000;
+
 /**
  * Refetches the item with our key (the webhook is only a signal, ARCHITECTURE §4.9) and syncs when it
  * is UPDATED. Shared by the webhook and by the 2 s polling (the fallback when the webhook is late).
@@ -355,6 +447,22 @@ export async function refreshPluggyConnection(
     return 'error';
   }
   const now = deps.nowMs ?? Date.now();
+  // Claim (code review E11, M3): the 2 s polling and the webhook may arrive together; only the one
+  // that moves `last_sync_at` runs the sync, the other reports `syncing`.
+  const claimed = await deps.db
+    .update(connections)
+    .set({ lastSyncAt: new Date(now) })
+    .where(
+      and(
+        eq(connections.id, row.id),
+        or(
+          isNull(connections.lastSyncAt),
+          lt(connections.lastSyncAt, new Date(now - SYNC_CLAIM_MS)),
+        ),
+      ),
+    )
+    .returning({ id: connections.id });
+  if (claimed.length === 0) return 'syncing';
   const synced = await syncConnection(
     { id: row.id, itemId, holder: row.holder },
     {
@@ -371,6 +479,8 @@ export async function getConnectionStatusWith(
   input: unknown,
   deps: ConnectionDeps,
 ): Promise<ActionResult<{ status: ConnectionStatus; transactions: number }>> {
+  const limited = await pollLimit(deps.db, deps.userId, deps.nowMs);
+  if (!limited.ok) return limited;
   const row = await ownConnection(deps, input);
   if (!row) return fail('NOT_FOUND', 'Conexão não encontrada.');
   let status = row.status as ConnectionStatus;
@@ -382,30 +492,24 @@ export async function getConnectionStatusWith(
 }
 
 /**
- * Revokes: the item is deleted at Pluggy and the copied accounts and transactions are deleted here
- * (LGPD minimization, ARCHITECTURE §9.6). The connection row stays as `revoked` (audit of when).
+ * "Desconectar": ends the connection (retireConnection). Revoking the last connection in force also
+ * withdraws the consent (LGPD art. 8, § 5º; compliance review E11, C3): connecting again asks again.
  */
 export async function revokeConnectionWith(
   input: unknown,
   deps: ConnectionDeps,
 ): Promise<ActionResult<void>> {
+  const limited = await trackLimit(deps.db, deps.userId, deps.nowMs);
+  if (!limited.ok) return limited;
   const row = await ownConnection(deps, input);
   if (!row) return fail('NOT_FOUND', 'Conexão não encontrada.');
-  if (row.provider === 'pluggy' && row.itemIdEncrypted) {
-    const itemId = decrypt(row.itemIdEncrypted, deps.secrets.encryption);
-    const provider = configuredPluggy(deps);
-    if (itemId && provider?.revokeItem) {
-      const r = await provider.revokeItem(itemId, { mode: 'live' });
-      if (!r.ok) logger.warn('pluggy.revoke_failed', { code: r.error.code });
-    }
-  }
-  await deps.db.transaction(async (tx) => {
-    await tx.delete(accounts).where(eq(accounts.connectionId, row.id));
-    await tx
-      .update(connections)
-      .set({ status: 'revoked', revokedAt: new Date(), itemIdEncrypted: null })
-      .where(eq(connections.id, row.id));
-  });
-  logger.info('connection.revoked', { provider: row.provider, holder: row.holder });
+  if (row.revokedAt === null) await retireConnection(deps, row);
+  const [left] = await deps.db
+    .select({ id: connections.id })
+    .from(connections)
+    .where(and(eq(connections.userId, deps.userId), isNull(connections.revokedAt)))
+    .limit(1);
+  const withdrawn = left ? 0 : await withdrawConsents(deps.db, deps.userId);
+  logger.info('connection.revoked', { provider: row.provider, holder: row.holder, withdrawn });
   return ok(undefined);
 }

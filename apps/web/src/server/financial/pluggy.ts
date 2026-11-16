@@ -224,10 +224,25 @@ export class PluggyFinancial implements FinancialProvider {
 
   /** ADR-012 probe: POST /auth + GET /connectors?sandbox=true. */
   async probe(ctx: ProviderContext): Promise<Result<{ sandboxAvailable: boolean }, ProviderError>> {
+    const ids = await this.sandboxConnectorIds(ctx);
+    return ids.ok ? { ok: true, value: { sandboxAvailable: ids.value.length > 0 } } : ids;
+  }
+
+  /**
+   * Ids of the sandbox connectors only (`isSandbox: true`): the widget lists nothing else, so no real
+   * bank can be connected in this version (compliance review E11, C1).
+   */
+  async sandboxConnectorIds(ctx: ProviderContext): Promise<Result<number[], ProviderError>> {
     const r = await this.request('/connectors?sandbox=true', signalOf(ctx));
     if (!r.ok) return r;
-    const results = (r.value as Page | null)?.results ?? [];
-    return { ok: true, value: { sandboxAvailable: results.length > 0 } };
+    const results = ((r.value as Page | null)?.results ?? []) as {
+      id?: unknown;
+      isSandbox?: unknown;
+    }[];
+    const ids = results
+      .filter((c) => c.isSandbox === true && typeof c.id === 'number')
+      .map((c) => c.id as number);
+    return { ok: true, value: ids };
   }
 }
 

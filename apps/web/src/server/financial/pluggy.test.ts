@@ -184,13 +184,29 @@ describe('PluggyFinancial', () => {
 
   it('probe: sandbox connectors present → available; revoke tolerates an item already gone', async () => {
     const { p } = client({
-      'GET /connectors?sandbox=true': () => json({ results: [{ id: 0 }] }),
+      'GET /connectors?sandbox=true': () =>
+        json({
+          results: [
+            { id: 0, name: 'Pluggy Bank', isSandbox: true },
+            { id: 201, name: 'Banco real', isSandbox: false },
+            { id: 2, name: 'Pluggy Bank PJ', isSandbox: true },
+          ],
+        }),
       'DELETE /items/item-1': () => new Response(null, { status: 204 }),
       'DELETE /items/gone': () => json({}, 404),
     });
     expect(await p.probe({ mode: 'live' })).toEqual({
       ok: true,
       value: { sandboxAvailable: true },
+    });
+    // Compliance C1: only the sandbox connectors go to the widget.
+    expect(await p.sandboxConnectorIds({ mode: 'live' })).toEqual({ ok: true, value: [0, 2] });
+    const { p: realOnly } = client({
+      'GET /connectors?sandbox=true': () => json({ results: [{ id: 201, isSandbox: false }] }),
+    });
+    expect(await realOnly.probe({ mode: 'live' })).toEqual({
+      ok: true,
+      value: { sandboxAvailable: false },
     });
     expect(await p.revokeItem('item-1', { mode: 'live' })).toEqual({ ok: true, value: undefined });
     expect(await p.revokeItem('gone', { mode: 'live' })).toEqual({ ok: true, value: undefined });

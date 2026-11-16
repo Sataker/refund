@@ -28,10 +28,13 @@ type Status = {
 
 export interface ConnectActions {
   connectSample: (input: { holder: Holder }) => Promise<ClientResult<Status>>;
-  createConnectToken: (input: {
-    holder: Holder;
-  }) => Promise<
-    ClientResult<{ connectToken: string; includeSandbox: boolean; connectorTypes: string[] }>
+  createConnectToken: (input: { holder: Holder }) => Promise<
+    ClientResult<{
+      connectToken: string;
+      includeSandbox: boolean;
+      connectorTypes: string[];
+      connectorIds: number[];
+    }>
   >;
   registerItem: (input: {
     itemId: string;
@@ -142,6 +145,8 @@ export function ConnectStep({
           connectToken: token.value.connectToken,
           includeSandbox: token.value.includeSandbox,
           connectorTypes: token.value.connectorTypes as never,
+          // Only the sandbox connectors: no real bank in this version (compliance C1).
+          connectorIds: token.value.connectorIds,
           onSuccess: async ({ item }) => {
             const r = await actions.registerItem({
               itemId: item.id,

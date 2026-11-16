@@ -120,10 +120,13 @@ export async function connectSampleData(input: {
   return run('connectSampleData', (ctx) => connectSampleWith(input, deps(ctx)));
 }
 
-export async function createConnectToken(input: {
-  holder: 'PF' | 'PJ';
-}): Promise<
-  ActionResult<{ connectToken: string; includeSandbox: boolean; connectorTypes: string[] }>
+export async function createConnectToken(input: { holder: 'PF' | 'PJ' }): Promise<
+  ActionResult<{
+    connectToken: string;
+    includeSandbox: boolean;
+    connectorTypes: string[];
+    connectorIds: number[];
+  }>
 > {
   return run('createConnectToken', (ctx) => createConnectTokenWith(input, deps(ctx)));
 }
