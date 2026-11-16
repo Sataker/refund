@@ -367,6 +367,9 @@ importers:
       '@refund/sources':
         specifier: workspace:*
         version: link:../sources
+      decimal.js:
+        specifier: 10.6.0
+        version: 10.6.0
     devDependencies:
       '@refund/law':
         specifier: workspace:*

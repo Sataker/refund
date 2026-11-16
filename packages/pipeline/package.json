@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@refund/engine": "workspace:*",
-    "@refund/sources": "workspace:*"
+    "@refund/sources": "workspace:*",
+    "decimal.js": "10.6.0"
   },
   "devDependencies": {
     "@refund/law": "workspace:*",
