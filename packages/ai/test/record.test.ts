@@ -7,6 +7,7 @@ import {
   gatewayClassifyItem,
   gatewayExplainItem,
   templateItem,
+  templateRun,
 } from '../src/record.ts';
 import { explanationInputs, heroRuns } from './hero.ts';
 
@@ -45,7 +46,7 @@ describe('pnpm ai:record building blocks', () => {
       task: 'explain',
       ruleId: 'R05',
       origin: 'template',
-      promptVersion: 'template@1',
+      promptVersion: 'template@2',
       guards: { numeric: 'ok', citation: 'ok' },
     });
     const text = 'Você pode pagar R$ 34.002,40 a menos (LC 123/2006, art. 18, § 14). ';
@@ -55,7 +56,7 @@ describe('pnpm ai:record building blocks', () => {
       task: 'explain',
       ruleId: 'R05',
       origin: 'gateway',
-      promptVersion: 'explain@1',
+      promptVersion: 'explain@2',
       model: 'm',
       recordedAt: 'T',
       output: { text: text.trim(), citedRefIds: ['lc123-2006/art18/p14'] },
@@ -75,6 +76,36 @@ describe('pnpm ai:record building blocks', () => {
       recordedAt: 'T',
       output: { category: 'bank_fee', confidence: 0.9, reason: 'r' },
     });
+  });
+
+  it('templateRun keeps recorded model items, classifications included (code review 16/11, LOW 5)', () => {
+    const input = r05();
+    const other = inputs.find((i) => i.finding.ruleId === 'R02') as ExplanationInput;
+    const t: LlmClassificationInput = {
+      transactionId: 't',
+      redactedDescription: 'x',
+      amountCents: 1,
+      direction: 'inflow',
+      holder: 'PJ',
+      method: 'PIX',
+      counterpartyType: null,
+      counterpartyCnae: null,
+      allowedCategories: ['unclassified'],
+    };
+    const model = gatewayExplainItem(input, { text: 'Texto.', citedRefIds: [] }, 'm', 'OLD');
+    const cls = gatewayClassifyItem(
+      { transactionId: 't', category: 'unclassified', confidence: 0.7, reason: 'r' },
+      'm',
+      'OLD',
+    );
+    const previous = {
+      ...emptyRecordings('p'),
+      items: { [recordingKey('explain', input)]: model, [recordingKey('classify', t)]: cls },
+    };
+    const next = templateRun(previous, { explain: [input, other], classify: [t] }, 'NEW');
+    expect(next[recordingKey('explain', input)]).toBe(model);
+    expect(next[recordingKey('classify', t)]).toBe(cls);
+    expect(next[recordingKey('explain', other)]).toEqual(templateItem(other, 'NEW'));
   });
 
   it('buildRecordings: unchanged items keep recordedAt, changed ones are replaced, stale ones dropped', () => {

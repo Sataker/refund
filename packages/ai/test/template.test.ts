@@ -29,52 +29,71 @@ function knownCents(f: Finding): Set<string> {
   return new Set([...out].map((c) => formatBrl(Math.abs(c))));
 }
 
-describe('templateExplanation (hero, ENGINE-SPEC F.3)', () => {
-  it('R01: number first, "pagar a menos", the steady-state line and the cost drop from the trace', () => {
+const CLOSING = 'A conta e a lei estão em “Ver cálculo”.';
+
+describe('templateExplanation (hero, ENGINE-SPEC F.3; product review 16/11)', () => {
+  it('R01 (M4): number → why → action, steady state, cost drop, "não faça", one closing line', () => {
     expect(templateExplanation(byRule('R01'))).toBe(
-      'Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei. ' +
-        'Depois, são R$ 42.896,52 a menos por ano a partir de abril de 2027. ' +
+      'Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei, subindo seu pró-labore para R$ 2.260,00 por mês. ' +
+        'Com a folha maior, a empresa passa para uma tabela mais barata do Simples (Anexo III) a partir de abril de 2027; depois, são R$ 42.896,52 a menos por ano. ' +
         'Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20. ' +
-        'O valor usa só dados do banco, da Receita e o que foi confirmado. ' +
-        'Cada passo da conta e o artigo da lei estão em “Ver cálculo”. ' +
-        'Valide com seu contador antes de agir.',
+        'Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. ' +
+        'Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. ' +
+        CLOSING,
     );
   });
 
-  it('R05: export savings with the tradeoff the engine wrote', () => {
+  it('R05 stacked on R01 (H2, M7): its own regime line and the cost it starts from', () => {
     const text = templateExplanation(byRule('R05'));
-    expect(text).toContain('Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses');
-    expect(text).toContain('R$ 31.109,76 a menos por ano');
+    expect(text).toContain(
+      'Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D.',
+    );
+    expect(text).toContain(
+      'Com a empresa já no Anexo III, esta mudança vale R$ 31.109,76 por ano.',
+    );
+    expect(text).toContain(
+      'Somada aos ajustes acima, esta mudança leva o custo dos próximos 12 meses de R$ 80.923,20 para R$ 46.920,80.',
+    );
     expect(text).toContain('Contrapartida: ao retificar, o município pode questionar o ISS.');
+    expect(text).toContain('Não peça a restituição sem antes retificar o PGDAS-D.');
   });
 
-  it('R05-REC: the recovery range, outside the total, with the deadline', () => {
+  it('R05-REC (H3): measured, then the 48-month assumption, who pays back, deadline; "a empresa"', () => {
     const text = templateExplanation(byRule('R05-REC'));
     expect(text).toContain(
-      'Você pode ter pago de R$ 39.787,68 a R$ 198.938,40 a mais, para recuperar (estimativa).',
+      'Nos 12 meses do extrato, a empresa pagou R$ 39.787,68 a mais. ' +
+        'Se o mesmo padrão valeu nos 48 meses anteriores, chega a R$ 198.938,40 (estimativa, sem a correção pela Selic). ' +
+        'A parte federal volta da Receita; o ISS, da Prefeitura.',
     );
     expect(text).toContain('não entra no total de economia');
-    expect(text).toContain('até 23/11/2026');
-    expect(text).not.toContain('É uma estimativa'); // "(estimativa)" is already beside the range
+    expect(text).toContain(
+      'só pode ser pedido até 23/11/2026; depois dessa data, esse mês não pode mais ser pedido.',
+    );
+    expect(text).not.toMatch(/\bvocê\b|Estimativa:/i);
   });
 
-  it('R02: an alert outside the total with its trace value', () => {
+  it('R02 (H1): the withholding, the months it waits, its cost, outside the total; typographic quotes', () => {
     const text = templateExplanation(byRule('R02'));
-    expect(text).toContain('Isto é um alerta e não entra no total de economia.');
-    expect(text).toContain('Custo financeiro das retenções: R$ 1.111,70.');
-    expect(text).not.toContain('R$ 600 mil'); // the tradeoff with a number stays out of the template
+    expect(text).toContain(
+      'Os R$ 9.000,00 de IR retidos na distribuição de R$ 90.000,00 de julho de 2026 só voltam na declaração de 2027: ' +
+        'são 10 meses de dinheiro parado, que custam R$ 1.111,70 com a Selic de 15% ao ano. ' +
+        'É um alerta e não entra no total de economia.',
+    );
+    expect(text).toContain('só para “usar” o limite');
+    expect(text).not.toContain('R$ 600 mil'); // the IRPFM tradeoff amount is not in R02's trace
   });
 
   it('unanswered R01 (estimated) says it is an estimate', () => {
     const r01 = findingsOf(hero.unanswered).find((f) => f.ruleId === 'R01');
     expect(r01?.confidence).toBe('estimated');
-    expect(templateExplanation(r01 as Finding)).toContain('É uma estimativa');
+    expect(templateExplanation(r01 as Finding)).toContain('Estimativa: depende de premissas');
   });
 
   it('accountant audience: legal basis from the finding refs, no "você"', () => {
-    const r01 = byRule('R01');
-    const text = templateExplanation(r01, 'accountant');
+    const text = templateExplanation(byRule('R01'), 'accountant');
     expect(text).toContain('A empresa pode pagar R$ 28.316,52 a menos');
+    expect(text).toContain('subindo o pró-labore do sócio');
+    expect(text).toContain('o que o cliente confirmou');
     expect(text).toContain('Base legal: LC 123/2006, art. 18, § 1º-A;');
     expect(text).toContain('LC 123/2006, art. 18, § 5º-J');
     expect(text).not.toMatch(/\bvocê\b/i);
@@ -92,14 +111,15 @@ describe('templateExplanation (hero, ENGINE-SPEC F.3)', () => {
     }
   });
 
-  it('tone: no promise words (IDENTITY-AND-UI §2.3–2.4), no exclamation on money', () => {
+  it('tone: no promise words, no exclamation, one closing line', () => {
     for (const f of all) {
       const text = templateExplanation(f);
-      expect(text).not.toMatch(/garantid|você vai economizar|!/i);
+      expect(text).not.toMatch(/garantid|você vai economizar|!|Valide com seu contador/i);
+      expect(text.split('Ver cálculo').length - 1).toBe(1);
     }
   });
 
-  it('risk findings warn and do not count money', () => {
+  it('risk findings (L12): warn, outside the total, the first "não faça" without numbers', () => {
     const risk: Finding = {
       ...byRule('R02'),
       ruleId: 'A01',
@@ -107,22 +127,35 @@ describe('templateExplanation (hero, ENGINE-SPEC F.3)', () => {
       doNot: ['Use 3 cartões', 'Não pague despesa pessoal com o cartão da empresa.'],
     };
     expect(templateExplanation(risk)).toBe(
-      'Isso parece economia, mas é risco. Não recomendamos. Não pague despesa pessoal com o cartão da empresa. ' +
-        'Cada passo da conta e o artigo da lei estão em “Ver cálculo”. Valide com seu contador antes de agir.',
+      'Isso parece economia, mas é risco e não entra no total. Não recomendamos. ' +
+        'Não pague despesa pessoal com o cartão da empresa. Veja por quê em “Ver cálculo”.',
     );
   });
 
-  it('edge wording: zero marginal, depends on regulation, single-value range', () => {
+  it('generic wording when a rule has no specific trace steps', () => {
     const r01 = byRule('R01');
     const zero: Finding = { ...r01, marginalValue12m: 0 as Finding['marginalValue12m'], trace: [] };
     expect(templateExplanation(zero)).toContain('Este achado não muda o total');
+    const other: Finding = { ...r01, ruleId: 'R04', trace: [], order: 4, regimeFrom: '2027-01' };
+    expect(templateExplanation(other)).toContain(
+      'Depois, são R$ 42.896,52 a menos por ano a partir de janeiro de 2027.',
+    );
     const reg: Finding = { ...r01, confidence: 'depends_on_regulation' };
     expect(templateExplanation(reg)).toContain('Depende de norma que ainda não saiu');
-    const rec = byRule('R05-REC');
-    const single: Finding = { ...rec, range: [rec.range?.[1] ?? 0, rec.range?.[1] ?? 0] as never };
-    expect(templateExplanation(single)).toContain('Você pode ter pago R$ 198.938,40 a mais');
     const ranged: Finding = { ...r01, confidence: 'estimated', range: [100, 200] as never };
     expect(templateExplanation(ranged)).toContain('de R$ 1,00 a R$ 2,00 a menos');
+    const rec = byRule('R05-REC');
+    const plainRec: Finding = { ...rec, trace: [], byDestination: undefined as never };
+    expect(templateExplanation(plainRec)).toContain(
+      'A empresa pode ter pago de R$ 39.787,68 a R$ 198.938,40 a mais, para recuperar (estimativa).',
+    );
+    const single: Finding = { ...plainRec, range: [5, 5] as never };
+    expect(templateExplanation(single)).toContain('A empresa pode ter pago R$ 0,05 a mais');
+    const r02 = byRule('R02');
+    const twoRetentions: Finding = { ...r02, trace: [...r02.trace, ...r02.trace] };
+    expect(templateExplanation(twoRetentions)).toContain(
+      'Isto é um alerta e não entra no total de economia. Custo financeiro das retenções: R$ 1.111,70.',
+    );
   });
 
   it('formats months and dates in pt-BR', () => {

@@ -1,16 +1,21 @@
 // Deterministic explanation (ARCHITECTURE §4.5): the fallback of every LlmPort mode and the whole `template` mode.
 // Built only from the finding and its trace (ENGINE-SPEC C.10), so it passes the numeric and citation guards by
 // construction: every amount is a finding field or a trace value, and only the finding's own refs are cited.
+// Copy: IDENTITY-AND-UI §2.3 (number first, then why, then what to do; "pagar a menos"; no promise).
 import {
   type Cents,
   type CivilDate,
   type Finding,
   formatBrl,
+  type Step,
   type YearMonth,
 } from '@refund/engine';
 import type { ExplanationInput, ExplanationOutput } from '@refund/pipeline';
+import { citationGuard } from './guards/citation.ts';
+import { findingNumericGuard } from './guards/numeric.ts';
+import { formatPercent } from './guards/ptbr.ts';
 
-export const TEMPLATE_VERSION = 'template@1';
+export const TEMPLATE_VERSION = 'template@2';
 
 export type Audience = ExplanationInput['audience'];
 
@@ -52,139 +57,235 @@ function continueSentence(s: string): string {
   return first.toLowerCase() + s.slice(first.length);
 }
 
-/** A sentence the engine wrote that carries no number and no citation can be repeated without any guard risk. */
-const withoutDigits = (s: string): boolean => !/\d/.test(s);
-
 const sentence = (s: string): string => (/[.!?]$/.test(s) ? s : `${s}.`);
+/** Engine strings use straight quotes; the UI uses typographic ones. */
+const curlyQuotes = (s: string): string => s.replace(/"([^"]*)"/g, '“$1”');
 
-/** `<rule>.MARGINAL_12M` with `before`/`after` costs in cents (C.5 cost function), when the rule wrote one. */
-function costDrop(f: Finding): { before: number; after: number } | null {
-  const step = f.trace.find((s) => s.id === `${f.ruleId}.MARGINAL_12M`);
-  const before = step?.inputs.before;
-  const after = step?.inputs.after;
-  if (before?.unit !== 'cents' || after?.unit !== 'cents') return null;
-  if (typeof before.value !== 'number' || typeof after.value !== 'number') return null;
-  if (!(before.value > after.value)) return null;
-  return { before: before.value, after: after.value };
+const stepOf = (f: Finding, id: string): Step | undefined => f.trace.find((s) => s.id === id);
+
+function centsIn(step: Step | undefined, input: string): number | null {
+  const v = step?.inputs[input];
+  return v?.unit === 'cents' && typeof v.value === 'number' ? v.value : null;
 }
 
-/** The step that holds the finding's own value: `<rule>.MARGINAL_12M`, else the last step with a cents result. */
-function valueStep(f: Finding): { label: string; value: number } | null {
-  const steps = [...f.trace].reverse();
-  const step =
-    steps.find((s) => s.id === `${f.ruleId}.MARGINAL_12M` && s.result.unit === 'cents') ??
-    steps.find((s) => s.result.unit === 'cents');
-  if (step === undefined || typeof step.result.value !== 'number' || step.result.value === 0)
-    return null;
-  return { label: step.label, value: step.result.value };
+const resultCents = (step: Step | undefined): number | null =>
+  step?.result.unit === 'cents' && typeof step.result.value === 'number' ? step.result.value : null;
+
+/** A sentence the engine wrote, kept only if both guards accept it for this finding. */
+const guarded = (f: Finding, s: string): boolean =>
+  findingNumericGuard(s, f).ok && citationGuard(s, f.refs).ok;
+
+interface Voice {
+  /** "Você pode pagar" / "A empresa pode pagar". */
+  can: string;
+  confirmedBy: string;
 }
 
-function confidenceSentence(f: Finding): string {
+const voiceOf = (audience: Audience): Voice =>
+  audience === 'owner'
+    ? { can: 'Você pode pagar', confirmedBy: 'o que você confirmou' }
+    : { can: 'A empresa pode pagar', confirmedBy: 'o que o cliente confirmou' };
+
+function confidenceSentence(f: Finding, v: Voice): string {
   switch (f.confidence) {
     case 'confirmed':
-      return 'O valor usa só dados do banco, da Receita e o que foi confirmado.';
+      return `Valor confirmado: usa só dados do banco, da Receita e ${v.confirmedBy}.`;
     case 'estimated':
-      return 'É uma estimativa: depende de premissas que dá para revisar em “Ver cálculo”.';
+      return 'Estimativa: depende de premissas que podem ser revistas.';
     default:
       return 'Depende de norma que ainda não saiu; o valor pode mudar quando ela for publicada.';
   }
 }
 
-function savingsLead(f: Finding, audience: Audience): string[] {
-  const who = audience === 'owner' ? 'Você pode pagar' : 'A empresa pode pagar';
+/** The anexo a rule's last monthly step lands in ("PA 11/2027: … (Anexo III)"). */
+function lastAnexo(f: Finding): string | null {
+  for (const s of [...f.trace].reverse()) {
+    const m = /\(Anexo (I{1,3}|IV|V)\)/.exec(s.label);
+    if (m !== null) return m[1] as string;
+  }
+  return null;
+}
+
+/** What the person does, per rule, from the trace (the headline already says it; here it closes the first line). */
+function action(f: Finding, audience: Audience): string | null {
+  if (f.ruleId === 'R01') {
+    const p = resultCents(stepOf(f, 'R01.P_STAR'));
+    if (p === null) return null;
+    const whose = audience === 'owner' ? 'seu pró-labore' : 'o pró-labore do sócio';
+    return `subindo ${whose} para ${money(p)} por mês`;
+  }
+  if (f.ruleId === 'R05') return 'declarando a receita do exterior como exportação no PGDAS-D';
+  return null;
+}
+
+function savings(f: Finding, audience: Audience, v: Voice): string[] {
   const out: string[] = [];
   const lo = f.range?.[0];
   const hi = f.range?.[1];
+  const how = action(f, audience);
+  const tail = how === null ? '' : `, ${how}`;
   if (f.marginalValue12m > 0) {
-    if (f.confidence !== 'confirmed' && lo !== undefined && hi !== undefined && lo !== hi) {
-      out.push(
-        `${who} de ${money(lo)} a ${money(hi)} a menos nos próximos 12 meses, dentro da lei.`,
-      );
-    } else {
-      out.push(`${who} ${money(f.marginalValue12m)} a menos nos próximos 12 meses, dentro da lei.`);
-    }
+    out.push(
+      f.confidence !== 'confirmed' && lo !== undefined && hi !== undefined && lo !== hi
+        ? `${v.can} de ${money(lo)} a ${money(hi)} a menos nos próximos 12 meses, dentro da lei${tail}.`
+        : `${v.can} ${money(f.marginalValue12m)} a menos nos próximos 12 meses, dentro da lei${tail}.`,
+    );
   } else {
     out.push('Este achado não muda o total dos próximos 12 meses.');
   }
-  if (f.annualRegimeValue !== undefined && f.annualRegimeValue > 0) {
-    const from = f.regimeFrom === undefined ? '' : ` a partir de ${monthName(f.regimeFrom)}`;
-    out.push(`Depois, são ${money(f.annualRegimeValue)} a menos por ano${from}.`);
-  }
-  const drop = costDrop(f);
-  if (drop !== null) {
+
+  const regime = f.annualRegimeValue !== undefined && f.annualRegimeValue > 0;
+  const anexo = lastAnexo(f);
+  if (f.ruleId === 'R01' && regime && f.regimeFrom !== undefined) {
+    // R01 moves the company to the cheaper table (C.7): why, then the steady-state value.
     out.push(
-      `Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de ${money(drop.before)} para ${money(drop.after)}.`,
+      `Com a folha maior, a empresa passa para uma tabela mais barata do Simples (Anexo III) a partir de ${monthName(f.regimeFrom)}; depois, são ${money(f.annualRegimeValue as number)} a menos por ano.`,
+    );
+  } else if (regime && f.order > 1 && anexo !== null) {
+    out.push(
+      `Com a empresa já no Anexo ${anexo}, esta mudança vale ${money(f.annualRegimeValue as number)} por ano.`,
+    );
+  } else if (regime) {
+    const from = f.regimeFrom === undefined ? '' : ` a partir de ${monthName(f.regimeFrom)}`;
+    out.push(`Depois, são ${money(f.annualRegimeValue as number)} a menos por ano${from}.`);
+  }
+
+  const marginal = stepOf(f, `${f.ruleId}.MARGINAL_12M`);
+  const before = centsIn(marginal, 'before');
+  const after = centsIn(marginal, 'after');
+  if (before !== null && after !== null && before > after) {
+    // In the combined scenario (C.6) a later rule starts from the cost the earlier ones left.
+    out.push(
+      f.order > 1
+        ? `Somada aos ajustes acima, esta mudança leva o custo dos próximos 12 meses de ${money(before)} para ${money(after)}.`
+        : `Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de ${money(before)} para ${money(after)}.`,
     );
   }
   return out;
 }
 
-function recoveryLead(f: Finding, audience: Audience): string[] {
+function recovery(f: Finding): string[] {
   const out: string[] = [];
-  const [lo, hi] = f.range ?? [f.marginalValue12m, f.marginalValue12m];
-  const who = audience === 'owner' ? 'Você pode ter pago' : 'A empresa pode ter pago';
-  if (hi > 0) {
+  const range = stepOf(f, `${f.ruleId}.RANGE`);
+  const measured = centsIn(range, 'measured');
+  const months = (k: string) => {
+    const x = range?.inputs[k];
+    return x?.unit === 'months' && typeof x.value === 'number' ? x.value : null;
+  };
+  const seen = months('measuredPas');
+  const projected = months('projectedPas');
+  const max = resultCents(range);
+  const selic =
+    range !== undefined && /Selic/.test(range.label) ? ', sem a correção pela Selic' : '';
+  if (measured !== null && max !== null && seen !== null && projected !== null && max > measured) {
     out.push(
-      lo === hi
-        ? `${who} ${money(hi)} a mais, para recuperar (estimativa).`
-        : `${who} de ${money(lo)} a ${money(hi)} a mais, para recuperar (estimativa).`,
+      `Nos ${seen} meses do extrato, a empresa pagou ${money(measured)} a mais.`,
+      `Se o mesmo padrão valeu nos ${projected} meses anteriores, chega a ${money(max)} (estimativa${selic}).`,
     );
+  } else {
+    const [lo, hi] = f.range ?? [f.marginalValue12m, f.marginalValue12m];
+    if (hi > 0)
+      out.push(
+        lo === hi
+          ? `A empresa pode ter pago ${money(hi)} a mais, para recuperar (estimativa).`
+          : `A empresa pode ter pago de ${money(lo)} a ${money(hi)} a mais, para recuperar (estimativa).`,
+      );
+  }
+  const d = f.byDestination;
+  if (d !== undefined) {
+    const from = [
+      d.federal[1] > 0 ? 'a parte federal volta da Receita' : null,
+      d.municipal[1] > 0 ? 'o ISS, da Prefeitura' : null,
+      d.state[1] > 0 ? 'o ICMS, do Estado' : null,
+    ].filter((x): x is string => x !== null);
+    const [first, ...rest] = from;
+    if (first !== undefined)
+      out.push(
+        sentence(
+          `${first[0]?.toUpperCase()}${first.slice(1)}${rest.map((r) => `; ${r}`).join('')}`,
+        ),
+      );
   }
   out.push('Esse dinheiro é do passado e não entra no total de economia dos próximos 12 meses.');
-  if (f.deadline !== undefined) {
-    out.push(`Há prazo: o mês mais antigo só pode ser pedido até ${civilDateBr(f.deadline)}.`);
-  }
+  if (f.deadline !== undefined)
+    out.push(
+      `Há prazo: o mês mais antigo só pode ser pedido até ${civilDateBr(f.deadline)}; depois dessa data, esse mês não pode mais ser pedido.`,
+    );
   return out;
 }
 
-function alertLead(f: Finding): string[] {
+/** R02-like alerts: one withholding that only comes back in next year's return (FINANCIAL_COST step). */
+function withholding(f: Finding): string | null {
+  const steps = f.trace.filter((s) => s.id.startsWith(`${f.ruleId}.FINANCIAL_COST.`));
+  const [s] = steps;
+  if (steps.length !== 1 || s === undefined || s.month === undefined) return null;
+  const withheld = centsIn(s, 'withheld');
+  const total = centsIn(s, 'total');
+  const months = s.inputs.months?.value;
+  const selic = s.inputs.selicAnnual?.value;
+  const cost = resultCents(s);
+  if (withheld === null || total === null || cost === null || typeof months !== 'number')
+    return null;
+  const rate = selic === undefined ? null : formatPercent(selic);
+  const year = /DIRPF (\d{4})/.exec(f.title)?.[1] ?? String(Number(s.month.slice(0, 4)) + 1);
+  return (
+    `Os ${money(withheld)} de IR retidos na distribuição de ${money(total)} de ${monthName(s.month)} só voltam na declaração de ${year}: ` +
+    `são ${months} meses de dinheiro parado, que custam ${money(cost)}${rate === null ? '' : ` com a Selic de ${rate} ao ano`}.`
+  );
+}
+
+function alert(f: Finding): string[] {
+  const lead = withholding(f);
+  if (lead !== null) return [lead, 'É um alerta e não entra no total de economia.'];
   const out = ['Isto é um alerta e não entra no total de economia.'];
-  const v = valueStep(f);
-  if (v !== null) out.push(`${v.label.replace(/\s*\(fora do total\)/, '')}: ${money(v.value)}.`);
+  const steps = [...f.trace].reverse();
+  const step =
+    steps.find((s) => s.id === `${f.ruleId}.MARGINAL_12M` && s.result.unit === 'cents') ??
+    steps.find((s) => s.result.unit === 'cents');
+  const value = resultCents(step);
+  if (step !== undefined && value !== null && value !== 0)
+    out.push(`${step.label.replace(/\s*\(fora do total\)/, '')}: ${money(value)}.`);
   return out;
 }
 
 /**
- * The deterministic explanation of a finding (pt-BR, IDENTITY-AND-UI §2.3: number first, "pagar a menos", no
- * promise). `owner` speaks to the business owner without legalese; `accountant` adds the legal basis.
+ * The deterministic explanation of a finding (pt-BR). `owner` speaks to the business owner without legalese;
+ * `accountant` names the company and adds the legal basis.
  */
 export function templateExplanation(finding: Finding, audience: Audience = 'owner'): string {
+  const v = voiceOf(audience);
   const parts: string[] = [];
-  switch (finding.type) {
-    case 'savings':
-      parts.push(...savingsLead(finding, audience));
-      break;
-    case 'recovery':
-      parts.push(...recoveryLead(finding, audience));
-      break;
-    case 'alert':
-      parts.push(...alertLead(finding));
-      break;
-    default:
-      parts.push('Isso parece economia, mas é risco. Não recomendamos.');
-  }
-  // A recovery already says "(estimativa)" next to its range.
-  const saidEstimate = finding.type === 'recovery' && finding.confidence === 'estimated';
-  if (finding.type !== 'risk' && !saidEstimate) parts.push(confidenceSentence(finding));
+  const doNot = finding.doNot.find((s) => !/\d/.test(s));
 
-  // Only the engine's main tradeoff: a later one may speak about the opposite move (R01's "pró-labore menor").
-  const tradeoff = finding.tradeoffs[0];
-  if (tradeoff !== undefined && withoutDigits(tradeoff) && finding.type !== 'risk')
-    parts.push(sentence(`Contrapartida: ${continueSentence(tradeoff)}`));
-  if (finding.type === 'risk' || finding.type === 'alert') {
-    const doNot = finding.doNot.find(withoutDigits);
+  if (finding.type === 'risk') {
+    parts.push('Isso parece economia, mas é risco e não entra no total. Não recomendamos.');
     if (doNot !== undefined) parts.push(sentence(doNot));
+    parts.push('Veja por quê em “Ver cálculo”.');
+    return curlyQuotes(parts.join(' '));
   }
+
+  if (finding.type === 'savings') parts.push(...savings(finding, audience, v));
+  else if (finding.type === 'recovery') parts.push(...recovery(finding));
+  else parts.push(...alert(finding));
+
+  // A recovery already says "estimativa" beside its range.
+  if (!(finding.type === 'recovery' && finding.confidence === 'estimated'))
+    parts.push(confidenceSentence(finding, v));
+
+  // The engine's main tradeoff, if it holds no number or citation the guards would refuse.
+  const tradeoff = finding.tradeoffs[0];
+  if (tradeoff !== undefined && guarded(finding, tradeoff))
+    parts.push(sentence(`Contrapartida: ${continueSentence(tradeoff)}`));
+  if (doNot !== undefined) parts.push(sentence(doNot));
 
   if (audience === 'accountant') {
     if (finding.refs.length > 0)
       parts.push(`Base legal: ${finding.refs.map((r) => r.label).join('; ')}.`);
     parts.push('O cálculo completo, passo a passo, está no relatório.');
   } else {
-    parts.push('Cada passo da conta e o artigo da lei estão em “Ver cálculo”.');
-    parts.push('Valide com seu contador antes de agir.');
+    parts.push('A conta e a lei estão em “Ver cálculo”.');
   }
-  return parts.join(' ');
+  return curlyQuotes(parts.join(' '));
 }
 
 /**

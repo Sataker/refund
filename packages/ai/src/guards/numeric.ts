@@ -64,7 +64,7 @@ const COUNT_AFTER =
 const APPROX =
   /(?:cerca de|aproximadamente|quase|em torno de|perto de|por volta de|uns|umas|~)\s*(?:r\s?\$\s*)?$/;
 
-const WORD = String.raw`(?:um|uma|dois|duas|tres|quatro|cinco|seis|sete|oito|nove|dez|onze|doze|treze|quatorze|catorze|quinze|dezesseis|dezessete|dezoito|dezenove|vinte|trinta|quarenta|cinquenta|sessenta|setenta|oitenta|noventa|cem|cento|duzentos|trezentos|quatrocentos|quinhentos|seiscentos|setecentos|oitocentos|novecentos|mil|milhao|milhoes|bilhao|bilhoes)`;
+const WORD = `(?:um|uma|dois|duas|tres|quatro|cinco|seis|sete|oito|nove|dez|onze|doze|treze|quatorze|catorze|quinze|dezesseis|dezessete|dezoito|dezenove|vinte|trinta|quarenta|cinquenta|sessenta|setenta|oitenta|noventa|cem|cento|duzentos|trezentos|quatrocentos|quinhentos|seiscentos|setecentos|oitocentos|novecentos|mil|milhao|milhoes|bilhao|bilhoes)`;
 const NUMBER_WORDS = new RegExp(
   String.raw`(?<![\p{L}])${WORD}(?:\s+(?:e\s+)?${WORD})*(?![\p{L}])`,
   'gu',
@@ -236,9 +236,10 @@ function moneyAllowed(value: Exact, exp: number, approx: boolean, allowed: numbe
     const u = 10 ** unitExp;
     const trunc = Math.trunc(a / u);
     const round = Math.trunc((a + u / 2) / u);
-    return (
-      round === mantissa || (unitExp === 2 && trunc === mantissa) || (u === 1 && a === mantissa)
-    );
+    // Coarser than a real (mil, mi, "cerca de R$ 41.600"): also within 0,5% (ARCHITECTURE §4.5), so "R$ 5 mil" does
+    // not stand for any value between 4.500 and 5.499.
+    if (unitExp > 2) return round === mantissa && Math.abs(a - mantissa * u) * 200 <= a;
+    return round === mantissa || (unitExp === 2 && trunc === mantissa);
   });
 }
 

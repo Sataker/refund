@@ -83,9 +83,9 @@ describe('recordings-complete (dev-exportador)', () => {
     const r02 = answered.find((f) => f.ruleId === 'R02') as Finding;
     expect(replayed.answered.explanations.R02?.text).toContain('R$ 1.111,70');
     expect(r02.marginalValue12m).toBe(111_170);
-    expect(replayed.answered.explanations['R05-REC']?.text).toContain(
-      'R$ 39.787,68 a R$ 198.938,40',
-    );
+    const rec = replayed.answered.explanations['R05-REC']?.text;
+    expect(rec).toContain('R$ 39.787,68');
+    expect(rec).toContain('R$ 198.938,40');
   });
 });
 
