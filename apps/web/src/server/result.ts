@@ -21,7 +21,10 @@ export type ActionErrorCode =
   | 'UNAUTHENTICATED'
   | 'FORBIDDEN'
   | 'INVALID_INPUT'
-  | 'UNAVAILABLE';
+  | 'UNAVAILABLE'
+  // DomainError codes surfaced by the company and connection actions (E11).
+  | 'NOT_FOUND'
+  | 'CONSENT_REQUIRED';
 
 export interface ActionError extends DomainError {
   code: ActionErrorCode | (string & {});
