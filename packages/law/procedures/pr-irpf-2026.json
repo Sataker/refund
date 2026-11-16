@@ -1,0 +1,26 @@
+[
+  {
+    "id": "pr-irpf-2026#pgbl",
+    "kind": "procedure",
+    "label": "RFB, Perguntas e Respostas IRPF 2026 (v1.00, 23/04/2026), PGBL",
+    "text": "a) no PGBL e no Fapi, planos de caráter previdenciário, os valores das contribuições são dedutíveis na DAA, limitado a 12% do rendimento tributável incluído na base de cálculo do imposto sobre a renda na declaração.\nInformar na ficha “Pagamentos Efetuados”, de acordo com a natureza do tipo de previdência complementar, no código 36 - Previdência Complementar (inclusive FAPI), ou no código 37 – Contribuições para as entidades de previdência complementar de que trata o § 15 do art. 40 da Constituição Federal de 1988, o valor das contribuições pagas no ano-calendário;",
+    "url": "https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/dirpf/p-r-irpf-2026-v1-00-2026-04-23.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "2fd58592e48322b17f282984b30d0de4f37784666956ae738aa7d9131ad2bbe2",
+    "sourceSha256": "721038645d4de73786f1bcc72a096646305d02cba85e8d1f9517638a5aceed62",
+    "captureFile": "rfb-pr-irpf-2026-extrato.md",
+    "textFile": "rfb-pr-irpf-2026-extrato.md"
+  },
+  {
+    "id": "pr-irpf-2026#183",
+    "kind": "procedure",
+    "label": "RFB, Perguntas e Respostas IRPF 2026 (v1.00, 23/04/2026), pergunta 183",
+    "text": "São considerados isentos do imposto sobre a renda, na fonte e na declaração de ajuste do beneficiário, os valores efetivamente pagos ou distribuídos ao titular ou sócio da microempresa ou empresa de pequeno porte optante pelo Simples Nacional, salvo os que corresponderem a pró-labore, aluguéis ou serviços prestados, observado, a partir do mês de janeiro do ano-calendário de 2026, o disposto nos arts. 6º-A e 16-A da Lei nº 9.250, de 26 de dezembro de 1995.\nA isenção fica limitada ao valor resultante da aplicação dos percentuais de presunção da base de cálculo do Imposto sobre a Renda das Pessoas Jurídicas - IRPJ, de que trata o art. 15 da Lei nº 9.249, de 26 de dezembro de 1995, sobre a receita bruta mensal, no caso de antecipação de fonte, ou da receita bruta total anual, tratando-se de declaração de ajuste, subtraído do valor devido na forma do Simples Nacional no período, relativo ao IRPJ. O limite não se aplica na hipótese de a microempresa ou empresa de pequeno porte manter escrituração contábil e evidenciar lucro superior àquele limite.",
+    "url": "https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/dirpf/p-r-irpf-2026-v1-00-2026-04-23.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "c9cfe04318b5f6c20ca249c1fe3fc6303167aea1f50466d9eed8a3aaa6b79055",
+    "sourceSha256": "721038645d4de73786f1bcc72a096646305d02cba85e8d1f9517638a5aceed62",
+    "captureFile": "rfb-pr-irpf-2026-extrato.md",
+    "textFile": "rfb-pr-irpf-2026-extrato.md"
+  }
+]

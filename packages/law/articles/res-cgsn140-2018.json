@@ -114,6 +114,21 @@
     "sourceSha256": "51aed0b74a4d8d97ee0158c6c9cca5f14658369b42e07cb345e31007818ec442"
   },
   {
+    "id": "res-cgsn140-2018/art66",
+    "regulation": "res-cgsn140-2018",
+    "provision": "art. 66",
+    "label": "Res. CGSN 140/2018, art. 66",
+    "text": "Art. 66. Os documentos fiscais relativos a operações ou prestações realizadas ou recebidas, bem como os livros fiscais e contábeis, deverão ser mantidos em boa guarda, ordem e conservação enquanto não decorrido o prazo decadencial e não prescritas eventuais ações que lhes sejam pertinentes. (Lei Complementar nº 123, de 2006, art. 26, inciso II)",
+    "notes": [],
+    "effectiveFrom": null,
+    "effectiveUntil": null,
+    "url": "http://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=92278&visao=compilado",
+    "capturedAt": "2026-11-12",
+    "hash": "58da4ec6e8b3f6956b6009c85d02438a1ac05a1996a77a6c44e2407e7b08327e",
+    "sourceSha256": "714a13d5a11eea013f3b9cfc76da06ae43691a09c2837a9df3003ba6e8c4ab3c",
+    "captureFile": "res-cgsn-140-2018-compilada.md"
+  },
+  {
     "id": "res-cgsn140-2018/art128",
     "regulation": "res-cgsn140-2018",
     "provision": "art. 128",

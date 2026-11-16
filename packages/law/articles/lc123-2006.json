@@ -573,6 +573,21 @@
     "sourceSha256": "d660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d"
   },
   {
+    "id": "lc123-2006/art26/p2",
+    "regulation": "lc123-2006",
+    "provision": "art. 26, § 2º",
+    "label": "LC 123/2006, art. 26, § 2º",
+    "text": "§ 2º As demais microempresas e as empresas de pequeno porte, além do disposto nos incisos I e II do caput deste artigo, deverão, ainda, manter o livro-caixa em que será escriturada sua movimentação financeira e bancária.",
+    "notes": [],
+    "effectiveFrom": null,
+    "effectiveUntil": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm",
+    "capturedAt": "2026-11-12",
+    "hash": "4aa8b9de7b1eef0d2787ad76e40d287bee50786bf3bdcdee9a06caba8d51e035",
+    "sourceSha256": "4b9be50796785eb69a80e0067955d694d76183ef7ea4121f6bffe64cb6e0329b",
+    "captureFile": "lc-123-2006-planalto.md"
+  },
+  {
     "id": "lc123-2006/art29/viii",
     "regulation": "lc123-2006",
     "provision": "art. 29, VIII",

@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   all,
@@ -9,6 +11,7 @@ import {
   regulation,
   regulations,
 } from '../src/index.ts';
+import { byCapture, CAPTURE_SHA256, CAPTURES, sha256Bytes, squash } from './captures.ts';
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -43,8 +46,8 @@ describe(PACKAGE_NAME, () => {
   const corpus = all();
 
   it('holds the closed list of provisions of every catalogued regulation', () => {
-    expect(regulations).toHaveLength(25);
-    expect(corpus).toHaveLength(111);
+    expect(regulations).toHaveLength(26);
+    expect(corpus).toHaveLength(116);
     for (const r of regulations)
       expect(regulation(r.id)?.provisions.length ?? 0).toBeGreaterThan(0);
     for (const p of corpus) expect(short.has(p.regulation)).toBe(true);
@@ -67,12 +70,19 @@ describe(PACKAGE_NAME, () => {
     }
   });
 
-  it('keeps one source hash, url and capture date per regulation', () => {
+  it('keeps one source hash and url per capture of a regulation', () => {
     for (const r of regulations) {
       const ps = regulation(r.id)?.provisions ?? [];
-      expect(new Set(ps.map((p) => p.sourceSha256)).size, r.id).toBe(1);
-      expect(new Set(ps.map((p) => p.url)), r.id).toEqual(new Set([r.url]));
       for (const p of ps) expect(p.capturedAt).toMatch(CIVIL_DATE);
+      // The 14/11 browser extraction (no captureFile) is served from the catalog URL.
+      const extracted = ps.filter((p) => p.captureFile === undefined);
+      for (const p of extracted) expect(p.url, p.id).toBe(r.url);
+      for (const group of [extracted, ...byCapture(ps)]) {
+        if (group.length === 0) continue;
+        expect(new Set(group.map((p) => p.sourceSha256)).size, r.id).toBe(1);
+        expect(new Set(group.map((p) => p.url)).size, r.id).toBe(1);
+        expect(new Set(group.map((p) => p.capturedAt)).size, r.id).toBe(1);
+      }
     }
   });
 
@@ -188,7 +198,31 @@ describe(PACKAGE_NAME, () => {
     expect(regulation('nao-existe')).toBeUndefined();
     const lc123 = regulation('lc123-2006');
     expect(lc123?.short).toBe('LC 123/2006');
-    expect(lc123?.provisions).toHaveLength(41);
+    expect(lc123?.provisions).toHaveLength(42);
     expect(all()).toBe(corpus);
+  });
+
+  // E8b: provisions transcribed from a 12/11 capture are checked against the file itself (research 08 §12 hashes).
+  it('finds every provision transcribed from a capture verbatim in it, and the file hash matches', () => {
+    const fromCaptures = corpus.filter((p) => p.captureFile !== undefined);
+    expect(fromCaptures.map((p) => p.id).sort()).toEqual([
+      'in-sf-surem10-2019/art1-a/caput',
+      'in-sf-surem10-2019/art1-a/ii',
+      'lc123-2006/art26/p2',
+      'lei5172-1966/art173',
+      'res-cgsn140-2018/art66',
+    ]);
+    for (const p of fromCaptures) {
+      expect(p.capturedAt, p.id).toBe('2026-11-12');
+      expect(CAPTURE_SHA256[p.captureFile as string], p.id).toBe(p.sourceSha256);
+    }
+    if (CAPTURES === null) return;
+    for (const p of fromCaptures) {
+      const file = readFileSync(join(CAPTURES, p.captureFile as string));
+      expect(sha256Bytes(file), p.id).toBe(p.sourceSha256);
+      const haystack = squash(file.toString('utf8'));
+      for (const line of p.text.split('\n'))
+        expect(haystack.includes(squash(line)), line).toBe(true);
+    }
   });
 });

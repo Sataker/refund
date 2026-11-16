@@ -45,6 +45,21 @@
     "sourceSha256": "783563120ea06a257dcf3e6a0460ce1ca5525ea30147930845048009e1ba406c"
   },
   {
+    "id": "lei5172-1966/art173",
+    "regulation": "lei5172-1966",
+    "provision": "art. 173",
+    "label": "CTN, art. 173",
+    "text": "Art. 173. O direito de a Fazenda Pública constituir o crédito tributário extingue-se após 5 (cinco) anos, contados:\nI - do primeiro dia do exercício seguinte àquele em que o lançamento poderia ter sido efetuado;\nII - da data em que se tornar definitiva a decisão que houver anulado, por vício formal, o lançamento anteriormente efetuado.\nParágrafo único. O direito a que se refere êste artigo extingue-se definitivamente com o decurso do prazo nêle previsto, contado da data em que tenha sido iniciada a constituição do crédito tributário pela notificação, ao sujeito passivo, de qualquer medida preparatória indispensável ao lançamento.",
+    "notes": [],
+    "effectiveFrom": null,
+    "effectiveUntil": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/l5172compilado.htm",
+    "capturedAt": "2026-11-12",
+    "hash": "08f36b453f82a1e9017d95f5b3cbfae3d852029651f187eeedd2b42dbea358f2",
+    "sourceSha256": "410707c773eb0decd180e06e6ab6e5126f62d7c5b991f0c422ecea6663a5e15e",
+    "captureFile": "ctn-planalto.md"
+  },
+  {
     "id": "lei5172-1966/art210",
     "regulation": "lei5172-1966",
     "provision": "art. 210",

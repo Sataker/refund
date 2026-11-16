@@ -1,0 +1,14 @@
+[
+  {
+    "id": "rfb-noticia-2023-10-prazo-dctfweb",
+    "kind": "procedure",
+    "label": "RFB, notícia \"Postergado prazo de entrega da DCTFWeb\" (outubro de 2023)",
+    "text": "a DCTFWeb deverá ser apresentada mensalmente até o dia 15 do mês seguinte ao da ocorrência dos fatos geradores.\nquando o dia 15 cair em dia não útil para fins fiscais, o prazo de entrega será postergado para o primeiro dia útil após o dia 15.",
+    "url": "https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2023/outubro/postergado-prazo-de-entrega-da-dctfweb",
+    "capturedAt": "2026-11-12",
+    "hash": "f9204407265e63adc8ea5a1c420bbc84868ef12505585b1cff1f9c604cc282a1",
+    "sourceSha256": "748740f24c59134104bac80d4a04bb4139b60faf93ec99319c14ae723b068eec",
+    "captureFile": "rfb-noticia-prazo-dctfweb.md",
+    "textFile": "rfb-noticia-prazo-dctfweb.md"
+  }
+]

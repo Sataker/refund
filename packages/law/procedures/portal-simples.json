@@ -1,0 +1,14 @@
+[
+  {
+    "id": "portal-simples#restituicao-compensacao",
+    "kind": "procedure",
+    "label": "Portal do Simples Nacional, Restituição e Compensação",
+    "text": "O serviço Compensação a Pedido permite realizar a compensação de pagamentos recolhidos indevidamente ou a maior, créditos apurados no Simples Nacional, para a extinção de débitos também apurados no Simples Nacional. O aplicativo possui as seguintes funcionalidades:\nCompensar;\nO Pedido Eletrônico de Restituição permite ao contribuinte solicitar a restituição de pagamentos feitos indevidamente ou a maior, relativos aos tributos federais apurados no Simples Nacional ou SIMEI.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Servicos/Grupo.aspx?grp=17",
+    "capturedAt": "2026-11-12",
+    "hash": "272b4ebeb6e0c3393a2f05e388e1ff2178781c882b161617b6bb679fec649f3a",
+    "sourceSha256": "dbf7b3b85d54ce9a9ef247b7bf3482ab10d6fc4d56a310420a639f3249620e28",
+    "captureFile": "portal-simples-restituicao-compensacao.md",
+    "textFile": "portal-simples-restituicao-compensacao.md"
+  }
+]

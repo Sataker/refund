@@ -40,6 +40,12 @@
  * Capture: 2026-11-14, in the browser (Planalto blocks curl), by a deterministic extractor (no LLM chooses or
  * rewrites text); the extractor, the per-page captures and the SHA-256 check of every transcribed text are in
  * docs/conferencias/corpus-lei-2026-11-14/ (outside Git).
+ *
+ * Added by E8b (the C.12 action plan, 16/11): provisions the steps cite that the 14/11 extraction did not hold,
+ * transcribed from the 12/11 captures in docs/conferencias/fontes-oficiais/ (research 08 §12): LC 123/2006, art. 26,
+ * § 2º; CTN, art. 173; Res. CGSN 140/2018, art. 66; IN SF/SUREM 10/2019 (São Paulo), art. 1º-A. They carry
+ * `capturedAt` 2026-11-12, the capture's URL, `captureFile` and, as `sourceSha256`, the SHA-256 of that file; the law
+ * test finds each text verbatim in it (whitespace aside) when the captures are on disk. Same transcription rules.
  */
 
 export type RegulationKind =
@@ -48,7 +54,8 @@ export type RegulationKind =
   | 'decreto'
   | 'decreto_lei'
   | 'resolucao_cgsn'
-  | 'portaria_interministerial';
+  | 'portaria_interministerial'
+  | 'instrucao_normativa';
 
 export interface Regulation {
   id: string;
@@ -63,7 +70,7 @@ export interface Regulation {
   url: string;
   /** LexML URN; null when the act is not in the Senate's legislation dataset. */
   urn: string | null;
-  source: 'planalto' | 'receita' | 'dou';
+  source: 'planalto' | 'receita' | 'dou' | 'prefeitura_sp';
 }
 
 export const regulations: readonly Regulation[] = [
@@ -316,5 +323,15 @@ export const regulations: readonly Regulation[] = [
     url: 'https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2025/lei/L15191.htm',
     urn: 'urn:lex:br:federal:lei:2025-08-11;15191',
     source: 'planalto',
+  },
+  {
+    id: 'in-sf-surem10-2019',
+    short: 'IN SF/SUREM 10/2019',
+    name: 'Instrução Normativa SF/SUREM nº 10, de 4 de dezembro de 2019 (Município de São Paulo)',
+    kind: 'instrucao_normativa',
+    date: '2019-12-04',
+    url: 'https://legislacao.prefeitura.sp.gov.br/leis/instrucao-normativa-10-de-4-de-dezembro-de-2019',
+    urn: null,
+    source: 'prefeitura_sp',
   },
 ];

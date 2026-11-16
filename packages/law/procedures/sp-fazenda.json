@@ -1,0 +1,14 @@
+[
+  {
+    "id": "sp-fazenda#restituicao-iss",
+    "kind": "procedure",
+    "label": "Prefeitura de São Paulo, Secretaria da Fazenda, \"Restituição de Valores – ISS\"",
+    "text": "Devido ao pagamento a maior ou em duplicidade;\nDocumento de identificação pessoal do contribuinte Pessoa Física, ou representante legal de Pessoa Física ou Jurídica;\nInstrumento de constituição de Pessoa Jurídica e eventuais alterações (atas de assembleias, termos de posse em cargos de direção, etc);\nGuias e comprovantes de pagamentos das incidências reclamadas;\nSe for procurador, deverá apresentar procuração.\nO processo é autuado pelo próprio interessado, de forma gratuita, sem intermediários, via internet, no sistema SAV- Solução de Atendimento Virtual.",
+    "url": "https://prefeitura.sp.gov.br/web/fazenda/w/33671",
+    "capturedAt": "2026-11-12",
+    "hash": "1033b40e969f049c0d1790b5ee0ff9bd4fad8e5468bebf57dd13c170e4c3cad2",
+    "sourceSha256": "be344d480052063fd0ed1d6844bbd691b3361bf44673732d90aa5907e5d6b9aa",
+    "captureFile": "sp-restituicao-iss.md",
+    "textFile": "sp-restituicao-iss.md"
+  }
+]

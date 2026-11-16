@@ -1,0 +1,98 @@
+[
+  {
+    "id": "pr-simples-2026-10-09#5.11",
+    "kind": "procedure",
+    "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 5.11",
+    "text": "1. Quando o fator “r” for igual ou superior a 0,28, serão tributadas pelo Anexo III;\n2. A FS12 inclui as remunerações pagas nos 12 meses anteriores ao PA de cálculo (regime de caixa), informadas em GFIP e no eSocial/DCTFWeb.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "adf91d5ea4877ddbe8d8b347880a60b6ecf92793f0691fb8aff7f4d1ef2531c0",
+    "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
+    "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
+    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+  },
+  {
+    "id": "pr-simples-2026-10-09#6.8",
+    "kind": "procedure",
+    "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 6.8",
+    "text": "Quando não houver expediente bancário no dia 20, o prazo para pagamento fica automaticamente prorrogado para o primeiro dia útil seguinte.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "43a4061188ec2e591aed1b27f5c157db0c3cd9569442553408389e4d2c635f11",
+    "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
+    "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
+    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+  },
+  {
+    "id": "pr-simples-2026-10-09#7.2",
+    "kind": "procedure",
+    "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 7.2",
+    "text": "deve segregar a receita decorrente da venda desse produto indicando a existência de substituição tributária/tributação monofásica para as referidas contribuições, de forma que serão desconsiderados, no cálculo do Simples Nacional, os percentuais a elas correspondentes\nRessalte-se, porém, que essas receitas continuam fazendo parte da base de cálculo dos demais tributos abrangidos pelo Simples Nacional. Nota: 1. Para informações sobre enquadramento nos Anexos e cálculo, em hipóteses de tributação monofásica, ver perguntas 7.3 e 7.4.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "319d9ba8259d9b467fd38c278dd96efc2cd1bc406deb78295e76e6e4bb1aef60",
+    "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
+    "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
+    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+  },
+  {
+    "id": "pr-simples-2026-10-09#7.4",
+    "kind": "procedure",
+    "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 7.4",
+    "text": "porém desconsiderando, para fins de recolhimento em documento único de arrecadação (DAS), os percentuais correspondentes à contribuição para o PIS/Pasep e à Cofins, nos termos do art. 18, § 4-A, inciso I, e § 12 da mesma Lei Complementar. (Orientação conforme Solução de Consulta Cosit nº 173, de 25 de junho de 2014)",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "22aefbae431e8a3712c1090bd51f9392865d38c0a929134d66ee3348afb14692",
+    "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
+    "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
+    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+  },
+  {
+    "id": "pr-simples-2026-10-09#10.4",
+    "kind": "procedure",
+    "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 10.4",
+    "text": "Sim, a compensação é possível com débitos vencidos ou a vencer.\nNo momento da compensação, tanto o crédito quanto o débito serão atualizados até a data da compensação.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "e28b1bf7e63d5269554269600f16a1a97ce3ef8d78e8c0542e5b946b3b381eb2",
+    "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
+    "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
+    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+  },
+  {
+    "id": "pr-simples-2026-10-09#10.5",
+    "kind": "procedure",
+    "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 10.5",
+    "text": "A restituição dos tributos federais deve ser realizada por meio do aplicativo Pedido Eletrônico de Restituição, disponível no Portal do Simples Nacional (exclusivamente pela opção Acesso via e-CAC) e Portal de Serviços da Receita Federal.\nO acesso ao pedido de restituição somente é possível por meio utilizando autenticação gov.br ouro ou prata.\nA restituição do ICMS ou do ISS deve ser solicitada no âmbito do respectivo ente federado.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "ad637aa2957e5d55fd484304202f8bc8271d58dcf5ca2fdb283174883efb56ee",
+    "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
+    "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
+    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+  },
+  {
+    "id": "pr-simples-2026-10-09#10.6",
+    "kind": "procedure",
+    "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 10.6",
+    "text": "Todo o processo é feito de forma eletrônica, desde o pedido até a efetivação do pagamento da restituição na conta bancária.\nQuando o pedido está na situação “Deferido Total” significa que o direito creditório foi reconhecido e está aguardando pagamento.\nCaso e empresa não possua uma chave PIX, deverá providenciar o seu cadastramento junto a uma instituição financeira de sua preferência. Se não o fizer, o valor da restituição ficará retido até que a chave seja cadastrada.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "2eed0f3fd3af1e8aa2ed0bed77ae8ffe28897c94c14e568abe86ea49b55fbfd8",
+    "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
+    "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
+    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+  },
+  {
+    "id": "pr-simples-2026-10-09#10.8",
+    "kind": "procedure",
+    "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 10.8",
+    "text": "A restituição ou a compensação deve ser solicitada em, no máximo, 5 anos, contados da data do pagamento.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "aee70995b5c6fd1674729c3ceed8401a4cda0dbace7b9142bccfe20be3424cec",
+    "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
+    "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
+    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+  }
+]

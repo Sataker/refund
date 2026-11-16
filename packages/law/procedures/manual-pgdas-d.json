@@ -1,0 +1,74 @@
+[
+  {
+    "id": "manual-pgdas-d#6.4",
+    "kind": "procedure",
+    "label": "Manual do PGDAS-D e Defis (17/06/2025), item 6.4",
+    "text": "Para efetuar a declaraão, o contribuinte deve acessar o menu “Declaraão Mensal > Declarar/Retificar”.\nDeverá ser informada a receita bruta mensal auferida pela empresa (matriz e filiais) no PA, apurada pelo Regime de Competência, separando as receitas do mercado interno e externo.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "3abfad9f7bf480f5948e455637baeede108f80099c6143b660375336d39f0b48",
+    "sourceSha256": "e73b2bfc7eded9e419ddd5c516cf37cc49a78540fcd79faf4d84b77988f3f316",
+    "captureFile": "pgdas.pdf",
+    "textFile": "pgdas.txt"
+  },
+  {
+    "id": "manual-pgdas-d#6.5",
+    "kind": "procedure",
+    "label": "Manual do PGDAS-D e Defis (17/06/2025), item 6.5",
+    "text": "1 - Revenda de mercadorias, exceto para o exterior:\n9 - Prestação de Serviços para o exterior:\nSe assinalado Com substituição tributária/tributação monofásica/antecipação com encerramento de tributação, pelo menos uma das opções abaixo deverá ser selecionada, para que o aplicativo prossiga: • COFINS – Tributação monofásica; • COFINS – Substituição tributária; • PIS – Tributação monofásica;",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "fefddbd2a654f35bb2c6f372f03ca50923e0846d5096e52e463350ff28b4bd4c",
+    "sourceSha256": "e73b2bfc7eded9e419ddd5c516cf37cc49a78540fcd79faf4d84b77988f3f316",
+    "captureFile": "pgdas.pdf",
+    "textFile": "pgdas.txt"
+  },
+  {
+    "id": "manual-pgdas-d#6.10",
+    "kind": "procedure",
+    "label": "Manual do PGDAS-D e Defis (17/06/2025), item 6.10",
+    "text": "Para retificar uma declaração já transmitida no PGDAS-D, acesse o menu “Declaraão Mensal > Declarar/Retificar”.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "122e15ade361e357ca15144f09a03ee540eccd5d7f704c8f32fc22bf1fd75fb5",
+    "sourceSha256": "e73b2bfc7eded9e419ddd5c516cf37cc49a78540fcd79faf4d84b77988f3f316",
+    "captureFile": "pgdas.pdf",
+    "textFile": "pgdas.txt"
+  },
+  {
+    "id": "manual-pgdas-d#6.10.1",
+    "kind": "procedure",
+    "label": "Manual do PGDAS-D e Defis (17/06/2025), item 6.10.1",
+    "text": "Atualmente as declarações são carregadas no sistema de cobrança logo após a transmissão, ainda que os débitos estejam a vencer. Em geral, a carga ocorre, no máximo, em até 5 dias úteis após a transmissão.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "ce1abba1232658fc1a93581a010e5e6bc30e732f39bfc1b121422df8727be6ed",
+    "sourceSha256": "e73b2bfc7eded9e419ddd5c516cf37cc49a78540fcd79faf4d84b77988f3f316",
+    "captureFile": "pgdas.pdf",
+    "textFile": "pgdas.txt"
+  },
+  {
+    "id": "manual-pgdas-d#6.10.3",
+    "kind": "procedure",
+    "label": "Manual do PGDAS-D e Defis (17/06/2025), item 6.10.3",
+    "text": "Retificação no valor de receita de meses anteriores provoca alteração na receita bruta acumulada nos 12 meses anteriores ao período de apuração (RBT12), utilizada para definir a alíquota nominal e efetiva. Assim, será necessária a retificação das declarações posteriores para que seja realizado novo cálculo do valor devido desses períodos\nO valor calculado na retificação será comparado, tributo a tributo, com o valor do DAS reconhecido como pago.\nEm relação aos valores recolhidos indevidamente ou a maior, o contribuinte poderá solicitar a restituição diretamente ao respectivo ente federado.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "8fb3c6587249b246ce171911972ead35f53bc0b6cc4b88ba328fbce06bc302f7",
+    "sourceSha256": "e73b2bfc7eded9e419ddd5c516cf37cc49a78540fcd79faf4d84b77988f3f316",
+    "captureFile": "pgdas.pdf",
+    "textFile": "pgdas.txt"
+  },
+  {
+    "id": "manual-pgdas-d#8.2",
+    "kind": "procedure",
+    "label": "Manual do PGDAS-D e Defis (17/06/2025), item 8.2",
+    "text": "Caso o contribuinte possua receitas informadas relativas a atividades dos Anexos III e/ou V, sujeitas ao fator “r”, após o preenchimento das informações do último estabelecimento, serão solicitadas as informações referentes à folha de salários dos 12 meses anteriores ao PA (FS12).\nO contribuinte deve retificar os períodos de apuração (PA) posteriores ao PA em que houve a alteração no valor da folha de salário ou receita, ainda que seus valores não tenham sido modificados.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "71ac740eded31aff2c438d39377f9c4a00f2c872af07b81e01a06d70c496f586",
+    "sourceSha256": "e73b2bfc7eded9e419ddd5c516cf37cc49a78540fcd79faf4d84b77988f3f316",
+    "captureFile": "pgdas.pdf",
+    "textFile": "pgdas.txt"
+  }
+]

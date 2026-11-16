@@ -1,0 +1,14 @@
+[
+  {
+    "id": "rfb-autorizacoes-de-acesso#2-4",
+    "kind": "procedure",
+    "label": "RFB, Autorizações de Acesso: guia do usuário, itens 2 a 4",
+    "text": "2. Vá na opção Portal de Serviços Digitais:\n4. Em seguida, escolha Minhas Autorizações de Acesso:\nNo máximo até 5 anos.\nAtenção: essa confirmação deve ser feita em até 30 dias. Após esse prazo, a autorização será cancelada automaticamente.\nPara conseguir acesso, a conta Gov.Br deve ser nível prata ou ouro.",
+    "url": "https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/passo-a-passo/autorizacoes-de-acesso-guia-do-usuario",
+    "capturedAt": "2026-11-12",
+    "hash": "582d94083fc9bb2fe3006209d7466929731373722ded95b69f969174263f7f94",
+    "sourceSha256": "f36cc814048e002d0a7b335b8dab55bf0f265381e06e2a7fde54f6afb2db6bc9",
+    "captureFile": "rfb-autorizacoes-de-acesso-guia.md",
+    "textFile": "rfb-autorizacoes-de-acesso-guia.md"
+  }
+]

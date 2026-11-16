@@ -1,0 +1,32 @@
+[
+  {
+    "id": "in-sf-surem10-2019/art1-a/caput",
+    "regulation": "in-sf-surem10-2019",
+    "provision": "art. 1º-A, caput",
+    "label": "IN SF/SUREM 10/2019, art. 1º-A, caput",
+    "text": "Art. 1º-A A partir de 1º de abril de 2021, na ausência de disposição contrária em notificação de lançamento ou decisão administrativa, deverão ser protocolizados por meio do SAV os pedidos de restituição de tributo recolhido indevidamente referente a:",
+    "notes": ["(Incluído pela Instrução Normativa SF/SUREM n° 4/2021)"],
+    "effectiveFrom": "2021-04-01",
+    "effectiveUntil": null,
+    "url": "https://legislacao.prefeitura.sp.gov.br/leis/instrucao-normativa-10-de-4-de-dezembro-de-2019",
+    "capturedAt": "2026-11-12",
+    "hash": "df13174649680eb5b19cef94481cb56b627c9db2adb7a5b82c79e7a25f8d5308",
+    "sourceSha256": "b9b9d1bd12b9bb0b5a001c4153dcf54d68fa8589084c27ca999e48b9c5ce6120",
+    "captureFile": "sp-in-sf-surem-10-2019.md"
+  },
+  {
+    "id": "in-sf-surem10-2019/art1-a/ii",
+    "regulation": "in-sf-surem10-2019",
+    "provision": "art. 1º-A, II",
+    "label": "IN SF/SUREM 10/2019, art. 1º-A, II",
+    "text": "II - Imposto Sobre Serviços de Qualquer Natureza - ISS;",
+    "notes": ["(Incluído pela Instrução Normativa SF/SUREM n° 4/2021)"],
+    "effectiveFrom": "2021-04-01",
+    "effectiveUntil": null,
+    "url": "https://legislacao.prefeitura.sp.gov.br/leis/instrucao-normativa-10-de-4-de-dezembro-de-2019",
+    "capturedAt": "2026-11-12",
+    "hash": "079d90b6cf1b04e976966fc486ffa3c3e7ec2387ff55f3b54cf1f1e0448be0c4",
+    "sourceSha256": "b9b9d1bd12b9bb0b5a001c4153dcf54d68fa8589084c27ca999e48b9c5ce6120",
+    "captureFile": "sp-in-sf-surem-10-2019.md"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "sp-manual-sav-2.15#3.1",
+    "kind": "procedure",
+    "label": "Prefeitura de São Paulo, Manual do SAV (versão 2.15), item 3.1",
+    "text": "a) Para acessar ao SAV, é imprescindível que o usuário esteja cadastrado no aplicativo “Senha Web” ou no Gov.br.\nd) O interessado pode delegação seu acesso a terceiro para acessar os serviços no SAV.",
+    "url": "https://prefeitura.sp.gov.br/documents/d/fazenda/sav-2-15-pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "a33531f7bcf168eea8b65cac48b9027b2e1a7f77927c25db6456b43b9249413b",
+    "sourceSha256": "459efa228409845e837e35dd4b90aa4707a709135850d03ba69b34bde7e79526",
+    "captureFile": "sp-manual-sav-2.15-extrato.md",
+    "textFile": "sp-manual-sav-2.15-extrato.md"
+  },
+  {
+    "id": "sp-manual-sav-2.15#15.1",
+    "kind": "procedure",
+    "label": "Prefeitura de São Paulo, Manual do SAV (versão 2.15), item 15.1",
+    "text": "b) Para acessar os serviços de protocolização do pedido de restituição de tributos, após acessar o SAV mediante utilização da senha web, senha gov.br ou certificado digital, o usuário deverá acessar as seguintes telas, que são comuns a estes serviços:\nc) Para formalizar um pedido de restituição, selecione o serviço “Restituição de Tributos” na seção “Restituição e Devolução de Valores”, constante da seção “Restituição, Regularização de Pagamentos e CADIN”:\nf) Após a seleção do tributo objeto da restituição, dos dados vinculados ao pedido (exemplo: incidência, valor, código de tributação, motivo da devolução) e clicar em PRÓXIMO, o usuário deverá preencher à Tela de Dados Bancários que segue:",
+    "url": "https://prefeitura.sp.gov.br/documents/d/fazenda/sav-2-15-pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "63bc713e69e0de9778874eafee77b0eb9aa30294d0bdddf6b8a39361bae76cf4",
+    "sourceSha256": "459efa228409845e837e35dd4b90aa4707a709135850d03ba69b34bde7e79526",
+    "captureFile": "sp-manual-sav-2.15-extrato.md",
+    "textFile": "sp-manual-sav-2.15-extrato.md"
+  },
+  {
+    "id": "sp-manual-sav-2.15#15.2",
+    "kind": "procedure",
+    "label": "Prefeitura de São Paulo, Manual do SAV (versão 2.15), item 15.2",
+    "text": "a) Selecione o tributo a ser restituído (ISS – Imposto sobre Serviços de Qualquer Natureza) e clique em PRÓXIMO:\nc) Se a ORIGEM do pedido de restituição for “Pagamento a Maior ou em Duplicidade” ou Reconhecimento de Imunidade ou Isenção, preencha os dados da tela que segue w clique em ADICIONAR. Caso seja optante do Simples Nacional ou não possua CCM, assinale esta opção:",
+    "url": "https://prefeitura.sp.gov.br/documents/d/fazenda/sav-2-15-pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "2d8e3fc6db787ecbfdbe2e41bfd8309ef2a9f2ca6dd782bb71e549a73af544e4",
+    "sourceSha256": "459efa228409845e837e35dd4b90aa4707a709135850d03ba69b34bde7e79526",
+    "captureFile": "sp-manual-sav-2.15-extrato.md",
+    "textFile": "sp-manual-sav-2.15-extrato.md"
+  }
+]
