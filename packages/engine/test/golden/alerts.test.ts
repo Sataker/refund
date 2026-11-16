@@ -46,7 +46,7 @@ describe('ENGINE-SPEC D.7 — A01, personal expense paid by the PJ', () => {
     const a01 = r.findings.filter((x) => x.ruleId === 'A01');
     expect(a01).toHaveLength(1);
     const group = a01[0]?.trace.find((s) => s.id === 'A01.MERCHANT.1');
-    expect(group?.inputs.count?.value).toBe(12);
+    expect(group?.inputs.count).toEqual({ value: 12, unit: 'count' });
     expect(String(group?.inputs.transactionIds?.value).split(',')).toHaveLength(12);
     expect(group?.result.value).toBe(12 * brl('129,90'));
   });

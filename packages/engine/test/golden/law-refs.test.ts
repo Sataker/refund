@@ -34,8 +34,8 @@ import { PROCEDURE_REFS } from '../../src/parameters/legal-refs.ts';
 import { estimateByProfile } from '../../src/profile.ts';
 import { RULE_REFS, type RuleId, refsOfRule, rulesByRef } from '../../src/ref-index.ts';
 import { REFS } from '../../src/rules/refs.ts';
-import { daysInMonth } from '../../src/time.ts';
-import type { Cents, Facts, LegalRef, Step, YearMonth } from '../../src/types.ts';
+import { addMonths, daysInMonth } from '../../src/time.ts';
+import type { Cents, Facts, Finding, LegalRef, Step, YearMonth } from '../../src/types.ts';
 import { constant, fact, heroFacts, syntheticFacts } from './fixtures/facts.ts';
 import { HERO_PROFILE } from './fixtures/profile.ts';
 
@@ -92,7 +92,30 @@ function inForceIn(p: Provision, month: YearMonth): boolean {
   );
 }
 
-function checkRef(ref: LegalRef, month?: YearMonth): void {
+/** A provision is in force at some point of [from, to] (a finding's period: observed months to steady state). */
+function inForceDuring(p: Provision, [from, to]: readonly [YearMonth, YearMonth]): boolean {
+  const last = `${to}-${daysInMonth(Number(to.slice(0, 4)), Number(to.slice(5)))}`;
+  return (
+    (p.effectiveFrom === null || p.effectiveFrom <= last) &&
+    (p.effectiveUntil === null || `${from}-01` <= p.effectiveUntil)
+  );
+}
+
+/**
+ * Period a finding's refs must be in force in: from the first observed month (or the oldest recovery PA) to the end
+ * of the steady-state block (start + 35 months covers horizon and regime for any C.4 start).
+ */
+function findingPeriod(f: Finding, facts: Facts): [YearMonth, YearMonth] {
+  const start = addMonths(facts.analysisDate.slice(0, 7) as YearMonth, 1);
+  const oldest = f.recoveryItems?.map((i) => i.pa).sort()[0];
+  return [oldest ?? addMonths(facts.referenceMonth, -11), addMonths(start, 35)];
+}
+
+function checkRef(
+  ref: LegalRef,
+  month?: YearMonth,
+  period?: readonly [YearMonth, YearMonth],
+): void {
   if (ref.type === 'procedure') {
     expect(procedures.has(ref.id), ref.id).toBe(true);
     expect(ref.captureSha256).toMatch(/^[0-9a-f]{64}$/);
@@ -105,6 +128,9 @@ function checkRef(ref: LegalRef, month?: YearMonth): void {
   expect(ref.url).toBe(p.url);
   expect(ref.captureSha256).toBe(p.sourceSha256);
   if (month !== undefined) expect(inForceIn(p, month), `${ref.id} in ${month}`).toBe(true);
+  if (period !== undefined) {
+    expect(inForceDuring(p, period), `${ref.id} in ${period.join('…')}`).toBe(true);
+  }
 }
 
 describe('legal references exist in @refund/law (CLAUDE.md rule 3)', () => {
@@ -118,8 +144,11 @@ describe('legal references exist in @refund/law (CLAUDE.md rule 3)', () => {
     for (const s of withRef) checkRef(s.ref as LegalRef, s.month);
   });
 
-  it('every finding-level ref of the hero exists in the corpus', () => {
-    for (const f of r.value.findings) for (const ref of f.refs) checkRef(ref);
+  it('every finding-level ref of the hero exists in the corpus and is in force in the finding period', () => {
+    const facts = heroFacts();
+    for (const f of r.value.findings) {
+      for (const ref of f.refs) checkRef(ref, undefined, findingPeriod(f, facts));
+    }
   });
 
   it('every rule ref, every rulesByRef key and every parameter ref is valid', () => {
@@ -196,12 +225,12 @@ describe('every engine reference exists in the corpus (INV-5, all rules)', () =>
   })();
 
   for (const [name, facts] of Object.entries(scenarios)) {
-    it(`${name}: every step ref is in force in its month and every finding ref exists`, () => {
+    it(`${name}: every step ref is in force in its month, every finding ref in the finding's period`, () => {
       const res = analyze(facts);
       if (!res.ok) throw new Error(res.error.code);
       expect(res.value.findings.length).toBeGreaterThan(0);
       for (const f of res.value.findings) {
-        for (const ref of f.refs) checkRef(ref);
+        for (const ref of f.refs) checkRef(ref, undefined, findingPeriod(f, facts));
         for (const s of f.trace) if (s.ref !== undefined) checkRef(s.ref, s.month);
       }
     });
@@ -218,7 +247,7 @@ describe('every engine reference exists in the corpus (INV-5, all rules)', () =>
     );
   });
 
-  it('profile-based estimate: every applicable-rule ref and every assumption ref exists', () => {
+  it('profile-based estimate: every applicable-rule and assumption ref exists and is in force in the period', () => {
     for (const answers of [
       {
         monthlyRevenueBracket: 'from_150k_to_300k',
@@ -238,8 +267,11 @@ describe('every engine reference exists in the corpus (INV-5, all rules)', () =>
       ]) {
         const r = estimateByProfile(profile, answers, { analysisDate: '2026-11-12' });
         if (!r.ok) throw new Error(r.error.code);
-        for (const rule of r.value.rules) checkRef(rule.ref);
-        for (const a of r.value.assumptions) if (a.ref !== undefined) checkRef(a.ref);
+        // In force between the observed months and the end of the steady state of an analysis on 12/11/2026.
+        const period = ['2025-11', '2029-11'] as const;
+        for (const rule of r.value.rules) checkRef(rule.ref, undefined, period);
+        for (const a of r.value.assumptions)
+          if (a.ref !== undefined) checkRef(a.ref, undefined, period);
       }
     }
   });

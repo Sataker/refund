@@ -203,7 +203,7 @@ export function optimizerR01(
       label: 'Pró-labore de menor custo anual em regime (curva)',
       formula: 'mínimo de DAS + INSS do sócio + IR do ajuste anual entre os candidatos',
       inputs: {
-        candidates: { value: candidates.length, unit: 'months' },
+        candidates: { value: candidates.length, unit: 'count' },
         minimumCost: { value: min, unit: 'cents' },
       },
       result: { value: argmin, unit: 'cents' },

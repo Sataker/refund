@@ -186,7 +186,12 @@ export interface Step {
   formula: string; // readable: "RBT12 × alíquota nominal − parcela a deduzir"
   inputs: Record<
     string,
-    { value: number | string; unit: 'cents' | 'rate' | 'months' | 'text'; factKey?: string }
+    // 'count' ([CONTRACT] E8): a number of items (A01 payments, R01 optimizer candidates), not months.
+    {
+      value: number | string;
+      unit: 'cents' | 'rate' | 'months' | 'count' | 'text';
+      factKey?: string;
+    }
   >;
   result: { value: number | string; unit: 'cents' | 'rate' | 'text' };
   rounding: StepRounding; // [CONTRACT] ENGINE-SPEC C.8

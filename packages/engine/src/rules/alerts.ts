@@ -48,7 +48,7 @@ export function a01Finding(ctx: Ctx): Finding | null {
       label: `${merchant}: ${list.length} pagamento(s) pela conta ou cartão da empresa`,
       formula: 'saídas da PJ classificadas como gasto pessoal (ENGINE-SPEC E.7)',
       inputs: {
-        count: { value: list.length, unit: 'months' },
+        count: { value: list.length, unit: 'count' },
         months: { value: list.map((e) => formatMonth(e.month)).join(', '), unit: 'text' },
         transactionIds: { value: list.map((e) => e.transactionId).join(','), unit: 'text' },
       },
