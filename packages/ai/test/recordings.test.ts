@@ -121,7 +121,8 @@ describe('recording port', () => {
       promptVersion: EXPLAIN_PROMPT_VERSION,
       model: 'anthropic/claude-sonnet-5.5',
       recordedAt: '2026-11-15T12:00:00-03:00',
-      output: { text: 'Você economiza R$ 99.999,00.', citedRefIds: [] },
+      // The rendered text looks fine; the slotted source (what replay trusts) holds a number of its own.
+      output: { text: 'Você economiza R$ 28.316,52.', source: 'Você economiza R$ 99.999,00.' },
       guards: { numeric: 'ok', citation: 'ok' },
     });
     const out = await createLlmPort({ mode: 'recording', recordings }).explain(input);
@@ -131,6 +132,7 @@ describe('recording port', () => {
   it('a gateway recording replays with origin "recording" and its model', async () => {
     const input = r01();
     const text = 'Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses.';
+    const source = 'Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}.';
     const recordings = withItem(recordingKey('explain', input), {
       task: 'explain',
       ruleId: 'R01',
@@ -138,7 +140,7 @@ describe('recording port', () => {
       promptVersion: EXPLAIN_PROMPT_VERSION,
       model: 'anthropic/claude-sonnet-5.5',
       recordedAt: '2026-11-15T12:00:00-03:00',
-      output: { text, citedRefIds: [] },
+      output: { text: 'stale text', source },
       guards: { numeric: 'ok', citation: 'ok' },
     });
     expect(await createLlmPort({ mode: 'recording', recordings }).explain(input)).toEqual({

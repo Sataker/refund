@@ -10,7 +10,12 @@ import { guardExplanation } from './guards/index.ts';
 import { CLASSIFY_PROMPT_VERSION, EXPLAIN_PROMPT_VERSION } from './prompts/index.ts';
 import { recordingKey, stableStringify } from './replay.ts';
 import type { ExplainOutput, RecordingItem, Recordings } from './schemas.ts';
-import { safeTemplateOutput, TEMPLATE_VERSION, templateExplanation } from './templates.ts';
+import {
+  safeTemplateOutput,
+  TEMPLATE_VERSION,
+  templateExplanation,
+  templateSource,
+} from './templates.ts';
 
 export interface Captured {
   explain: ExplanationInput[];
@@ -44,15 +49,19 @@ export function capturingPort(): { port: LlmPort; captured: Captured } {
 
 /** The deterministic template as a recording item (origin 'template'): /demo is complete before any model run. */
 export function templateItem(input: ExplanationInput, recordedAt: string): RecordingItem {
-  const text = templateExplanation(input.finding, input.audience);
+  const { source } = templateSource(input.finding, input.audience);
+  const verdict = guardExplanation(source, input.finding);
   return {
     task: 'explain',
     ruleId: input.finding.ruleId,
     origin: 'template',
     promptVersion: TEMPLATE_VERSION,
     recordedAt,
-    output: { text, citedRefIds: [] },
-    guards: guardExplanation(text, input.finding).guards,
+    output: {
+      text: verdict.rendered ?? templateExplanation(input.finding, input.audience),
+      source,
+    },
+    guards: verdict.guards,
   };
 }
 
@@ -63,6 +72,8 @@ export function gatewayExplainItem(
   model: string,
   recordedAt: string,
 ): RecordingItem {
+  const source = output.text.trim();
+  const verdict = guardExplanation(source, input.finding);
   return {
     task: 'explain',
     ruleId: input.finding.ruleId,
@@ -70,8 +81,8 @@ export function gatewayExplainItem(
     promptVersion: EXPLAIN_PROMPT_VERSION,
     model,
     recordedAt,
-    output: { text: output.text.trim(), citedRefIds: output.citedRefIds },
-    guards: guardExplanation(output.text, input.finding, output.citedRefIds).guards,
+    output: { text: verdict.rendered ?? source, source },
+    guards: verdict.guards,
   };
 }
 

@@ -46,20 +46,21 @@ describe('pnpm ai:record building blocks', () => {
       task: 'explain',
       ruleId: 'R05',
       origin: 'template',
-      promptVersion: 'template@2',
+      promptVersion: 'template@3',
       guards: { numeric: 'ok', citation: 'ok' },
     });
-    const text = 'Você pode pagar R$ 34.002,40 a menos (LC 123/2006, art. 18, § 14). ';
-    expect(
-      gatewayExplainItem(input, { text, citedRefIds: ['lc123-2006/art18/p14'] }, 'm', 'T'),
-    ).toEqual({
+    const text = 'Você pode pagar {{marginalValue12m}} a menos ({{ref:3}}). ';
+    expect(gatewayExplainItem(input, { text }, 'm', 'T')).toEqual({
       task: 'explain',
       ruleId: 'R05',
       origin: 'gateway',
-      promptVersion: 'explain@2',
+      promptVersion: 'explain@3',
       model: 'm',
       recordedAt: 'T',
-      output: { text: text.trim(), citedRefIds: ['lc123-2006/art18/p14'] },
+      output: {
+        text: 'Você pode pagar R$ 34.002,40 a menos (LC 123/2006, art. 18, § 14).',
+        source: text.trim(),
+      },
       guards: { numeric: 'ok', citation: 'ok' },
     });
     expect(
@@ -92,7 +93,7 @@ describe('pnpm ai:record building blocks', () => {
       counterpartyCnae: null,
       allowedCategories: ['unclassified'],
     };
-    const model = gatewayExplainItem(input, { text: 'Texto.', citedRefIds: [] }, 'm', 'OLD');
+    const model = gatewayExplainItem(input, { text: 'Texto.' }, 'm', 'OLD');
     const cls = gatewayClassifyItem(
       { transactionId: 't', category: 'unclassified', confidence: 0.7, reason: 'r' },
       'm',
@@ -121,7 +122,7 @@ describe('pnpm ai:record building blocks', () => {
       ...META,
       items: { [key]: templateItem(input, 'OLD') },
     });
-    const changed = gatewayExplainItem(input, { text: 'Texto.', citedRefIds: [] }, 'm', 'NEW');
+    const changed = gatewayExplainItem(input, { text: 'Texto.' }, 'm', 'NEW');
     expect(buildRecordings(previous, { [key]: changed }, META).items[key]).toBe(changed);
   });
 });

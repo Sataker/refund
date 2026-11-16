@@ -110,16 +110,20 @@ export function redactNames(text: string): string {
   return out.join(' ');
 }
 
-/** Documents → "[doc]", e-mails → "[email]", phones → "[telefone]", names → "[pessoa]", digit runs → "#". */
-export function redactForModel(text: string): string {
-  const stripped = stripDocuments(text)
+/** Documents → "[doc]", e-mails → "[email]", phones → "[telefone]", digit runs → "#" (no name rule). */
+export function redactContacts(text: string): string {
+  return stripDocuments(text)
     .replace(EMAIL_SPELLED, '[email]')
     .replace(EMAIL, '[email]')
     .replace(PHONE, '[telefone]')
     .replace(CNPJ_ROOT, '#')
     .replace(LONG_DIGITS, '#')
     .replace(DIGIT_WORDS, '# ');
-  return redactNames(stripped);
+}
+
+/** `redactContacts`, then the person-name rule (`redactNames`): what a bank description may send to a model. */
+export function redactForModel(text: string): string {
+  return redactNames(redactContacts(text));
 }
 
 /** The classification input as it may leave the server, or null when something personal survives. */

@@ -20,10 +20,8 @@ export const classifyOutputSchema = z.object({
 export type ClassifyOutput = z.infer<typeof classifyOutputSchema>;
 
 export const explainOutputSchema = z.object({
-  /** pt-BR, plain language, every number copied from the data given. */
+  /** pt-BR slotted text (ADR-016): numbers and citations only as {{placeholders}}. */
   text: z.string().min(1).max(1200),
-  /** The `LegalRef.id`s the text relies on; each must be one of the finding's refs. */
-  citedRefIds: z.array(z.string()).max(20),
 });
 export type ExplainOutput = z.infer<typeof explainOutputSchema>;
 
@@ -49,7 +47,8 @@ const recordingItemSchema = z.discriminatedUnion('task', [
     promptVersion: z.string(),
     model: z.string().optional(),
     recordedAt: z.string(),
-    output: explainOutputSchema,
+    /** `source` = the slotted text as written (model or template); `text` = it rendered (for reading the file). */
+    output: z.object({ text: z.string().min(1), source: z.string().min(1) }),
     guards: guardsSchema,
   }),
   z.object({

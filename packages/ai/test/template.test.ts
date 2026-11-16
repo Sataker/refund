@@ -154,7 +154,7 @@ describe('templateExplanation (hero, ENGINE-SPEC F.3; product review 16/11)', ()
     const r02 = byRule('R02');
     const twoRetentions: Finding = { ...r02, trace: [...r02.trace, ...r02.trace] };
     expect(templateExplanation(twoRetentions)).toContain(
-      'Isto é um alerta e não entra no total de economia. Custo financeiro das retenções: R$ 1.111,70.',
+      'Isto é um alerta e não entra no total de economia. O efeito calculado é de R$ 1.111,70.',
     );
   });
 

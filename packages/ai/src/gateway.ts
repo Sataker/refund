@@ -10,7 +10,7 @@ import type {
 } from '@refund/pipeline';
 import { generateText, type LanguageModel, Output } from 'ai';
 import type { z } from 'zod';
-import { citationGuard, guardExplanation } from './guards/index.ts';
+import { citationGuard, guardExplanation, slotGuard } from './guards/index.ts';
 import { allowanceFromText, checkNumbers } from './guards/numeric.ts';
 import { type AiBudget, type AiTask, MODELS } from './models.ts';
 import {
@@ -23,7 +23,7 @@ import {
   SUMMARIZE_DIFF_PROMPT_VERSION,
   summarizeDiffPrompt,
 } from './prompts/index.ts';
-import { explanationIsClean, redactForModel, toModelInput } from './redact.ts';
+import { explanationIsClean, redactContacts, redactForModel, toModelInput } from './redact.ts';
 import {
   findClassification,
   findExplanation,
@@ -129,13 +129,13 @@ async function generate<S extends z.ZodType>(
 export const FALLBACK_REASON = 'Classificação sugerida pelo modelo.';
 
 /**
- * The model's reason, redacted, with no amount, percentage or citation at all (nothing in a reason is backed by a
- * trace; code review 16/11, MEDIUM 4).
+ * The model's reason, redacted, with no number and no citation at all: the slot guard with no slot allowed (nothing in
+ * a reason is backed by a trace; code review 16/11, MEDIUM 4). Contacts are redacted, not the name rule: a reason
+ * is no bank description.
  */
 export function safeReason(reason: string): string {
-  const text = redactForModel(reason).slice(0, 200);
-  const clean = checkNumbers(text, { cents: [], rates: [] }).ok && citationGuard(text, []).ok;
-  return clean ? text : FALLBACK_REASON;
+  const text = redactContacts(reason).slice(0, 200);
+  return slotGuard(text, new Set()).ok ? text : FALLBACK_REASON;
 }
 
 /** A model classification survives only if it answers a transaction we sent, inside that transaction's list. */
@@ -219,20 +219,20 @@ export function gatewayPort(options: GatewayOptions): LlmPort {
       options,
     );
     if (!res.ok) return safeTemplateOutput(input);
-    const verdict = guardExplanation(res.value.text, input.finding, res.value.citedRefIds);
-    if (!verdict.ok) {
+    const verdict = guardExplanation(res.value.text, input.finding);
+    if (!verdict.ok || verdict.rendered === null) {
       options.log?.({
         event: 'ai.guard_failed',
         ruleId: input.finding.ruleId,
         numeric: verdict.guards.numeric,
         citation: verdict.guards.citation,
-        outside: verdict.outsideTrace.length + verdict.outsideRefs.length,
+        outside: verdict.problems.length,
       });
       return safeTemplateOutput(input, verdict.guards);
     }
     options.onExplanation?.(input, res.value);
     return {
-      text: res.value.text.trim(),
+      text: verdict.rendered.trim(),
       origin: 'llm',
       guards: verdict.guards,
       model: res.model,

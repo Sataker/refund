@@ -81,14 +81,15 @@ export function findClassification(recordings: Recordings, input: LlmClassificat
 }
 
 /**
- * A recorded explanation as the port returns it. The guards run again (a hand-edited file cannot slip a number
- * past them); a template-written item keeps origin 'template', so the UI never labels it as the model's text.
+ * A recorded explanation as the port returns it. The slotted source crosses the guards again and is rendered with
+ * today's slots (a hand-edited file cannot slip a number past them); a template-written item keeps origin
+ * 'template', so the UI never labels it as the model's text.
  */
 export function replayExplanation(item: ExplainItem, input: ExplanationInput): ExplanationOutput {
-  const verdict = guardExplanation(item.output.text, input.finding, item.output.citedRefIds);
-  if (!verdict.ok) return safeTemplateOutput(input, verdict.guards);
+  const verdict = guardExplanation(item.output.source, input.finding);
+  if (!verdict.ok || verdict.rendered === null) return safeTemplateOutput(input, verdict.guards);
   return {
-    text: item.output.text,
+    text: verdict.rendered,
     origin: item.origin === 'gateway' ? 'recording' : 'template',
     guards: item.guards,
     ...(item.model === undefined ? {} : { model: item.model }),

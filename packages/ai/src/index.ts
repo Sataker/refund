@@ -10,6 +10,8 @@ export {
   guardExplanation,
   type NumericGuardResult,
   numericGuard,
+  type SlotVerdict,
+  slotGuard,
 } from './guards/index.ts';
 export { type AiBudget, type AiTask, DEFAULT_BUDGET, MODELS } from './models.ts';
 export { createLlmPort, type LlmPortOptions } from './port.ts';
@@ -28,10 +30,12 @@ export {
   stableStringify,
 } from './replay.ts';
 export { type RecordingItem, type Recordings, recordingsSchema } from './schemas.ts';
+export { buildSlots, renderSlots, type SlotInfo, type Slots, slotInfo } from './slots.ts';
 export {
   type Audience,
   safeTemplateOutput,
   TEMPLATE_VERSION,
   templateExplanation,
   templateOutput,
+  templateSource,
 } from './templates.ts';

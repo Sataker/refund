@@ -5,10 +5,11 @@ import {
   findingNumericGuard,
   guardExplanation,
   numericGuard,
+  slotGuard,
 } from '../src/guards/index.ts';
 import { mentions } from '../src/guards/numeric.ts';
 import { asInteger, atPrecision, parseMachine, parsePtBr, shift } from '../src/guards/ptbr.ts';
-import { createLlmPort, templateExplanation } from '../src/index.ts';
+import { createLlmPort, renderSlots, templateExplanation, templateSource } from '../src/index.ts';
 import { POISONED, REAL_EXPLANATIONS } from './fixtures/explanations.ts';
 import { findingsOf, heroRuns } from './hero.ts';
 
@@ -219,41 +220,89 @@ describe('citationGuard', () => {
   });
 });
 
+describe('slot guard (ADR-016)', () => {
+  const allowed = new Set(['marginalValue12m', 'horizon', 'ref:0']);
+  const ok = (t: string) => slotGuard(t, allowed);
+
+  it('accepts plain Portuguese with known placeholders and the fixed "lei" phrases', () => {
+    for (const t of [
+      'Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei.',
+      'Declare no PGDAS-D, a declaração mensal do Simples ({{ref:0}}). A conta e a lei estão em “Ver cálculo”.',
+      'O INSS, o IR, a CBS e o IBS ficam dentro da lei',
+    ])
+      expect(ok(t), t).toEqual({ ok: true, numeric: false, citation: false, problems: [] });
+  });
+
+  it.each([
+    ['digit', 'Em 12 meses.', { numeric: true, citation: false }],
+    ['currency', 'Custa US$ mais.', { numeric: true, citation: false }],
+    ['percent sign', 'Cai pela metade %.', { numeric: true, citation: false }],
+    ['§', 'Veja o § certo.', { numeric: false, citation: true }],
+    ['roman', 'Fica no Anexo IV.', { numeric: true, citation: true }],
+    ['zero-width', 'Você​ paga.', { numeric: true, citation: true }],
+    ['soft hyphen', 'Eco­nomia.', { numeric: true, citation: true }],
+    ['control', 'Linha\u0007.', { numeric: true, citation: true }],
+    ['Greek', 'Vοcê paga.', { numeric: true, citation: true }],
+    ['ordinal', 'O nº certo.', { numeric: true, citation: true }],
+    ['unknown placeholder', 'Paga {{x}}.', { numeric: true, citation: true }],
+    ['stray brace', 'Paga } menos.', { numeric: true, citation: true }],
+    ['percent phrase', 'Paga dez por cento.', { numeric: true, citation: false }],
+    ['legal phrase', 'Veja a medida provisória.', { numeric: false, citation: true }],
+    ['lei with a name', 'Dentro da lei Kandir.', { numeric: false, citation: true }],
+  ])('rejects %s', (_label, text, flags) => {
+    expect(ok(text)).toMatchObject({ ok: false, ...flags });
+  });
+});
+
 describe('guards on the hero (TESTS §3.5)', () => {
-  it('20 real explanations pass both guards (false positives)', () => {
+  it('20 real explanations (slotted) pass and render with the trace values', () => {
     expect(REAL_EXPLANATIONS).toHaveLength(20);
     for (const { ruleId, text } of REAL_EXPLANATIONS) {
       const v = guardExplanation(text, finding(ruleId));
-      expect({ text, ...v }).toEqual({
+      expect({ text, ok: v.ok, guards: v.guards, problems: v.problems }).toEqual({
         text,
         ok: true,
         guards: { numeric: 'ok', citation: 'ok' },
-        outsideTrace: [],
-        outsideRefs: [],
+        problems: [],
       });
+      expect(v.rendered).not.toMatch(/\{\{|\}\}/);
     }
+    const first = guardExplanation(REAL_EXPLANATIONS[0]?.text as string, finding('R01'));
+    expect(first.rendered).toContain('Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses');
+    expect(first.rendered).toContain('de R$ 1.621,00 para R$ 2.260,00 por mês');
+    expect(first.rendered).toContain('(LC 123/2006, art. 18, § 5º-J)');
   });
 
   it.each(POISONED)('poisoned $guard: $text', ({ ruleId, text, guard }) => {
     const v = guardExplanation(text, finding(ruleId));
     expect(v.ok).toBe(false);
+    expect(v.rendered).toBeNull();
     expect(v.guards[guard]).toBe('failed');
   });
 
-  it('a declared ref id outside the finding fails the citation guard', () => {
-    const r01 = finding('R01');
-    expect(guardExplanation('Texto.', r01, ['lc123-2006/art18/p5-j']).ok).toBe(true);
-    expect(guardExplanation('Texto.', r01, ['lc123-2006/art3/p14'])).toMatchObject({
-      ok: false,
-      guards: { numeric: 'ok', citation: 'failed' },
-      outsideRefs: ['lc123-2006/art3/p14'],
-    });
+  it('the template source passes the slot guard and renders to the template, for every finding and audience', () => {
+    for (const f of all)
+      for (const audience of ['owner', 'accountant'] as const) {
+        const { source } = templateSource(f, audience);
+        const v = guardExplanation(source, f);
+        expect(v.ok, `${f.ruleId} ${audience} ${v.problems.join(', ')}`).toBe(true);
+        expect(v.rendered).toBe(templateExplanation(f, audience));
+      }
   });
 
-  it('the template passes both guards for every hero finding and audience (fallback is safe)', () => {
-    for (const f of all)
-      for (const audience of ['owner', 'accountant'] as const)
-        expect(guardExplanation(templateExplanation(f, audience), f).ok, f.ruleId).toBe(true);
+  it.each(POISONED.filter((p) => !p.slotOnly))(
+    'second check (pattern guards) still refuses $guard: $text',
+    ({ ruleId, text, guard }) => {
+      const f = finding(ruleId);
+      const ok =
+        guard === 'numeric' ? findingNumericGuard(text, f).ok : citationGuard(text, f.refs).ok;
+      expect(ok).toBe(false);
+    },
+  );
+
+  it('renderSlots refuses a name it has no value for', () => {
+    expect(renderSlots('{{nope}}', {})).toBeNull();
+    expect(renderSlots('{{ a }}', { a: 'x' })).toBe('x');
   });
 
   it('the hero numbers pass only as the trace has them', () => {

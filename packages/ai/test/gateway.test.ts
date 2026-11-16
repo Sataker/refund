@@ -8,6 +8,7 @@ import {
   DEFAULT_BUDGET,
   EXPLAIN_PROMPT_VERSION,
   type GatewayOptions,
+  guardExplanation,
   MODELS,
   type Recordings,
   recordingKey,
@@ -42,18 +43,16 @@ function gateway(model: ReturnType<typeof mockModel>, over: Partial<GatewayOptio
   return { port, logs, model };
 }
 
-const explainReply = (text: string, citedRefIds: string[] = []) =>
-  JSON.stringify({ text, citedRefIds });
+const explainReply = (text: string) => JSON.stringify({ text });
 
 describe('gateway explain (AI SDK 7, mocked model)', () => {
-  it('a text that passes both guards is shown as the model wrote it', async () => {
+  it('a slotted text that passes the guards is shown filled with our values', async () => {
     const r01 = REAL_EXPLANATIONS[0] as { ruleId: string; text: string };
-    const { port, logs, model } = gateway(
-      mockModel(() => explainReply(r01.text, ['lc123-2006/art18/p5-j'])),
-    );
+    const { port, logs, model } = gateway(mockModel(() => explainReply(r01.text)));
     const out = await port.explain(inputOf('R01'));
+    expect(out.text).toContain('Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses');
     expect(out).toEqual({
-      text: r01.text,
+      text: guardExplanation(r01.text, inputOf('R01').finding).rendered,
       origin: 'llm',
       guards: { numeric: 'ok', citation: 'ok' },
       model: 'claude-sonnet-5.5',
@@ -74,8 +73,10 @@ describe('gateway explain (AI SDK 7, mocked model)', () => {
     const { port, model } = gateway(mockModel(() => explainReply('Texto.')));
     await port.explain(inputOf('R01'));
     const prompt = promptText(model.doGenerateCalls[0] as never);
-    expect(prompt).toContain('"value12Months": "R$ 28.316,52"');
-    expect(prompt).toContain('"valuePerYear": "R$ 42.896,52"');
+    expect(prompt).toContain('<slots>');
+    expect(prompt).toContain('"value": "R$ 28.316,52"');
+    expect(prompt).toContain('"value": "R$ 42.896,52"');
+    expect(prompt).toContain('"proLaboreTarget"');
     expect(prompt).toContain('"margin": "1%"');
     expect(prompt).toContain('LC 123/2006, art. 18, § 5º-J');
     expect(prompt).not.toContain('2831652');
@@ -94,14 +95,14 @@ describe('gateway explain (AI SDK 7, mocked model)', () => {
     },
   );
 
-  it('a declared ref id that is not the finding’s falls back (citation failed)', async () => {
-    const { port } = gateway(mockModel(() => explainReply('Texto sem números.', ['lc999/art1'])));
+  it('a placeholder the finding does not offer falls back (both guards failed)', async () => {
+    const { port } = gateway(mockModel(() => explainReply('Você pode pagar {{bonusValue}}.')));
     const out = await port.explain(inputOf('R01'));
     expect(out).toMatchObject({ origin: 'template', guards: { citation: 'failed' } });
   });
 
   it('output outside the schema is discarded (TESTS §3.5)', async () => {
-    for (const reply of ['{"texto":"x"}', 'not json', '{"text":"","citedRefIds":[]}']) {
+    for (const reply of ['{"texto":"x"}', 'not json', '{"text":""}']) {
       const { port, logs } = gateway(mockModel(() => reply));
       const out = await port.explain(inputOf('R05'));
       expect(out.origin, reply).toBe('template');
@@ -152,6 +153,7 @@ describe('gateway explain (AI SDK 7, mocked model)', () => {
   it('a recording is replayed before any call', async () => {
     const input = inputOf('R05');
     const text = 'Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses.';
+    const source = 'Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}.';
     const recordings: Recordings = {
       $format: 'refund.ai-recording/v1',
       persona: 'dev-exportador',
@@ -165,7 +167,7 @@ describe('gateway explain (AI SDK 7, mocked model)', () => {
           promptVersion: EXPLAIN_PROMPT_VERSION,
           model: 'anthropic/claude-sonnet-5.5',
           recordedAt: '2026-11-15T12:00:00-03:00',
-          output: { text, citedRefIds: [] },
+          output: { text, source },
           guards: { numeric: 'ok', citation: 'ok' },
         },
       },

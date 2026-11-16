@@ -1,91 +1,100 @@
-// TESTS §3.5 "false positives": explanations the way a model writes them about the hero (ENGINE-SPEC F.3), with
-// "art. 18, § 5º-J", years, "12 meses" and rounded amounts ("cerca de R$ 42,9 mil"). Hand-written stand-ins until
-// `pnpm ai:record` produces real ones; guards.test.ts also runs every gateway-recorded text it finds.
+// TESTS §3.5 "false positives", in the slotted form a model must now write (ADR-016): numbers and citations only as
+// {{placeholders}}. Hand-written stand-ins until `pnpm ai:record` produces real ones; guards.test.ts also runs every
+// gateway-recorded text it finds.
 export const REAL_EXPLANATIONS: { ruleId: string; text: string }[] = [
   {
     ruleId: 'R01',
-    text: 'Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses aumentando seu pró-labore de R$ 1.621,00 para R$ 2.260,00 por mês. Com isso, a folha passa de 28% da receita e a empresa sai do Anexo V para o Anexo III a partir de abril de 2027 (LC 123/2006, art. 18, § 5º-J).',
+    text: 'Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}} aumentando seu pró-labore de {{proLaboreCurrent}} para {{proLaboreTarget}} por mês. Com isso, a folha de pagamento passa a pesar mais em relação ao faturamento (o Fator R) e a empresa vai para o {{regimeAnexo}} a partir de {{regimeFrom}} ({{ref:3}}).',
   },
   {
     ruleId: 'R01',
-    text: 'Hoje o Fator R da empresa está em 27%, abaixo dos 28% que a lei pede para o Anexo III (art. 18, § 5º-J e § 5º-M da LC 123). Subindo o pró-labore para R$ 2.260,00, ele chega a 28% em 04/2027. O INSS sobe um pouco, mas a conta já desconta isso: são R$ 28.316,52 a menos em 12 meses.',
+    text: 'O Fator R é a folha de pagamento dividida pelo faturamento. Hoje ele está abaixo do mínimo que a regra pede para o {{regimeAnexo}} ({{ref:3}} e {{ref:5}}). Subindo o pró-labore para {{proLaboreTarget}}, ele chega lá em {{regimeFrom}}.',
   },
   {
     ruleId: 'R01',
-    text: 'Depois que o regime se acomoda, a economia fica em cerca de R$ 42,9 mil por ano, a partir de abril de 2027.',
+    text: 'Depois que o regime se acomoda, a economia fica em {{annualRegimeValue}} por ano, a partir de {{regimeFrom}}.',
   },
   {
     ruleId: 'R01',
-    text: 'O custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20, já somando DAS, INSS do sócio e IR.',
+    text: 'O custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}, já somando DAS, INSS do sócio e IR.',
   },
   {
     ruleId: 'R01',
-    text: 'A receita dos últimos 12 meses foi de R$ 600 mil e a folha sem o pró-labore, de R$ 146.880,00. Com 1 p.p. de folga, o pró-labore recomendado é R$ 2.260,00 por mês.',
+    text: 'Valor confirmado: você pode pagar {{marginalValue12m}} a menos, dentro da lei.',
   },
   {
     ruleId: 'R01',
-    text: 'Em 2026 você pagou o DAS pelo Anexo V. Pagando o pró-labore de R$ 2.260,00 todo mês, com o INSS recolhido, o DAS dos próximos 12 meses cai de R$ 107.100,00 para R$ 77.940,00.',
+    text: 'Pró-labore recomendado de {{proLaboreTarget}} para o Fator R atingir o mínimo do {{regimeAnexo}} a partir de {{regimeFrom}} ({{ref:3}}; {{ref:5}}; {{ref:7}}).',
   },
   {
     ruleId: 'R01',
-    text: 'Fator R projetado de 28% a partir do PA 04/2027 (LC 123/2006, art. 18, §§ 5º-J e 5º-M; Res. CGSN 140/2018, art. 26). Pró-labore recomendado: R$ 2.260,00; INSS do sócio em 12 meses: R$ 2.983,20.',
+    text: 'O INSS do sócio sobe um pouco, mas a conta já desconta isso: são {{marginalValue12m}} a menos nos próximos {{horizon}}.',
   },
   {
     ruleId: 'R01',
-    text: 'Você pode pagar R$ 28.316 a menos em 12 meses, com o pró-labore em R$ 2.260 por mês.',
+    text: 'Pagando o pró-labore de {{ proLaboreTarget }} todo mês, com o INSS recolhido, a empresa passa para uma tabela mais barata do Simples.',
   },
   {
     ruleId: 'R01',
-    text: 'Desde 2026 o Fator R fica abaixo de 28%. A regra do art. 18, § 5º-J, olha a folha dos 12 meses anteriores; por isso a economia começa em 04/2027 e soma R$ 28.316,52 nos próximos 12 meses.',
+    text: 'A regra olha a folha dos {{horizon}} anteriores; por isso a economia começa em {{regimeFrom}} e soma {{marginalValue12m}} nos próximos {{horizon}}.',
   },
   {
     ruleId: 'R05',
-    text: 'Sua receita vem de clientes no exterior, e exportação de serviço não paga PIS, Cofins nem ISS no Simples (LC 123/2006, art. 18, § 14). Declarando essa receita como exportação no PGDAS-D, você pode pagar R$ 34.002,40 a menos nos próximos 12 meses.',
+    text: 'Sua receita vem de clientes no exterior, e exportação de serviço não paga PIS, Cofins nem ISS no Simples ({{ref:3}}). Declarando essa receita como exportação no PGDAS-D, a declaração mensal do Simples, você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}.',
   },
   {
     ruleId: 'R05',
-    text: 'O DAS mensal cai de R$ 8.925,00 para R$ 5.609,36 enquanto a empresa estiver no Anexo V, e de R$ 5.280,00 para R$ 2.687,52 no Anexo III.',
+    text: 'Com a empresa já no {{regimeAnexo}}, segregar a exportação vale {{annualRegimeValue}} por ano.',
   },
   {
     ruleId: 'R05',
-    text: 'Em regime, são cerca de R$ 31,1 mil por ano a menos.',
+    text: 'Somada ao ajuste do pró-labore, esta mudança leva o custo dos próximos {{horizon}} de {{costBefore}} para {{costAfter}}.',
   },
   {
     ruleId: 'R05',
-    text: 'A partir de 01/2027, a CBS e o IBS também saem do DAS de quem exporta serviço consumido lá fora (LC 214/2025, art. 80).',
+    text: 'A CBS e o IBS também saem do DAS de quem exporta serviço consumido lá fora ({{ref:13}}).',
   },
   {
     ruleId: 'R05',
-    text: 'Segregando a exportação, a economia é de cerca de R$ 34 mil em 12 meses (Res. CGSN 140/2018, art. 25, § 3º).',
+    text: 'Segregando a exportação, a economia é de {{marginalValue12m}} em {{horizon}} ({{ref:5}}).',
   },
   {
     ruleId: 'R05-REC',
-    text: 'Nos 12 meses do extrato, a empresa pagou R$ 3.315,64 a mais por mês porque a exportação não foi segregada. Isso dá R$ 39.787,68 e, se o mesmo padrão vale para os 48 meses anteriores, até R$ 198.938,40 para pedir de volta (CTN, art. 168).',
+    text: 'Nos {{measuredMonths}} do extrato, a empresa pagou {{measured}} a mais, para recuperar. Se o mesmo padrão valeu nos {{projectedMonths}} anteriores, chega a {{rangeMax}} ({{ref:7}}).',
   },
   {
     ruleId: 'R05-REC',
-    text: 'Da diferença de cada mês, R$ 1.619,89 é de tributos federais e R$ 1.695,75 é de ISS, do município. O pedido do mês mais antigo vence em 23/11/2026.',
+    text: 'O pedido do mês mais antigo vence em {{deadline}}; depois disso, aquele mês não pode mais ser pedido.',
   },
   {
     ruleId: 'R05-REC',
-    text: 'A faixa vai de R$ 39,8 mil a R$ 198,9 mil, sem a correção pela Selic (Res. CGSN 140/2018, arts. 128 e 131).',
+    text: 'A faixa vai de {{rangeMin}} a {{rangeMax}}, sem a correção pela Selic, e não entra no total de economia.',
   },
   {
     ruleId: 'R02',
-    text: 'Em 07/2026 a empresa distribuiu R$ 90.000,00 e reteve R$ 9.000,00 de IR (Lei 9.250/1995, art. 6º-A). Esse dinheiro volta na declaração de 2027, mas fica parado 10 meses: com a Selic de 15% ao ano, isso custa R$ 1.111,70.',
+    text: 'Em {{withholdingMonth}} a empresa distribuiu {{distributed}} e reteve {{withheld}} de IR ({{ref:0}}). Esse dinheiro volta na declaração de {{returnYear}}, mas fica parado {{monthsWaiting}}: com a Selic de {{selicRate}} ao ano, isso custa {{financialCost}}.',
   },
   {
     ruleId: 'R02',
-    text: 'Distribuindo até R$ 50 mil por mês, por exemplo 2 × R$ 45.000,00, não há retenção e o dinheiro fica com você.',
+    text: 'É um alerta e não entra no total de economia: o custo do dinheiro parado é de {{financialCost}}.',
   },
   {
     ruleId: 'R02',
-    text: 'Retenção de R$ 9.000,00 sobre R$ 90.000,00 distribuídos em 07/2026 (Lei 9.250/1995, art. 6º-A), compensada no ajuste anual (Lei 9.250/1995, art. 16-A, § 6º).',
+    text: 'Retenção de {{withheld}} sobre {{distributed}} distribuídos em {{withholdingMonth}} ({{ref:0}}), compensada no ajuste anual ({{ref:2}}).',
   },
 ];
 
+const Z = '​';
+const SH = '­';
+
 /** TESTS §3.5 "poisoning": each must fail its guard for the finding it is checked against. */
-export const POISONED: { ruleId: string; text: string; guard: 'numeric' | 'citation' }[] = [
+export const POISONED: {
+  ruleId: string;
+  text: string;
+  guard: 'numeric' | 'citation';
+  /** Refused by the slot guard only (ADR-016); the older pattern guards were bypassed by these. */
+  slotOnly?: true;
+}[] = [
   {
     ruleId: 'R01',
     text: 'Você pode pagar R$ 31.000,00 a menos nos próximos 12 meses.',
@@ -170,4 +179,80 @@ export const POISONED: { ruleId: string; text: string; guard: 'numeric' | 'citat
     'Conforme o Parecer Normativo 3.',
     'Conforme o Ato Declaratório Interpretativo 5.',
   ].map((text) => ({ ruleId: 'R01', text, guard: 'citation' as const })),
+  // Code review re-review 16/11 (fuzz2): every string, now refused by the slot guard (ADR-016).
+  ...[
+    `Você economiza 4${Z}1${Z}6${Z}0${Z}0 por ano.`,
+    `Você economiza R$ 4${Z}1.600,00.`,
+    `Você economiza 4${SH}1${SH}6${SH}0${SH}0 a menos.`,
+    'Você paga 2050 a menos por mês.',
+    'Você paga 1999 a menos por ano.',
+    'Você paga 99 a menos por mês.',
+    'Você economiza 30.000 pagamentos.',
+    'Você economiza 41 600 reais.',
+    "Você economiza 41'600 por ano.",
+    'Você economiza trinta e cinco a menos por ano.',
+    'Você paga R$ XL mil a menos.',
+    'Você paga R$ XL a menos.',
+    'Economia de 28 pontos.',
+    'Economia de R$ 28.316,52/ano.',
+    'Pró-labore de R$ 2.260,00/mês.',
+    'Economia de R$ 28.316,52 (vinte e oito mil reais).',
+    'Economia de R$ 28.316,52 em 2027 e 41.600 em 2028.',
+    'Economia de R$ 28.316,52 até 12/2099.',
+    'Economia de R$ 12/2027.',
+    'Economia de R$ 2027-04.',
+    'Economia de US 41.600.',
+    'Economia de 41.600 dólares.',
+    'Economia de 41.600 euros.',
+    'Economia de R$ 28,3 mil e mais 9 mil.',
+    'Economia de 1e4 reais.',
+    'Economia de R$ 28.316,52 x 3 anos.',
+    'Economia de 0x7530 reais.',
+    'R$ 35 mil por ano a menos.',
+    'Você economiza a metade do imposto.',
+    'A alíquota cai alguns por cento.',
+    'Você economiza {{marginalValue12m}} e mais duzentos.',
+  ].map((text) => ({ ruleId: 'R01', text, guard: 'numeric' as const, slotOnly: true })),
+  ...[
+    'Conforme o art. 18 da lei do inquilinato.',
+    'Conforme o art. 18 do regulamento do imposto de renda.',
+    'Conforme a Lei Kandir.',
+    'Conforme a Lei Compl. 214/2025.',
+    'Conforme a L. 14.000.',
+    'Conforme o Dec. 9.580/2018.',
+    'Conforme a Port. MF 13.',
+    'Conforme a Res CGSN 999.',
+    'Conforme o Convênio ICMS 52/2017.',
+    'Conforme a LC 123/2006, аrt. 17.',
+    'Conforme a Lеi 14.000.',
+    `Conforme a LC 123/2006, art${Z}. 17.`,
+    `Conforme a L${Z}C 999.`,
+    'Conforme o art. XVIII da LC 123.',
+    'Conforme a Res. CGSN 190/2026, art. 8º, inc. XXII.',
+    'Conforme a Res. CGSN 190/2026, art. 8º, XXII.',
+    'Conforme a Res. CGSN 190/2026, art. 8º, XVI.',
+    'Conforme a Lei 8.212/1991, art. 12, V.',
+    'Conforme o art. 30.',
+    'Conforme o art. 30 da Lei 9.250.',
+    'Conforme a Lei 9.250, art. 3º-A, e o art. 12.',
+    'Conforme a Lei 9.250 (art. 12).',
+    'Conforme a Lei 9.250; art. 12.',
+    'Conforme a Lei 9.250 — art. 12.',
+    'Conforme a Lei 9.250. O art. 30 também.',
+    'Conforme o Anexo V da LC 123.',
+    'Conforme a Instrução Normativa 2.110.',
+    'Conforme a Lei nº 9.250/1995, artigo 3º-A, § 7º.',
+    'Conforme o art. 18, § 5º-J, alínea b.',
+    'Conforme o caput do art. 30 da Lei 8.212.',
+    'Conforme o STF no RE 574.706.',
+    'Conforme o REsp 1.221.170.',
+    'Conforme o ADI 5.659.',
+    'Você pode pagar {{marginalValue12m}} a menos, dentro da lei Kandir.',
+    'Conforme a súmula do tribunal.',
+    'Veja a Constituição.',
+    'Você pode pagar {{marginalValue12m}} a menos ({{ref:99}}).',
+    'Você pode pagar {{marginalValue12m}} a menos em {{bonusValue}}.',
+    'Você pode pagar {{marginalValue12m} a menos.',
+    'Você pode pagar {{marginalValue12m}} a menos (ver Мinistério).',
+  ].map((text) => ({ ruleId: 'R01', text, guard: 'citation' as const, slotOnly: true })),
 ];
