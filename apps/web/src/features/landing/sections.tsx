@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { joinWaitlist } from '@/app/(marketing)/actions';
 import { CalcTrace } from '@/components/brand/calc-trace';
 import { ConfidenceBadge } from '@/components/brand/confidence-badge';
 import { DISCLAIMER_TEXT } from '@/components/brand/disclaimer';
@@ -484,7 +485,7 @@ export function FinalCtaSection() {
             <CnpjForm id="cta" />
             <DemoLink className="mt-1" />
           </div>
-          <WaitlistForm />
+          <WaitlistForm join={joinWaitlist} />
         </div>
       </div>
     </section>
