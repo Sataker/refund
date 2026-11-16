@@ -4,7 +4,7 @@ import type { FinancialProvider } from '@refund/sources';
 import { refreshPluggyConnection } from '../connection/connections.ts';
 import { hmac, type Secrets, safeEqual } from '../crypto.ts';
 import { logger } from '../log.ts';
-import type { VerifiedEvent, WebhookVerifier } from './types.ts';
+import { minimal, type VerifiedEvent, type WebhookVerifier } from './types.ts';
 
 // ARCHITECTURE §4.9, Pluggy: it does not sign. The global webhook (scripts/pluggy-webhook.ts) sends
 // `x-refund-webhook-secret`; we compare it in constant time and check `clientId`. The event is only a
@@ -15,9 +15,18 @@ export const PLUGGY_SECRET_HEADER = 'x-refund-webhook-secret';
 export function pluggyVerifier(config: {
   secret: string | undefined;
   clientId: string | undefined;
+  /** HMAC key for the stored item id (`PII_PEPPER`): the raw id gives access to the bank data. */
+  pepper: Buffer;
 }): WebhookVerifier {
   return {
     provider: 'pluggy',
+    stored(payload) {
+      const itemId = (payload as { itemId?: unknown } | null)?.itemId;
+      return {
+        ...minimal(payload),
+        ...(typeof itemId === 'string' ? { itemIdHash: hmac(itemId, config.pepper) } : {}),
+      };
+    },
     async verify({ body, headers }) {
       if (!config.secret || !config.clientId)
         return { ok: false, error: { code: 'NOT_CONFIGURED' } };

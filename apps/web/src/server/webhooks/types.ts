@@ -23,7 +23,15 @@ export interface WebhookVerifier {
     headers: Headers;
     url: URL;
   }): Promise<Result<VerifiedEvent, VerifyError>>;
+  /**
+   * What `webhook_events.payload` keeps (ADR-010: minimal). Identifiers that give access to data are
+   * stored only as an HMAC (ARCHITECTURE §9.3). Default: event name, event id and trigger only.
+   */
+  stored?(payload: unknown): Record<string, unknown>;
 }
+
+/** Larger bodies are refused before parsing (code review E11). */
+export const MAX_WEBHOOK_BODY_BYTES = 64 * 1024;
 
 export interface ReceiveDeps {
   db: Db;
@@ -43,7 +51,10 @@ export async function receiveWebhook(
   deps: ReceiveDeps,
   process: (ev: VerifiedEvent) => Promise<'processed' | 'ignored'>,
 ): Promise<Response> {
+  const declared = Number(req.headers.get('content-length') ?? '0');
+  if (declared > MAX_WEBHOOK_BODY_BYTES) return json(413, { ok: false });
   const body = await req.text();
+  if (Buffer.byteLength(body, 'utf8') > MAX_WEBHOOK_BODY_BYTES) return json(413, { ok: false });
   const verified = await v.verify({ body, headers: req.headers, url: new URL(req.url) });
   if (!verified.ok) {
     logger.warn('webhook.rejected', { provider: v.provider, code: verified.error.code });
@@ -56,7 +67,7 @@ export async function receiveWebhook(
       provider: v.provider,
       eventId: ev.eventId,
       type: ev.type,
-      payload: minimal(ev.payload),
+      payload: v.stored ? v.stored(ev.payload) : minimal(ev.payload),
     });
   } catch (err) {
     logger.error('webhook.error', { provider: v.provider, error: err });
@@ -75,12 +86,12 @@ export async function receiveWebhook(
   return json(200, { ok: true });
 }
 
-/** Only ids and the event name are stored (ADR-010: "the stored payload is minimal"). */
-function minimal(payload: unknown): Record<string, unknown> {
+/** Only the event name, its id and the trigger (ADR-010: "the stored payload is minimal"). */
+export function minimal(payload: unknown): Record<string, unknown> {
   if (payload === null || typeof payload !== 'object') return {};
   const p = payload as Record<string, unknown>;
   const out: Record<string, unknown> = {};
-  for (const key of ['event', 'eventId', 'itemId', 'accountId', 'triggeredBy']) {
+  for (const key of ['event', 'eventId', 'triggeredBy']) {
     if (typeof p[key] === 'string') out[key] = p[key];
   }
   return out;

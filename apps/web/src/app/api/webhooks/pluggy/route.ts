@@ -16,10 +16,6 @@ export const maxDuration = 60;
 export async function POST(req: Request): Promise<Response> {
   const env = readEnv().values;
   const secrets = serverSecrets();
-  const verifier = pluggyVerifier({
-    secret: env.PLUGGY_WEBHOOK_SECRET,
-    clientId: env.PLUGGY_CLIENT_ID,
-  });
   let handle: Awaited<ReturnType<typeof getDb>> = null;
   try {
     handle = secrets ? await getDb() : null;
@@ -32,6 +28,11 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ ok: false }, { status: 401 });
   }
   const db = handle.db;
+  const verifier = pluggyVerifier({
+    secret: env.PLUGGY_WEBHOOK_SECRET,
+    clientId: env.PLUGGY_CLIENT_ID,
+    pepper: secrets.pepper,
+  });
   const provider = pluggyProvider(capabilities(), secrets);
   return receiveWebhook(verifier, req, { db, defer: waitUntil }, (ev) =>
     processPluggyEvent(ev, { db, secrets, provider }),
