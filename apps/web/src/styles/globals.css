@@ -461,6 +461,17 @@
   }
 }
 
+/* First-access track (IDENTITY-AND-UI §5): each step enters from the right, 240ms ease-out. */
+.step-enter {
+  animation: step-enter 240ms var(--ease-out-expo) both;
+}
+@keyframes step-enter {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -479,6 +490,9 @@
     animation: none;
   }
   .enter {
+    animation: fade-in 200ms linear both;
+  }
+  .step-enter {
     animation: fade-in 200ms linear both;
   }
   html:focus-within {

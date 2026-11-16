@@ -1,0 +1,232 @@
+import { notFound, redirect } from 'next/navigation';
+import { CnpjStep } from '@/features/company/cnpj-step.client';
+import { CompanyCard } from '@/features/company/company-card';
+import { EstimateView } from '@/features/company/estimate-view';
+import { ConnectStep } from '@/features/connection/connect-step.client';
+import { ConsentContent } from '@/features/connection/consent-content';
+import { AdvanceButton } from '@/features/track/advance-button.client';
+import { ChoiceStep } from '@/features/track/choice-step.client';
+import { LiveUnavailable } from '@/features/track/live-unavailable';
+import {
+  ABROAD_OPTIONS,
+  access,
+  EMPLOYEES_OPTIONS,
+  isStep,
+  REVENUE_OPTIONS,
+  type Step,
+  stepPath,
+  type TrackProgress,
+} from '@/features/track/steps';
+import { StepTitle, TrackShell } from '@/features/track/track-shell';
+import { estimateFor } from '@/server/company/lookup.ts';
+import { completeAnswers } from '@/server/company/profile.ts';
+import { CONSENT_SCOPES, TERMS_VERSION } from '@/server/connection/connections.ts';
+import { pluggyAvailable } from '@/server/financial/availability.ts';
+import { liveContext } from '@/server/live.ts';
+import { loadTrack, type TrackCompany } from '@/server/track/state.ts';
+import {
+  answerStep,
+  confirmCompany,
+  connectSampleData,
+  createConnectToken,
+  getConnectionStatus,
+  lookupCnpj,
+  markEstimateSeen,
+  recordConsent,
+  registerPluggyItem,
+  rejectCompany,
+  revokeConnection,
+  skipPersonalAccount,
+} from '../actions';
+
+// First-access track, one step per screen (D19; IDENTITY-AND-UI §5; ARCHITECTURE §13). The step comes
+// from the URL, the progress from the anonymous session; a future step or a skipped conditional step
+// redirects to the right one, and answered steps stay open for corrections.
+
+interface PageProps {
+  params: Promise<{ passo: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+const CONNECT_ACTIONS = {
+  connectSample: connectSampleData,
+  createConnectToken,
+  registerItem: registerPluggyItem,
+  getStatus: getConnectionStatus,
+  revoke: revokeConnection,
+};
+
+export default async function TrackStepPage({ params, searchParams }: PageProps) {
+  const { passo } = await params;
+  if (!isStep(passo)) notFound();
+  const ctx = await liveContext();
+  if (!ctx.ok) return <LiveUnavailable message={ctx.error.message} />;
+  const { db, userId, caps, secrets } = ctx.value;
+  const { progress, company } = await loadTrack(db, userId);
+  const gate = access(passo, progress);
+  if (gate.kind === 'redirect') redirect(stepPath(gate.to) as never);
+
+  const query = await searchParams;
+  const typed = typeof query.cnpj === 'string' ? query.cnpj : undefined;
+  const pluggyOn =
+    passo === 'conta-pj' || passo === 'conta-pf' ? await pluggyAvailable(caps, secrets) : false;
+
+  return (
+    <TrackShell step={passo} progress={progress}>
+      <StepBody
+        step={passo}
+        progress={progress}
+        company={company}
+        typedCnpj={typed}
+        pluggyOn={pluggyOn}
+      />
+    </TrackShell>
+  );
+}
+
+function StepBody({
+  step,
+  progress,
+  company,
+  typedCnpj,
+  pluggyOn,
+}: {
+  step: Step;
+  progress: TrackProgress;
+  company: TrackCompany | null;
+  typedCnpj: string | undefined;
+  pluggyOn: boolean;
+}) {
+  switch (step) {
+    case 'cnpj':
+      return (
+        <>
+          <StepTitle title="Qual é o CNPJ da sua empresa?" />
+          <CnpjStep lookup={lookupCnpj} {...(typedCnpj ? { initial: typedCnpj } : {})} />
+        </>
+      );
+    case 'confirmar-empresa':
+      if (!company) return null;
+      return (
+        <>
+          <StepTitle title="É você?" />
+          <CompanyCard company={company.company} />
+          <div className="mt-8 flex flex-col gap-2">
+            <AdvanceButton action={confirmCompany} label="Sou eu" testId="confirm-company" />
+            <AdvanceButton
+              action={rejectCompany}
+              label="Não é minha empresa"
+              variant="link"
+              arrow={false}
+              testId="reject-company"
+              className="-mt-2 items-start"
+            />
+          </div>
+        </>
+      );
+    case 'faturamento':
+      return (
+        <>
+          <StepTitle title="Quanto a empresa fatura por mês, em média?" />
+          <ChoiceStep
+            name="Faturamento médio por mês"
+            options={REVENUE_OPTIONS}
+            selected={progress.answers.monthlyRevenueBracket}
+            save={answerStep.bind(null, 'faturamento')}
+            footnote="É só para estimar. O número exato vem do extrato."
+          />
+        </>
+      );
+    case 'funcionarios':
+      return (
+        <>
+          <StepTitle title="Tem funcionários com carteira assinada?" />
+          <ChoiceStep
+            name="Funcionários com carteira assinada"
+            options={EMPLOYEES_OPTIONS}
+            selected={progress.answers.hasEmployees}
+            save={answerStep.bind(null, 'funcionarios')}
+            footnote="É só para estimar. O número exato vem do extrato."
+          />
+        </>
+      );
+    case 'exterior':
+      return (
+        <>
+          <StepTitle title="Recebe de clientes no exterior?" />
+          <ChoiceStep
+            name="Receita de clientes no exterior"
+            options={ABROAD_OPTIONS}
+            selected={progress.answers.receivesFromAbroad}
+            save={answerStep.bind(null, 'exterior')}
+            footnote="É só para estimar. O número exato vem do extrato."
+          />
+        </>
+      );
+    case 'estimativa': {
+      if (!company) return null;
+      const estimate = estimateFor(company.company, completeAnswers(progress.answers));
+      return (
+        <>
+          <StepTitle title="Quanto isso pode valer para você?" />
+          {estimate.ok ? (
+            <EstimateView estimate={estimate.value} cnae={company.company.primaryCnae.code} />
+          ) : (
+            <p className="type-body-lg text-muted-foreground" role="alert">
+              {estimate.error.message}
+            </p>
+          )}
+          <AdvanceButton
+            action={markEstimateSeen}
+            label="Ver o número exato"
+            testId="see-exact-number"
+            className="mt-8"
+          />
+        </>
+      );
+    }
+    case 'permissoes':
+      return (
+        <>
+          <StepTitle title="O que vamos ler e o que nunca fazemos" />
+          <ConsentContent />
+          <AdvanceButton
+            action={recordConsent.bind(null, {
+              scopes: [...CONSENT_SCOPES],
+              termsVersion: TERMS_VERSION,
+            })}
+            label="Conectar com Open Finance"
+            testId="give-consent"
+            className="mt-8"
+          />
+        </>
+      );
+    case 'conta-pj':
+      return (
+        <>
+          <StepTitle title="Conecte a conta da empresa" />
+          <ConnectStep
+            holder="PJ"
+            pluggyOn={pluggyOn}
+            existing={progress.pj}
+            nextHref={stepPath('conta-pf')}
+            {...(company ? { companyCnpj: company.company.cnpj } : {})}
+            actions={CONNECT_ACTIONS}
+          />
+        </>
+      );
+    case 'conta-pf':
+      return (
+        <>
+          <StepTitle title="Agora a sua conta pessoal" />
+          <ConnectStep
+            holder="PF"
+            pluggyOn={pluggyOn}
+            existing={progress.pf}
+            nextHref={stepPath('done')}
+            actions={{ ...CONNECT_ACTIONS, skip: skipPersonalAccount }}
+          />
+        </>
+      );
+  }
+}
