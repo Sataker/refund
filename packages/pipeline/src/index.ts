@@ -22,7 +22,25 @@ export {
   type TotalDto,
   toSseFrame,
 } from './events.ts';
-export { normalizeDescription, transactionId } from './normalize.ts';
+export {
+  buildFinancialView,
+  type ChargeRow,
+  type DuplicateSuspect,
+  FINANCIAL_GROUPS,
+  type FinancialGroupId,
+  type FinancialView,
+  type FinancialViewFinding,
+  type FinancialViewInput,
+  financialViewOfRun,
+  type GroupLine,
+  type HolderView,
+  type MonthHighlight,
+  type MonthValue,
+  type OutflowChange,
+  type TaxSeal,
+  type TaxSealKind,
+} from './financial-view.ts';
+export { normalizeDescription, normalizeTransactions, transactionId } from './normalize.ts';
 export type {
   AnalysisClock,
   ExplanationInput,
@@ -32,6 +50,7 @@ export type {
   LlmPort,
 } from './ports.ts';
 export { CATEGORY_LABEL } from './questions.ts';
+export { ratioBps } from './ratio.ts';
 export { runAnalysis } from './run.ts';
 export {
   type AnalysisDeps,

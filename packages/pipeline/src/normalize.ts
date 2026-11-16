@@ -58,3 +58,22 @@ export function normalizeTransaction(
     },
   };
 }
+
+/**
+ * The run's normalization over an array (same rules as `runAnalysis`: invalid rows dropped, first id wins, sorted by
+ * date then id). The financial view needs the transactions themselves, which `PipelineResult` does not carry.
+ */
+export function normalizeTransactions(
+  accounts: readonly SourceAccount[],
+  transactions: readonly SourceTransaction[],
+): NormalizedTransaction[] {
+  const byAccount = new Map(accounts.map((a) => [a.sourceId, a]));
+  const byId = new Map<string, NormalizedTransaction>();
+  for (const tx of transactions) {
+    const n = normalizeTransaction(tx, byAccount);
+    if (n.ok && !byId.has(n.value.id)) byId.set(n.value.id, n.value);
+  }
+  return [...byId.values()].sort((a, b) =>
+    a.date < b.date ? -1 : a.date > b.date ? 1 : a.id < b.id ? -1 : 1,
+  );
+}
