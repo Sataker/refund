@@ -472,6 +472,156 @@
   }
 }
 
+/* ---------- /demo track and live analysis (E12; IDENTITY-AND-UI §4.9 and §5 Screens 1–4) ---------- */
+
+/* The persona's answer is pre-selected and the advance button highlighted ("On /demo"): a cobalt outline
+   that breathes on a pseudo-element (opacity only), still under reduced motion. */
+.demo-cue {
+  position: relative;
+}
+.demo-cue::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: calc(var(--radius-md) + 4px);
+  border: 2px solid var(--accent-c);
+  pointer-events: none;
+  animation: cue 2s var(--ease-in-out) infinite;
+}
+@keyframes cue {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* A check that lands (220ms, scale + opacity): Screen 3 and the stage list of Screen 4. */
+.check-draw {
+  animation: check-pop var(--dur-base) var(--ease-out-expo) both;
+}
+@keyframes check-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+}
+
+/* "Esperando o seu banco…": indeterminate bar. */
+.indeterminate {
+  animation: indeterminate 900ms var(--ease-in-out) infinite;
+}
+@keyframes indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+/* Loading skeleton (§5 default states): shimmer 1,2 s, --surface-2 → --surface-3. */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.spin-ring {
+  animation: spin 800ms linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Stage 1: the statement scrolls masked at the edges (script 1, 40 lines/s feel). */
+.scroll-mask {
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+}
+.tx-roll {
+  animation: tx-roll 1.6s linear infinite;
+}
+@keyframes tx-roll {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+/* Stage 2: PF/PJ chips "flip" onto the lines (140ms). */
+.chip-flip {
+  animation: chip-flip var(--dur-fast) var(--ease-standard) both;
+}
+@keyframes chip-flip {
+  from {
+    opacity: 0;
+    transform: rotateX(90deg);
+  }
+}
+
+/* The number settles: scale 1.00 → 1.02 → 1.00 (360ms). */
+.money-settle {
+  animation: money-settle var(--dur-slow) var(--ease-out-expo) both;
+  transform-origin: left center;
+}
+@keyframes money-settle {
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* "Ver meu painel" enters (fade + y, 220ms) after the confetti. */
+.result-enter {
+  animation: enter var(--dur-base) var(--ease-out-expo) both;
+  animation-delay: 500ms;
+}
+
+/* Script 3: 28 slips fired upward from below the number, ±35°, 1.100ms, fading in the last 300ms. */
+.confetti > span {
+  position: absolute;
+  left: 30%;
+  bottom: 18%;
+  width: 4px;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--c);
+  opacity: 0;
+  animation: confetti 1100ms cubic-bezier(0.2, 0.6, 0.4, 1) both;
+}
+@keyframes confetti {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(calc(var(--x) * 0.8), var(--y)) rotate(calc(var(--r) * 0.6));
+  }
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x), calc(var(--y) * 0.2 + 40px)) rotate(var(--r));
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -494,6 +644,29 @@
   }
   .step-enter {
     animation: fade-in 200ms linear both;
+  }
+  .demo-cue::after {
+    animation: none;
+    opacity: 0.6;
+  }
+  .check-draw {
+    animation: fade-in 200ms linear both;
+  }
+  .indeterminate,
+  .shimmer,
+  .spin-ring,
+  .tx-roll {
+    animation: none;
+  }
+  .chip-flip,
+  .result-enter {
+    animation: fade-in 200ms linear both;
+  }
+  .money-settle {
+    animation: none;
+  }
+  .confetti {
+    display: none;
   }
   html:focus-within {
     scroll-behavior: auto;

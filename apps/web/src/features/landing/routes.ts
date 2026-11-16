@@ -1,10 +1,10 @@
 import type { Route } from 'next';
 
-// Routes the landing links to before they exist (typedRoutes would reject the literals). /demo arrives with
-// E12; the support pages with the stage that builds them (EXECUTION, "/como-funciona, /seguranca, /motor,
-// /status, /privacidade, /termos"). Remove the casts as each route lands.
+// Routes the landing links to. /demo exists since E12; the support pages still arrive with the stage that
+// builds them (EXECUTION, "/como-funciona, /seguranca, /motor, /status, /privacidade, /termos"), so they keep
+// a cast (typedRoutes would reject the literals). Remove each cast as its route lands.
 export const ROUTES = {
-  demo: '/demo' as Route,
+  demo: '/demo' satisfies Route,
   security: '/seguranca' as Route,
   howItWorks: '/como-funciona' as Route,
   engine: '/motor' as Route,
