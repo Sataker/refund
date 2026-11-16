@@ -91,10 +91,15 @@ describe('ENGINE-SPEC D.6 — R06', () => {
     expect(das('2027-06').das).toBe(das('2027-06', '0.4').das);
   });
 
-  // C.6 / INV-2 put a lever in the total only with a steady-state gain ≥ R$ 1,00; T06-06 expects the 12-month value
-  // 222,89 as the marginal. Spec value kept (rule 11), conflict recorded for the spec owner (EXECUTION §9, E8 row).
-  it.fails('T06-06: marginalValue12m 222,89 (conflicts with C.6/INV-2: regime gain 0 < R$ 1,00)', () => {
-    expect(r06(run(pharmacy({ assumptions: PCT_40 })))?.marginalValue12m).toBe(brl('222,89'));
+  it('T06-06 (D25): R06 stays outside the total from 2027: value 0, "não compensa" with the 12-month 222,89 in the text', () => {
+    const r = run(pharmacy({ assumptions: PCT_40 }));
+    const f = r06(r);
+    expect(f?.marginalValue12m).toBe(0);
+    expect(f?.countsInTotal).toBe(false);
+    expect(f?.title).toBe(
+      'Separar a receita monofásica não compensa: só R$ 222,89 a menos nos próximos 12 meses e nada por ano em regime (fora do total).',
+    );
+    expect(r.total.savings12m).toBe(0);
   });
 
   it('T06-07: 6th bracket (RBT12 4.000.000) → removable share 28,27 + 6,13 = 34,40%', () => {

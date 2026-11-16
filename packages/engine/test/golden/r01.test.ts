@@ -124,8 +124,17 @@ describe('ENGINE-SPEC D.1 — R01', () => {
     expect(f.trace.some((s) => s.id.startsWith('R01.EARLY_ALTERNATIVE'))).toBe(false);
   });
 
-  it('T01-10: partner works and P0 = 0 → S0 regularized at 1.621; no savings from paying the minimum', () => {
-    const regularized = r01(run(ex1({ proLabore: constant(0 as Cents) })));
+  it('T01-10 (D24): partner works, P0 = 0 and a withdrawal → S0 regularized at 1.621; no savings from paying the minimum', () => {
+    const withdrawal = {
+      month: '2026-10' as const,
+      payerCnpj: 'RFTEST00000100',
+      grossAmount: brl('10.000,00'),
+      irrfWithheld: 0 as Cents,
+      profitThrough2025Approved: false,
+    };
+    const regularized = r01(
+      run(ex1({ proLabore: constant(0 as Cents), distributions: [withdrawal] })),
+    );
     const atMinimum = r01(run(ex1()));
     expect(stepValue(regularized, 'R01.P_STAR')).toBe(brl('3.700,00'));
     expect(regularized.annualRegimeValue).toBe(atMinimum.annualRegimeValue);

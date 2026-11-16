@@ -101,16 +101,20 @@ export const A02_REFS = refsOf([
 const minimumWageIn = (m: YearMonth, fallback: YearMonth): Cents =>
   (paramOrNull('minimumWage', m) ?? param('minimumWage', fallback)).value;
 
+export interface PartnerBelowMinimum {
+  below: YearMonth[]; // months of the last 3 with a pró-labore below the minimum wage
+  distributed: Cents;
+  paidProLabore: Cents;
+}
+
 /**
- * D.8 trigger: Simples or Presumido, the partner answered that they work in the company, and in the last 3 closed
- * months a confirmed pró-labore below the minimum wage — or no pró-labore — while the partner withdrew something
- * (pró-labore or distributions) in those months. The withdrawal condition reads TA2-08 ("P0 = 0 and no
- * distributions → no alert") together with TA2-01/03/06/12 (EXECUTION §9, E8 row of 15/11).
+ * Decision D24 (PLAN §18): ONE condition drives alert A02 and the "atual regularizado" S0 of the C.6 chain — the
+ * partner answered that they work in the company, a confirmed pró-labore below the minimum wage (or none) in one of
+ * the last 3 closed months, and some withdrawal (pró-labore or distributions) in those months: who works and is paid
+ * for it is a mandatory INSS contributor (Lei 8.212, art. 12, V, "f"). Null when it does not hold.
  */
-export function a02Finding(ctx: Ctx): Finding | null {
+export function partnerBelowMinimum(ctx: Ctx): PartnerBelowMinimum | null {
   const f = ctx.facts;
-  const regime = f.company.value.regime;
-  if (regime !== 'SIMPLES' && regime !== 'PRESUMIDO') return null;
   const works = f.partner.worksInCompany;
   if (works.value !== true || works.provenance.origin === 'default_assumption') return null;
   const last3 = monthRange(addMonths(ctx.referenceMonth, -2), ctx.referenceMonth).filter(
@@ -120,11 +124,26 @@ export function a02Finding(ctx: Ctx): Finding | null {
   const proLabore = (m: YearMonth): Cents => f.partner.grossProLabore.value[m] ?? cents(0);
   const below = last3.filter((m) => proLabore(m) < minimumWageIn(m, start));
   if (below.length === 0) return null;
-  const distributed = f.partner.distributions.value
-    .filter((d) => last3.includes(d.month))
-    .reduce((a, d) => a + d.grossAmount, 0);
-  const paidProLabore = last3.reduce((a, m) => a + proLabore(m), 0);
+  const distributed = cents(
+    f.partner.distributions.value
+      .filter((d) => last3.includes(d.month))
+      .reduce((a, d) => a + d.grossAmount, 0),
+  );
+  const paidProLabore = cents(last3.reduce((a, m) => a + proLabore(m), 0));
   if (distributed + paidProLabore === 0) return null;
+  return { below, distributed, paidProLabore };
+}
+
+/** D.8 for Simples or Presumido, under the D24 condition (`partnerBelowMinimum`). */
+export function a02Finding(ctx: Ctx): Finding | null {
+  const f = ctx.facts;
+  const regime = f.company.value.regime;
+  if (regime !== 'SIMPLES' && regime !== 'PRESUMIDO') return null;
+  const condition = partnerBelowMinimum(ctx);
+  if (condition === null) return null;
+  const { below, distributed, paidProLabore } = condition;
+  const start = ctx.assumptions.start;
+  const proLabore = (m: YearMonth): Cents => f.partner.grossProLabore.value[m] ?? cents(0);
   const sm = param('minimumWage', start);
   const trace: Step[] = below.map((m) =>
     step({

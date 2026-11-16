@@ -156,7 +156,8 @@ export function r06Finding(
     type: 'savings',
     title: recommended
       ? `Separe a receita monofásica no PGDAS-D: R$ ${formatBrl(value12m)} a menos nos próximos 12 meses (estimativa com ${pctText}% das vendas)`
-      : `Separar a receita monofásica não gera economia por ano em regime: R$ ${formatBrl(gain.gain12m)} só nos próximos 12 meses, fora do total`,
+      : // D25 (PLAN §18): outside the total (C.6/INV-2); the 12-month value goes in the text only.
+        `Separar a receita monofásica não compensa: só R$ ${formatBrl(gain.gain12m)} a menos nos próximos 12 meses e nada por ano em regime (fora do total).`,
     marginalValue12m: value12m,
     annualRegimeValue: regimeValue,
     confidence: 'estimated',

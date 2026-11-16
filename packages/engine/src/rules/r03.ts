@@ -63,7 +63,8 @@ export interface AnnualRevenue {
 }
 
 /**
- * `RBA_proj = Σ revenue jan..closed month + average(last 3 closed months) × remaining months` (D.3), per market.
+ * `RBA_proj = Σ revenue jan..closed month + average(last 3 closed months since the opening) × remaining months` (D.3,
+ * D26), per market.
  * The average is rounded half-up to the cent, like the C.4 `avg12` (no C.8 point for either; EXECUTION §9, E5).
  */
 export function projectAnnualRevenue(ctx: Ctx): AnnualRevenue {
@@ -76,7 +77,10 @@ export function projectAnnualRevenue(ctx: Ctx): AnnualRevenue {
       ? cents(0)
       : (ctx.facts.revenueByMarket[market].value[m] ?? cents(0));
   const closedMonths = compareYearMonth(ref, jan) < 0 ? [] : monthRange(jan, ref);
-  const lastThree = monthRange(addMonths(ref, -2), ref);
+  // D26: the average counts only the closed months since the opening (an MEI opened 1 or 2 months ago).
+  const lastThree = monthRange(addMonths(ref, -2), ref).filter(
+    (m) => compareYearMonth(m, ctx.openedIn) >= 0,
+  );
   const projectedMonths =
     compareYearMonth(ref, dec) >= 0
       ? []
@@ -87,7 +91,8 @@ export function projectAnnualRevenue(ctx: Ctx): AnnualRevenue {
   for (const market of ['domestic', 'export'] as const) {
     closed[market] = sumCents(closedMonths.map((m) => observedOf(market, m)));
     const three = sumCents(lastThree.map((m) => observedOf(market, m)));
-    average3[market] = roundToCents(reais(three).dividedBy(3));
+    average3[market] =
+      lastThree.length === 0 ? cents(0) : roundToCents(reais(three).dividedBy(lastThree.length));
     byMarket[market] = cents(closed[market] + average3[market] * projectedMonths.length);
   }
   const cumulative: AnnualRevenue['cumulative'] = [];

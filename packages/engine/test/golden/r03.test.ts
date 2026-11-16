@@ -120,6 +120,26 @@ describe('ENGINE-SPEC D.3 — R03, MEI', () => {
     );
   });
 
+  it('D26: the 3-month average counts only the months since the opening (MEI opened 1 or 2 months before the reference month)', () => {
+    const months = monthRange('2025-11', '2026-10');
+    const rba = (openedOn: `${number}-${string}-${string}`) => {
+      const f = syntheticFacts({
+        regime: 'MEI',
+        domestic: constant(brl('6.000,00'), months),
+        openedOn,
+      });
+      return r03(run(f))?.trace.find((s) => s.id === 'R03.RBA_PROJ');
+    };
+    // Opened 2026-09: 2 months (6.000 + 6.000) / 2 = 6.000; RBA = 12.000 + 2 × 6.000 = 24.000; limit 6.750 × 4.
+    const one = rba('2026-09-15');
+    expect(one?.inputs.average3?.value).toBe(brl('6.000,00'));
+    expect(one?.result.value).toBe(brl('24.000,00'));
+    // Opened 2026-08: 3 months; RBA = 18.000 + 2 × 6.000 = 30.000 (limit 6.750 × 5 = 33.750 → warning).
+    const two = rba('2026-08-03');
+    expect(two?.inputs.average3?.value).toBe(brl('6.000,00'));
+    expect(two?.result.value).toBe(brl('30.000,00'));
+  });
+
   it('analyze() of an MEI analysed in 2027 cites the LC 238 limit and depends on the regulation', () => {
     const months = monthRange('2026-01', '2026-12');
     const f = syntheticFacts({

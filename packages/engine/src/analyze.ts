@@ -8,7 +8,7 @@ import { ALL_PARAMETERS, OFFICIAL_SET_ID, PARAMETERS_VERSION, param } from './pa
 import { inferPgdas, type PgdasInference } from './pgdas.ts';
 import { costReads, irMonths, projectedParametersStep } from './projected.ts';
 import { type Ctx, createCtx } from './projection.ts';
-import { a01Finding, a02Finding } from './rules/alerts.ts';
+import { a01Finding, a02Finding, partnerBelowMinimum } from './rules/alerts.ts';
 import {
   appliesR01,
   earlyAlternativeSteps,
@@ -230,8 +230,8 @@ function run(facts: Facts, options?: { parameters?: string }): EngineResult {
     const status = segregationStatus(ctx, inference);
     const start = ctx.assumptions.start;
     const sm = param('minimumWage', start).value;
-    // S0 "atual regularizado": a partner who works never stays below the minimum wage (D.1, T01-10; A02).
-    const p0 = facts.partner.worksInCompany.value && ctx.p0 < sm ? sm : ctx.p0;
+    // S0 "atual regularizado" (D.1, T01-10): the same condition as A02 (decision D24, `partnerBelowMinimum`).
+    const p0 = partnerBelowMinimum(ctx) !== null && ctx.p0 < sm ? sm : ctx.p0;
     const s0Dec: ScenarioDecisions = {
       proLabore: p0,
       segregateExport: status === 'yes',

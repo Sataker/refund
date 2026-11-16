@@ -178,6 +178,34 @@ describe('ENGINE-SPEC D.8 — A02, zero or below-minimum pró-labore with a part
     expect(find(run(a02Facts({ proLabore: last3(0, 0, 0) })), 'A02')).toBeUndefined();
   });
 
+  it('D24: works + P0 = 0 + no withdrawals → no A02 and no S0 regularization (R01 starts from P0 = 0)', () => {
+    const r = run(a02Facts({ proLabore: last3(0, 0, 0) }));
+    expect(find(r, 'A02')).toBeUndefined();
+    const r01 = find(r, 'R01');
+    expect(r01?.trace.find((s) => s.id === 'R01.P_STAR')?.inputs.currentProLabore?.value).toBe(0);
+  });
+
+  it('D24: works + P0 = 0 + a withdrawal → A02 and the S0 regularization together (P0′ = SM)', () => {
+    const r = run(
+      a02Facts({ proLabore: last3(0, 0, 0), distributions: [dist('2026-10', 100000)] }),
+    );
+    expect(find(r, 'A02')).toBeDefined();
+    const r01 = find(r, 'R01');
+    expect(r01?.trace.find((s) => s.id === 'R01.P_STAR')?.inputs.currentProLabore?.value).toBe(
+      162100,
+    );
+  });
+
+  it('D24: an unanswered "works in the company" regularizes nothing', () => {
+    const f = a02Facts({
+      proLabore: last3(0, 0, 0),
+      works: 'no_answer',
+      distributions: monthlyDistributions(2000000),
+    });
+    const r01 = find(run(f), 'R01');
+    expect(r01?.trace.find((s) => s.id === 'R01.P_STAR')?.inputs.currentProLabore?.value).toBe(0);
+  });
+
   it('TA2-11: A02 fires and R01 starts from the regularized S0 (P0′ = SM; T01-10)', () => {
     const r = run(
       a02Facts({ proLabore: last3(0, 0, 0), distributions: monthlyDistributions(2000000) }),
