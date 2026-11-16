@@ -209,10 +209,10 @@ export async function loadTrack(db: Db, userId: string): Promise<TrackSnapshot> 
   if (revenue) answers.monthlyRevenueBracket = revenue;
   if (employees) answers.hasEmployees = employees;
   if (abroad) answers.receivesFromAbroad = abroad;
-  const [consented, conns] = await Promise.all([
-    hasActiveConsent(db, userId),
-    liveConnections(db, userId),
-  ]);
+  // Sequential on purpose: two tiny indexed reads; one connection per render keeps the pooler
+  // (transaction mode, §9.5) and the local PGlite socket shim happy.
+  const consented = await hasActiveConsent(db, userId);
+  const conns = await liveConnections(db, userId);
   const c = company.company;
   return {
     company,

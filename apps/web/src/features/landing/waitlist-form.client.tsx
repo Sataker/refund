@@ -82,7 +82,15 @@ export function WaitlistForm({ join }: { join: WaitlistJoin }) {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate data-testid="waitlist-form" className="w-full max-w-xl">
+    // method="post": if a tap lands before hydration, the native submit must never put the
+    // e-mail in a URL (server logs, history, Referer).
+    <form
+      method="post"
+      onSubmit={onSubmit}
+      noValidate
+      data-testid="waitlist-form"
+      className="w-full max-w-xl"
+    >
       <label htmlFor={emailId} className="type-small mb-2 block font-medium text-foreground">
         Quer usar com a sua empresa? Entre na lista.
       </label>
