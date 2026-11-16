@@ -9,7 +9,7 @@
     "hash": "b172ed60a5999714363a54982a7fa76382ca4bb351e9a3557d182467496162f6",
     "sourceSha256": "74ae352b145fa48f034d51be7ade731a6cd0fcba3b226b9bed93a3952bd12db2",
     "captureFile": "manual-restituicao-simples.pdf",
-    "textFile": "manual-restituicao-simples.txt"
+    "textFile": "manual-restituicao-simples.pdfkit.txt"
   },
   {
     "id": "manual-restituicao-sn-2025-10-20#3.1",
@@ -21,19 +21,19 @@
     "hash": "87a9718fb19b42f6d084b2d246609775b69563c48f045efe43d3bccebc3d9d2a",
     "sourceSha256": "74ae352b145fa48f034d51be7ade731a6cd0fcba3b226b9bed93a3952bd12db2",
     "captureFile": "manual-restituicao-simples.pdf",
-    "textFile": "manual-restituicao-simples.txt"
+    "textFile": "manual-restituicao-simples.pdfkit.txt"
   },
   {
     "id": "manual-restituicao-sn-2025-10-20#3.1.1",
     "kind": "procedure",
     "label": "Manual da Restituição do Simples Nacional (20/10/2025), item 3.1.1",
-    "text": "Para os documentos de arrecadação do Simples Nacional, os tributos federais passíveis de restituição são: IRPJ, CSLL, INSS, PIS, COFINS e IPI.\nA restituição do ICMS e do ISS somente poderá ser solicitada no âmbito do respectivo ente federado.\nANTES DE REGISTRAR O PEDIDO DE RESTITUIÇÃO CERTIFIQUE-SE DE QUE HOUVE, DE FATO, PAGAMENTO INDEVIDO OU EM DUPLICIDADE.\nA restituição de DAS que não esteja em uma das duas situações citadas provocará a cobrança do débito original.\nSelecione a opção “Solicitar Restituição” para iniciar o pedido de restituição.\nInforme o Período de Apuração (PA) em que houve pagamento indevido ou em montante superior ao devido, no formato MM/AAAA e clique em “Consultar”. Existindo mais de um pagamento a ser restituído, o contribuinte deverá solicitar um pedido para cada DAS.\nPagamento feito há mais de 5 anos, contados da data atual.\nPagamentos de DAS de Simples Nacional de períodos de apuração dos últimos 4 meses, incluído o mês do pedido.\nOs créditos são exibidos com os valores originais. A atualização do valor, com aplicação da taxa Selic acumulada, ocorrerá no momento da efetivação do pagamento da restituição.\nO crédito ocorrerá apenas por meio de PIX. Assim, o crédito ocorrerá automaticamente na conta bancária vinculada à Chave PIX-CNPJ.\nCaso ainda não tenha uma chave PIX, deverá acessar o sistema de uma instituição financeira em que tenha conta e realizar a vinculação dessa chave. Apenas Chave = CNPJ poderão ser utilizadas para recebimento da restituição.",
+    "text": "Para os documentos de arrecadação do Simples Nacional, os tributos federais passíveis de restituição são: IRPJ, CSLL, INSS, PIS, COFINS e IPI.\nA restituição do ICMS e do ISS somente poderá ser solicitada no âmbito do respectivo ente federado.\nANTES DE REGISTRAR O PEDIDO DE RESTITUIÇÃO CERTIFIQUE-SE DE QUE HOUVE, DE FATO, PAGAMENTO INDEVIDO OU EM DUPLICIDADE.\nA restituição de DAS que não esteja em uma das duas situações citadas provocará a cobrança do débito original.\nSelecione a opção “Solicitar Restituição” para iniciar o pedido de restituição.\nInforme o Período de Apuração (PA) em que houve pagamento indevido ou em montante superior ao devido, no formato MM/AAAA e clique em “Consultar”. Existindo mais de um pagamento a ser restituído, o contribuinte deverá solicitar um pedido para cada DAS.\nNão é possível solicitar a restituição de valores nas seguintes situações: Pagamento feito há mais de 5 anos, contados da data atual. Por exemplo: um pagamento efetuado em 20/01/2018 não poderá ser objeto de pedido de restituição em 20/02/2023. Pagamentos de DAS de Simples Nacional de períodos de apuração dos últimos 4 meses, incluído o mês do pedido.\nOs créditos são exibidos com os valores originais. A atualização do valor, com aplicação da taxa Selic acumulada, ocorrerá no momento da efetivação do pagamento da restituição.\nApós informar os valores a serem restituídos por tributo e clicar em Prosseguir, o sistema apresentará a tela:\nO crédito ocorrerá apenas por meio de PIX. Assim, o crédito ocorrerá automaticamente na conta bancária vinculada à Chave PIX-CNPJ.\nCaso ainda não tenha uma chave PIX, deverá acessar o sistema de uma instituição financeira em que tenha conta e realizar a vinculação dessa chave. Apenas Chave = CNPJ poderão ser utilizadas para recebimento da restituição.",
     "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_RESTITUICAO.pdf",
     "capturedAt": "2026-11-12",
-    "hash": "fe7871709a7e4f419f24a625f2a4300645024ccf26f1adfa1fe769ebc8221cd7",
+    "hash": "6128674513c8c09d36fa85af984d518c2cf938a6d7058147841e263396cf4de8",
     "sourceSha256": "74ae352b145fa48f034d51be7ade731a6cd0fcba3b226b9bed93a3952bd12db2",
     "captureFile": "manual-restituicao-simples.pdf",
-    "textFile": "manual-restituicao-simples.txt"
+    "textFile": "manual-restituicao-simples.pdfkit.txt"
   },
   {
     "id": "manual-restituicao-sn-2025-10-20#3.2",
@@ -45,7 +45,7 @@
     "hash": "2ba33277b44fc56e6c61945df091661b71f4877898e42c6128724cc444ed9e79",
     "sourceSha256": "74ae352b145fa48f034d51be7ade731a6cd0fcba3b226b9bed93a3952bd12db2",
     "captureFile": "manual-restituicao-simples.pdf",
-    "textFile": "manual-restituicao-simples.txt"
+    "textFile": "manual-restituicao-simples.pdfkit.txt"
   },
   {
     "id": "manual-restituicao-sn-2025-10-20#4",
@@ -57,6 +57,6 @@
     "hash": "6dd7042d4ad846d1195ab634b26e8b98a9497cc6495f5a2d8a7701af297d7267",
     "sourceSha256": "74ae352b145fa48f034d51be7ade731a6cd0fcba3b226b9bed93a3952bd12db2",
     "captureFile": "manual-restituicao-simples.pdf",
-    "textFile": "manual-restituicao-simples.txt"
+    "textFile": "manual-restituicao-simples.pdfkit.txt"
   }
 ]

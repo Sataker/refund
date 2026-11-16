@@ -47,7 +47,7 @@ describe(PACKAGE_NAME, () => {
 
   it('holds the closed list of provisions of every catalogued regulation', () => {
     expect(regulations).toHaveLength(26);
-    expect(corpus).toHaveLength(116);
+    expect(corpus).toHaveLength(117);
     for (const r of regulations)
       expect(regulation(r.id)?.provisions.length ?? 0).toBeGreaterThan(0);
     for (const p of corpus) expect(short.has(p.regulation)).toBe(true);
@@ -145,6 +145,7 @@ describe(PACKAGE_NAME, () => {
       'res-cgsn140-2018/art25/p3',
       'res-cgsn140-2018/art25/p4',
       'res-cgsn140-2018/art25/p4-a',
+      'res-cgsn140-2018/art25/p6',
       'res-cgsn140-2018/art26',
     ]);
     for (const p of corpus) {
@@ -210,6 +211,7 @@ describe(PACKAGE_NAME, () => {
       'in-sf-surem10-2019/art1-a/ii',
       'lc123-2006/art26/p2',
       'lei5172-1966/art173',
+      'res-cgsn140-2018/art25/p6',
       'res-cgsn140-2018/art66',
     ]);
     for (const p of fromCaptures) {

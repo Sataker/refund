@@ -9,7 +9,7 @@
     "hash": "6ede3ddf2bde26ab2adeee7610a8a2873186b9afc56678c8800abda61cf44742",
     "sourceSha256": "51712e390f090521d07a0013c0dec041981e160b1b638ae92888fa278c3a7b44",
     "captureFile": "pr.pdf",
-    "textFile": "pr.clean.txt"
+    "textFile": "pr.pdfkit.txt"
   },
   {
     "id": "rfb-pr-altas-rendas-2025-12-19#q6",
@@ -21,18 +21,18 @@
     "hash": "8b1cf99b1df3f6ea50116863148d894ac4b04f85964571177c8a813ca243ab6a",
     "sourceSha256": "51712e390f090521d07a0013c0dec041981e160b1b638ae92888fa278c3a7b44",
     "captureFile": "pr.pdf",
-    "textFile": "pr.clean.txt"
+    "textFile": "pr.pdfkit.txt"
   },
   {
     "id": "rfb-pr-altas-rendas-2025-12-19#q10",
     "kind": "procedure",
     "label": "RFB, P&R Tributação de Altas Rendas (19/12/2025), pergunta 10",
-    "text": "Sim. A retenção na fonte prevista na lei também se aplica aos pagamentos de lucros e dividendos efetuados por empresas do Simples Nacional.",
+    "text": "Sim. A retenção na fonte prevista na lei também se aplica aos pagamentos de lucros e dividendos efetuados por empresas do Simples Nacional.\nCom a Lei nº 15.270/25, a isenção prevista no art. 14 da Lei Complementar nº 123/06 deixou de ser aplicada de modo que os lucros e dividendos pagos passarão a estar sujeitos a retenção na fonte do IRRF quando se tratar de pagamentos a uma mesma pessoa física residente no Brasil que supere R$ 50.000,00 em um mesmo mês.",
     "url": "https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/dirf/manual_padrao_rfb_per_tributacao_cotin_v-19-12-2025.pdf",
     "capturedAt": "2026-11-12",
-    "hash": "53bd1c7cce435d367bbe66c21be9c6aa46f931a96363931dc222ba1268d44926",
+    "hash": "31845c8c23acee250dd9f50248104a23a28633b8c3ae5cd6ab677c8bdc2cae99",
     "sourceSha256": "51712e390f090521d07a0013c0dec041981e160b1b638ae92888fa278c3a7b44",
     "captureFile": "pr.pdf",
-    "textFile": "pr.clean.txt"
+    "textFile": "pr.pdfkit.txt"
   }
 ]

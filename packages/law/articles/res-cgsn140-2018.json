@@ -64,6 +64,23 @@
     "sourceSha256": "51aed0b74a4d8d97ee0158c6c9cca5f14658369b42e07cb345e31007818ec442"
   },
   {
+    "id": "res-cgsn140-2018/art25/p6",
+    "regulation": "res-cgsn140-2018",
+    "provision": "art. 25, § 6º",
+    "label": "Res. CGSN 140/2018, art. 25, § 6º",
+    "text": "§ 6º A ME ou EPP que proceda à importação, à industrialização ou à comercialização de produto sujeito à tributação concentrada ou à substituição tributária para efeitos de incidência da Contribuição para o PIS/Pasep e da Cofins deve segregar a receita decorrente de sua venda e indicar a existência de tributação concentrada ou substituição tributária para as referidas contribuições, de forma que serão desconsiderados, no cálculo do valor devido no âmbito do Simples Nacional, os percentuais a elas correspondentes. (Lei Complementar nº 123, de 2006, art. 2º, inciso I e § 6º; art. 18, § 4º-A, inciso I, § 12)",
+    "notes": [
+      "Vide modificação prevista para 01/01/2027, nos termos do(a) Resolução CGSN nº 190, de 4 de agosto de 2026"
+    ],
+    "effectiveFrom": null,
+    "effectiveUntil": "2026-12-31",
+    "url": "http://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=92278&visao=compilado",
+    "capturedAt": "2026-11-12",
+    "hash": "db4ef81329751bdbf43f4c1ebefdfae776d849a46674ac060316471ec7400874",
+    "sourceSha256": "714a13d5a11eea013f3b9cfc76da06ae43691a09c2837a9df3003ba6e8c4ab3c",
+    "captureFile": "res-cgsn-140-2018-compilada.md"
+  },
+  {
     "id": "res-cgsn140-2018/art26",
     "regulation": "res-cgsn140-2018",
     "provision": "art. 26",

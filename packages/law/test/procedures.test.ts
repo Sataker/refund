@@ -11,7 +11,7 @@ const procedures = allProcedures();
 
 describe('procedure excerpts (@refund/law)', () => {
   it('holds the closed list of excerpts with unique ids that never collide with a provision', () => {
-    expect(procedures).toHaveLength(34);
+    expect(procedures).toHaveLength(36);
     const ids = procedures.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
     const provisions = new Set(all().map((p) => p.id));
@@ -26,7 +26,10 @@ describe('procedure excerpts (@refund/law)', () => {
     for (const p of procedures) {
       expect(sha256Bytes(p.text), p.id).toBe(p.hash);
       expect(CAPTURE_SHA256[p.captureFile], p.id).toBe(p.sourceSha256);
-      expect(p.capturedAt).toBe('2026-11-12');
+      // 12/11 captures, except the PGDAS-D manual recaptured on 16/11 (version of 13/11/2026; source audit S4).
+      expect(p.capturedAt).toBe(
+        p.captureFile === 'pgdas-2026-11-13.pdf' ? '2026-11-16' : '2026-11-12',
+      );
       expect(p.url).toMatch(
         /^https:\/\/(www8?\.receita\.fazenda\.gov\.br|www\.gov\.br|prefeitura\.sp\.gov\.br)\//,
       );

@@ -11,6 +11,8 @@ export const CAPTURE_SHA256: Readonly<Record<string, string>> = {
   'manual-restituicao-simples.pdf':
     '74ae352b145fa48f034d51be7ade731a6cd0fcba3b226b9bed93a3952bd12db2',
   'pgdas.pdf': 'e73b2bfc7eded9e419ddd5c516cf37cc49a78540fcd79faf4d84b77988f3f316',
+  // Recaptured on 16/11 (version of 13/11/2026, for PA 2018–2026): pgdas-2026-11-13.FONTE.md.
+  'pgdas-2026-11-13.pdf': '1786a9badcd6676567b8a2ce27c6f11466b3abaf1ea1330a27eef31ec013119f',
   'res-cgsn-140-2018-compilada.md':
     '714a13d5a11eea013f3b9cfc76da06ae43691a09c2837a9df3003ba6e8c4ab3c',
   'lc-123-2006-planalto.md': '4b9be50796785eb69a80e0067955d694d76183ef7ea4121f6bffe64cb6e0329b',
@@ -55,7 +57,7 @@ export const sha256Bytes = (b: Buffer | string): string =>
 
 /**
  * Text compared for "verbatim": whitespace removed (PDF extraction breaks lines and words), markdown bold and backslash
- * escapes of the markdown captures removed. Nothing else is normalized: letters, accents and punctuation must match.
+ * escapes of the markdown captures removed. PDF texts are the PDF text layer (Apple PDFKit). Nothing else is normalized: letters, accents and punctuation must match.
  */
 export const squash = (s: string): string =>
   s

@@ -3,13 +3,13 @@
     "id": "pr-simples-2026-10-09#5.11",
     "kind": "procedure",
     "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 5.11",
-    "text": "1. Quando o fator “r” for igual ou superior a 0,28, serão tributadas pelo Anexo III;\n2. A FS12 inclui as remunerações pagas nos 12 meses anteriores ao PA de cálculo (regime de caixa), informadas em GFIP e no eSocial/DCTFWeb.",
+    "text": "1. Quando o fator “r” for igual ou superior a 0,28, serão tributadas pelo Anexo III;\nNotas: 1. No cálculo do fator “r”, a RBT12 inclui as receitas auferidas no mercado interno e externo. 2. A FS12 inclui as remunerações pagas nos 12 meses anteriores ao PA de cálculo (regime de caixa), informadas em GFIP e no eSocial/DCTFWeb.",
     "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
     "capturedAt": "2026-11-12",
-    "hash": "adf91d5ea4877ddbe8d8b347880a60b6ecf92793f0691fb8aff7f4d1ef2531c0",
+    "hash": "661e2169c9525aff70350b76d0b118626869747689ae85b13c8b0f655859c0e4",
     "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
     "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
-    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+    "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
   },
   {
     "id": "pr-simples-2026-10-09#6.8",
@@ -21,7 +21,7 @@
     "hash": "43a4061188ec2e591aed1b27f5c157db0c3cd9569442553408389e4d2c635f11",
     "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
     "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
-    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+    "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
   },
   {
     "id": "pr-simples-2026-10-09#7.2",
@@ -33,7 +33,7 @@
     "hash": "319d9ba8259d9b467fd38c278dd96efc2cd1bc406deb78295e76e6e4bb1aef60",
     "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
     "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
-    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+    "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
   },
   {
     "id": "pr-simples-2026-10-09#7.4",
@@ -45,7 +45,7 @@
     "hash": "22aefbae431e8a3712c1090bd51f9392865d38c0a929134d66ee3348afb14692",
     "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
     "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
-    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+    "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
   },
   {
     "id": "pr-simples-2026-10-09#10.4",
@@ -57,7 +57,7 @@
     "hash": "e28b1bf7e63d5269554269600f16a1a97ce3ef8d78e8c0542e5b946b3b381eb2",
     "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
     "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
-    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+    "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
   },
   {
     "id": "pr-simples-2026-10-09#10.5",
@@ -69,7 +69,7 @@
     "hash": "ad637aa2957e5d55fd484304202f8bc8271d58dcf5ca2fdb283174883efb56ee",
     "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
     "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
-    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+    "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
   },
   {
     "id": "pr-simples-2026-10-09#10.6",
@@ -81,7 +81,7 @@
     "hash": "2eed0f3fd3af1e8aa2ed0bed77ae8ffe28897c94c14e568abe86ea49b55fbfd8",
     "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
     "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
-    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+    "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
   },
   {
     "id": "pr-simples-2026-10-09#10.8",
@@ -93,6 +93,18 @@
     "hash": "aee70995b5c6fd1674729c3ceed8401a4cda0dbace7b9142bccfe20be3424cec",
     "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
     "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
-    "textFile": "perguntao-simples-nacional-2026-10-09.txt"
+    "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
+  },
+  {
+    "id": "pr-simples-2026-10-09#12.3",
+    "kind": "procedure",
+    "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 12.3",
+    "text": "A exclusão do Simples Nacional, mediante comunicação da ME ou da EPP, dar-se-á:\nA receita bruta acumulada no ano ultrapassar o limite de R$ 4.800.000,00 ou o limite adicional para exportação de mercadorias, de igual valor, hipótese em que a exclusão deverá ser comunicada: ✓ Até o último dia útil do mês subsequente à ultrapassagem, em mais de 20%, de um dos limites referidos, produzindo efeitos a partir do mês subsequente ao do excesso; ✓ Até o último dia útil do mês de janeiro do ano-calendário subsequente, à ultrapassagem em até 20%, de um dos limites referidos, produzindo efeitos a partir do ano-calendário subsequente ao do excesso.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "eb460b604125fbb09e7da43f877713539d011720daf80ba23f138c530b995def",
+    "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
+    "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
+    "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
   }
 ]

@@ -31,7 +31,7 @@
  *   it (Lei 15.270/2025, art. 8º; Res. CGSN 190/2026, art. 9º; LC 238/2026, art. 10; Decreto 12.797/2025, arts. 1º
  *   and 2º; Portaria MPS/MF 13/2026). `null` means "in force on `capturedAt`; start date not asserted".
  * - `effectiveUntil`: last day this wording produces effects, filled only when a captured provision replaces or
- *   revokes it: Res. CGSN 140/2018, art. 25, §§ 3º, 4º and 4º-A, and art. 26 end on 2026-12-31 (Res. CGSN 190/2026,
+ *   revokes it: Res. CGSN 140/2018, art. 25, §§ 3º, 4º, 4º-A and 6º, and art. 26 end on 2026-12-31 (Res. CGSN 190/2026,
  *   art. 1º, art. 8º, XVI, and art. 9º). `null` means no end date in the corpus. LC 123/2006, art. 18-A, §§ 1º–2º
  *   stay `null`: LC 238/2026 replaces them from 2028 only if the budget condition of its art. 3º is met.
  * - Label of an excerpt adds the amended article: "Res. CGSN 190/2026, art. 1º (art. 26 da Res. CGSN 140/2018)".
@@ -43,7 +43,7 @@
  *
  * Added by E8b (the C.12 action plan, 16/11): provisions the steps cite that the 14/11 extraction did not hold,
  * transcribed from the 12/11 captures in docs/conferencias/fontes-oficiais/ (research 08 §12): LC 123/2006, art. 26,
- * § 2º; CTN, art. 173; Res. CGSN 140/2018, art. 66; IN SF/SUREM 10/2019 (São Paulo), art. 1º-A. They carry
+ * § 2º; CTN, art. 173; Res. CGSN 140/2018, arts. 25, § 6º (until 2026-12-31, like §§ 3º–4º-A), and 66; IN SF/SUREM 10/2019 (São Paulo), art. 1º-A. They carry
  * `capturedAt` 2026-11-12, the capture's URL, `captureFile` and, as `sourceSha256`, the SHA-256 of that file; the law
  * test finds each text verbatim in it (whitespace aside) when the captures are on disk. Same transcription rules.
  */
