@@ -394,6 +394,10 @@ export function buildFacts(input: FactsInput): Result<Facts, FactsError> {
         regime: regimeOf(company),
         openedOn: company.activityStartDate,
         uf: company.uf,
+        // C.12 (E8b): decides the municipal ISS refund steps; absent when the public data has no valid IBGE code.
+        ...(company.ibgeMunicipality === null
+          ? {}
+          : { ibgeMunicipality: company.ibgeMunicipality }),
       },
       provenance: { origin: 'cnpj', source: company.source },
     },

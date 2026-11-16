@@ -142,7 +142,19 @@ describe('C.12 hero (T12-01…T12-05)', () => {
     const f = find(hero, 'R01');
     const pStar = f.trace.find((s) => s.id === 'R01.P_STAR')?.result.value;
     expect(pStar).toBe(226000);
-    expect(f.actionPlan).toHaveLength(6);
+    expect(f.actionPlan.map((s) => s.id)).toEqual([
+      'R01.action.1',
+      'R01.action.2',
+      'R01.action.3',
+      'R01.action.4',
+      'R01.action.7',
+      'R01.action.5',
+      'R01.action.6',
+    ]);
+    // The INSS rate of a Simples company is research 08 §11, item 5: a noSource question next to the INSS step.
+    expect(f.actionPlan[4]?.noSource).toBe(true);
+    expect(f.actionPlan[3]?.refIds).toContain('lei8212-1991/art30/p4');
+    expect(f.actionPlan[5]?.refIds).toContain('res-cgsn140-2018/art26');
     expect(f.actionPlan[0]?.what).toContain(`R$ ${formatBrl(pStar as number)} por mês`);
     expect(f.actionPlan[0]?.what).toContain('R$ 2.260,00');
     expect(f.actionPlan[0]?.from).toBe('2026-12');
@@ -156,6 +168,7 @@ describe('C.12 hero (T12-01…T12-05)', () => {
       '2027-01-15',
       '2027-01-20',
       undefined,
+      undefined,
       '2027-01-20',
     ]);
   });
@@ -168,7 +181,15 @@ describe('C.12 hero (T12-01…T12-05)', () => {
       'R02.action.3',
       'R02.action.4',
     ]);
-    expect(r02.actionPlan[1]?.until).toBe('2027-01-20');
+    // E3: the withholding of 07/2026 repeats in 07/2027 → DARF by the last business day of the 2nd decêndio of 08/2027.
+    expect(r02.trace.some((s) => s.id === 'R02.FINANCIAL_COST.2026-07')).toBe(true);
+    expect(r02.actionPlan[1]?.until).toBe('2027-08-20');
+    expect(weekday('2027-08-20')).toBe(5);
+    // S1: the art. 14 exemption no longer stops the withholding (P&R Altas Rendas, perg. 10).
+    expect(r02.actionPlan[3]?.what).toContain('Essa isenção não evita a retenção na fonte');
+    expect(r02.actionPlan[3]?.refIds).toEqual(
+      expect.arrayContaining(['lei9250-1995/art6-a', 'rfb-pr-altas-rendas-2025-12-19#q10']),
+    );
     expect(r02.howToReceive.map((h) => h.method)).toEqual(['irpf_refund']);
     const a01 = find(hero, 'A01');
     expect(a01.actionPlan).toHaveLength(3);
@@ -197,14 +218,58 @@ describe('C.12 hero (T12-01…T12-05)', () => {
 });
 
 describe('C.12 variants', () => {
-  it('outside São Paulo the ISS step is the noSource question; no SAV step', () => {
+  it('outside São Paulo: the "where" is sourced (the city hall), only the "how" is a noSource question', () => {
     const [, , r] = RESULTS.find(([n]) => n === 'hero-outside-sp') as [string, Facts, EngineResult];
     const f = find(r, 'R05-REC');
     const seven = f.actionPlan[6];
     expect(seven?.id).toBe('R05-REC.action.7');
-    expect(seven?.noSource).toBe(true);
-    expect(seven?.refIds).toEqual([]);
+    expect(seven?.noSource).toBeUndefined();
+    expect(seven?.where?.name).toBe('Prefeitura da sua cidade');
+    expect(seven?.refIds).toContain('res-cgsn140-2018/art130');
+    expect(f.actionPlan[7]).toMatchObject({ id: 'R05-REC.action.10', noSource: true, refIds: [] });
     expect(f.actionPlan.some((s) => s.where?.name.includes('SAV') === true)).toBe(false);
+    expect(f.howToReceive.find((h) => h.method === 'refund_municipality')?.summary).toBe(
+      'Pedido à prefeitura; prazo de análise não confirmado.',
+    );
+  });
+
+  it('São Paulo: the ISS money arrives in the account of the SAV bank-data screen (SAV manual 15.1)', () => {
+    const h = find(hero, 'R05-REC').howToReceive.find((x) => x.method === 'refund_municipality');
+    expect(h?.refIds).toContain('sp-manual-sav-2.15#15.1');
+    expect(h?.summary).toContain('não foi confirmado');
+  });
+
+  it('R03: the exclusion (Simples) or desenquadramento (MEI) step is sourced; the rest stays a question', () => {
+    const facts = heroFacts();
+    const ctx = { facts, start: '2026-12' as YearMonth };
+    const [, , mei] = RESULTS.find(([n]) => n === 'mei') as [string, Facts, EngineResult];
+    const r03Mei = find(mei, 'R03');
+    const projected = r03Mei.trace.find((s) => s.id === 'R03.RBA_PROJ')?.result.value as number;
+    const limit = r03Mei.trace.find((s) => s.id === 'R03.LIMIT')?.result.value as number;
+    expect(r03Mei.actionPlan.map((s) => s.id)).toEqual(
+      projected > limit ? ['R03.action.1', 'R03.action.2'] : ['R03.action.2'],
+    );
+    const simples = (effect: string): Finding => ({
+      ...r03Mei,
+      trace: [
+        {
+          id: 'R03.MARGINAL_12M',
+          label: '',
+          formula: '',
+          inputs: { effect: { value: effect, unit: 'text' } },
+          result: { value: 0, unit: 'cents' },
+          rounding: 'NONE',
+        },
+      ],
+    });
+    const exclusion = buildActionPlan(simples('exclusion_next_year'), ctx).actionPlan;
+    expect(exclusion.map((s) => s.id)).toEqual(['R03.action.1', 'R03.action.2']);
+    expect(exclusion[0]?.refIds).toEqual(
+      expect.arrayContaining(['lc123-2006/art30', 'pr-simples-2026-10-09#12.3']),
+    );
+    expect(buildActionPlan(simples('warning'), ctx).actionPlan.map((s) => s.id)).toEqual([
+      'R03.action.2',
+    ]);
   });
 
   it('R02 above the IRPFM threshold: no R02.3 and nothing to receive', () => {
@@ -253,7 +318,10 @@ describe('C.12 variants', () => {
       'R05-REC.action.6',
       'R05-REC.action.8',
       'R05-REC.action.9',
+      'R05-REC.action.11',
     ]);
+    expect(plan.actionPlan[7]?.refIds).toContain('res-cgsn140-2018/art130');
+    expect(plan.actionPlan[8]?.noSource).toBe(true);
     expect(plan.howToReceive.map((h) => h.method)).toEqual([
       'refund_pix_cnpj',
       'refund_state',

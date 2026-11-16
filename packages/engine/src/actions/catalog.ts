@@ -27,7 +27,7 @@ export type DateRule =
   | 'das_due' // DAS of PA `start`: day 20 of the next month, postponed (Res. CGSN 140, art. 40, § 3º)
   | 'inss_due' // INSS of competence `start`: day 20 of the next month, brought forward (Lei 10.666, art. 4º)
   | 'esocial_due' // S-1200/S-1299/DCTFWeb of `start`: day 15 of the next month, postponed (MOS S-1.3; [F23])
-  | 'darf_irrf_due' // DARF 1841 of a distribution in `start`: last business day of the 2nd decêndio (F29 q6)
+  | 'darf_irrf_due' // DARF 1841 of the next withholding month (see build.ts): last business day of the 2nd decêndio (F29 q6)
   | 'year_end' // 31/12 of the analysis year (PGBL "pagas no ano-calendário", P&R IRPF 2026)
   | 'earliest_claim_until'; // min(recoveryItems.claimUntil)
 
@@ -40,7 +40,10 @@ export type Condition =
   | 'irpfm_below' // R02: projected annual total income < IRPFM threshold (P&R Altas Rendas, perg. 4: "inferior")
   | 'fator_r_raise' // R01: P* above the current pró-labore in a CNAE subject to the Fator R
   | 'pro_labore_lowered' // R01: P* below the current pró-labore
-  | 'subject_to_fator_r'; // the CNAE is subject to the Fator R (FS12 is asked in the PGDAS-D)
+  | 'subject_to_fator_r' // the CNAE is subject to the Fator R (FS12 is asked in the PGDAS-D)
+  | 'regime_mei'
+  | 'regime_simples'
+  | 'limit_exceeded'; // R03: the projected revenue passes the MEI limit, or the Simples ceiling (exclusion)
 
 export interface ActionTemplate {
   id: string; // `${RuleKey}.action.${n}`: stable; variants with exclusive conditions share the id
@@ -137,8 +140,14 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
         who: 'you',
         what: INSS_TEXT,
         until: 'inss_due',
-        refIds: ['lei10666-2003/art4', 'lei8212-1991/art21/caput'],
+        refIds: ['lei10666-2003/art4', 'lei8212-1991/art21/caput', 'lei8212-1991/art30/p4'],
       },
+      // Research 08 §11, item 5: the rate a Simples company withholds (IN RFB 2.110/2022) was not read.
+      noSource(
+        'R01.action.7',
+        'accountant',
+        'Qual alíquota de INSS descontar do pró-labore numa empresa do Simples?',
+      ),
       {
         id: 'R01.action.5',
         who: 'accountant',
@@ -147,6 +156,7 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
         refIds: [
           'manual-pgdas-d#8.2',
           'manual-pgdas-d#6.4',
+          'res-cgsn140-2018/art26',
           'res-cgsn190-2026/art1/res140-art26',
           'res-cgsn190-2026/art9',
         ],
@@ -246,7 +256,7 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
       {
         id: 'R05-REC.action.3',
         who: 'you',
-        what: 'Tenha uma conta gov.br nível prata ou ouro e entre no e-CAC com o perfil do CNPJ da empresa. Se quiser dar acesso ao contador, isso se faz em Minhas Autorizações de Acesso, no Portal de Serviços da Receita.',
+        what: 'Tenha uma conta gov.br nível prata ou ouro e entre no e-CAC com o perfil do CNPJ da empresa. Para dar acesso ao contador, a autorização fica em Portal de Serviços Digitais › Minhas Autorizações de Acesso; confirme com ele se ela cobre o pedido de restituição.',
         where: {
           ...E_CAC,
           path: 'Alterar perfil de acesso › CNPJ da empresa › aba "Simples Nacional"',
@@ -266,6 +276,7 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
         refIds: [
           'manual-pgdas-d#6.10',
           'manual-pgdas-d#6.10.3',
+          'manual-pgdas-d#6.4',
           'res-cgsn140-2018/art39-a',
           'manual-restituicao-sn-2025-10-20#3.1.1',
         ],
@@ -279,7 +290,7 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
       {
         id: 'R05-REC.action.6',
         who: 'you_or_accountant',
-        what: 'Peça a devolução da parte federal no Pedido Eletrônico de Restituição: um pedido por DAS, com o mês de apuração e o valor de cada tributo. Cada mês só pode ser pedido a partir da data e até o prazo final mostrados na tabela.',
+        what: 'Peça a devolução da parte federal no Pedido Eletrônico de Restituição: um pedido por DAS, com o mês de apuração e os valores a restituir por tributo. Cada mês só pode ser pedido a partir da data e até o prazo final mostrados na tabela.',
         where: {
           ...E_CAC,
           path: 'Simples Nacional › Pedido Eletrônico de Restituição › Solicitar Restituição',
@@ -323,10 +334,22 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
         ],
         appliesIf: ['iss_positive', 'municipality_sao_paulo'],
       },
+      {
+        id: 'R05-REC.action.7',
+        who: 'you_or_accountant',
+        what: 'Peça a devolução do ISS diretamente à prefeitura da sua cidade: o pedido federal não devolve o ISS.',
+        where: { name: 'Prefeitura da sua cidade' },
+        refIds: [
+          'res-cgsn140-2018/art130',
+          'pr-simples-2026-10-09#10.5',
+          'manual-restituicao-sn-2025-10-20#3.1.1',
+        ],
+        appliesIf: ['iss_positive', 'municipality_other'],
+      },
       noSource(
-        'R05-REC.action.7',
+        'R05-REC.action.10',
         'you_or_accountant',
-        'Como pedir a devolução do ISS na prefeitura da sua cidade?',
+        'Qual o procedimento da sua prefeitura para devolver o ISS?',
         ['iss_positive', 'municipality_other'],
       ),
       {
@@ -339,10 +362,22 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
         },
         refIds: ['manual-restituicao-sn-2025-10-20#3.2', 'pr-simples-2026-10-09#10.6'],
       },
+      {
+        id: 'R05-REC.action.9',
+        who: 'you_or_accountant',
+        what: 'Peça a devolução do ICMS diretamente ao estado, o ente responsável pelo imposto: o pedido federal não devolve o ICMS.',
+        where: { name: 'Estado da empresa' },
+        refIds: [
+          'res-cgsn140-2018/art130',
+          'pr-simples-2026-10-09#10.5',
+          'manual-restituicao-sn-2025-10-20#3.1.1',
+        ],
+        appliesIf: ['icms_positive'],
+      },
       noSource(
-        'R05-REC.action.9',
+        'R05-REC.action.11',
         'you_or_accountant',
-        'Como pedir a devolução do ICMS ao seu estado?',
+        'Qual o procedimento do seu estado para devolver o ICMS?',
         ['icms_positive'],
       ),
     ],
@@ -362,14 +397,19 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
       {
         method: 'refund_municipality',
         summary:
-          'Depósito na conta que você informar no pedido à prefeitura. O prazo de análise segue as regras da prefeitura.',
+          'Crédito na conta informada na tela de dados bancários do pedido no SAV. O prazo de análise da prefeitura não foi confirmado.',
+        refIds: ['sp-manual-sav-2.15#15.1', 'res-cgsn140-2018/art130'],
+        appliesIf: ['iss_positive', 'municipality_sao_paulo'],
+      },
+      {
+        method: 'refund_municipality',
+        summary: 'Pedido à prefeitura; prazo de análise não confirmado.',
         refIds: ['res-cgsn140-2018/art130', 'manual-restituicao-sn-2025-10-20#3.1.1'],
-        appliesIf: ['iss_positive'],
+        appliesIf: ['iss_positive', 'municipality_other'],
       },
       {
         method: 'refund_state',
-        summary:
-          'Pedido à Secretaria da Fazenda do estado. O prazo de análise segue as regras do estado.',
+        summary: 'Pedido ao estado, o ente responsável pelo ICMS; prazo de análise não confirmado.',
         refIds: ['res-cgsn140-2018/art130', 'pr-simples-2026-10-09#10.5'],
         appliesIf: ['icms_positive'],
       },
@@ -409,6 +449,7 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
           'pr-simples-2026-10-09#7.2',
           'pr-simples-2026-10-09#7.4',
           'lc123-2006/art18/p4-a',
+          'res-cgsn140-2018/art25/p6',
           'res-cgsn190-2026/art1/res140-art25',
         ],
       },
@@ -478,7 +519,7 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
       {
         id: 'R02.action.2',
         who: 'you',
-        what: 'Se houver retenção, pague o DARF do imposto retido, que o contador gera, até o último dia útil do segundo decêndio do mês seguinte ao da distribuição. A data indicada vale para uma distribuição feita no primeiro mês do plano.',
+        what: 'Se houver retenção, pague o DARF do imposto retido, que o contador gera, até o último dia útil do segundo decêndio do mês seguinte ao da distribuição. A data indicada supõe uma nova distribuição acima do limite no mesmo mês do ano em que houve retenção.',
         where: { name: 'DARF', path: 'Código de receita "1841 - IRRF - Lucros ou Dividendos"' },
         until: 'darf_irrf_due',
         refIds: ['rfb-pr-altas-rendas-2025-12-19#q6'],
@@ -494,8 +535,16 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
       {
         id: 'R02.action.4',
         who: 'you_or_accountant',
-        what: 'Com o contador, veja quanto lucro pode ser distribuído como isento: sem contabilidade completa, o limite parte da presunção do imposto de renda sobre a receita, menos o IRPJ pago no Simples; com escrituração que mostre lucro maior, vale o lucro contábil.',
-        refIds: ['lc123-2006/art14', 'pr-irpf-2026#183'],
+        // Source audit S1 (16/11): since Lei 15.270/2025 the art. 14 exemption only says what is exempt in the annual
+        // return; it no longer stops the withholding (P&R Altas Rendas, perg. 10; P&R IRPF 2026, perg. 183).
+        what: 'Com o contador, veja quanto lucro conta como isento na declaração anual: sem contabilidade completa, o limite parte da presunção do imposto de renda sobre a receita, menos o IRPJ pago no Simples; com escrituração que mostre lucro maior, vale o lucro contábil. Essa isenção não evita a retenção na fonte quando a mesma empresa paga acima do limite mensal da lei, e esses lucros entram na soma da renda do imposto mínimo.',
+        refIds: [
+          'lc123-2006/art14',
+          'pr-irpf-2026#183',
+          'lei9250-1995/art6-a',
+          'rfb-pr-altas-rendas-2025-12-19#q10',
+          'lei9250-1995/art16-a/caput',
+        ],
       },
     ],
     receive: [
@@ -508,13 +557,35 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
     ],
   },
 
-  // Research 08 does not cover R03 (decision D29 / README Q8): one noSource step until a research pass covers it.
+  // Research 08 does not cover R03 (README Q8). Source audit (16/11): the communication of the exclusion is sourced by
+  // LC 123, arts. 3º §§ 9º–9º-A, 30 and 18-A § 7º, and P&R Simples 12.3; the rest stays a noSource question.
   R03: {
     steps: [
+      {
+        id: 'R03.action.1',
+        who: 'accountant',
+        what: 'Comunique à Receita a exclusão do Simples: até o último dia útil do mês seguinte ao excesso, se a receita do ano passar o teto em mais de vinte por cento; até o último dia útil de janeiro do ano seguinte, se passar em até vinte por cento.',
+        where: { name: 'Receita Federal' },
+        refIds: [
+          'lc123-2006/art30',
+          'lc123-2006/art3/p9',
+          'lc123-2006/art3/p9-a',
+          'pr-simples-2026-10-09#12.3',
+        ],
+        appliesIf: ['regime_simples', 'limit_exceeded'],
+      },
+      {
+        id: 'R03.action.1',
+        who: 'accountant',
+        what: 'Comunique à Receita o desenquadramento do MEI até o último dia útil do mês seguinte ao excesso.',
+        where: { name: 'Receita Federal' },
+        refIds: ['lc123-2006/art18-a/p7'],
+        appliesIf: ['regime_mei', 'limit_exceeded'],
+      },
       noSource(
-        'R03.action.1',
+        'R03.action.2',
         'accountant',
-        'O que fazer quando a receita passa do limite do seu regime?',
+        'Qual o prazo exato no seu caso e o que muda nos impostos?',
       ),
     ],
     receive: [],

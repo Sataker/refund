@@ -542,6 +542,12 @@ export const REFS = {
     '09224fdf72e6338d34559ee8d7857e8483590772c4ebd38bf5d70dabb02474e5',
   ),
   // E8b: provisions cited only by the C.12 action plan (actions/catalog.ts).
+  'res-cgsn140-2018/art25/p6': ref(
+    'res-cgsn140-2018/art25/p6',
+    'Res. CGSN 140/2018, art. 25, § 6º',
+    'http://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=92278&visao=compilado',
+    '714a13d5a11eea013f3b9cfc76da06ae43691a09c2837a9df3003ba6e8c4ab3c',
+  ),
   'lc123-2006/art26/p2': ref(
     'lc123-2006/art26/p2',
     'LC 123/2006, art. 26, § 2º',

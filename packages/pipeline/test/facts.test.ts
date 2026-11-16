@@ -3,7 +3,7 @@
 import type { Facts, Provenance, Series } from '@refund/engine';
 import { describe, expect, it } from 'vitest';
 import { accrualMonth, estimateGrossProLabore, regimeOf } from '../src/facts.ts';
-import { answerKey, heroAnswered, idMap, persona, run, sumSeries } from './helpers.ts';
+import { answerKey, heroAnswered, heroInput, idMap, persona, run, sumSeries } from './helpers.ts';
 
 const key = answerKey();
 const expected = key.expectedFacts;
@@ -45,6 +45,28 @@ describe('facts == answer key (ENGINE-SPEC F.2)', () => {
       expected.qualifications.contributesToRgps,
     );
     expect(facts.pfDetails.value).toEqual(expected.pfDetails);
+  });
+
+  it('the IBGE municipality reaches the engine, so the hero gets the São Paulo SAV step (E8b, C.12)', async () => {
+    const { result } = await heroAnswered();
+    expect(result.facts?.company.value.ibgeMunicipality).toBe(persona().company.ibgeMunicipality);
+    expect(result.facts?.company.value.ibgeMunicipality).toBe('3550308');
+    const rec = result.engineResult?.findings.find((f) => f.ruleId === 'R05-REC');
+    const iss = rec?.actionPlan.find((s) => s.id === 'R05-REC.action.7');
+    expect(iss?.where?.name).toBe('SAV da Prefeitura de São Paulo');
+    expect(iss?.noSource).toBeUndefined();
+  });
+
+  it('without an IBGE code the field is omitted and the ISS step is the generic one', async () => {
+    const data = persona();
+    const { result } = await run(
+      heroInput({ company: { ...data.company, ibgeMunicipality: null } }, data),
+    );
+    expect(result.facts).not.toBeNull();
+    expect(result.facts && 'ibgeMunicipality' in result.facts.company.value).toBe(false);
+    const rec = result.engineResult?.findings.find((f) => f.ruleId === 'R05-REC');
+    const iss = rec?.actionPlan.find((s) => s.id === 'R05-REC.action.7');
+    if (iss !== undefined) expect(iss.where?.name).toBe('Prefeitura da sua cidade');
   });
 
   it('pgdasSegregatesExport is left to the engine’s C.3.7 inference, which finds "no" in 12/12 PAs', async () => {

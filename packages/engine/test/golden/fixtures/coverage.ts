@@ -75,8 +75,11 @@ function denseTotal(r: number, sPct: number, f: number): Cents {
   return total;
 }
 
-/** T11-19 for the given revenue brackets (one test file per group, so the sweeps run in parallel). */
-export function coverageSuite(brackets: readonly RevenueBracket[]): void {
+/**
+ * T11-19 for the given revenue brackets (one test file per group, so the sweeps run in parallel). `timeout` per sweep:
+ * the dense 150 mil group needs more under v8 coverage instrumentation (~3× slower than a plain run).
+ */
+export function coverageSuite(brackets: readonly RevenueBracket[], timeout = 180_000): void {
   describe(`T11-19 — margin coverage of the profile-based estimate (6201-5/01): ${brackets.join(', ')}`, () => {
     const ranges: { answers: ProfileAnswers; e: Extract<ProfileEstimate, { type: 'range' }> }[] =
       [];
@@ -93,7 +96,7 @@ export function coverageSuite(brackets: readonly RevenueBracket[]): void {
 
     for (const { answers, e } of ranges) {
       const label = `${answers.monthlyRevenueBracket} / employees ${answers.hasEmployees} / abroad ${answers.receivesFromAbroad}`;
-      it(`every dense total ≥ the displayed minimum: ${label}`, { timeout: 180_000 }, () => {
+      it(`every dense total ≥ the displayed minimum: ${label}`, { timeout }, () => {
         const [lo, hi] = LIMITS[answers.monthlyRevenueBracket] as [number, number];
         const [sLo, sHi] = FRACTION_LIMITS[answers.receivesFromAbroad];
         let n = 0;

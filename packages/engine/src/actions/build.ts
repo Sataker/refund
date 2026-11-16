@@ -12,7 +12,7 @@ import { param } from '../parameters/index.ts';
 import { PROCEDURE_REFS } from '../parameters/legal-refs.ts';
 import { formatBrl } from '../rules/common.ts';
 import { REFS } from '../rules/refs.ts';
-import { civilDate } from '../time.ts';
+import { addMonths, civilDate } from '../time.ts';
 import type {
   ActionStep,
   CivilDate,
@@ -106,7 +106,48 @@ function holds(c: Condition, finding: Finding, ctx: PlanContext): boolean {
       const p = r01ProLabore(finding);
       return p !== null && p.pStar < p.current;
     }
+    case 'regime_mei':
+      return facts.company.value.regime === 'MEI';
+    case 'regime_simples':
+      return facts.company.value.regime === 'SIMPLES';
+    case 'limit_exceeded':
+      return r03LimitExceeded(finding);
   }
+}
+
+const resultOf = (finding: Finding, id: string) => {
+  const v = finding.trace.find((s) => s.id === id)?.result.value;
+  return typeof v === 'number' ? v : null;
+};
+
+/**
+ * R03, read from its trace: a Simples company whose effect is an exclusion (R03.MARGINAL_12M input `effect`), or an MEI
+ * whose projected revenue (R03.RBA_PROJ) is above its limit (R03.LIMIT). Warnings and the ICMS/ISS sublimit are not.
+ */
+function r03LimitExceeded(finding: Finding): boolean {
+  const effect = finding.trace.find((s) => s.id === 'R03.MARGINAL_12M')?.inputs.effect?.value;
+  if (typeof effect === 'string') return effect.startsWith('exclusion_');
+  const projected = resultOf(finding, 'R03.RBA_PROJ');
+  const limit = resultOf(finding, 'R03.LIMIT');
+  return projected !== null && limit !== null && projected > limit;
+}
+
+/**
+ * R02 (engine review E3): the next month a withholding would repeat, from the trace. The engine projects no dividends,
+ * so it follows the same convention as the payroll (`sameMonthPriorYear`): the first month from `start` on that has
+ * the calendar month of a withholding seen in the statement (R02.FINANCIAL_COST.<month>). The step text says so.
+ */
+function nextWithholdingMonth(finding: Finding, start: YearMonth): YearMonth | undefined {
+  const prefix = 'R02.FINANCIAL_COST.';
+  const months = finding.trace
+    .filter((s) => s.id.startsWith(prefix))
+    .map((s) => s.id.slice(prefix.length) as YearMonth);
+  const next = months.map((m) => {
+    let out = m;
+    while (out < start) out = addMonths(out, 12);
+    return out;
+  });
+  return next.sort()[0];
 }
 
 const applies = (conditions: Condition[] | undefined, finding: Finding, ctx: PlanContext) =>
@@ -128,8 +169,10 @@ function resolveDate(
       return inssDueDate(ctx.start);
     case 'esocial_due':
       return esocialDueDate(ctx.start);
-    case 'darf_irrf_due':
-      return secondDecendioLastBusinessDay(ctx.start);
+    case 'darf_irrf_due': {
+      const month = nextWithholdingMonth(finding, ctx.start);
+      return month === undefined ? undefined : secondDecendioLastBusinessDay(month);
+    }
     case 'year_end':
       return civilDate(`${ctx.facts.analysisDate.slice(0, 4)}-12-31`);
     case 'earliest_claim_until':
