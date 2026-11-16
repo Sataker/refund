@@ -91,6 +91,29 @@ export function gatewayClassifyItem(
 }
 
 /**
+ * `pnpm ai:record --template`: every explanation the model has not written is the template; recorded model items
+ * (explanations, and classifications, which have no template) the pipeline still asks for are kept.
+ */
+export function templateRun(
+  previous: Recordings,
+  captured: Captured,
+  recordedAt: string,
+): Record<string, RecordingItem> {
+  const next: Record<string, RecordingItem> = {};
+  for (const input of captured.explain) {
+    const key = recordingKey('explain', input);
+    const old = previous.items[key];
+    next[key] = old?.origin === 'gateway' ? old : templateItem(input, recordedAt);
+  }
+  for (const input of captured.classify) {
+    const key = recordingKey('classify', input);
+    const old = previous.items[key];
+    if (old?.task === 'classify') next[key] = old;
+  }
+  return next;
+}
+
+/**
  * The new file: only the keys the current run produced (stale ones are dropped); an unchanged item keeps its
  * `recordedAt`, so re-recording the same thing leaves the file byte-identical.
  */

@@ -24,6 +24,7 @@ import {
   gatewayClassifyItem,
   gatewayExplainItem,
   templateItem,
+  templateRun,
 } from '../packages/ai/src/record.ts';
 import type { ExplainOutput } from '../packages/ai/src/schemas.ts';
 import { heroRuns } from '../packages/ai/test/hero.ts';
@@ -51,18 +52,19 @@ async function record(persona: string, templateOnly: boolean): Promise<void> {
   const next: Record<string, RecordingItem> = {};
   const rejected: string[] = [];
   if (templateOnly) {
-    for (const input of captured.explain) {
-      const key = recordingKey('explain', input);
-      const old = previous.items[key];
-      next[key] = old?.origin === 'gateway' ? old : templateItem(input, recordedAt);
-    }
+    Object.assign(next, templateRun(previous, captured, recordedAt));
   } else {
     // 2. The model, behind the guards. Recordings are not replayed here: this run writes them.
     const raw = new Map<ExplanationInput, ExplainOutput>();
+    let classifyModel: string = MODELS.classify.primary;
     const port = createLlmPort({
       mode: 'gateway',
       budget: DEFAULT_BUDGET,
-      log: (e) => console.log(JSON.stringify(e)),
+      log: (e) => {
+        // The model that actually answered (a gateway fallback may have).
+        if (e.event === 'ai.call' && e.task === 'classify') classifyModel = e.model;
+        console.log(JSON.stringify(e));
+      },
       onExplanation: (input, output) => raw.set(input, output),
     });
     for (const input of captured.explain) {
@@ -83,16 +85,15 @@ async function record(persona: string, templateOnly: boolean): Promise<void> {
         next[key] = templateItem(input, recordedAt);
       }
     }
-    if (captured.classify.length > 0) {
-      const outputs = await port.classify(captured.classify);
+    // Same batch size as the pipeline (classify/llm.ts: 50).
+    for (let i = 0; i < captured.classify.length; i += 50) {
+      const batch = captured.classify.slice(i, i + 50);
+      classifyModel = MODELS.classify.primary;
+      const outputs = await port.classify(batch);
       for (const out of outputs) {
-        const input = captured.classify.find((t) => t.transactionId === out.transactionId);
+        const input = batch.find((t) => t.transactionId === out.transactionId);
         if (input === undefined) continue;
-        next[recordingKey('classify', input)] = gatewayClassifyItem(
-          out,
-          MODELS.classify.primary,
-          recordedAt,
-        );
+        next[recordingKey('classify', input)] = gatewayClassifyItem(out, classifyModel, recordedAt);
       }
     }
   }

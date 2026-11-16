@@ -1,6 +1,7 @@
 import type { Finding } from '@refund/engine';
 import type { ExplanationInput, LlmClassificationInput } from '@refund/pipeline';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { FALLBACK_REASON, safeReason } from '../src/gateway.ts';
 import {
   type AiLogEvent,
   createLlmPort,
@@ -61,7 +62,11 @@ describe('gateway explain (AI SDK 7, mocked model)', () => {
     expect(logs).toMatchObject([{ event: 'ai.call', task: 'explain', tokens: 30 }]);
     const call = model.doGenerateCalls[0];
     expect(call?.providerOptions).toEqual({
-      gateway: { models: [...MODELS.explain.fallbacks], disallowPromptTraining: true },
+      gateway: {
+        models: [...MODELS.explain.fallbacks],
+        caching: 'auto',
+        disallowPromptTraining: true,
+      },
     });
   });
 
@@ -215,7 +220,11 @@ describe('gateway classify', () => {
     expect(prompt).toContain('TARIFA [doc]');
     expect(prompt).toContain('"amount": "R$ 123,45"');
     expect(model.doGenerateCalls[0]?.providerOptions).toEqual({
-      gateway: { models: [...MODELS.classify.fallbacks], disallowPromptTraining: true },
+      gateway: {
+        models: [...MODELS.classify.fallbacks],
+        caching: 'auto',
+        disallowPromptTraining: true,
+      },
     });
   });
 
@@ -295,5 +304,35 @@ describe('summarizeDiff (P1)', () => {
       promptVersion: 'summarize-diff@1',
     });
     expect(await summarizeDiff('x', 'y', options(mockModel(() => '{}')))).toBeNull();
+  });
+
+  it('the summary passes the guards against the diff itself (code review 16/11, MEDIUM 4)', async () => {
+    const diff = '- R$ 81.000,00\n+ R$ 130.000,00 (LC 123/2006, art. 18-A, § 1º)';
+    const reply = (summary: string) =>
+      options(mockModel(() => JSON.stringify({ summary, mayAffectCalculation: true })));
+    const ok = 'O limite do MEI passa de R$ 81 mil para R$ 130 mil (art. 18-A, § 1º).';
+    expect((await summarizeDiff(diff, 'LC 123/2006', reply(ok)))?.summary).toBe(ok);
+    const logs: AiLogEvent[] = [];
+    const invented = {
+      ...reply('O limite passa para R$ 150 mil.'),
+      log: (e: AiLogEvent) => logs.push(e),
+    };
+    expect(await summarizeDiff(diff, 'LC 123/2006', invented)).toBeNull();
+    expect(logs.at(-1)).toMatchObject({ event: 'ai.guard_failed', numeric: 'failed' });
+    expect(await summarizeDiff(diff, 'LC 123/2006', reply('Veja a MP 1.303.'))).toBeNull();
+  });
+});
+
+describe('classification reason (code review 16/11, MEDIUM 4)', () => {
+  it('a reason with an amount, a percentage or a citation becomes the fixed text', () => {
+    expect(safeReason('Compra de material de escritório.')).toBe(
+      'Compra de material de escritório.',
+    );
+    for (const r of [
+      'Economia de R$ 500,00.',
+      '30% do faturamento.',
+      'Dedutível pelo art. 18 da LC 123.',
+    ])
+      expect(safeReason(r), r).toBe(FALLBACK_REASON);
   });
 });

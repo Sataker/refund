@@ -10,7 +10,8 @@ import type {
 } from '@refund/pipeline';
 import { generateText, type LanguageModel, Output } from 'ai';
 import type { z } from 'zod';
-import { guardExplanation } from './guards/index.ts';
+import { citationGuard, guardExplanation } from './guards/index.ts';
+import { allowanceFromText, checkNumbers } from './guards/numeric.ts';
 import { type AiBudget, type AiTask, MODELS } from './models.ts';
 import {
   CLASSIFY_INSTRUCTIONS,
@@ -89,7 +90,11 @@ async function generate<S extends z.ZodType>(
       prompt,
       output: Output.object({ schema }),
       providerOptions: {
-        gateway: { models: [...MODELS[task].fallbacks], disallowPromptTraining: true },
+        gateway: {
+          models: [...MODELS[task].fallbacks],
+          caching: 'auto',
+          disallowPromptTraining: true,
+        },
       },
       abortSignal: AbortSignal.timeout(options.budget.timeoutMs),
       maxRetries: 1,
@@ -120,6 +125,19 @@ async function generate<S extends z.ZodType>(
   }
 }
 
+/** Shown on the confirmation card when the model's reason cannot be (a number, a citation). */
+export const FALLBACK_REASON = 'Classificação sugerida pelo modelo.';
+
+/**
+ * The model's reason, redacted, with no amount, percentage or citation at all (nothing in a reason is backed by a
+ * trace; code review 16/11, MEDIUM 4).
+ */
+export function safeReason(reason: string): string {
+  const text = redactForModel(reason).slice(0, 200);
+  const clean = checkNumbers(text, { cents: [], rates: [] }).ok && citationGuard(text, []).ok;
+  return clean ? text : FALLBACK_REASON;
+}
+
 /** A model classification survives only if it answers a transaction we sent, inside that transaction's list. */
 function acceptClassification(
   out: {
@@ -136,7 +154,7 @@ function acceptClassification(
     transactionId: out.transactionId,
     category: out.category,
     confidence: out.confidence,
-    reason: redactForModel(out.reason).slice(0, 200),
+    reason: safeReason(out.reason),
   };
 }
 
@@ -254,7 +272,21 @@ export async function summarizeDiff(
     summarizeDiffPrompt(redactForModel(diff), regulationLabel),
     options,
   );
-  return res.ok
-    ? { ...res.value, model: res.model, promptVersion: SUMMARIZE_DIFF_PROMPT_VERSION }
-    : null;
+  if (!res.ok) return null;
+  // The summary may only repeat amounts and citations the diff itself shows (code review 16/11, MEDIUM 4).
+  const source = `${regulationLabel}\n${diff}`;
+  const pseudoRef = { id: 'diff', label: source, url: '', verifiedAt: '1970-01-01' } as const;
+  const numbersOk = checkNumbers(res.value.summary, allowanceFromText(source)).ok;
+  const citationsOk = citationGuard(res.value.summary, [pseudoRef]).ok;
+  if (!numbersOk || !citationsOk) {
+    options.log?.({
+      event: 'ai.guard_failed',
+      ruleId: 'summarizeDiff',
+      numeric: numbersOk ? 'ok' : 'failed',
+      citation: citationsOk ? 'ok' : 'failed',
+      outside: 1,
+    });
+    return null;
+  }
+  return { ...res.value, model: res.model, promptVersion: SUMMARIZE_DIFF_PROMPT_VERSION };
 }

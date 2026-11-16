@@ -10,6 +10,17 @@ import { explanationIsClean } from '../src/redact.ts';
 import { syntheticCpf, syntheticEmail } from './pii.ts';
 
 const PERSON = 'Joana Pereira Lima';
+const tx: LlmClassificationInput = {
+  transactionId: 't',
+  redactedDescription: '',
+  amountCents: 100,
+  direction: 'outflow',
+  holder: 'PJ',
+  method: 'PIX',
+  counterpartyType: null,
+  counterpartyCnae: null,
+  allowedCategories: ['unclassified'],
+};
 const phone = () => `(11) ${String(98_765)}-${String(4321)}`;
 
 function dirtyInputs(data: PersonaData = persona()): LlmClassificationInput[] {
@@ -53,6 +64,46 @@ describe('redaction before the model (rule 4)', () => {
       expect(text).not.toMatch(/@|joana|pereira|lima/i);
       expect(text).not.toContain(syntheticCpf(false));
       expect(text).not.toContain(String(98_765));
+    }
+  });
+
+  it('code review 16/11 (MEDIUM 3): names without a counterparty, MEI, spelled e-mails, BR phones', () => {
+    const cnpj = { document: { type: 'CNPJ' }, name: null } as never;
+    const cpf = syntheticCpf(false);
+    const spaced = `${cpf.slice(0, 3)} ${cpf.slice(3, 6)} ${cpf.slice(6, 9)} ${cpf.slice(9)}`;
+    const mobile = `${String(98_765)}${String(4321)}`;
+    const cases: [string, unknown, string][] = [
+      ['PIX ENVIADO JOANA LIMA', undefined, 'PIX ENVIADO [pessoa]'],
+      ['PIX ENVIADO JOANA LIMA', { document: null, name: null }, 'PIX ENVIADO [pessoa]'],
+      [
+        `PIX JOANA LIMA ${cpf}`,
+        { ...(cnpj as object), name: `JOANA LIMA ${cpf}` },
+        'PIX [pessoa] [doc]',
+      ],
+      ['PIX JOANA LIMA MEI', { ...(cnpj as object), name: 'JOANA LIMA' }, 'PIX [pessoa] MEI'],
+      ['COMPRA CARTAO JOANA LIMA MEI', undefined, 'COMPRA CARTAO [pessoa] MEI'],
+      [
+        `PIX p/ joana lima tel 11 ${mobile.slice(0, 5)} ${mobile.slice(5)}`,
+        undefined,
+        'PIX p/ [pessoa] tel [telefone]',
+      ],
+      [`PIX ${spaced} JOANA`, undefined, 'PIX [doc] [pessoa]'],
+      ['TED joana(at)correio.com', undefined, 'TED [email]'],
+      ['TED joana arroba correio.com.br', undefined, 'TED [email]'],
+      [`PIX chave +55 11 ${mobile}`, undefined, 'PIX chave +55 11 #'], // the pipeline already made the run '#'
+      [`PIX chave 11.${mobile.slice(0, 5)}-${mobile.slice(5)}`, undefined, 'PIX chave [telefone]'],
+      [
+        'PIX ENVIADO - ACADEMIA RITMO FORTE LTDA',
+        undefined,
+        'PIX ENVIADO - ACADEMIA RITMO FORTE LTDA',
+      ],
+      ['PIX RECEBIDO - MARINA DEV LTDA', undefined, 'PIX RECEBIDO - MARINA DEV LTDA'],
+      ['PIX ENVIADO [pessoa] FERIAS', undefined, 'PIX ENVIADO [pessoa] FERIAS'],
+    ];
+    for (const [raw, counterparty, expected] of cases) {
+      const fromPipeline = redactDescription(raw, counterparty as never);
+      const sent = toModelInput({ ...tx, redactedDescription: fromPipeline });
+      expect(sent?.redactedDescription, raw).toBe(expected);
     }
   });
 
