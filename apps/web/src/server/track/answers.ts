@@ -3,6 +3,7 @@ import type { Db } from '@refund/db';
 import { z } from 'zod';
 import { nextAfter, type Step, stepPath } from '@/features/track/steps.ts';
 import { type ActionResult, fail, ok } from '../result.ts';
+import { trackLimit } from './limits.ts';
 import { loadTrack, setAssumption, TRACK_KEYS, type TrackKey, unlinkCompany } from './state.ts';
 
 // Track answers (IDENTITY-AND-UI §5 "First-access track"): each tap saves on the server and returns
@@ -50,7 +51,10 @@ export async function saveAnswerWith(
   db: Db,
   userId: string,
   input: unknown,
+  nowMs?: number,
 ): Promise<ActionResult<Next>> {
+  const limited = await trackLimit(db, userId, nowMs);
+  if (!limited.ok) return limited;
   const parsed = answerInput.safeParse(input);
   if (!parsed.success) return fail('INVALID_INPUT', 'Escolha uma das opções.');
   const { company, progress } = await loadTrack(db, userId);
@@ -67,7 +71,13 @@ export async function saveAnswerWith(
 }
 
 /** "Sou eu". */
-export async function confirmCompanyWith(db: Db, userId: string): Promise<ActionResult<Next>> {
+export async function confirmCompanyWith(
+  db: Db,
+  userId: string,
+  nowMs?: number,
+): Promise<ActionResult<Next>> {
+  const limited = await trackLimit(db, userId, nowMs);
+  if (!limited.ok) return limited;
   const { company } = await loadTrack(db, userId);
   if (!company) return fail('FORBIDDEN', NO_COMPANY);
   await setAssumption(db, userId, company.id, TRACK_KEYS.confirmed, true);
@@ -75,13 +85,25 @@ export async function confirmCompanyWith(db: Db, userId: string): Promise<Action
 }
 
 /** "Não é minha empresa": back to the CNPJ step. */
-export async function rejectCompanyWith(db: Db, userId: string): Promise<ActionResult<Next>> {
+export async function rejectCompanyWith(
+  db: Db,
+  userId: string,
+  nowMs?: number,
+): Promise<ActionResult<Next>> {
+  const limited = await trackLimit(db, userId, nowMs);
+  if (!limited.ok) return limited;
   await unlinkCompany(db, userId);
   return ok({ next: stepPath('cnpj') });
 }
 
 /** [Ver o número exato →] on the estimate (the estimate was shown before asking for the bank). */
-export async function markEstimateSeenWith(db: Db, userId: string): Promise<ActionResult<Next>> {
+export async function markEstimateSeenWith(
+  db: Db,
+  userId: string,
+  nowMs?: number,
+): Promise<ActionResult<Next>> {
+  const limited = await trackLimit(db, userId, nowMs);
+  if (!limited.ok) return limited;
   const { company, progress } = await loadTrack(db, userId);
   if (!company || progress.answers.monthlyRevenueBracket === undefined) {
     return fail('FORBIDDEN', 'Responda o faturamento para ver a estimativa.');
@@ -91,7 +113,13 @@ export async function markEstimateSeenWith(db: Db, userId: string): Promise<Acti
 }
 
 /** "Pular: só a PJ" (Screen 3: the pró-labore stays estimated). Requires the PJ account. */
-export async function skipPersonalAccountWith(db: Db, userId: string): Promise<ActionResult<Next>> {
+export async function skipPersonalAccountWith(
+  db: Db,
+  userId: string,
+  nowMs?: number,
+): Promise<ActionResult<Next>> {
+  const limited = await trackLimit(db, userId, nowMs);
+  if (!limited.ok) return limited;
   const { company, progress } = await loadTrack(db, userId);
   if (!company || progress.pj?.status !== 'active') {
     return fail('FORBIDDEN', 'Conecte a conta da empresa primeiro.');

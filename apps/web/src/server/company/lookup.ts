@@ -18,6 +18,7 @@ import type { Secrets } from '../crypto.ts';
 import { logger } from '../log.ts';
 import { ipKey, rateLimit } from '../rate-limit.ts';
 import { type ActionResult, fail, ok } from '../result.ts';
+import { trackLimit } from '../track/limits.ts';
 import { linkCompany, trackCompany } from '../track/state.ts';
 import {
   DONT_KNOW_ANSWERS,
@@ -31,8 +32,14 @@ import { cnpjProvider } from './providers.ts';
 // ARCHITECTURE §4.7 `lookupCnpj` and `estimateByRevenue` (live). The web calculates nothing: the rules,
 // the questions and the range all come from the engine's estimateByProfile (ENGINE-SPEC C.11).
 
-/** 07 §3.5 `cnpj_estimate`: 3 per day per IP without login (ARCHITECTURE §9.4). */
-export const CNPJ_RATE = { limit: 3, windowMs: 24 * 60 * 60_000 } as const;
+/**
+ * 07 §3.5 `cnpj_estimate` (ARCHITECTURE §9.4), adjusted in the E11 code review (M4): 5 per day per
+ * session + IP (jurors may share the venue's NAT at the final), plus a coarse 50 per day per IP so
+ * rotating anonymous sessions cannot scrape the public APIs. Live data only; replay lookups never
+ * leave the process and are bounded by the per-session track limit.
+ */
+export const CNPJ_RATE = { limit: 5, windowMs: 24 * 60 * 60_000 } as const;
+export const CNPJ_IP_RATE = { limit: 50, windowMs: 24 * 60 * 60_000 } as const;
 
 export interface CompanyDeps {
   db: Db;
@@ -103,26 +110,31 @@ export function applicableRulesOf(company: PublicCompany, nowMs?: number): Appli
   return r.ok ? r.value.rules : [];
 }
 
-/** Steps after getSession/requireCapability: rate limit (live data only) → zod → provider → save. */
+/**
+ * Steps after getSession/requireCapability: zod → check digits → limits → provider → save. The CNPJ
+ * limit counts only a well-formed CNPJ (a typo does not spend the user's daily lookups).
+ */
 export async function lookupCnpjWith(
   userId: string,
   input: unknown,
   deps: CompanyDeps,
 ): Promise<ActionResult<LookupResult>> {
-  // The limit protects the paid/free public APIs (07 §3.5, ARCHITECTURE §9.4). In `replay` mode the
-  // lookup never leaves the process (personas and fixtures), so it is not counted (EXECUTION §9, E11).
-  if (deps.dataMode === 'live') {
-    const limited = await rateLimit(
-      { key: ipKey('cnpj', deps.headers, deps.secrets.pepper), ...CNPJ_RATE },
-      deps.db,
-      deps.nowMs,
-    );
-    if (!limited.ok) return limited;
-  }
   const parsed = lookupInput.safeParse(input);
   if (!parsed.success) return fail('INVALID_INPUT', MESSAGES.invalid);
   const cnpj = validateCnpj(parsed.data.cnpj);
   if (!cnpj.ok) return fail('INVALID_INPUT', MESSAGES.invalid);
+  const session = await trackLimit(deps.db, userId, deps.nowMs);
+  if (!session.ok) return session;
+  if (deps.dataMode === 'live') {
+    const ip = ipKey('cnpj', deps.headers, deps.secrets.pepper);
+    for (const rule of [
+      { key: `${ip}:u:${userId}`, ...CNPJ_RATE },
+      { key: ip, ...CNPJ_IP_RATE },
+    ]) {
+      const limited = await rateLimit(rule, deps.db, deps.nowMs);
+      if (!limited.ok) return limited;
+    }
+  }
 
   const provider = deps.provider ?? cnpjProvider(deps.db, deps.dataMode);
   const found = await provider.lookup(cnpj.value, {
@@ -152,6 +164,8 @@ export async function estimateByRevenueWith(
   input: unknown,
   deps: Pick<CompanyDeps, 'db' | 'nowMs'>,
 ): Promise<ActionResult<ProfileEstimate>> {
+  const limited = await trackLimit(deps.db, userId, deps.nowMs);
+  if (!limited.ok) return limited;
   const parsed = estimateInput.safeParse(input);
   if (!parsed.success) return fail('INVALID_INPUT', 'Responda as perguntas para ver a estimativa.');
   const cnpj = validateCnpj(parsed.data.cnpj);
