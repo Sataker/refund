@@ -1,29 +1,26 @@
 'use client';
 
-import { Diamond } from 'lucide-react';
+import { ChevronDown, Diamond } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion.client';
 import { formatBRL, formatYearMonth } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import { Sparkline } from './sparkline.tsx';
 import { TaxSeal } from './tax-seal.client.tsx';
 import { comparedTo, formatBps, formatDate, ORIGIN_LABEL } from './text.ts';
 import type { GroupLine, SealFinding, TxRow } from './types.ts';
 
-// "Por categoria" (Screen 5b, hierarchy item 4): the heart of the screen. Each group is an accordion item; its seals
-// sit outside the trigger (a chip is its own button). `#grupo-<slug>` opens a group already expanded.
+// "Por categoria" (Screen 5b, hierarchy item 4): the heart of the screen. Each group is a disclosure (a plain button
+// with aria-expanded; no accordion library, ARCHITECTURE §11.1 budget); its seals sit outside the button (a chip is
+// its own button). `#grupo-<slug>` opens a group already expanded.
 
 export interface CategoryListProps {
   groups: GroupLine[];
   findings: Record<string, SealFinding>;
   transactions: Record<string, TxRow>;
   confirmHref: string;
-  /** Accordion item values are the slugs; the ids are unique per holder panel. */
   holder: 'pj' | 'pf';
+  /** Test-id key per slug (`groupKeys`): the groupId, plus the direction when the holder has both. */
+  keys: Record<string, string>;
 }
 
 function GroupTransactions({
@@ -52,7 +49,7 @@ function GroupTransactions({
                 </span>
               )}
             </span>
-            <span className="type-small col-span-2 row-start-2 min-w-0 truncate text-foreground lg:col-span-1 lg:row-auto">
+            <span className="type-small col-span-2 row-start-2 min-w-0 break-words text-foreground lg:col-span-1 lg:row-auto lg:truncate">
               {t.label}
             </span>
             <span
@@ -70,55 +67,75 @@ function GroupTransactions({
 
 function GroupItem({
   group,
+  testKey,
+  open,
+  onToggle,
   findings,
   transactions,
   confirmHref,
-}: Omit<CategoryListProps, 'groups' | 'holder'> & { group: GroupLine }) {
+}: Omit<CategoryListProps, 'groups' | 'holder' | 'keys'> & {
+  group: GroupLine;
+  testKey: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const last = group.byMonth.at(-1);
   const prev = group.byMonth.at(-2);
+  const contentId = `grupo-${group.slug}-conteudo`;
   return (
-    <AccordionItem
-      value={group.slug}
+    <div
       id={`grupo-${group.slug}`}
-      data-testid={`fv-group-${group.groupId}`}
+      data-testid={`fv-group-${testKey}`}
       data-cents={group.total12m}
-      className="scroll-mt-24 border-border"
+      className="scroll-mt-6 border-b border-border"
     >
-      <AccordionTrigger className="items-center gap-3 py-3 hover:no-underline">
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5 lg:flex-row lg:items-center lg:gap-4">
-          <span className="text-base flex min-w-0 items-center gap-1.5 font-medium text-foreground lg:flex-1">
-            <span className="truncate">{group.label}</span>
-            {group.byOrigin.llm > 0 ? (
-              <Diamond
-                className="size-3 shrink-0 text-muted-foreground"
-                aria-label="classificado por IA"
-              />
-            ) : null}
+      <h3 className="flex">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={contentId}
+          onClick={onToggle}
+          className="flex min-h-11 flex-1 items-center gap-3 rounded-md py-3 text-left"
+        >
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5 lg:flex-row lg:items-center lg:gap-4">
+            <span className="flex min-w-0 items-center gap-1.5 text-base font-medium text-foreground lg:flex-1">
+              <span className="truncate">{group.label}</span>
+              {group.byOrigin.llm > 0 ? (
+                <Diamond
+                  className="size-3 shrink-0 text-muted-foreground"
+                  aria-label="classificado por IA"
+                />
+              ) : null}
+            </span>
+            <span className="num flex items-baseline gap-2 text-muted-foreground lg:gap-4">
+              <span
+                className="text-base font-medium text-foreground lg:w-[150px] lg:text-right"
+                data-cents={group.total12m}
+              >
+                {formatBRL(group.total12m)}
+              </span>
+              <span className="type-small lg:w-[64px] lg:text-right" data-bps={group.shareBps}>
+                {formatBps(group.shareBps)}
+              </span>
+              <span className="type-small lg:w-[72px] lg:text-right">{group.count} lanç.</span>
+            </span>
           </span>
-          <span className="num flex items-baseline gap-2 text-muted-foreground lg:gap-4">
-            <span
-              className="text-base font-medium text-foreground lg:w-[150px] lg:text-right"
-              data-cents={group.total12m}
-            >
-              {formatBRL(group.total12m)}
-            </span>
-            <span className="type-small lg:w-[64px] lg:text-right" data-bps={group.shareBps}>
-              {formatBps(group.shareBps)}
-            </span>
-            <span className="type-small lg:w-[36px] lg:text-right" title="lançamentos">
-              <span className="sr-only">lançamentos: </span>
-              {group.count}
-            </span>
-          </span>
-        </span>
-        <Sparkline values={group.byMonth.map((m) => m.cents)} className="hidden lg:block" />
-      </AccordionTrigger>
+          <Sparkline values={group.byMonth.map((m) => m.cents)} className="hidden lg:block" />
+          <ChevronDown
+            className={cn(
+              'size-4 shrink-0 text-muted-foreground transition-transform duration-(--dur-fast)',
+              open && 'rotate-180',
+            )}
+            aria-hidden="true"
+          />
+        </button>
+      </h3>
       {group.seals.length > 0 || group.pending > 0 ? (
         <div className="-mt-1 flex flex-wrap items-center gap-2 pb-3">
           {group.seals.map((seal) => (
             <TaxSeal
               key={seal.kind}
-              groupId={group.groupId}
+              groupKey={testKey}
               seal={seal}
               findings={seal.ruleIds.flatMap((id) => {
                 const f = findings[id];
@@ -129,16 +146,16 @@ function GroupItem({
           {group.pending > 0 ? (
             <a
               href={confirmHref}
-              data-testid={`fv-pending-${group.groupId}`}
-              className="type-small font-medium text-cobalt underline-offset-4 hover:underline"
+              data-testid={`fv-pending-${testKey}`}
+              className="type-small inline-flex min-h-11 items-center font-medium text-cobalt underline-offset-4 hover:underline lg:min-h-0"
             >
               {group.pending} a confirmar →
             </a>
           ) : null}
         </div>
       ) : null}
-      <AccordionContent className="flex flex-col gap-3 pb-4">
-        {last !== undefined && prev !== undefined ? (
+      <div id={contentId} hidden={!open} className="flex flex-col gap-3 pb-4">
+        {open && last !== undefined && prev !== undefined ? (
           <p className="type-small text-muted-foreground">
             <span className="num">
               {formatYearMonth(last.month)}: {formatBRL(group.lastMonth)}
@@ -146,46 +163,61 @@ function GroupItem({
             · {comparedTo(group.deltaCents, prev.month)}
           </p>
         ) : null}
-        <Sparkline
-          values={group.byMonth.map((m) => m.cents)}
-          className="lg:hidden"
-          label={`${group.label}, 12 meses`}
-        />
-        <GroupTransactions group={group} transactions={transactions} />
-      </AccordionContent>
-    </AccordionItem>
+        {open ? (
+          <>
+            <Sparkline
+              values={group.byMonth.map((m) => m.cents)}
+              className="lg:hidden"
+              label={`${group.label}, 12 meses`}
+            />
+            <GroupTransactions group={group} transactions={transactions} />
+          </>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
-export function CategoryList({ groups, findings, transactions, confirmHref }: CategoryListProps) {
-  const [open, setOpen] = useState<string[]>([]);
+export function CategoryList({
+  groups,
+  findings,
+  transactions,
+  confirmHref,
+  keys,
+}: CategoryListProps) {
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
   useEffect(() => {
     const sync = () => {
       const hash = decodeURIComponent(window.location.hash.replace(/^#grupo-/, ''));
       if (hash !== '' && groups.some((g) => g.slug === hash)) {
-        setOpen((current) => (current.includes(hash) ? current : [...current, hash]));
+        setOpen((current) => (current.has(hash) ? current : new Set([...current, hash])));
       }
     };
     sync();
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
   }, [groups]);
+  const toggle = (slug: string) =>
+    setOpen((current) => {
+      const next = new Set(current);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return next;
+    });
   return (
-    <Accordion
-      type="multiple"
-      value={open}
-      onValueChange={setOpen}
-      className="border-t border-border"
-    >
+    <div className="border-t border-border">
       {groups.map((g) => (
         <GroupItem
-          key={g.groupId}
+          key={g.slug}
           group={g}
+          testKey={keys[g.slug] ?? g.groupId}
+          open={open.has(g.slug)}
+          onToggle={() => toggle(g.slug)}
           findings={findings}
           transactions={transactions}
           confirmHref={confirmHref}
         />
       ))}
-    </Accordion>
+    </div>
   );
 }

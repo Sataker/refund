@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { comparedTo, formatBps, formatDate, listDates, sealDetail, shortMonth } from './text.ts';
+import {
+  comparedTo,
+  firstSentence,
+  formatBps,
+  formatDate,
+  groupKeys,
+  listDates,
+  sealDetail,
+  shortMonth,
+} from './text.ts';
 import type { SealFinding } from './types.ts';
 
 /** formatBRL uses a thin no-break space after R$ (§4.5); the expectations are written with a plain space. */
@@ -13,6 +22,39 @@ const finding = (o: Partial<SealFinding> = {}): SealFinding => ({
   range: null,
   href: '/demo/dev-exportador/achados/R05',
   ...o,
+});
+
+describe('chip title and test keys (E14b review)', () => {
+  it('the chip shows a title’s first sentence, never cut mid-sentence', () => {
+    const r02 =
+      'R$ 9.000,00 retidos voltam na DIRPF 2027. Distribuindo até R$ 50 mil por mês (por exemplo, 2 × R$ 45.000,00), o dinheiro fica com você.';
+    expect(firstSentence(r02)).toBe('R$ 9.000,00 retidos voltam na DIRPF 2027.');
+    expect(firstSentence('Conforme o art. 18 da LC 123. Depois disso, nada.')).toBe(
+      'Conforme o art. 18 da LC 123.',
+    );
+    expect(firstSentence('Uma frase só')).toBe('Uma frase só');
+    expect(sealDetail('attention', finding({ title: r02 }))).toBe(
+      'R$ 9.000,00 retidos voltam na DIRPF 2027.',
+    );
+  });
+
+  it('a group present in both directions gets the direction in its test key', () => {
+    expect(
+      groupKeys([
+        {
+          groupId: 'holder_transfer',
+          direction: 'inflow',
+          slug: 'entre-voce-e-a-empresa-entradas',
+        },
+        { groupId: 'holder_transfer', direction: 'outflow', slug: 'entre-voce-e-a-empresa-saidas' },
+        { groupId: 'das', direction: 'outflow', slug: 'das' },
+      ]),
+    ).toEqual({
+      'entre-voce-e-a-empresa-entradas': 'holder_transfer-inflow',
+      'entre-voce-e-a-empresa-saidas': 'holder_transfer-outflow',
+      das: 'das',
+    });
+  });
 });
 
 describe('Finanças copy (Screen 5b)', () => {

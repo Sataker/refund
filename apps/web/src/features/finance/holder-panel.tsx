@@ -2,10 +2,10 @@ import { Diamond } from 'lucide-react';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { CategoryList } from './category-list.client.tsx';
-import { MonthBars, type MonthBarsSeries } from './month-bars.client.tsx';
+import { MonthBars, type MonthBarsSeries } from './month-bars.tsx';
 import { SealMark } from './seal-style.tsx';
 import { FinanceSection } from './section.client.tsx';
-import { comparedTo, listDates, shortMonth, signedBRL } from './text.ts';
+import { comparedTo, groupKeys, listDates, signedBRL } from './text.ts';
 import type { ChargeRow, FinanceScreenData, GroupLine, HolderView } from './types.ts';
 
 // One holder of Screen 5b, hierarchy items 2–9. Every number is the builder's; this file only formats.
@@ -14,8 +14,9 @@ const CHART_COLORS = [
   'var(--chart-1)',
   'var(--chart-2)',
   'var(--chart-5)',
-  'var(--chart-4)',
+  // Ink before violet: Distribuição (chart-1, cobalt) and Pró-labore must not read as the same blue (UX review).
   'var(--chart-3)',
+  'var(--chart-4)',
 ];
 const NET_BASIS_NOTE =
   'Pró-labore e distribuições aparecem líquidos, como saíram da conta. Os achados usam os valores brutos que você confirmou.';
@@ -122,7 +123,10 @@ export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder:
   const inflows = holder.groups.filter((g) => g.direction === 'inflow');
   const change = holder.outflowChange;
   const anyLlm = holder.groups.some((g) => g.byOrigin.llm > 0);
-  const groupLabel = new Map(holder.groups.map((g) => [g.groupId, g]));
+  // Highlights and charge rows are outflows: look their group up among the outflow lines.
+  const groupLabel = new Map(outflows.map((g) => [g.groupId, g]));
+  const keys = groupKeys(holder.groups);
+  const sealed = holder.groups.filter((g) => g.seals.length > 0).length;
   const key = holder.holder === 'PJ' ? 'pj' : 'pf';
   const list = (groups: GroupLine[]) => (
     <CategoryList
@@ -131,6 +135,7 @@ export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder:
       transactions={data.transactions}
       confirmHref={data.links.confirm}
       holder={key}
+      keys={keys}
     />
   );
 
@@ -163,13 +168,28 @@ export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder:
         />
       </section>
 
+      {sealed > 0 ? (
+        <p className="type-small -mt-4 text-muted-foreground" data-testid="fv-sealed-count">
+          <a
+            href={`#fv-${key}-out-h`}
+            className="inline-flex min-h-11 items-center font-medium text-foreground underline underline-offset-4 lg:min-h-0"
+          >
+            {sealed === 1
+              ? '1 categoria tem selo de imposto.'
+              : `${sealed} categorias têm selo de imposto.`}
+          </a>{' '}
+          Toque no selo para ver o achado.
+        </p>
+      ) : null}
+
       {holder.outflow12m > 0 ? (
         <section className="flex flex-col gap-3" aria-labelledby={`fv-${key}-chart`}>
           <h2 id={`fv-${key}-chart`} className="type-small font-medium text-muted-foreground">
             Saídas por mês
           </h2>
           <MonthBars
-            months={view.months.map(shortMonth)}
+            months={view.months}
+            totals={holder.monthly.map((m) => m.outflow)}
             series={seriesOf(holder.groups)}
             summary={`Saídas por mês de ${formatYearMonth(view.months[0] ?? change.month)} a ${formatYearMonth(change.month)}, por categoria`}
           />
@@ -177,8 +197,8 @@ export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder:
       ) : null}
 
       {outflows.length > 0 ? (
-        <section className="flex flex-col gap-3" aria-labelledby={`fv-${key}-out`}>
-          <h2 id={`fv-${key}-out`} className="type-h4 text-foreground">
+        <section className="flex flex-col gap-3" aria-labelledby={`fv-${key}-out-h`}>
+          <h2 id={`fv-${key}-out-h`} className="type-h4 scroll-mt-6 text-foreground">
             Por categoria <span className="font-normal text-muted-foreground">· saídas</span>
           </h2>
           {list(outflows)}
@@ -231,19 +251,21 @@ export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder:
                     className="flex flex-col gap-1 py-2.5"
                     data-testid="fv-highlight"
                   >
-                    <span className="type-small text-foreground">
-                      {formatYearMonth(h.month)}:{' '}
-                      <a
-                        href={`#grupo-${g?.slug ?? ''}`}
-                        className="font-medium underline-offset-4 hover:underline"
-                      >
-                        {g?.label ?? h.driver.groupId}
-                      </a>{' '}
-                      <span className="num font-medium" data-cents={h.driver.deltaCents}>
-                        {signedBRL(h.driver.deltaCents)}
+                    <a
+                      href={`#grupo-${g?.slug ?? ''}`}
+                      className="type-small flex min-h-11 items-center text-foreground underline-offset-4 hover:underline lg:min-h-0"
+                    >
+                      <span>
+                        {formatYearMonth(h.month)}:{' '}
+                        <span className="font-medium">{g?.label ?? h.driver.groupId}</span>{' '}
+                        <span className="num font-medium" data-cents={h.driver.deltaCents}>
+                          {signedBRL(h.driver.deltaCents)}
+                        </span>
+                        {previous === undefined
+                          ? null
+                          : ` em relação a ${formatYearMonth(previous)}`}
                       </span>
-                      {previous === undefined ? null : ` em relação a ${formatYearMonth(previous)}`}
-                    </span>
+                    </a>
                     {g === undefined || g.seals.length === 0 ? null : (
                       <span className="flex flex-wrap gap-3">
                         {g.seals.map((s) => (
@@ -265,7 +287,7 @@ export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder:
         >
           <ChargeList
             rows={holder.biggestOutflows}
-            groups={holder.groups}
+            groups={outflows}
             testId="fv-biggest"
             showCounterparty="secondary"
           />
@@ -284,7 +306,7 @@ export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder:
           ) : (
             <ChargeList
               rows={holder.recurring}
-              groups={holder.groups}
+              groups={outflows}
               testId="fv-recurring"
               showCounterparty="primary"
             />
@@ -302,7 +324,7 @@ export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder:
           ) : (
             <ChargeList
               rows={holder.fees.rows}
-              groups={holder.groups}
+              groups={outflows}
               testId="fv-fees"
               showCounterparty="primary"
             />

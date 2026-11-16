@@ -68,11 +68,29 @@ test.describe('financas @demo', () => {
       const inflow = Number(await page.getByTestId('fv-total-inflow').getAttribute('data-cents'));
       const outflow = Number(await page.getByTestId('fv-total-outflow').getAttribute('data-cents'));
       expect(sums.reduce((a, b) => a + b, 0)).toBe(inflow + outflow);
-      for (const s of await page.locator('[data-testid^="fv-seal-"][data-kind]').all()) {
+      // The chart's text alternative: one row per month.
+      await expect(page.getByTestId('fv-month-table').locator('tbody tr')).toHaveCount(12);
+      const seals = await page.locator('[data-testid^="fv-seal-"][data-kind]').all();
+      expect(seals.length).toBeGreaterThan(0);
+      for (const s of seals) {
         // Icon + label, never color alone.
         await expect(s).toHaveAccessibleName(
           /tem dinheiro a receber|pode pagar menos|é dedutível|é risco|atenção/,
         );
+        // Every "Ver achado" of the seal opens that finding's route (a deductible seal links the law, no finding).
+        await s.click();
+        const layer = page.getByRole('dialog');
+        await expect(layer).toBeVisible();
+        const links = await layer.locator('[data-testid^="fv-seal-link-"]').all();
+        if ((await s.getAttribute('data-kind')) !== 'deductible')
+          expect(links.length).toBeGreaterThan(0);
+        for (const link of links) {
+          const ruleId = (await link.getAttribute('data-testid'))?.replace('fv-seal-link-', '');
+          expect(ruleId).toMatch(/^(R0[1-6](-REC)?|A0[12])$/);
+          await expect(link).toHaveAttribute('href', `/demo/dev-exportador/achados/${ruleId}`);
+        }
+        await page.keyboard.press('Escape');
+        await expect(layer).toBeHidden();
       }
     }
   });

@@ -18,18 +18,50 @@ export const DEDUCTIBLE_TEXT = 'Dedutível no Imposto de Renda, na declaração 
 /**
  * What goes next to the chip (ENGINE-SPEC E.9.2 "Seal text on screen"): the linked finding's own amount or title.
  * money_to_receive → range (R02 has none: its title, EXECUTION §9 16/11); lower_tax → marginalValue12m;
- * risk and attention → title; deductible → "na declaração completa".
+ * risk and attention → title; deductible → "na declaração completa". On the chip a title is cut to its first
+ * sentence (the popover shows it whole), never mid-sentence.
  */
 export function sealDetail(kind: TaxSealKind, finding: SealFinding | undefined): string {
   if (kind === 'deductible') return 'na declaração completa';
   if (finding === undefined) return '';
   if (kind === 'money_to_receive') {
     return finding.range === null
-      ? finding.title
+      ? firstSentence(finding.title)
       : `${formatBRL(finding.range[0])} a ${formatBRL(finding.range[1])} · estimativa`;
   }
   if (kind === 'lower_tax') return `${formatBRL(finding.marginalValue12m)} a menos em 12 meses`;
-  return finding.title;
+  return firstSentence(finding.title);
+}
+
+/** Legal abbreviations that end in a period without ending the sentence ("art. 18", "inc. II", "n. 5"). */
+const ABBREVIATION = /\b(art|arts|inc|incs|al|n|nº|par|p|pág|cf|ex)\.$/iu;
+
+/**
+ * The first sentence of a finding title: up to the first ". " followed by a capital letter, skipping legal
+ * abbreviations and numbers ("R$ 9.000,00" has no space after the period). The whole title when there is one.
+ */
+export function firstSentence(title: string): string {
+  const re = /\.\s+(?=\p{Lu})/gu;
+  for (let m = re.exec(title); m !== null; m = re.exec(title)) {
+    const head = title.slice(0, m.index + 1);
+    if (!ABBREVIATION.test(head)) return head;
+  }
+  return title;
+}
+
+/**
+ * Test-id key of each group line, by slug: the groupId, plus the direction when the holder has the same group in
+ * both directions (`fv-group-holder_transfer-inflow`), so test ids stay unique as the anchors do.
+ */
+export function groupKeys(
+  groups: readonly { groupId: string; direction: 'inflow' | 'outflow'; slug: string }[],
+): Record<string, string> {
+  const keys: Record<string, string> = {};
+  for (const g of groups) {
+    const twin = groups.some((o) => o.groupId === g.groupId && o.direction !== g.direction);
+    keys[g.slug] = twin ? `${g.groupId}-${g.direction}` : g.groupId;
+  }
+  return keys;
 }
 
 /** Integer basis points → "49,82%" (string formatting of a ready value; 10000 → "100%"). */
