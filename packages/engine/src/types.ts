@@ -69,6 +69,11 @@ export interface Facts {
     currentAnexo?: Anexo;
     openedOn: CivilDate;
     uf: string;
+    /**
+     * [CONTRACT proposal, E8b] IBGE code of the company's municipality, from `PublicCompany.ibgeMunicipality`. Decides
+     * the municipal ISS refund steps of the action plan (São Paulo, 3550308: SAV); absent = the generic step.
+     */
+    ibgeMunicipality?: string;
   }>;
   monthlyRevenue: Fact<Series>;
   monthlyExportRevenue: Fact<Series>;
@@ -232,6 +237,8 @@ export interface RecoveryItem {
   icms: Cents;
   claimFrom: YearMonth; // PA + 4 months (C.12.2)
   claimUntil: CivilDate; // statute of limitations (C.12.2)
+  /** [CONTRACT proposal, E8b] claimUntil − analysisDate in calendar days (≥ 0; expired items are not emitted). */
+  daysLeft: number;
 }
 export interface HowToReceive {
   method:

@@ -1,6 +1,7 @@
 // Combined scenario (ENGINE-SPEC C.6, ADR-003): decisions chosen jointly, values attributed in the fixed order
 // R01 → R05 → R06 → R04; total = cost(S0) − cost(S4), which telescopes to Σ marginals (INV-1).
 // Public entry points return `Result`: no exception crosses the package (CLAUDE.md; EXECUTION §9, E5).
+import { applyActionPlans } from './actions/build.ts';
 import { resolveAssumptions } from './assumptions.ts';
 import { EngineError, toDomainError } from './errors.ts';
 import { canonicalJson, sha256Hex } from './hash.ts';
@@ -295,6 +296,8 @@ function run(facts: Facts, options?: { parameters?: string }): EngineResult {
   if (r02 !== null) findings.push(r02);
 
   findings.sort((a, b) => a.order - b.order);
+  // C.12: "how to apply / how to receive" of each finding, from the catalog, after the combined scenario.
+  applyActionPlans(findings, { facts, start: ctx.assumptions.start });
   const result: EngineResult = {
     engineVersion: ENGINE_VERSION,
     parametersVersion: PARAMETERS_VERSION,

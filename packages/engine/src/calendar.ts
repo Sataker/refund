@@ -73,6 +73,55 @@ export function nextBusinessDay(d: CivilDate): CivilDate {
   return out;
 }
 
+/** The day before `d` (calendar). */
+function previousDay(d: CivilDate): CivilDate {
+  const [y, m, day] = parts(d);
+  if (day > 1) return fmt(y, m, day - 1);
+  if (m > 1) return fmt(y, m - 1, daysInMonth(y, m - 1));
+  return fmt(y - 1, 12, 31);
+}
+
+/** The date itself when it is a business day; otherwise the previous one. */
+export function previousBusinessDay(d: CivilDate): CivilDate {
+  let out = d;
+  while (!isBusinessDay(out)) out = previousDay(out);
+  return out;
+}
+
+/** Calendar days from `from` to `to` (to − from; negative when `to` is earlier). */
+export function daysBetween(from: CivilDate, to: CivilDate): number {
+  const [y1, m1, d1] = parts(from);
+  const [y2, m2, d2] = parts(to);
+  return daysFromCivil(y2, m2, d2) - daysFromCivil(y1, m1, d1);
+}
+
+const dayOfMonthAfter = (competence: YearMonth, day: number): CivilDate =>
+  civilDate(`${addMonths(competence, 1)}-${String(day).padStart(2, '0')}`);
+
+/**
+ * INSS withheld from the pró-labore of `competence`: day 20 of the following month, brought FORWARD to the previous
+ * business day when there is no banking day (Lei 10.666/2003, art. 4º; the opposite of the DAS, research 08 §1).
+ */
+export function inssDueDate(competence: YearMonth): CivilDate {
+  return previousBusinessDay(dayOfMonthAfter(competence, 20));
+}
+
+/**
+ * eSocial S-1200/S-1299 and DCTFWeb of `competence`: day 15 of the following month, postponed to the next business day
+ * (MOS eSocial S-1.3; IN RFB 2.005/2021, art. 10, as amended in 2023, per the RFB notice in research 08 [F23]).
+ */
+export function esocialDueDate(competence: YearMonth): CivilDate {
+  return nextBusinessDay(dayOfMonthAfter(competence, 15));
+}
+
+/**
+ * IRRF on dividends paid in `month` (DARF 1841): last business day of the 2nd decêndio (days 11–20) of the following
+ * month (RFB, P&R Tributação de Altas Rendas, pergunta 6).
+ */
+export function secondDecendioLastBusinessDay(month: YearMonth): CivilDate {
+  return previousBusinessDay(dayOfMonthAfter(month, 20));
+}
+
 /** DAS due date: day 20 of the month after the PA, postponed to the next business day (Res. CGSN 140, art. 40, § 3º). */
 export function dasDueDate(pa: YearMonth): CivilDate {
   const rule = param('simples.das.dueDate', pa).value;

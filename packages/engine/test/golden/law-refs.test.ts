@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import dec12797 from '../../../law/articles/dec12797-2025.json' with { type: 'json' };
 import dl1598 from '../../../law/articles/dl1598-1977.json' with { type: 'json' };
+import inSfSurem10 from '../../../law/articles/in-sf-surem10-2019.json' with { type: 'json' };
 import lc116 from '../../../law/articles/lc116-2003.json' with { type: 'json' };
 import lc118 from '../../../law/articles/lc118-2005.json' with { type: 'json' };
 import lc123 from '../../../law/articles/lc123-2006.json' with { type: 'json' };
@@ -28,16 +29,16 @@ import port13 from '../../../law/articles/port-mps-mf13-2026.json' with { type: 
 import res140 from '../../../law/articles/res-cgsn140-2018.json' with { type: 'json' };
 import res190 from '../../../law/articles/res-cgsn190-2026.json' with { type: 'json' };
 import { analyze } from '../../src/analyze.ts';
-import { brl } from '../../src/money.ts';
 import { ALL_PARAMETERS, legalRefOf } from '../../src/parameters/index.ts';
 import { PROCEDURE_REFS } from '../../src/parameters/legal-refs.ts';
 import { estimateByProfile } from '../../src/profile.ts';
 import { RULE_REFS, type RuleId, refsOfRule, rulesByRef } from '../../src/ref-index.ts';
 import { REFS } from '../../src/rules/refs.ts';
 import { addMonths, daysInMonth } from '../../src/time.ts';
-import type { Cents, Facts, Finding, LegalRef, Step, YearMonth } from '../../src/types.ts';
-import { constant, fact, heroFacts, syntheticFacts } from './fixtures/facts.ts';
+import type { Facts, Finding, LegalRef, Step, YearMonth } from '../../src/types.ts';
+import { heroFacts } from './fixtures/facts.ts';
 import { HERO_PROFILE } from './fixtures/profile.ts';
+import { ruleScenarios } from './fixtures/scenarios.ts';
 
 interface Provision {
   id: string;
@@ -52,6 +53,7 @@ const corpus = new Map<string, Provision>(
     [
       dec12797,
       dl1598,
+      inSfSurem10,
       lc116,
       lc118,
       lc123,
@@ -181,48 +183,7 @@ describe('every engine reference exists in the corpus (INV-5, all rules)', () =>
     );
   });
 
-  const scenarios: Record<string, Facts> = (() => {
-    const pharmacy = syntheticFacts({
-      domestic: constant(brl('50.000,00')),
-      subjectToFatorR: false,
-      baseAnexo: 'I',
-      assumptions: {
-        monofasicoPct: { value: '0.4', origin: 'user', editable: true, source: 'slider' },
-      },
-    });
-    pharmacy.companyDetails.value.resellsMonofasico = true;
-    const pharmacyNoPct = syntheticFacts({
-      domestic: constant(brl('50.000,00')),
-      subjectToFatorR: false,
-      baseAnexo: 'I',
-    });
-    pharmacyNoPct.companyDetails.value.resellsMonofasico = true;
-    const mei = syntheticFacts({ regime: 'MEI', domestic: constant(brl('8.100,00')) });
-    const large = syntheticFacts({ domestic: constant(brl('250.000,00')), subjectToFatorR: false });
-    const a02 = syntheticFacts({
-      domestic: constant(brl('50.000,00')),
-      proLabore: constant(0 as Cents),
-      distributions: [
-        {
-          month: '2026-10',
-          payerCnpj: 'RFTEST00000100',
-          grossAmount: brl('20.000,00'),
-          irrfWithheld: 0 as Cents,
-          profitThrough2025Approved: false,
-        },
-      ],
-    });
-    const pgbl = syntheticFacts({
-      domestic: constant(brl('60.000,00')),
-      cltGross: constant(brl('15.000,00')),
-      proLabore: constant(brl('3.000,00')),
-      otherTaxableIncome: constant(brl('12.000,00')),
-    });
-    pgbl.personalExpensesInPj = fact([
-      { transactionId: 't', month: '2026-05', amount: 5590 as Cents, merchant: 'NETFLIX' },
-    ]);
-    return { pharmacy, pharmacyNoPct, mei, large, a02, pgbl };
-  })();
+  const scenarios: Record<string, Facts> = ruleScenarios();
 
   for (const [name, facts] of Object.entries(scenarios)) {
     it(`${name}: every step ref is in force in its month, every finding ref in the finding's period`, () => {

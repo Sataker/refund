@@ -541,6 +541,79 @@ export const REFS = {
     'https://www.planalto.gov.br/ccivil_03/leis/l8212cons.htm',
     '09224fdf72e6338d34559ee8d7857e8483590772c4ebd38bf5d70dabb02474e5',
   ),
+  // E8b: provisions cited only by the C.12 action plan (actions/catalog.ts).
+  'lc123-2006/art26/p2': ref(
+    'lc123-2006/art26/p2',
+    'LC 123/2006, art. 26, § 2º',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    '4b9be50796785eb69a80e0067955d694d76183ef7ea4121f6bffe64cb6e0329b',
+  ),
+  'lc123-2006/art21/p6': ref(
+    'lc123-2006/art21/p6',
+    'LC 123/2006, art. 21, § 6º',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
+  ),
+  'lc123-2006/art21/p10': ref(
+    'lc123-2006/art21/p10',
+    'LC 123/2006, art. 21, § 10',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
+  ),
+  'lc123-2006/art21/p11': ref(
+    'lc123-2006/art21/p11',
+    'LC 123/2006, art. 21, § 11',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
+  ),
+  'lei5172-1966/art173': ref(
+    'lei5172-1966/art173',
+    'CTN, art. 173',
+    'https://www.planalto.gov.br/ccivil_03/leis/l5172compilado.htm',
+    '410707c773eb0decd180e06e6ab6e5126f62d7c5b991f0c422ecea6663a5e15e',
+  ),
+  'res-cgsn140-2018/art39-a': ref(
+    'res-cgsn140-2018/art39-a',
+    'Res. CGSN 140/2018, art. 39-A',
+    'https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/92278/visao/vigente',
+    '51aed0b74a4d8d97ee0158c6c9cca5f14658369b42e07cb345e31007818ec442',
+  ),
+  'res-cgsn140-2018/art66': ref(
+    'res-cgsn140-2018/art66',
+    'Res. CGSN 140/2018, art. 66',
+    'http://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=92278&visao=compilado',
+    '714a13d5a11eea013f3b9cfc76da06ae43691a09c2837a9df3003ba6e8c4ab3c',
+  ),
+  'res-cgsn140-2018/art129': ref(
+    'res-cgsn140-2018/art129',
+    'Res. CGSN 140/2018, art. 129',
+    'https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/92278/visao/vigente',
+    '51aed0b74a4d8d97ee0158c6c9cca5f14658369b42e07cb345e31007818ec442',
+  ),
+  'res-cgsn140-2018/art130': ref(
+    'res-cgsn140-2018/art130',
+    'Res. CGSN 140/2018, art. 130',
+    'https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/92278/visao/vigente',
+    '51aed0b74a4d8d97ee0158c6c9cca5f14658369b42e07cb345e31007818ec442',
+  ),
+  'res-cgsn140-2018/art132': ref(
+    'res-cgsn140-2018/art132',
+    'Res. CGSN 140/2018, art. 132',
+    'https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/92278/visao/vigente',
+    '51aed0b74a4d8d97ee0158c6c9cca5f14658369b42e07cb345e31007818ec442',
+  ),
+  'in-sf-surem10-2019/art1-a/caput': ref(
+    'in-sf-surem10-2019/art1-a/caput',
+    'IN SF/SUREM 10/2019, art. 1º-A, caput',
+    'https://legislacao.prefeitura.sp.gov.br/leis/instrucao-normativa-10-de-4-de-dezembro-de-2019',
+    'b9b9d1bd12b9bb0b5a001c4153dcf54d68fa8589084c27ca999e48b9c5ce6120',
+  ),
+  'in-sf-surem10-2019/art1-a/ii': ref(
+    'in-sf-surem10-2019/art1-a/ii',
+    'IN SF/SUREM 10/2019, art. 1º-A, II',
+    'https://legislacao.prefeitura.sp.gov.br/leis/instrucao-normativa-10-de-4-de-dezembro-de-2019',
+    'b9b9d1bd12b9bb0b5a001c4153dcf54d68fa8589084c27ca999e48b9c5ce6120',
+  ),
 } as const satisfies Record<string, LegalRef>;
 
 export type RefId = keyof typeof REFS;

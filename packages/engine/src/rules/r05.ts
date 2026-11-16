@@ -1,6 +1,6 @@
 // R05: segregated export revenue in Simples (ENGINE-SPEC D.5, with the period split of decision D20) and R05-REC,
 // the recovery of the last 5 years as a range, never in the total (D6).
-import { claimFrom, claimUntil, dasDueDate } from '../calendar.ts';
+import { claimFrom, claimUntil, dasDueDate, daysBetween } from '../calendar.ts';
 import { D, roundToCents } from '../money.ts';
 import { param } from '../parameters/index.ts';
 import type { PgdasInference } from '../pgdas.ts';
@@ -285,6 +285,7 @@ export function r05RecFinding(ctx: Ctx, inference: PgdasInference): Finding | nu
         icms: cents(diff(['ICMS'])),
         claimFrom: claimFrom(pa),
         claimUntil: until,
+        daysLeft: daysBetween(analysisDate, until),
       };
       items.push(item);
       measured += overpayment;
@@ -318,6 +319,7 @@ export function r05RecFinding(ctx: Ctx, inference: PgdasInference): Finding | nu
         icms: cents(0),
         claimFrom: claimFrom(pa),
         claimUntil: until,
+        daysLeft: daysBetween(analysisDate, until),
       });
     }
   }

@@ -1,6 +1,8 @@
 // Public API of @refund/engine (ARCHITECTURE §4.2).
 export const PACKAGE_NAME = '@refund/engine';
 
+export { actionRefOf, SAO_PAULO_IBGE } from './actions/build.ts';
+export { NO_SOURCE_TEXT } from './actions/catalog.ts';
 export { analyze, recalculate } from './analyze.ts';
 export type { EngineErrorCode } from './errors.ts';
 export { brl, rate, roundToCents, sumCents } from './money.ts';

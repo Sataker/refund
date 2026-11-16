@@ -38,8 +38,8 @@ export type FindingBase = Pick<
 >;
 
 /**
- * The action plan (C.12) has no stage in EXECUTION E5/E8; its texts come only from `@refund/law` metadata with a
- * primary source. Until it is specified in a stage, findings carry empty lists (EXECUTION §9, E5).
+ * Common fields of a finding. `actionPlan` and `howToReceive` start empty here and are filled by actions/build.ts
+ * (C.12, stage E8b) once the combined scenario is done, so the rules never write a step.
  */
 export const base = (): FindingBase => ({
   ruleVersion: RULE_VERSION,

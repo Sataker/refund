@@ -200,6 +200,8 @@ export function heroFacts(assumptions: Facts['assumptions'] = HERO_ASSUMPTIONS):
     assumptions,
   });
   f.company.value.cnpj = HERO_CNPJ;
+  // dev-exportador.json#company.ibgeMunicipality: São Paulo/SP (the SAV steps of the action plan, E8b).
+  f.company.value.ibgeMunicipality = '3550308';
   f.pfDetails.value.healthExpenses = [
     { amount: 780000 as Cents, cnaeOrProfession: '6550-2/00', beneficiary: 'holder' },
     { amount: 960000 as Cents, cnaeOrProfession: 'psychologist', beneficiary: 'holder' },
