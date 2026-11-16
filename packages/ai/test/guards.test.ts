@@ -47,9 +47,10 @@ describe('PT-BR normalization (TESTS §3.5)', () => {
   const one = (text: string) => {
     const [m] = mentions(text);
     if (m === undefined) throw new Error(`no mention in ${text}`);
-    const v = m.kind === 'money' ? m.cents : m.pct;
-    if (v === null) throw new Error(`unreadable ${text}`);
-    return { [m.kind === 'money' ? 'cents' : 'pct']: v.mantissa / 10 ** v.scale };
+    if (m.kind === 'invalid' || m.value === null) throw new Error(`unreadable ${text}`);
+    const v = m.value.mantissa / 10 ** m.value.scale;
+    if (m.kind === 'percent') return { pct: v };
+    return { cents: Math.round(v * 10 ** ((m.kind === 'money' ? m.exp : 0) + 2)) };
   };
 
   it.each([
@@ -193,13 +194,13 @@ describe('citationGuard', () => {
     'Decreto 12.797, art. 2º',
     'Portaria Interministerial MPS/MF 13',
     'Simples Nacional (LC 123)',
-    'parágrafo único',
   ])('allows %s', (text) => {
     expect(citationGuard(text, refs)).toEqual({ ok: true, outsideRefs: [] });
   });
 
   it.each([
     ['art. 999', 'art. 999'],
+    ['parágrafo único', 'parágrafo único'],
     ['Lei 12.345', 'Lei 12.345'],
     ['LC 123/2006, art. 3º, § 14', 'LC 123/2006, art. 3º, § 14'],
     ['art. 18, § 5º-K', 'art. 18, § 5º-K'],
