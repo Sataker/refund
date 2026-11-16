@@ -40,13 +40,23 @@ const BLOCKS: Block[] = [
     title: 'Você controla',
     Icon: RotateCcw,
     tone: 'text-cobalt',
-    items: ['Revoga quando quiser, em um toque', 'O acesso expira em 12 meses'],
+    items: [
+      'Desconecta quando quiser, em um toque, na tela da conta ou no fim do cadastro',
+      'Ao desconectar, apagamos na hora o extrato copiado e o consentimento deixa de valer',
+    ],
   },
 ];
 
 export function ConsentContent() {
   return (
     <div className="flex flex-col gap-6" data-testid="consent">
+      <p
+        className="type-small rounded-lg border border-border bg-surface px-4 py-3 text-foreground"
+        data-testid="sandbox-notice"
+      >
+        Nesta versão, a conexão usa o ambiente de testes da Pluggy (sandbox): nenhum banco real é
+        conectado.
+      </p>
       {BLOCKS.map(({ id, title, Icon, tone, items }) => (
         <section key={id} aria-labelledby={`consent-${id}`}>
           <h2 id={`consent-${id}`} className="type-h4 flex items-center gap-2 text-foreground">

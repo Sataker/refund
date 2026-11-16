@@ -17,7 +17,7 @@ export function LiveUnavailable({ message }: { message: string }) {
           <Link href="/" aria-label="Refund, página inicial" className="text-xl">
             <Logo />
           </Link>
-          <SandboxSeal className="hidden sm:inline-flex" />
+          <SandboxSeal live className="hidden sm:inline-flex" />
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-[560px] flex-1 flex-col justify-center px-4 py-16">

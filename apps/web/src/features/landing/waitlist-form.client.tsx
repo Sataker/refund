@@ -97,7 +97,6 @@ export function WaitlistForm({ join }: { join: WaitlistJoin }) {
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           id={emailId}
-          name="email"
           type="email"
           autoComplete="email"
           placeholder="voce@exemplo.com.br"

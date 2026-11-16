@@ -62,7 +62,7 @@ export function TrackShell({ step, progress, children }: TrackShellProps) {
             <Logo />
           </Link>
           <div className="flex items-center gap-4">
-            <SandboxSeal className="hidden sm:inline-flex" />
+            <SandboxSeal live className="hidden sm:inline-flex" />
             <Link
               href="/"
               className="type-small text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
@@ -192,7 +192,7 @@ export function TrackShell({ step, progress, children }: TrackShellProps) {
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-[1120px] flex-col gap-3 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <Disclaimer size="caption" />
-          <SandboxSeal className="self-start sm:hidden" />
+          <SandboxSeal live className="self-start sm:hidden" />
         </div>
       </footer>
     </div>

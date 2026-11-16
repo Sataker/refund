@@ -4,11 +4,13 @@ import { redirect } from 'next/navigation';
 import { Disclaimer } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
+import { DisconnectButton } from '@/features/connection/disconnect-button.client';
 import { ROUTES } from '@/features/landing/routes';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { CONNECTION_STATUS_LABEL, currentStep, stepPath } from '@/features/track/steps';
 import { liveContext } from '@/server/live.ts';
 import { loadTrack } from '@/server/track/state.ts';
+import { revokeConnection } from './comecar/actions';
 
 // /app: while the first-access track is not over, everything leads back to the current step (shell
 // lock, D19). At the end of the track the live analysis (Screen 4) starts: it arrives with E14, so for
@@ -33,7 +35,7 @@ export default async function AppHome() {
           <Link href="/" aria-label="Refund, página inicial" className="text-xl">
             <Logo />
           </Link>
-          <SandboxSeal className="hidden sm:inline-flex" />
+          <SandboxSeal live className="hidden sm:inline-flex" />
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-[560px] flex-1 flex-col px-4 py-12">
@@ -58,6 +60,12 @@ export default async function AppHome() {
                   'não conectada'
                 )}
               </span>
+              {conn ? (
+                <DisconnectButton
+                  label={`Desconectar: ${label}`}
+                  revoke={revokeConnection.bind(null, { connectionId: conn.id })}
+                />
+              ) : null}
             </li>
           ))}
         </ul>
