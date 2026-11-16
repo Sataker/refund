@@ -12,12 +12,15 @@ export { redactDescription };
 // "[pessoa].[pessoa]@…"), and the spelled-out forms "joana(at)gmail.com", "joana at gmail dot com".
 const EMAIL = /[^\s@]*@[^\s@]*/gu;
 const EMAIL_SPELLED =
-  /[^\s@]+\s*(?:\(at\)|\[at\]|\{at\}|\(arroba\)|\s+at\s+|\s+arroba\s+)\s*[^\s@]+(?:(?:\s+(?:dot|ponto)\s+|\.)[^\s@.]+)+/giu;
+  /[^\s@]+\s*(?:\(at\)|\[at\]|\{at\}|\(a\)|\(arroba\)|\s+at\s+|\s+arroba\s+)\s*[^\s@]+(?:(?:\s+(?:dot|ponto)\s+|\.)[^\s@.]+)+/giu;
 // Brazilian phones: "(DD) 9NNNN-NNNN", "DD.9NNNN-NNNN", "DD 9 NNNN NNNN", "+55 DD 9NNNNNNNN".
 const PHONE = /(?<!\d)(?:\+?\s?55[\s.-]?)?\(?\d{2}\)?[\s.-]?(?:9[\s.-]?)?\d{4}[\s.-]?\d{4}(?!\d)/g;
 // An 8-digit CNPJ root ("12.345.678"): an MEI's legal name is "<root> <person>".
 const CNPJ_ROOT = /(?<![\d.])\d{2}\.?\d{3}\.?\d{3}(?![\d.])/g;
 const LONG_DIGITS = /\d{6,}/g;
+// Professional registries identify a person: "CRM 12345", "OAB/SP 123456", "CRP 06/12345".
+const REGISTRY =
+  /(?<![\p{L}])(?:CRM|CRO|CRP|CRC|CRN|CRF|CRMV|CREA|CAU|COREN|CREFITO|OAB)(?:[\s/-]*[A-Z]{2}(?![\p{L}]))?[\s:/-]*(?:\d[\d./-]*|#)/giu;
 const DIGIT_WORDS =
   /(?<![\p{L}])(?:(?:zero|um|uma|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez|onze|doze)(?:\s+|$)){3,}/giu;
 
@@ -25,7 +28,7 @@ const fold = (w: string) => w.normalize('NFD').replace(/\p{M}/gu, '').toLowerCas
 
 /** Words that open a transfer or payment: what follows may be a person. */
 const TRIGGER =
-  /^(?:pix\w*|ted\w*|doc|tev|transf\w*|pagamento|pagto|pgto|pag|salario|sal|dep|deposito|reembolso|compra)$/;
+  /^(?:pix\w*|ted\w*|doc|tev|transf\w*|pagamento|pagto|pgto|pag|salario|sal|dep|deposito|reembolso|compra|aluguel|boleto|\*)$/;
 /** Between the trigger and the name. */
 const SKIP =
   /^(?:enviad[oa]|recebid[oa]|agendad[oa]|para|pra|p\/|de|da|do|a|ao|cartao|debito|credito|conta|qr|code|online|-|–|—|#|\d+|\[\w+\])$/;
@@ -35,13 +38,14 @@ const NOT_A_NAME = new Set(
     'pix ted doc tev transf transferencia enviado enviada recebido recebida agendado agendada para pra qr code chave ' +
     'tel telefone fone cel celular cpf cnpj ref referente pagamento pgto pag pagto salario ferias decimo terceiro ' +
     'aluguel conta corrente poupanca boleto tarifa devolucao estorno reembolso cobranca compra cartao debito credito ' +
-    'saque deposito dep parcela fatura assinatura mensalidade online'
+    'saque deposito dep parcela fatura assinatura mensalidade online exterior ordem cambio consulta honorarios'
   ).split(' '),
 );
-/** A run of names that ends in one of these is a company and is kept (it helps the classification). */
-const COMPANY = new Set(
-  'ltda ltda. sa s.a. s.a s/a cia cia. inc inc. llc corp ltd plc gmbh'.split(' '),
-);
+/**
+ * A run of names that ends in one of these is a company and is kept (it helps the classification). Bare "SA", "CIA"
+ * and "INC" are surnames or ambiguous (code review 16/11): only the dotted forms count.
+ */
+const COMPANY = new Set('ltda ltda. s.a. s.a s/a llc corp ltd plc gmbh'.split(' '));
 /** Sole proprietors: the name before them is a person (code review 16/11). */
 const PERSON_MARKER = new Set(['me', 'epp', 'eireli', 'mei']);
 const PARTICLE = new Set(['da', 'de', 'do', 'dos', 'das', 'e', "d'"]);
@@ -49,7 +53,7 @@ const PARTICLE = new Set(['da', 'de', 'do', 'dos', 'das', 'e', "d'"]);
 const isNameWord = (w: string) => {
   const f = fold(w);
   return (
-    /^\p{L}[\p{L}'’-]*\p{L}$/u.test(w) &&
+    (/^\p{L}[\p{L}'’-]*\p{L}$/u.test(w) || /^\p{L}\.$/u.test(w)) &&
     !NOT_A_NAME.has(f) &&
     !COMPANY.has(f) &&
     !PERSON_MARKER.has(f)
@@ -64,7 +68,8 @@ const isDigitish = (w: string) => /^(?:[\d.,/-]+|#|\[\w+\])$/.test(w);
  */
 export function redactNames(text: string): string {
   const prepared = text
-    .replace(/[:*|;,]/g, ' ')
+    .replace(/[:|;,]/g, ' ')
+    .replace(/\*/g, ' * ')
     .replace(/\b(pix|ted|doc|enviad[oa]|recebid[oa])-/giu, '$1 ');
   const tokens = prepared.split(/\s+/).filter((t) => t !== '');
   const mark = new Array<boolean>(tokens.length).fill(false);
@@ -112,7 +117,9 @@ export function redactNames(text: string): string {
 
 /** Documents → "[doc]", e-mails → "[email]", phones → "[telefone]", digit runs → "#" (no name rule). */
 export function redactContacts(text: string): string {
-  return stripDocuments(text)
+  // "529_982_247_25": underscores between digits are separators too.
+  return stripDocuments(text.replace(/(?<=\d)_(?=\d)/g, ' '))
+    .replace(REGISTRY, '[registro]')
     .replace(EMAIL_SPELLED, '[email]')
     .replace(EMAIL, '[email]')
     .replace(PHONE, '[telefone]')
@@ -126,9 +133,27 @@ export function redactForModel(text: string): string {
   return redactNames(redactContacts(text));
 }
 
+/**
+ * A description that is only a name ("JOANA LIMA", 2–4 name words, no trigger) when the counterparty is a person or
+ * unknown: the whole name becomes "[pessoa]" (code review 16/11). A company counterparty (CNPJ) keeps it.
+ */
+export function redactBareName(
+  text: string,
+  counterpartyType: LlmClassificationInput['counterpartyType'],
+): string {
+  if (counterpartyType === 'CNPJ') return text;
+  const words = text.split(/\s+/).filter((t) => t !== '');
+  const named = words.filter((t) => !isDigitish(t));
+  return named.length >= 2 && named.length <= 4 && named.every(isNameWord) ? '[pessoa]' : text;
+}
+
 /** The classification input as it may leave the server, or null when something personal survives. */
 export function toModelInput(input: LlmClassificationInput): LlmClassificationInput | null {
-  const out = { ...input, redactedDescription: redactForModel(input.redactedDescription) };
+  const redacted = redactBareName(
+    redactForModel(input.redactedDescription),
+    input.counterpartyType,
+  );
+  const out = { ...input, redactedDescription: redacted };
   return detectPii({ description: out.redactedDescription }).length === 0 ? out : null;
 }
 

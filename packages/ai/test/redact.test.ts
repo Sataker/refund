@@ -126,7 +126,7 @@ describe('redaction before the model (rule 4)', () => {
       ['PIX:JOANA LIMA', 'PIX [pessoa]'],
       ['PIXENVIADO JOANA LIMA', 'PIXENVIADO [pessoa]'],
       ['PIX ENVIADO 01 JOANA LIMA', 'PIX ENVIADO 01 [pessoa]'],
-      ['PIX ENVIADO * JOANA LIMA', 'PIX ENVIADO [pessoa]'],
+      ['PIX ENVIADO * JOANA LIMA', 'PIX ENVIADO * [pessoa]'],
       ['TRANSFERENCIA PARA JOANA LIMA', 'TRANSFERENCIA PARA [pessoa]'],
       ['TED RECEBIDA DE: JOANA LIMA', 'TED RECEBIDA DE [pessoa]'],
       ['PIX ENVIADO JOANA LIMA SILVA SOUZA COSTA PEREIRA ALVES', 'PIX ENVIADO [pessoa]'],
@@ -140,7 +140,7 @@ describe('redaction before the model (rule 4)', () => {
       ['tel onze nove oito sete', 'tel #'],
       ['PIX ENVIADO Joana Lima', 'PIX ENVIADO [pessoa]'],
       ['pix enviado joana lima', 'pix enviado [pessoa]'],
-      ['PIX ENVIADO JOANA LIMA SA', 'PIX ENVIADO JOANA LIMA SA'],
+      ['PIX ENVIADO JOANA LIMA SA', 'PIX ENVIADO [pessoa]'], // bare SA is a surname (16/11),
       ['PIX ENVIADO JOANA LIMA E FILHOS LTDA', 'PIX ENVIADO JOANA LIMA E FILHOS LTDA'],
       ['PIX ENVIADO JOANA LIMA BANCO', 'PIX ENVIADO [pessoa]'],
       ['COMPRA CARTAO JOANA LIMA', 'COMPRA CARTAO [pessoa]'],
@@ -151,6 +151,40 @@ describe('redaction before the model (rule 4)', () => {
     ];
     for (const [raw, expected] of cases) {
       const sent = toModelInput({ ...tx, redactedDescription: redactDescription(raw) });
+      expect(sent?.redactedDescription, raw).toBe(expected);
+    }
+  });
+
+  it('code review 16/11 (pii3): ambiguous company words, more triggers, initials, bare names, registries', () => {
+    const cpf = syntheticCpf(false);
+    const under = `${cpf.slice(0, 3)}_${cpf.slice(3, 6)}_${cpf.slice(6, 9)}_${cpf.slice(9)}`;
+    const cases: [string, LlmClassificationInput['counterpartyType'], string][] = [
+      ['PIX ENVIADO JOANA LIMA SA', null, 'PIX ENVIADO [pessoa]'],
+      ['PIX ENVIADO JOANA LIMA CIA', null, 'PIX ENVIADO [pessoa]'],
+      ['PIX ENVIADO JOANA LIMA INC', null, 'PIX ENVIADO [pessoa]'],
+      ['PIX ENVIADO JOANA LIMA S.A.', null, 'PIX ENVIADO JOANA LIMA S.A.'],
+      ['PIX ENVIADO JOANA LIMA S/A', null, 'PIX ENVIADO JOANA LIMA S/A'],
+      ['ALUGUEL JOANA LIMA', null, 'ALUGUEL [pessoa]'],
+      ['BOLETO JOANA LIMA', null, 'BOLETO [pessoa]'],
+      ['IFOOD *JOANA LIMA', null, 'IFOOD * [pessoa]'],
+      ['UBER*JOANA LIMA', null, 'UBER * [pessoa]'],
+      ['PIX ENVIADO J. LIMA', null, 'PIX ENVIADO [pessoa]'],
+      ['JOANA LIMA', null, '[pessoa]'],
+      ['JOANA MARIA LIMA SOUZA', 'CPF', '[pessoa]'],
+      ['ACADEMIA RITMO FORTE', 'CNPJ', 'ACADEMIA RITMO FORTE'],
+      ['NETFLIX.COM', null, 'NETFLIX.COM'],
+      ['joana.lima(a)correio.com', null, '[email]'],
+      [`CPF ${under}`, null, 'CPF [doc]'],
+      ['CONSULTA CRM 12345', null, 'CONSULTA [registro]'],
+      ['HONORARIOS OAB/SP 123456', null, 'HONORARIOS [registro]'],
+      ['PSICOLOGA CRP 06/12345', null, 'PSICOLOGA [registro]'],
+    ];
+    for (const [raw, counterpartyType, expected] of cases) {
+      const sent = toModelInput({
+        ...tx,
+        counterpartyType,
+        redactedDescription: redactDescription(raw),
+      });
       expect(sent?.redactedDescription, raw).toBe(expected);
     }
   });
