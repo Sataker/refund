@@ -1,7 +1,83 @@
 {
   "$format": "refund.ai-recording/v1",
   "persona": "dev-exportador",
-  "engineVersion": "",
-  "parametersVersion": "",
-  "items": {}
+  "engineVersion": "0.2.0",
+  "parametersVersion": "2026.11.14",
+  "items": {
+    "sha256:08b28dca07599d630e74d8eaaec294d47801a40b451bff0f5d3eee55754ddbb6": {
+      "task": "explain",
+      "ruleId": "R05-REC",
+      "origin": "template",
+      "promptVersion": "template@1",
+      "recordedAt": "2026-11-16T00:19:24.614Z",
+      "output": {
+        "text": "Você pode ter pago de R$ 39.787,68 a R$ 198.938,40 a mais, para recuperar (estimativa). Esse dinheiro é do passado e não entra no total de economia dos próximos 12 meses. Há prazo: o mês mais antigo só pode ser pedido até 23/11/2026. Contrapartida: ao retificar, o município pode questionar o ISS. Guarde contratos, invoices e contratos de câmbio; o contador precisa validar. Cada passo da conta e o artigo da lei estão em “Ver cálculo”. Valide com seu contador antes de agir.",
+        "citedRefIds": []
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
+    },
+    "sha256:4f3d02b45ff3108ce4495642a4deb5bacbcbe0599d19a8de9f368a184b2e6d7b": {
+      "task": "explain",
+      "ruleId": "R05",
+      "origin": "template",
+      "promptVersion": "template@1",
+      "recordedAt": "2026-11-16T00:19:04.874Z",
+      "output": {
+        "text": "Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses, dentro da lei. Depois, são R$ 31.109,76 a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 80.923,20 para R$ 46.920,80. O valor usa só dados do banco, da Receita e o que foi confirmado. Contrapartida: ao retificar, o município pode questionar o ISS. Guarde contratos, invoices e contratos de câmbio; o contador precisa validar. Cada passo da conta e o artigo da lei estão em “Ver cálculo”. Valide com seu contador antes de agir.",
+        "citedRefIds": []
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
+    },
+    "sha256:534903e767885297dbed94ac24141a587bd8de9fcae45e22481673776b4e2441": {
+      "task": "explain",
+      "ruleId": "R01",
+      "origin": "template",
+      "promptVersion": "template@1",
+      "recordedAt": "2026-11-16T00:19:04.874Z",
+      "output": {
+        "text": "Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei. Depois, são R$ 42.896,52 a menos por ano a partir de abril de 2027. Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20. É uma estimativa: depende de premissas que dá para revisar em “Ver cálculo”. Cada passo da conta e o artigo da lei estão em “Ver cálculo”. Valide com seu contador antes de agir.",
+        "citedRefIds": []
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
+    },
+    "sha256:833f809ca336aa7bd7d305973703a41e69501ad449276eac11e29dd3006d4e4c": {
+      "task": "explain",
+      "ruleId": "R02",
+      "origin": "template",
+      "promptVersion": "template@1",
+      "recordedAt": "2026-11-16T00:19:04.874Z",
+      "output": {
+        "text": "Isto é um alerta e não entra no total de economia. Custo financeiro das retenções: R$ 1.111,70. É uma estimativa: depende de premissas que dá para revisar em “Ver cálculo”. Não distribua lucro que a empresa não apurou só para \"usar\" o limite. Cada passo da conta e o artigo da lei estão em “Ver cálculo”. Valide com seu contador antes de agir.",
+        "citedRefIds": []
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
+    },
+    "sha256:bfa2bde6f8350c0d0b17b1e0ae73ebf6ef07fbd1b34906bfb7eab9d7b4cf3c87": {
+      "task": "explain",
+      "ruleId": "R01",
+      "origin": "template",
+      "promptVersion": "template@1",
+      "recordedAt": "2026-11-16T00:19:04.874Z",
+      "output": {
+        "text": "Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei. Depois, são R$ 42.896,52 a menos por ano a partir de abril de 2027. Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20. O valor usa só dados do banco, da Receita e o que foi confirmado. Cada passo da conta e o artigo da lei estão em “Ver cálculo”. Valide com seu contador antes de agir.",
+        "citedRefIds": []
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
+    }
+  }
 }
