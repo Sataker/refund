@@ -55,4 +55,23 @@ test.describe('security @security', () => {
     expect(res.status()).toBe(401);
     expect(await res.json()).toEqual({ ok: false });
   });
+
+  test('the AbacatePay webhook without the secret or the signature → 401, nothing processed', async ({
+    request,
+  }) => {
+    const event = {
+      id: 'log_e2e_forged',
+      event: 'transparent.completed',
+      devMode: true,
+      data: { transparent: { id: 'pix_char_x', amount: 100, status: 'PAID', devMode: true } },
+    };
+    const bare = await request.post('/api/webhooks/abacatepay', { data: event });
+    expect(bare.status()).toBe(401);
+    expect(await bare.json()).toEqual({ ok: false });
+    const wrong = await request.post('/api/webhooks/abacatepay?webhookSecret=guess', {
+      headers: { 'x-webhook-signature': 'bm9wZQ==' },
+      data: event,
+    });
+    expect(wrong.status()).toBe(401);
+  });
 });

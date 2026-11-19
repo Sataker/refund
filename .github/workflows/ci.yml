@@ -159,6 +159,12 @@ jobs:
       PII_PEPPER: cGVwcGVyLWRlLWNpLW5hby1lLXNlZ3JlZG8tMzJieXRlcw==
       CRON_SECRET: ci-cron
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      # E17: Pix against the local fake AbacatePay of tests/e2e/support (a Test Mode key is the only one allowed to
+      # point elsewhere than api.abacatepay.com); not a real key.
+      ABACATEPAY_API_KEY: abc_dev_ci_fake
+      ABACATEPAY_WEBHOOK_SECRET: ci-abacatepay-webhook-secret
+      ABACATEPAY_API_BASE_URL: http://127.0.0.1:3199/v2
+      E2E_ABACATEPAY_WEBHOOK_SECRET: ci-abacatepay-webhook-secret
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1

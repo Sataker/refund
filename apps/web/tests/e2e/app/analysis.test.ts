@@ -1,54 +1,10 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../fixtures.ts';
+import { analyze, finishTrack } from './live-flow.ts';
 
 // TESTS §6.2 @app (E14): A3–A7, A9 and A10 on the live /app with the hero's sample data (replay, no Pluggy keys, no
 // e-mail). No fixed tax numbers here: the hero's values are pinned by the engine and pipeline tests; these check the
 // flow, the persistence and the paywall on the wire.
-
-const HERO_CNPJ = 'RF.DEV.001/0001-58';
-
-async function tap(page: Page, label: string, nextUrl: RegExp): Promise<void> {
-  await page.getByRole('button', { name: label, exact: true }).click();
-  await expect(page).toHaveURL(nextUrl);
-}
-
-/** First-access track with the hero's sample PJ and PF accounts, ending on /app. */
-async function finishTrack(page: Page): Promise<void> {
-  await page.goto('/app');
-  await page.getByLabel('CNPJ da sua empresa').fill(HERO_CNPJ);
-  await page.getByRole('button', { name: 'Continuar' }).click();
-  await expect(page).toHaveURL(/\/confirmar-empresa$/);
-  await tap(page, 'Sou eu', /\/faturamento$/);
-  await tap(page, 'R$ 30 mil a 60 mil', /\/funcionarios$/);
-  await tap(page, 'Sim', /\/exterior$/);
-  await tap(page, 'Sim, metade ou mais', /\/estimativa$/);
-  await page.getByTestId('see-exact-number').click();
-  await page.getByTestId('give-consent').click();
-  await expect(page).toHaveURL(/\/conta-pj$/);
-  await page.getByTestId('use-sample-data').click();
-  await expect(
-    page.getByTestId('account-card-PJ').getByTestId('connection-status'),
-  ).toHaveAttribute('data-status', 'active');
-  await page.getByTestId('track-continue').click();
-  await expect(page).toHaveURL(/\/conta-pf$/);
-  await page.getByTestId('use-sample-data').click();
-  await expect(
-    page.getByTestId('account-card-PF').getByTestId('connection-status'),
-  ).toHaveAttribute('data-status', 'active');
-  await page.getByTestId('track-continue').click();
-  await expect(page).toHaveURL(/\/app$/);
-}
-
-/** Starts an analysis from /app and waits for Screen 4 to finish; returns its id. */
-async function analyze(page: Page): Promise<string> {
-  await page.goto('/app');
-  await page.getByTestId('start-analysis').click();
-  await expect(page).toHaveURL(/\/app\/analises\/[0-9a-f-]{36}$/);
-  await expect(page.getByTestId('analysis')).toHaveAttribute('data-status', 'done', {
-    timeout: 60_000,
-  });
-  return new URL(page.url()).pathname.split('/').at(-1) as string;
-}
 
 /** The dashboard's confirmed total and its estimated line (all the engine's numbers on Screen 5). */
 async function numbers(page: Page): Promise<string[]> {
