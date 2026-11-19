@@ -160,6 +160,8 @@ function personaAnswers(p: DemoPersona, accounts: DemoAccounts): Promise<Questio
       const { result } = await drain(runAnalysis(input, demoDeps(p, 'instant')));
       return addressAnswers(p, result.questions);
     })();
+    // A failed run is not cached: the next request tries again.
+    cached.catch(() => answersCache.delete(key));
     answersCache.set(key, cached);
   }
   return cached;
@@ -197,6 +199,7 @@ export function runDemoAnalysis(
   let cached = resultCache.get(key);
   if (!cached) {
     cached = demoAnalysis(p, { accounts }).then(drain);
+    cached.catch(() => resultCache.delete(key));
     resultCache.set(key, cached);
   }
   return cached;

@@ -68,38 +68,55 @@ export async function GET(request: Request): Promise<Response> {
   if (!persona) return problem(404, 'PERSONA_NOT_FOUND', 'Essa persona não existe na demo.');
 
   const signal = request.signal;
-  const generator = await demoAnalysis(persona, {
-    accounts: params.data.accounts,
-    pace: params.data.pace,
-    wait: abortableWait(signal),
-    sessionId: params.data.session ?? 'anon',
-  });
+  let generator: AsyncGenerator<AnalysisEvent, unknown, void>;
+  try {
+    generator = await demoAnalysis(persona, {
+      accounts: params.data.accounts,
+      pace: params.data.pace,
+      wait: abortableWait(signal),
+      sessionId: params.data.session ?? 'anon',
+    });
+  } catch {
+    return problem(500, 'ANALYSIS_FAILED', 'Não conseguimos começar a análise. Tente de novo.');
+  }
   const encoder = new TextEncoder();
+  // Shared by start() and cancel(): once closed, nothing is enqueued and the ping stops.
+  let closed = false;
+  let ping: ReturnType<typeof setInterval> | undefined;
+  const stop = () => {
+    closed = true;
+    if (ping !== undefined) clearInterval(ping);
+    void generator.return(undefined).catch(() => undefined);
+  };
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let seq = 0;
-      let closed = false;
       const send = (text: string) => {
-        if (!closed) controller.enqueue(encoder.encode(text));
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(text));
+        } catch {
+          stop(); // the client went away between the check and the enqueue
+        }
       };
-      const ping = setInterval(() => send(': ping\n\n'), PING_MS);
       const close = () => {
         if (closed) return;
-        closed = true;
-        clearInterval(ping);
-        controller.close();
+        stop();
+        try {
+          controller.close();
+        } catch {
+          // Already closed or errored by the runtime.
+        }
       };
-      signal.addEventListener('abort', () => {
-        void generator.return(undefined as never);
-        close();
-      });
+      ping = setInterval(() => send(': ping\n\n'), PING_MS);
+      signal.addEventListener('abort', close, { once: true });
       // Opens the stream right away (first SSE byte ≤ 300 ms, ARCHITECTURE §11.1).
       send(': ok\n\n');
       try {
         for (;;) {
           const next = await generator.next();
-          if (next.done || signal.aborted) break;
+          if (next.done || closed || signal.aborted) break;
           seq += 1;
           send(toSseFrame(next.value, seq));
         }
@@ -112,11 +129,12 @@ export async function GET(request: Request): Promise<Response> {
         };
         seq += 1;
         send(toSseFrame(failure, seq));
+      } finally {
+        close();
       }
-      close();
     },
     cancel() {
-      void generator.return(undefined as never);
+      stop();
     },
   });
 
