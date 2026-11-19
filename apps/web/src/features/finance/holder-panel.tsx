@@ -29,6 +29,8 @@ const CHART_COLORS = [
 ];
 const NET_BASIS_NOTE =
   'Pró-labore e distribuições aparecem líquidos, como saíram da conta. Os achados usam os valores brutos que você confirmou.';
+const EXCLUDED_NOTE =
+  'Remover aqui muda só esta tela. A análise de impostos continua usando o extrato do banco; se a cobrança veio mesmo em dobro, fale com o banco ou com o seu contador.';
 const AI_NOTE = 'Classificado por IA. Sem a sua confirmação, não gera selo.';
 
 function Tile({
@@ -410,6 +412,13 @@ export function HolderPanel({
               data-count={mine.length}
             >
               <h3 className="type-small font-medium text-foreground">Removidos por você</h3>
+              {/* D31 (coordinator, 19/11): the removal never reaches the engine; say so plainly. */}
+              <p
+                className="type-small max-w-[68ch] text-muted-foreground"
+                data-testid="fv-excluded-note"
+              >
+                {EXCLUDED_NOTE}
+              </p>
               <ul className="flex flex-col divide-y divide-border">
                 {mine.map((e) => (
                   <li
