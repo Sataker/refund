@@ -1,11 +1,51 @@
 import 'server-only';
-import { consumeUsage, type Db } from '@refund/db';
+import { activeSubscriptions, consumeUsage, type Db } from '@refund/db';
 import { getDb } from './db.ts';
 import { logger } from './log.ts';
+import { type Entitlements, isPlanId, PLAN_TIER, PLANS, type PlanId } from './plans/catalog.ts';
 import { type ActionResult, fail, ok } from './result.ts';
 
-// ARCHITECTURE §8.2 (ADR-009). E4 delivers only the atomic monthly count; activePlan,
-// requireEntitlement and countLive arrive with the plan catalog in E14.
+// ARCHITECTURE §8.2 (ADR-009): the active plan, the entitlement check and the atomic monthly count. The rule lives here
+// and in the serialization (§8.3), never in the proxy or the UI.
+
+export interface ActivePlan {
+  plan: PlanId;
+  until: Date | null;
+  origin: 'subscription' | 'default';
+}
+
+/** 'active' subscription with ends_at > now(); more than one → the highest tier; none → 'free'. */
+export async function activePlanWith(db: Db, userId: string): Promise<ActivePlan> {
+  let best: ActivePlan = { plan: 'free', until: null, origin: 'default' };
+  for (const s of await activeSubscriptions(db, userId)) {
+    if (!isPlanId(s.planId)) continue;
+    if (PLAN_TIER.indexOf(s.planId) > PLAN_TIER.indexOf(best.plan))
+      best = { plan: s.planId, until: s.endsAt, origin: 'subscription' };
+  }
+  return best;
+}
+
+export async function entitlementsWith(
+  db: Db,
+  userId: string,
+): Promise<{ plan: PlanId; ent: Entitlements }> {
+  const { plan } = await activePlanWith(db, userId);
+  return { plan, ent: PLANS[plan] };
+}
+
+/** PLAN_LIMIT with the upgrade hint when the plan's value fails the predicate. */
+export async function requireEntitlementWith<K extends keyof Entitlements>(
+  db: Db,
+  userId: string,
+  key: K,
+  predicate: (v: Entitlements[K]) => boolean,
+): Promise<ActionResult<void>> {
+  const { ent } = await entitlementsWith(db, userId);
+  if (predicate(ent[key])) return ok(undefined);
+  return fail('PLAN_LIMIT', 'Este recurso faz parte de um plano pago.', {
+    upgrade: { resource: String(key), suggestedPlan: 'business', url: '/app/plano' },
+  });
+}
 
 export type QuotaResource = 'live_analyses_month' | 'ask_law';
 
