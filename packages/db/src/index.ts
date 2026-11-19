@@ -17,8 +17,50 @@ export {
   claimAnalysis,
   markFindingsOutdated,
 } from './repos/analyses.ts';
+export {
+  clearRevokedItem,
+  connectionsOlderThan,
+  connectionsWithItem,
+  consentsOlderThan,
+  deleteOrphanCompanies,
+  expireSubscriptions,
+  inactiveAnonymousUserIds,
+  revokePendingConnections,
+  withdrawConsent,
+} from './repos/cleanup.ts';
 export { type ConnectionRow, findConnectionByItemHash } from './repos/connections.ts';
 export { deleteRateLimitsBefore, hitRateLimit } from './repos/rate-limits.ts';
+export {
+  decideReportRow,
+  findOwnedReport,
+  findReportByTokenHash,
+  insertReport,
+  latestReport,
+  markReportOpened,
+  markReportSent,
+  type ReportDecisionItem,
+  type ReportInsert,
+  type ReportRow,
+} from './repos/reports.ts';
+export {
+  type AnalysisRow,
+  type ClassificationInput,
+  createAnalysis,
+  type FindingRow,
+  failRun,
+  findAnalysis,
+  findingOf,
+  findingRow,
+  findOwnedAnalysis,
+  type LedgerRow,
+  latestAnalysis,
+  listAnalysisLedger,
+  listFindings,
+  type RunOutcome,
+  saveRun,
+  setExcludedTransactions,
+  setFindingStatus,
+} from './repos/runs.ts';
 export { type ActiveSubscription, activeSubscriptions } from './repos/subscriptions.ts';
 export {
   appliedMigrations,

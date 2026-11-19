@@ -63,6 +63,8 @@ export const analyses = refund.table(
     claimedAt: ts('claimed_at'), // execution lock (claim)
     startedAt: ts('started_at'),
     completedAt: ts('completed_at'),
+    /** [E14, D31] Transactions the owner removed as a repeated charge in Finanças (display only; never the engine). */
+    excludedTransactionIds: text('excluded_transaction_ids').array().notNull().default(emptyArray),
     createdAt: createdAt(),
   },
   (t) => [
@@ -154,6 +156,10 @@ export const findings = refund.table(
     assumptionsUsed: text('assumptions_used').array().notNull().default(emptyArray),
     doNot: text('do_not').array().notNull().default(emptyArray),
     tradeoffs: text('tradeoffs').array().notNull().default(emptyArray),
+    // [E14] ENGINE-SPEC C.12 (EXECUTION §9, 14/11): additive and nullable, so older rows stay valid.
+    actionPlan: jsonb('action_plan').$type<Finding['actionPlan']>(),
+    howToReceive: jsonb('how_to_receive').$type<Finding['howToReceive']>(),
+    recoveryItems: jsonb('recovery_items').$type<NonNullable<Finding['recoveryItems']>>(),
     explanation: text('explanation'),
     explanationOrigin: explanationOrigin('explanation_origin'),
     status: findingStatus('status').notNull().default('new'),
