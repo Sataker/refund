@@ -1,10 +1,6 @@
 import { recalculate } from '@refund/engine';
 import { describe, expect, it } from 'vitest';
-import {
-  cleanEngineText,
-  TRACE_INPUT_LABEL,
-  traceTextValue,
-} from '@/components/brand/trace-labels';
+import { TRACE_INPUT_LABEL, traceTextValue } from '@/components/brand/trace-labels';
 import {
   answersFromChoices,
   DONT_KNOW,
@@ -119,9 +115,21 @@ describe('Screen 6 and 6b', () => {
     expect(traceTextValue('note', '2027-01 a 2028-12: usado o de 2026')).toBe(
       '2027-01 a 2028-12: usado o de 2026',
     );
-    expect(cleanEngineText('a (ENGINE-SPEC C.1, item 4)')).toBe('a');
-    expect(cleanEngineText('2 parâmetro(s) projetado(s)')).toBe('2 parâmetros projetados');
-    expect(cleanEngineText('1 parâmetro(s) projetado(s)')).toBe('1 parâmetro projetado');
+  });
+
+  it('the engine trace text is shown as is: no spec reference, rule code or "(s)" plural (UX review M3, M9, L2)', async () => {
+    const { result } = await hero();
+    const texts = result.findings.flatMap((f) =>
+      f.trace.flatMap((s) => [
+        s.label,
+        s.formula,
+        ...[s.result, ...Object.values(s.inputs)].flatMap((v) =>
+          v.unit === 'text' ? [String(v.value)] : [],
+        ),
+      ]),
+    );
+    const bad = texts.filter((t) => /ENGINE-SPEC|\(s\)|\bR0\d|\bA0\d|em regime/.test(t));
+    expect(bad).toEqual([]);
   });
 
   it('every cited ref resolves to a verbatim excerpt of @refund/law', async () => {

@@ -80,14 +80,3 @@ export function traceTextValue(key: string, value: string): string {
       .join(', ');
   return value;
 }
-
-/**
- * Engine wording cleanup for display (UX review M3): spec references are for developers, not users, and the
- * "parâmetro(s)" plural. The engine string itself stays (the AI recordings hash the trace).
- */
-export function cleanEngineText(text: string): string {
-  return text
-    .replace(/\s*\(ENGINE-SPEC[^)]*\)/g, '')
-    .replace(/\b1 parâmetro\(s\) projetado\(s\)/g, '1 parâmetro projetado')
-    .replace(/\b(\d+) parâmetro\(s\) projetado\(s\)/g, '$1 parâmetros projetados');
-}

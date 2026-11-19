@@ -5,7 +5,7 @@ import { confidenceLabel } from '@/components/brand/confidence-badge';
 import { DISCLAIMER_TEXT } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
 import { sealLabel } from '@/components/brand/sandbox-seal';
-import { cleanEngineText, traceInputLabel, traceTextValue } from '@/components/brand/trace-labels';
+import { traceInputLabel, traceTextValue } from '@/components/brand/trace-labels';
 import { displayTitle, keepCurrency } from '@/features/demo/display';
 import { formatBRL, formatRatePercent, formatYearMonth } from '@/lib/format';
 import { formatWhen, NO_MONEY_TEXT, RecoveryTable } from './action-plan';
@@ -51,7 +51,7 @@ type TraceStep = Finding['trace'][number];
 function resultText(r: TraceStep['result']): string {
   if (r.unit === 'cents' && typeof r.value === 'number') return formatBRL(r.value);
   if (r.unit === 'rate') return formatRatePercent(String(r.value));
-  return traceTextValue('', cleanEngineText(String(r.value)));
+  return traceTextValue('', String(r.value));
 }
 
 /**
@@ -185,9 +185,9 @@ function TraceTable({ f }: { f: Finding }) {
             b.kind === 'step'
               ? [
                   <tr key={b.step.id} className="border-t border-neutral-200 align-top">
-                    <td className="py-1 pr-3">{cleanEngineText(b.step.label)}</td>
+                    <td className="py-1 pr-3">{b.step.label}</td>
                     <td className="py-1 pr-3 font-mono text-[11px] text-neutral-600">
-                      {cleanEngineText(b.step.formula)}
+                      {b.step.formula}
                     </td>
                     <td className="num py-1 pr-3 text-right whitespace-nowrap">
                       {resultText(b.step.result)}
