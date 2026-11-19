@@ -95,6 +95,11 @@ export function signedBRL(cents: number): string {
   return cents > 0 ? `+${formatBRL(cents)}` : formatBRL(cents);
 }
 
+/** "1 lançamento" / "101 lançamentos". */
+export function countLabel(n: number): string {
+  return n === 1 ? '1 lançamento' : `${n} lançamentos`;
+}
+
 export const ORIGIN_LABEL = { rule: 'regra', llm: 'IA', user: 'você' } as const;
 
 /** "2025-11" → "nov/25" (chart axis). */

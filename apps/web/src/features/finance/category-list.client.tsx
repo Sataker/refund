@@ -6,7 +6,7 @@ import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Sparkline } from './sparkline.tsx';
 import { TaxSeal } from './tax-seal.client.tsx';
-import { comparedTo, formatBps, formatDate, ORIGIN_LABEL } from './text.ts';
+import { comparedTo, countLabel, formatBps, formatDate, ORIGIN_LABEL } from './text.ts';
 import type { GroupLine, SealFinding, TxRow } from './types.ts';
 
 // "Por categoria" (Screen 5b, hierarchy item 4): the heart of the screen. Each group is a disclosure (a plain button
@@ -117,7 +117,9 @@ function GroupItem({
               <span className="type-small lg:w-[64px] lg:text-right" data-bps={group.shareBps}>
                 {formatBps(group.shareBps)}
               </span>
-              <span className="type-small lg:w-[72px] lg:text-right">{group.count} lanç.</span>
+              <span className="type-small lg:w-[72px] lg:text-right">
+                {countLabel(group.count)}
+              </span>
             </span>
           </span>
           <Sparkline values={group.byMonth.map((m) => m.cents)} className="hidden lg:block" />

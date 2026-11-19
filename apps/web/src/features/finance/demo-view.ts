@@ -25,7 +25,7 @@ import {
 } from '@refund/pipeline';
 import { redactDescription, type SourceTransaction } from '@refund/sources';
 import { cache } from 'react';
-import { variantKey } from './exclusions.ts';
+import { exclusionSets, storageKey, variantKey } from './exclusions.ts';
 import type { FinanceScreenData, SealFinding, TxRow } from './types.ts';
 
 interface DemoPersona {
@@ -40,8 +40,8 @@ const PERSONAS: Record<string, DemoPersona> = {
   },
 };
 
-/** 2^5 = 32 prebuilt views at most (D31 b). */
-const MAX_SUSPECTS = 5;
+/** 2^3 = 8 prebuilt views at most (D31 b; more would bloat the static page). */
+const MAX_SUSPECTS = 3;
 
 export const DEMO_FINANCE_PERSONAS: readonly string[] = Object.keys(PERSONAS);
 
@@ -198,8 +198,8 @@ export const demoFinance = cache(async (personaId: string): Promise<DemoFinance>
     .slice(0, MAX_SUSPECTS)
     .map(duplicateRemovals);
   const variants: Record<string, FinancialView> = { '': view.value };
-  for (let mask = 1; mask < 2 ** suspects.length; mask += 1) {
-    const ids = suspects.flatMap((s, i) => ((mask >> i) & 1 ? s : []));
+  for (const ids of exclusionSets(suspects)) {
+    if (ids.length === 0) continue;
     const v = financialViewOfRun(
       { ...runInput, transactions: runInput.transactions as SourceTransaction[] },
       result,
@@ -218,7 +218,7 @@ export const demoFinance = cache(async (personaId: string): Promise<DemoFinance>
       title: `${company} + ${data.holderDisplayName}`,
       view: view.value,
       variants,
-      storageKey: `refund:financas:excluidos:${data.id}`,
+      storageKey: storageKey(data.id),
       findings,
       transactions: txRows(data, result),
       links: { confirm: `/demo/${data.id}/confirmar`, dashboard: `/demo/${data.id}/painel` },

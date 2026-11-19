@@ -183,9 +183,19 @@ describe('D31 (b): the owner excludes a payment that appears twice', () => {
     ]);
   });
 
-  it('undo = build again without the id: the view is exactly the original', () => {
-    const base = view({ transactions, classifications });
-    expect(view({ transactions, classifications, excludedTransactionIds: [] })).toEqual(base);
+  it('undo round trip: remove the twin, then rebuild from the same input with [] = exactly the original', () => {
+    const input = { transactions, classifications };
+    const base = view(input);
+    const removed = view({ ...input, excludedTransactionIds: [twin.id] });
+    expect(removed).not.toEqual(base);
+    const undone = view({
+      ...input,
+      excludedTransactionIds: removed.excluded
+        .filter((e) => e.transactionId !== twin.id)
+        .map((e) => e.transactionId),
+    });
+    expect(undone).toEqual(base);
+    expect(view({ ...input, excludedTransactionIds: [] })).toEqual(base);
   });
 
   it('a seal recomputes: excluding the only settled row of a group drops its seal', () => {

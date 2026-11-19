@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { exclude, load, restore, save, variantKey } from './exclusions.ts';
 
 // D31 (b): which precomputed view is on screen. The variants (one per combination of exclusions the build offered)
@@ -28,6 +36,26 @@ export function ExclusionSwitch({
     [variants],
   );
   const [excluded, setExcluded] = useState<ReadonlySet<string>>(new Set());
+  const [announcement, setAnnouncement] = useState('');
+  /** Where focus goes once the new view is on screen (the old buttons are gone by then). */
+  const focusNext = useRef<
+    { kind: 'removed' } | { kind: 'restored'; ids: readonly string[] } | null
+  >(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs after each new view is committed (keyed on excluded)
+  useEffect(() => {
+    const next = focusNext.current;
+    if (next === null) return;
+    focusNext.current = null;
+    const target =
+      next.kind === 'removed'
+        ? document.getElementById('fv-excluded-heading')
+        : (next.ids
+            .map((id) => document.querySelector<HTMLElement>(`[data-testid="fv-remove-${id}"]`))
+            .find((el) => el !== null) ??
+          document.getElementById('fv-excluded-heading') ??
+          document.getElementById('fv-duplicates-heading'));
+    target?.focus();
+  }, [excluded]);
   useEffect(() => {
     const stored = load(storage, allowed);
     if (variants[variantKey(stored)] !== undefined) setExcluded(stored);
@@ -38,24 +66,44 @@ export function ExclusionSwitch({
       exclude: (ids) => {
         const next = exclude(excluded, ids);
         if (variants[variantKey(next)] === undefined) return;
+        focusNext.current = { kind: 'removed' };
+        setAnnouncement('Lançamento removido. Os totais desta tela foram recalculados.');
         setExcluded(next);
         save(storage, next);
       },
       restore: (ids) => {
         const next = restore(excluded, ids);
+        focusNext.current = { kind: 'restored', ids };
+        setAnnouncement('Lançamento de volta nos totais desta tela.');
         setExcluded(next);
         save(storage, next);
       },
     }),
     [excluded, variants, storage],
   );
-  return <Ctx.Provider value={api}>{variants[variantKey(excluded)] ?? variants['']}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={api}>
+      {variants[variantKey(excluded)] ?? variants['']}
+      <p role="status" className="sr-only" data-testid="fv-exclusion-status">
+        {announcement}
+      </p>
+    </Ctx.Provider>
+  );
 }
 
 /** "Remover repetido" on a duplicate suspect: removes every occurrence but the first. */
-export function RemoveDuplicateButton({ ids, testId }: { ids: string[]; testId: string }) {
+export function RemoveDuplicateButton({
+  ids,
+  testId,
+  fallback,
+}: {
+  ids: string[];
+  testId: string;
+  /** Shown when no prebuilt view covers this removal (past the /demo cap): the old "Confirmar →" link. */
+  fallback: ReactNode;
+}) {
   const api = useContext(Ctx);
-  if (api === null || ids.length === 0 || !api.canExclude(ids)) return null;
+  if (api === null || ids.length === 0 || !api.canExclude(ids)) return fallback;
   return (
     <button
       type="button"
@@ -63,13 +111,16 @@ export function RemoveDuplicateButton({ ids, testId }: { ids: string[]; testId: 
       onClick={() => api.exclude(ids)}
       className="type-small inline-flex min-h-11 w-fit items-center rounded-md border border-border px-3 font-medium text-foreground hover:bg-surface-2 lg:min-h-9"
     >
-      {ids.length === 1 ? 'Remover o lançamento repetido' : `Remover os ${ids.length} repetidos`}
+      {ids.length === 1
+        ? 'Remover o lançamento repetido'
+        : `Remover os ${ids.length} lançamentos repetidos`}
     </button>
   );
 }
 
 /** "Desfazer" on an excluded payment: it comes back into every total. */
 export function UndoExclusionButton({ id, label }: { id: string; label: string }) {
+  // `label`: "{rótulo}, {valor}, {data}" (the caller formats it).
   const api = useContext(Ctx);
   if (api === null) return null;
   return (

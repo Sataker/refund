@@ -30,8 +30,10 @@ export function FinanceScreen({ data }: { data: FinanceScreenData }) {
           variants={Object.fromEntries(
             Object.entries(data.variants).map(([key, v]) => [
               key,
+              // One key for every variant: a remove/undo swaps the data, never remounts the screen (tab,
+              // open sections and focus survive).
               <HolderTabs
-                key={key}
+                key="fv-view"
                 pj={
                   v.pj === null ? null : (
                     <HolderPanel data={data} holder={v.pj} excluded={v.excluded} />

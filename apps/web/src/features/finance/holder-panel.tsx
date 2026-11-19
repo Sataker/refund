@@ -7,7 +7,7 @@ import { RemoveDuplicateButton, UndoExclusionButton } from './exclusions.client.
 import { MonthBars, type MonthBarsSeries } from './month-bars.tsx';
 import { SealMark } from './seal-style.tsx';
 import { FinanceSection } from './section.client.tsx';
-import { comparedTo, formatDate, groupKeys, listDates, signedBRL } from './text.ts';
+import { comparedTo, countLabel, formatDate, groupKeys, listDates, signedBRL } from './text.ts';
 import type {
   AccountLine,
   ChargeRow,
@@ -362,6 +362,7 @@ export function HolderPanel({
           title="Cobranças em duplicidade"
           summary={holder.duplicates.length === 0 ? 'nenhuma' : String(holder.duplicates.length)}
           testId="fv-duplicates"
+          focusId="fv-duplicates-heading"
           attrs={{ 'data-count': holder.duplicates.length }}
         >
           {holder.duplicates.length === 0 ? (
@@ -376,18 +377,43 @@ export function HolderPanel({
                   className="flex flex-col gap-1.5 py-2.5"
                   data-testid="fv-duplicate"
                 >
-                  <span className="type-small text-foreground">
-                    Possível cobrança em duplicidade:{' '}
-                    <span className="num font-medium" data-cents={d.amount}>
-                      {formatBRL(d.amount)}
-                    </span>{' '}
-                    em {listDates(d.dates)}. Confirme antes de pedir de volta.
-                  </span>
+                  {d.reason === 'same_charge_within_3_days' ? (
+                    <span className="type-small text-foreground">
+                      Possível pagamento repetido:{' '}
+                      <span className="num font-medium" data-cents={d.amount}>
+                        {formatBRL(d.amount)}
+                      </span>{' '}
+                      em {listDates(d.dates)}. Se é o mesmo pagamento listado duas vezes, remova a
+                      cópia desta tela. Se o dinheiro saiu mesmo duas vezes, peça de volta a quem
+                      recebeu.
+                    </span>
+                  ) : (
+                    <span className="type-small text-foreground">
+                      Possível cobrança em duplicidade:{' '}
+                      <span className="num font-medium" data-cents={d.amount}>
+                        {formatBRL(d.amount)}
+                      </span>{' '}
+                      em {listDates(d.dates)}. Confirme antes de pedir de volta.
+                    </span>
+                  )}
                   {d.reason === 'same_charge_within_3_days' ? (
                     // D31 (b): the owner removes the repeat from this view; "Desfazer" brings it back.
+                    // Past the /demo cap there is no prebuilt view: the confirmation link stays.
                     <RemoveDuplicateButton
                       ids={duplicateRemovals(d)}
                       testId={`fv-remove-${d.transactionIds[1] ?? ''}`}
+                      fallback={
+                        <a
+                          href={
+                            d.questionId === undefined
+                              ? data.links.confirm
+                              : `${data.links.confirm}#${d.questionId}`
+                          }
+                          className="type-small w-fit font-medium text-cobalt underline-offset-4 hover:underline"
+                        >
+                          Confirmar →
+                        </a>
+                      }
                     />
                   ) : (
                     <a
@@ -411,7 +437,13 @@ export function HolderPanel({
               data-testid="fv-excluded"
               data-count={mine.length}
             >
-              <h3 className="type-small font-medium text-foreground">Removidos por você</h3>
+              <h3
+                id="fv-excluded-heading"
+                tabIndex={-1}
+                className="type-small rounded-sm font-medium text-foreground"
+              >
+                Removidos por você
+              </h3>
               {/* D31 (coordinator, 19/11): the removal never reaches the engine; say so plainly. */}
               <p
                 className="type-small max-w-[68ch] text-muted-foreground"
@@ -432,7 +464,10 @@ export function HolderPanel({
                       </span>{' '}
                       · {formatDate(e.date)}
                     </span>
-                    <UndoExclusionButton id={e.transactionId} label={e.label} />
+                    <UndoExclusionButton
+                      id={e.transactionId}
+                      label={`${e.label}, ${formatBRL(e.amount)}, ${formatDate(e.date)}`}
+                    />
                   </li>
                 ))}
               </ul>
@@ -466,13 +501,17 @@ function Accounts({
           <li
             key={a.accountId}
             data-testid="fv-account"
-            className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-2.5 lg:grid-cols-[1fr_180px_180px]"
+            className="grid grid-cols-2 gap-x-4 gap-y-0.5 px-4 py-2.5 lg:grid-cols-[1fr_180px_180px]"
           >
-            <span className="type-small col-span-2 min-w-0 truncate font-medium text-foreground lg:col-span-1">
+            <span className="type-small col-span-2 flex min-w-0 flex-col break-words font-medium text-foreground lg:col-span-1 lg:block">
               {a.label}
-              <span className="font-normal text-muted-foreground"> · {a.count} lanç.</span>
+              <span className="font-normal text-muted-foreground">
+                <span className="hidden lg:inline"> · </span>
+                {countLabel(a.count)}
+              </span>
             </span>
-            <span className="type-small num text-muted-foreground lg:text-right">
+            {/* Mobile: Saiu before Entrou, as the tiles. */}
+            <span className="type-small num order-2 text-right text-muted-foreground lg:order-none lg:text-right">
               Entrou{' '}
               <span
                 className="text-foreground"
@@ -482,7 +521,7 @@ function Accounts({
                 {formatBRL(a.inflow12m)}
               </span>
             </span>
-            <span className="type-small num text-right text-muted-foreground">
+            <span className="type-small num order-1 text-muted-foreground lg:order-none lg:text-right">
               Saiu{' '}
               <span
                 className="text-foreground"
@@ -497,12 +536,15 @@ function Accounts({
       </ul>
       {internal.outflow > 0 || internal.inflow > 0 ? (
         <p className="type-small max-w-[68ch] text-muted-foreground" data-testid="fv-internal-note">
-          <span className="num" data-cents={internal.outflow}>
-            {formatBRL(internal.outflow)}
+          {/* The larger side, so an account outside the analysis (only one leg seen) is still covered. */}
+          <span className="num" data-cents={Math.max(internal.inflow, internal.outflow)}>
+            {formatBRL(Math.max(internal.inflow, internal.outflow))}
           </span>{' '}
-          {holder === 'PJ'
-            ? 'foram transferidos entre contas da própria empresa: saem de uma conta e entram em outra, por isso aparecem em “Saiu” e em “Entrou”.'
-            : 'foram transferidos entre as suas contas: saem de uma conta e entram em outra, por isso aparecem em “Saiu” e em “Entrou”.'}
+          {internal.inflow !== internal.outflow
+            ? 'são transferências entre contas suas: contam em “Saiu” e em “Entrou”.'
+            : holder === 'PJ'
+              ? 'foram transferidos entre contas da própria empresa: saem de uma conta e entram em outra, por isso aparecem em “Saiu” e em “Entrou”.'
+              : 'foram transferidos entre as suas contas: saem de uma conta e entram em outra, por isso aparecem em “Saiu” e em “Entrou”.'}
         </p>
       ) : null}
     </section>

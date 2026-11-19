@@ -13,12 +13,15 @@ export function FinanceSection({
   summary,
   children,
   testId,
+  focusId,
   attrs,
 }: {
   title: string;
   summary?: string | undefined;
   children: ReactNode;
   testId: string;
+  /** Focus target after a D31 undo (tabIndex -1). */
+  focusId?: string;
   attrs?: Record<`data-${string}`, string | number>;
 }) {
   const [open, setOpen] = useState(false);
@@ -32,7 +35,12 @@ export function FinanceSection({
     </span>
   );
   return (
-    <section data-testid={testId} {...attrs} className="border-t border-border pt-4">
+    <section
+      data-testid={testId}
+      {...attrs}
+      {...(focusId === undefined ? {} : { id: focusId, tabIndex: -1 })}
+      className="border-t border-border pt-4"
+    >
       <h2 className="hidden text-base font-semibold text-foreground lg:block">{text}</h2>
       <h2 className="text-base font-semibold text-foreground lg:hidden">
         <button

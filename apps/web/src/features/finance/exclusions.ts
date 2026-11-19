@@ -7,6 +7,18 @@ export function variantKey(excluded: Iterable<string>): string {
   return [...new Set(excluded)].sort().join(',');
 }
 
+/**
+ * Every combination of "remover repetido" choices: one id list per subset of suspects (each suspect contributes its
+ * `duplicateRemovals`), the empty set first. 2^n lists for n suspects; the caller caps n.
+ */
+export function exclusionSets(suspects: readonly (readonly string[])[]): string[][] {
+  const sets: string[][] = [];
+  for (let mask = 0; mask < 2 ** suspects.length; mask += 1) {
+    sets.push(suspects.flatMap((s, i) => (Math.floor(mask / 2 ** i) % 2 === 1 ? [...s] : [])));
+  }
+  return sets;
+}
+
 export function exclude(current: ReadonlySet<string>, ids: readonly string[]): Set<string> {
   const next = new Set(current);
   for (const id of ids) next.add(id);
