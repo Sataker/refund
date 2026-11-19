@@ -171,21 +171,17 @@ describe('E.9.3 hero: Marina’s financial view (174 transactions, nov/2025–ou
     }
   });
 
-  it('DARF 1841 follows R02’s "como receber" (D29): irpf_refund → money_to_receive, otherwise atenção', () => {
-    expect(kinds(group(pj, 'dividend_irrf'))).toEqual([
-      r02HasIrpfRefund ? 'money_to_receive' : 'attention',
+  // E8b landed D29 (R02.3 irpf_refund, 19/11): the E.9.3 seal is now asserted unconditionally.
+  it('E.9.3: DARF 1841 shows "tem dinheiro a receber" (R02 with irpf_refund, D29)', () => {
+    expect(r02HasIrpfRefund).toBe(true);
+    expect(group(pj, 'dividend_irrf').seals).toMatchObject([
+      { kind: 'money_to_receive', ruleIds: ['R02'] },
     ]);
+    // "Distribuição de lucros" keeps "atenção" (D29).
+    expect(kinds(group(pj, 'distributions'))).toEqual(['attention']);
   });
 
-  // The two seals of E.9.3 that wait for an upstream stage (EXECUTION §9, 16/11): they turn on by themselves.
-  it.skipIf(!r02HasIrpfRefund)(
-    'E.9.3: DARF 1841 shows "tem dinheiro a receber" (needs E8b’s R02 irpf_refund)',
-    () => {
-      expect(group(pj, 'dividend_irrf').seals).toMatchObject([
-        { kind: 'money_to_receive', ruleIds: ['R02'] },
-      ]);
-    },
-  );
+  // The seal of E.9.3 that still waits for an upstream stage (EXECUTION §9, 16/11): it turns on by itself.
   it.skipIf(!a01Fires)(
     'E.9.3: "Gastos pessoais pagos pela empresa" shows "é risco" (needs the A01 fact)',
     () => {
