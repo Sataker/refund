@@ -27,6 +27,12 @@ export default async function DemoShell({
   const company = titleCase(persona.data.company.displayLegalName);
   return (
     <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
+      <a
+        href="#conteudo"
+        className="sr-only z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+      >
+        Pular para o conteúdo
+      </a>
       <ShellLock persona={id} />
       <aside className="sticky top-0 hidden h-dvh flex-col gap-8 border-r border-border bg-surface px-4 py-6 lg:flex print:hidden">
         <Link
@@ -66,7 +72,7 @@ export default async function DemoShell({
             <div className="flex items-center gap-2">
               <SandboxSeal compact className="lg:hidden" />
               <span className="lg:hidden">
-                <ThemeToggle />
+                <ThemeToggle compact shortcut={false} />
               </span>
               <Link
                 href={`/demo/${id}/relatorio` as Route}
@@ -81,7 +87,7 @@ export default async function DemoShell({
         </header>
         <main
           id="conteudo"
-          className="mx-auto w-full max-w-[1080px] flex-1 px-4 pt-6 pb-28 lg:px-8 lg:pt-10 lg:pb-12 print:max-w-none print:p-0"
+          className="mx-auto w-full max-w-[1080px] flex-1 overflow-x-clip px-4 pt-6 pb-28 lg:px-8 lg:pt-10 lg:pb-12 print:max-w-none print:p-0"
         >
           {children}
         </main>
