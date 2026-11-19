@@ -1,6 +1,13 @@
 // Public API of @refund/ai (ARCHITECTURE §4.5).
 export const PACKAGE_NAME = '@refund/ai';
 
+export {
+  DIFF_TEMPLATE_VERSION,
+  type LawChangeSummary,
+  type LawChangeSummaryInput,
+  summarizeLawChange,
+  templateDiffSummary,
+} from './diff-summary.ts';
 export { type AiLogEvent, type GatewayOptions, summarizeDiff } from './gateway.ts';
 export {
   type CitationGuardResult,
