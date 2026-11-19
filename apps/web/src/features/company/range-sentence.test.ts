@@ -2,6 +2,7 @@ import {
   type ApplicableRule,
   type Cents,
   estimateByProfile,
+  type LegalRef,
   type ProfileAnswers,
 } from '@refund/engine';
 import { describe, expect, it } from 'vitest';
@@ -11,7 +12,7 @@ import { rangedRuleCount, rangeLead } from './range-sentence.ts';
 
 // ENGINE-SPEC C.11.7 (D33): k = the listed rules that carry a range, as a word; "vale" when k = 1; alerts never count.
 
-const ref = { id: 'x', label: 'x', url: 'https://x', verifiedAt: '2026-11-19' };
+const ref: LegalRef = { id: 'x', label: 'x', url: 'https://x', verifiedAt: '2026-11-19' };
 const rule = (ruleId: ApplicableRule['ruleId'], range?: [number, number]): ApplicableRule => ({
   ruleId,
   title: ruleId,
