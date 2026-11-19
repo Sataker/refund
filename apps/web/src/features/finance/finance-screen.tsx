@@ -1,4 +1,5 @@
 import { formatYearMonth } from '@/lib/format';
+import { ExclusionSwitch } from './exclusions.client.tsx';
 import { HolderPanel } from './holder-panel.tsx';
 import { HolderTabs } from './holder-tabs.client.tsx';
 import type { FinanceScreenData } from './types.ts';
@@ -24,9 +25,26 @@ export function FinanceScreen({ data }: { data: FinanceScreenData }) {
       {view.pj === null && view.pf === null ? (
         <FinanceEmpty dashboard={data.links.dashboard} />
       ) : (
-        <HolderTabs
-          pj={view.pj === null ? null : <HolderPanel data={data} holder={view.pj} />}
-          pf={view.pf === null ? null : <HolderPanel data={data} holder={view.pf} />}
+        <ExclusionSwitch
+          storage={data.storageKey}
+          variants={Object.fromEntries(
+            Object.entries(data.variants).map(([key, v]) => [
+              key,
+              <HolderTabs
+                key={key}
+                pj={
+                  v.pj === null ? null : (
+                    <HolderPanel data={data} holder={v.pj} excluded={v.excluded} />
+                  )
+                }
+                pf={
+                  v.pf === null ? null : (
+                    <HolderPanel data={data} holder={v.pf} excluded={v.excluded} />
+                  )
+                }
+              />,
+            ]),
+          )}
         />
       )}
     </div>

@@ -107,6 +107,46 @@ test.describe('financas @demo', () => {
     await expect(page.getByTestId('fv-group-health')).toBeVisible();
   });
 
+  test('D17 D31 totals per bank account sum to the tiles; no own-account transfer note for the hero', async ({
+    page,
+  }) => {
+    await page.goto(URL);
+    const accounts = page.getByTestId('fv-accounts');
+    await expect(accounts).toHaveAttribute('data-count', '2');
+    const rows = accounts.getByTestId('fv-account');
+    await expect(rows.nth(0)).toContainText('Banco Meridiano · Conta Corrente PJ');
+    await expect(rows.nth(0).getByTestId('fv-account-out')).toHaveAttribute(
+      'data-cents',
+      '55856334',
+    );
+    await expect(rows.nth(1)).toContainText('Cartão de Crédito Empresarial');
+    await expect(rows.nth(1).getByTestId('fv-account-out')).toHaveAttribute('data-cents', '148320');
+    const sum = async (id: string) =>
+      (
+        await page
+          .getByTestId(id)
+          .evaluateAll((els) => els.map((e) => Number(e.getAttribute('data-cents'))))
+      ).reduce((a, b) => a + b, 0);
+    expect(await sum('fv-account-in')).toBe(60_000_000);
+    expect(await sum('fv-account-out')).toBe(56_004_654);
+    await expect(page.getByTestId('fv-internal-note')).toHaveCount(0);
+    await page.getByTestId('fv-holder-pf').click();
+    await expect(page.getByTestId('fv-accounts')).toHaveAttribute('data-count', '1');
+  });
+
+  test('D17 D31 the hero has no duplicate to remove; a stale stored exclusion is ignored', async ({
+    page,
+  }) => {
+    await page.goto(URL);
+    await page.evaluate(() =>
+      window.sessionStorage.setItem('refund:financas:excluidos:dev-exportador', '["nao-existe"]'),
+    );
+    await page.reload();
+    await expect(page.getByTestId('fv-total-outflow')).toHaveAttribute('data-cents', '56004654');
+    await expect(page.getByRole('button', { name: /Remover/ })).toHaveCount(0);
+    await expect(page.getByTestId('fv-excluded')).toHaveCount(0);
+  });
+
   for (const scheme of ['light', 'dark'] as const) {
     test(`D15 financas has no serious or critical axe violations (${scheme})`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });

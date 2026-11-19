@@ -4,8 +4,10 @@ import type { Finding } from '@refund/engine';
 import type { FinancialView } from '@refund/pipeline';
 
 export type {
+  AccountLine,
   ChargeRow,
   DuplicateSuspect,
+  ExcludedTransaction,
   FinancialGroupId,
   FinancialView,
   GroupLine,
@@ -40,6 +42,13 @@ export interface FinanceScreenData {
   /** "Marina Dev Ltda + Marina". */
   title: string;
   view: FinancialView;
+  /**
+   * [D31 b] The view per set of excluded transactions, keyed by `variantKey` ('' = `view`). /demo prebuilds every
+   * combination the owner can choose; /app (E14) will build the one its stored exclusions ask for.
+   */
+  variants: Record<string, FinancialView>;
+  /** sessionStorage key of the /demo exclusions (per persona). */
+  storageKey: string;
   findings: Record<string, SealFinding>;
   transactions: Record<string, TxRow>;
   links: {

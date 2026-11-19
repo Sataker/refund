@@ -1,12 +1,21 @@
+import { duplicateRemovals } from '@refund/pipeline';
 import { Diamond } from 'lucide-react';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { CategoryList } from './category-list.client.tsx';
+import { RemoveDuplicateButton, UndoExclusionButton } from './exclusions.client.tsx';
 import { MonthBars, type MonthBarsSeries } from './month-bars.tsx';
 import { SealMark } from './seal-style.tsx';
 import { FinanceSection } from './section.client.tsx';
-import { comparedTo, groupKeys, listDates, signedBRL } from './text.ts';
-import type { ChargeRow, FinanceScreenData, GroupLine, HolderView } from './types.ts';
+import { comparedTo, formatDate, groupKeys, listDates, signedBRL } from './text.ts';
+import type {
+  AccountLine,
+  ChargeRow,
+  ExcludedTransaction,
+  FinanceScreenData,
+  GroupLine,
+  HolderView,
+} from './types.ts';
 
 // One holder of Screen 5b, hierarchy items 2–9. Every number is the builder's; this file only formats.
 
@@ -117,7 +126,17 @@ function ChargeList({
   );
 }
 
-export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder: HolderView }) {
+export function HolderPanel({
+  data,
+  holder,
+  excluded,
+}: {
+  data: FinanceScreenData;
+  holder: HolderView;
+  /** [D31 b] The owner's exclusions in this variant (both holders; filtered here). */
+  excluded: readonly ExcludedTransaction[];
+}) {
+  const mine = excluded.filter((e) => e.holder === holder.holder);
   const { view } = data;
   const outflows = holder.groups.filter((g) => g.direction === 'outflow');
   const inflows = holder.groups.filter((g) => g.direction === 'inflow');
@@ -181,6 +200,12 @@ export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder:
           Toque no selo para ver o achado.
         </p>
       ) : null}
+
+      <Accounts
+        accounts={holder.accounts}
+        internal={holder.internalTransfers}
+        holder={holder.holder}
+      />
 
       {holder.outflow12m > 0 ? (
         <section className="flex flex-col gap-3" aria-labelledby={`fv-${key}-chart`}>
@@ -356,22 +381,121 @@ export function HolderPanel({ data, holder }: { data: FinanceScreenData; holder:
                     </span>{' '}
                     em {listDates(d.dates)}. Confirme antes de pedir de volta.
                   </span>
-                  <a
-                    href={
-                      d.questionId === undefined
-                        ? data.links.confirm
-                        : `${data.links.confirm}#${d.questionId}`
-                    }
-                    className="type-small w-fit font-medium text-cobalt underline-offset-4 hover:underline"
-                  >
-                    Confirmar →
-                  </a>
+                  {d.reason === 'same_charge_within_3_days' ? (
+                    // D31 (b): the owner removes the repeat from this view; "Desfazer" brings it back.
+                    <RemoveDuplicateButton
+                      ids={duplicateRemovals(d)}
+                      testId={`fv-remove-${d.transactionIds[1] ?? ''}`}
+                    />
+                  ) : (
+                    <a
+                      href={
+                        d.questionId === undefined
+                          ? data.links.confirm
+                          : `${data.links.confirm}#${d.questionId}`
+                      }
+                      className="type-small w-fit font-medium text-cobalt underline-offset-4 hover:underline"
+                    >
+                      Confirmar →
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
           )}
+          {mine.length === 0 ? null : (
+            <div
+              className="mt-3 flex flex-col gap-1"
+              data-testid="fv-excluded"
+              data-count={mine.length}
+            >
+              <h3 className="type-small font-medium text-foreground">Removidos por você</h3>
+              <ul className="flex flex-col divide-y divide-border">
+                {mine.map((e) => (
+                  <li
+                    key={e.transactionId}
+                    className="flex flex-wrap items-center justify-between gap-x-4 py-1.5"
+                  >
+                    <span className="type-small text-muted-foreground">
+                      {e.label} ·{' '}
+                      <span className="num" data-cents={e.amount}>
+                        {formatBRL(e.amount)}
+                      </span>{' '}
+                      · {formatDate(e.date)}
+                    </span>
+                    <UndoExclusionButton id={e.transactionId} label={e.label} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </FinanceSection>
       </div>
     </div>
+  );
+}
+
+/**
+ * [D31 a] The tiles per bank account. Own-account transfers stay in both tiles (Enzo, 16/11); the line under the
+ * list says so, with the builder's own total.
+ */
+function Accounts({
+  accounts,
+  internal,
+  holder,
+}: {
+  accounts: readonly AccountLine[];
+  internal: HolderView['internalTransfers'];
+  holder: 'PF' | 'PJ';
+}) {
+  if (accounts.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-2" data-testid="fv-accounts" data-count={accounts.length}>
+      <h2 className="type-small font-medium text-muted-foreground">Por conta</h2>
+      <ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-surface">
+        {accounts.map((a) => (
+          <li
+            key={a.accountId}
+            data-testid="fv-account"
+            className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 px-4 py-2.5 lg:grid-cols-[1fr_180px_180px]"
+          >
+            <span className="type-small col-span-2 min-w-0 truncate font-medium text-foreground lg:col-span-1">
+              {a.label}
+              <span className="font-normal text-muted-foreground"> · {a.count} lanç.</span>
+            </span>
+            <span className="type-small num text-muted-foreground lg:text-right">
+              Entrou{' '}
+              <span
+                className="text-foreground"
+                data-testid="fv-account-in"
+                data-cents={a.inflow12m}
+              >
+                {formatBRL(a.inflow12m)}
+              </span>
+            </span>
+            <span className="type-small num text-right text-muted-foreground">
+              Saiu{' '}
+              <span
+                className="text-foreground"
+                data-testid="fv-account-out"
+                data-cents={a.outflow12m}
+              >
+                {formatBRL(a.outflow12m)}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      {internal.outflow > 0 || internal.inflow > 0 ? (
+        <p className="type-small max-w-[68ch] text-muted-foreground" data-testid="fv-internal-note">
+          <span className="num" data-cents={internal.outflow}>
+            {formatBRL(internal.outflow)}
+          </span>{' '}
+          {holder === 'PJ'
+            ? 'foram transferidos entre contas da própria empresa: saem de uma conta e entram em outra, por isso aparecem em “Saiu” e em “Entrou”.'
+            : 'foram transferidos entre as suas contas: saem de uma conta e entram em outra, por isso aparecem em “Saiu” e em “Entrou”.'}
+        </p>
+      ) : null}
+    </section>
   );
 }

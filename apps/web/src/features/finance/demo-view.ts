@@ -13,6 +13,8 @@ import {
   type AnalysisDeps,
   type AnalysisInput,
   type ConfirmationQuestion,
+  duplicateRemovals,
+  type FinancialView,
   financialViewOfRun,
   type LlmPort,
   normalizeTransactions,
@@ -23,6 +25,7 @@ import {
 } from '@refund/pipeline';
 import { redactDescription, type SourceTransaction } from '@refund/sources';
 import { cache } from 'react';
+import { variantKey } from './exclusions.ts';
 import type { FinanceScreenData, SealFinding, TxRow } from './types.ts';
 
 interface DemoPersona {
@@ -36,6 +39,9 @@ const PERSONAS: Record<string, DemoPersona> = {
     answerKey: answerKeyJson as unknown as AnswerKey,
   },
 };
+
+/** 2^5 = 32 prebuilt views at most (D31 b). */
+const MAX_SUSPECTS = 5;
 
 export const DEMO_FINANCE_PERSONAS: readonly string[] = Object.keys(PERSONAS);
 
@@ -184,6 +190,23 @@ export const demoFinance = cache(async (personaId: string): Promise<DemoFinance>
     result,
   );
   if (!view.ok) return { ok: false, reason: 'FINANCIAL_VIEW_UNAVAILABLE' };
+  // D31 (b): one view per combination of "remover repetido" choices, built here because the client cannot run the
+  // pipeline. Capped at MAX_SUSPECTS suspects (2^n views); beyond that the extra suspects offer no removal.
+  const suspects = [view.value.pj, view.value.pf]
+    .flatMap((h) => h?.duplicates ?? [])
+    .filter((d) => d.reason === 'same_charge_within_3_days')
+    .slice(0, MAX_SUSPECTS)
+    .map(duplicateRemovals);
+  const variants: Record<string, FinancialView> = { '': view.value };
+  for (let mask = 1; mask < 2 ** suspects.length; mask += 1) {
+    const ids = suspects.flatMap((s, i) => ((mask >> i) & 1 ? s : []));
+    const v = financialViewOfRun(
+      { ...runInput, transactions: runInput.transactions as SourceTransaction[] },
+      result,
+      ids,
+    );
+    if (v.ok) variants[variantKey(ids)] = v.value;
+  }
   const findings: Record<string, SealFinding> = {};
   for (const f of result.engineResult?.findings ?? []) findings[f.ruleId] = sealFinding(data.id, f);
   const company = data.company.displayLegalName
@@ -194,6 +217,8 @@ export const demoFinance = cache(async (personaId: string): Promise<DemoFinance>
     value: {
       title: `${company} + ${data.holderDisplayName}`,
       view: view.value,
+      variants,
+      storageKey: `refund:financas:excluidos:${data.id}`,
       findings,
       transactions: txRows(data, result),
       links: { confirm: `/demo/${data.id}/confirmar`, dashboard: `/demo/${data.id}/painel` },
