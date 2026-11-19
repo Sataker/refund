@@ -43,6 +43,31 @@ export function contactProblems(source: string): string[] {
   return [];
 }
 
+export const STATUS_FILE = 'apps/web/src/lib/status.ts';
+
+/**
+ * /status links the UptimeRobot status page (ARCHITECTURE §10.3). It lives in one constant; while it is the
+ * placeholder (or anything that is not an https URL on uptimerobot.com), the freeze cannot pass.
+ */
+export function statusPageProblems(source: string): string[] {
+  const line = source.split('\n').find((l) => /export const STATUS_PAGE_URL\b/.test(l));
+  if (line === undefined) return [`${STATUS_FILE}: STATUS_PAGE_URL not found`];
+  const value = /=\s*'([^']*)'/.exec(line)?.[1];
+  let url: URL | null = null;
+  try {
+    url = value === undefined ? null : new URL(value);
+  } catch {}
+  const host = url?.hostname ?? '';
+  if (
+    url?.protocol !== 'https:' ||
+    !(host === 'uptimerobot.com' || host.endsWith('.uptimerobot.com'))
+  )
+    return [
+      `${STATUS_FILE}: STATUS_PAGE_URL is not an UptimeRobot URL yet (placeholder STATUS_PENDENTE)`,
+    ];
+  return [];
+}
+
 const checks: Check[] = [
   {
     id: 1,
@@ -99,6 +124,11 @@ const checks: Check[] = [
     id: 11,
     name: 'contact e-mail set (/privacidade, waitlist)',
     run: () => contactProblems(readFileSync(CONTACT_FILE, 'utf8')),
+  },
+  {
+    id: 12,
+    name: 'UptimeRobot status page set (/status)',
+    run: () => statusPageProblems(readFileSync(STATUS_FILE, 'utf8')),
   },
   {
     id: 10,
