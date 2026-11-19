@@ -34,6 +34,21 @@ export {
   withdrawConsent,
 } from './repos/cleanup.ts';
 export { type ConnectionRow, findConnectionByItemHash } from './repos/connections.ts';
+export {
+  ensureMonitoredRegulation,
+  insertLawChange,
+  type LawChangeInput,
+  type LawChangeRow,
+  type LawChangeStatus,
+  lawAlertRecipients,
+  listLawChanges,
+  markMonitorChecked,
+  markRuleFindingsOutdated,
+  reviewLawChange,
+  setFirecrawlMonitorId,
+  setLawChangeSummary,
+  touchMonitoredRegulation,
+} from './repos/law.ts';
 export { deleteRateLimitsBefore, hitRateLimit } from './repos/rate-limits.ts';
 export {
   decideReportRow,
