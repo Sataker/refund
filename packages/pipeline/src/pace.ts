@@ -10,13 +10,20 @@ type Moment =
   | 'facts_done'
   | 'first_finding'
   | 'finding'
+  | 'finding_outside_total'
   | 'alert'
   | 'total'
   | 'explanation'
   | 'end'
   | 'other';
 
-/** Script 1 (~8 s): stage 1 ✓ at 1,8 s, stage 2 ✓ at 3,4 s, cards from 3,9 s (1,4 s per counter jump), end 8,6 s. */
+/**
+ * Script 1 (~8 s; IDENTITY-AND-UI §4.9): stage 1 ✓ at 1,8 s, stage 2 ✓ at 3,4 s, first card and first R$ at 3,9 s,
+ * then 1,4 s per counter jump (`count` token). A card outside the total moves no counter, so it takes the script's
+ * 1,0 s (card 3 at 6,3 s); alerts and risks follow 0,3 s apart (the risk card at 6,9 s, "at the end of the list";
+ * > the 220 ms card entrance). The number settles at 7,9 s and the run ends at 8,6 s (CTA). Hero with A01:
+ * R01 3,9 · R05 5,3 · R05-REC 6,3 · R02 6,6 · A01 6,9 · total 7,9 · end 8,6 (EXECUTION §9, 16/11 A01 row).
+ */
 const SCRIPTED: Record<Moment, number> = {
   normalization_done: 1800,
   classification_done: 1600,
@@ -24,8 +31,9 @@ const SCRIPTED: Record<Moment, number> = {
   facts_done: 0,
   first_finding: 500,
   finding: 1400,
-  alert: 600,
-  total: 700,
+  finding_outside_total: 1000,
+  alert: 300,
+  total: 1000,
   explanation: 0,
   end: 700,
   other: 0,
@@ -38,6 +46,7 @@ const FAST: Record<Moment, number> = {
   facts_done: 0,
   first_finding: 100,
   finding: 250,
+  finding_outside_total: 250,
   alert: 100,
   total: 100,
   explanation: 0,
@@ -53,7 +62,8 @@ function momentOf(e: AnalysisEvent, findingsSoFar: number): Moment {
       if (e.stage === 'classification') return 'classification_done';
       return e.stage === 'facts' ? 'facts_done' : 'other';
     case 'finding':
-      return findingsSoFar === 0 ? 'first_finding' : 'finding';
+      if (findingsSoFar === 0) return 'first_finding';
+      return e.finding.countsInTotal ? 'finding' : 'finding_outside_total';
     case 'alert':
     case 'total':
     case 'question':
