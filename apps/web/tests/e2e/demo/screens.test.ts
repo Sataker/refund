@@ -169,6 +169,15 @@ test.describe('demo screens 5–8 @demo', () => {
       await expect(page.getByTestId('sim/pro-labore')).toHaveAttribute('data-cents', '226000');
       await expect(page.getByTestId('sim/value')).toHaveAttribute('data-cents', '2831652');
       await expect(page.getByTestId('sim/total')).toHaveAttribute('data-cents', TOTAL);
+      // D32: safety margin; per-year line and the margin cost from the engine's step values.
+      await expect(page.getByLabel('Folga de segurança acima de 28%')).toBeVisible();
+      await expect(page.getByTestId('sim/margin')).toContainText('1 p.p. (recomendada)');
+      await expect(page.getByTestId('sim/annual')).toHaveAttribute('data-cents', '4289652');
+      await expect(page.getByTestId('sim/annual')).toContainText('por ano a partir de abr/2027');
+      await expect(page.getByTestId('sim/cost')).toContainText(
+        /Cada 0,25 p\.p\. de folga custa R\$\s165,00 por ano/,
+      );
+      await expect(page.getByTestId('sim/late')).toHaveCount(0);
 
       // Timed inside the page: from the input event to the new number on screen.
       const elapsed = await page.evaluate(
@@ -197,6 +206,11 @@ test.describe('demo screens 5–8 @demo', () => {
       await expect(page.getByTestId('optimizer-curve')).toHaveAttribute('data-target', '176000');
       const moved = await page.getByTestId('sim/value').getAttribute('data-cents');
       expect(moved).not.toBe('2831652');
+      await expect(page.getByTestId('sim/value')).toContainText('a mais nos próximos 12 meses');
+      await expect(page.getByTestId('sim/late')).toHaveText(
+        'Sem folga suficiente, o Anexo III só começa em jan/2028',
+      );
+      await expect(page.getByTestId('sim/annual')).toHaveAttribute('data-cents', '4355652');
 
       await slider.fill('12');
       await expect(page.getByTestId('sim/pro-labore')).not.toHaveAttribute('data-cents', '226000');
@@ -205,6 +219,8 @@ test.describe('demo screens 5–8 @demo', () => {
       await expect(page.getByTestId('sim/value')).toHaveAttribute('data-cents', '2831652');
       await expect(page.getByTestId('sim/total')).toHaveAttribute('data-cents', TOTAL);
       await expect(page.getByTestId('optimizer-curve')).toHaveAttribute('data-target', '226000');
+      await expect(page.getByTestId('sim/annual')).toHaveAttribute('data-cents', '4289652');
+      await expect(page.getByTestId('sim/late')).toHaveCount(0);
     });
 
     test('D9: confirm cards come answered by the persona; "Não sei" opens one; answers recalculate the total', async ({
