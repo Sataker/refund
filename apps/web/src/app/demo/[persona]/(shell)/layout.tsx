@@ -1,4 +1,4 @@
-import { Bell } from 'lucide-react';
+import { Bell, Gem } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -49,6 +49,14 @@ export default async function DemoShell({
           <Logo />
         </Link>
         <SidebarNav base={`/demo/${id}`} />
+        <Link
+          href={`/demo/${id}/plano` as Route}
+          data-testid="nav-plano"
+          className="type-small -mt-6 flex min-h-10 items-center gap-3 rounded-md px-3 font-medium text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-surface-2 hover:text-foreground"
+        >
+          <Gem className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+          Planos
+        </Link>
         <div className="mt-auto flex flex-col items-start gap-3 px-3">
           <div className="flex flex-col">
             <span className="type-small font-medium text-foreground">
@@ -86,6 +94,14 @@ export default async function DemoShell({
               >
                 <Bell className="size-4" strokeWidth={1.5} aria-hidden="true" />
               </Link>
+              <Link
+                href={`/demo/${id}/plano` as Route}
+                aria-label="Planos"
+                data-testid="header-plano"
+                className="inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-2 lg:hidden"
+              >
+                <Gem className="size-4" strokeWidth={1.5} aria-hidden="true" />
+              </Link>
               <span className="lg:hidden">
                 <ThemeToggle compact shortcut={false} />
               </span>
@@ -102,7 +118,14 @@ export default async function DemoShell({
         <footer className="border-t border-border pb-20 lg:pb-0 print:hidden">
           <div className="mx-auto flex max-w-[1080px] flex-wrap items-center justify-between gap-3 px-4 py-4 lg:px-8">
             <Disclaimer />
-            <span className="lg:hidden">
+            <span className="flex items-center gap-4 lg:hidden">
+              <Link
+                href={`/demo/${id}/plano` as Route}
+                data-testid="footer-plano"
+                className="type-small text-muted-foreground underline underline-offset-4 hover:text-foreground"
+              >
+                Planos
+              </Link>
               <ShellRestart persona={id} />
             </span>
           </div>

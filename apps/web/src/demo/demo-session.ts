@@ -21,6 +21,16 @@ export interface DemoPersonaState {
   marked?: string[];
   /** Screen 8: the accountant's approval in another tab (no e-mail on /demo). */
   report?: DemoReportState;
+  /** Screen 10: the simulated Pix (D14). Nothing is charged; it only stages the plan change. */
+  plan?: DemoPlanState;
+}
+
+export interface DemoPlanState {
+  plan: 'personal' | 'mei' | 'business';
+  period: 'monthly' | 'yearly' | 'validation';
+  chargeId: string;
+  /** "Simular pagamento" pressed (ms epoch, display only). */
+  paidAt?: number;
 }
 
 export interface DemoReportState {
