@@ -9,7 +9,7 @@ import {
   consentsOlderThan,
   deleteOrphanCompanies,
   expireSubscriptions,
-  inactiveAnonymousUserIds,
+  inactiveAnonymousUsers,
   revokePendingConnections,
   withdrawConsent,
 } from '../src/repos/cleanup.ts';
@@ -331,7 +331,7 @@ describe('cleanup', () => {
   it('inactive anonymous users, items to delete, pending revokes', async () => {
     const old = await makeUser(db, { lastAccessAt: new Date(Date.now() - 31 * DAY) });
     const recent = await makeUser(db, { lastAccessAt: new Date(Date.now() - 29 * DAY) });
-    const ids = await inactiveAnonymousUserIds(db, 30);
+    const ids = (await inactiveAnonymousUsers(db, 30)).map((u) => u.id);
     expect(ids).toContain(old.id);
     expect(ids).not.toContain(recent.id);
     const [c] = await db

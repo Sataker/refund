@@ -203,18 +203,6 @@ export async function saveRun(db: Db, analysisId: string, run: RunOutcome): Prom
   });
 }
 
-/** A run that failed before it could be saved: `error`, so the page stops waiting. */
-export async function failRun(
-  db: Db,
-  analysisId: string,
-  error: { code: string; message: string },
-): Promise<void> {
-  await db
-    .update(analyses)
-    .set({ status: 'error', error, completedAt: sql`now()` })
-    .where(and(eq(analyses.id, analysisId), eq(analyses.status, 'running')));
-}
-
 export async function setFindingStatus(
   db: Db,
   analysisId: string,

@@ -18,13 +18,18 @@ export {
   markFindingsOutdated,
 } from './repos/analyses.ts';
 export {
+  clearDeletedAuditActors,
   clearRevokedItem,
   connectionsOlderThan,
   connectionsWithItem,
   consentsOlderThan,
   deleteOrphanCompanies,
+  deleteRateLimitsOfUser,
+  deleteUnusedCompanies,
+  deleteWaitlist,
   expireSubscriptions,
-  inactiveAnonymousUserIds,
+  inactiveAnonymousUsers,
+  linkedCompanyIds,
   revokePendingConnections,
   withdrawConsent,
 } from './repos/cleanup.ts';
@@ -47,7 +52,6 @@ export {
   type ClassificationInput,
   createAnalysis,
   type FindingRow,
-  failRun,
   findAnalysis,
   findingOf,
   findingRow,

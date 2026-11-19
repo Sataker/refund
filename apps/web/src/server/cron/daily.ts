@@ -1,6 +1,7 @@
 import 'server-only';
 import {
   cleanupTechnical,
+  clearDeletedAuditActors,
   clearRevokedItem,
   connectionsOlderThan,
   connectionsWithItem,
@@ -8,16 +9,18 @@ import {
   type Db,
   deleteOrphanCompanies,
   deleteRateLimitsBefore,
-  deleteUser,
+  deleteWaitlist,
   expireSubscriptions,
-  inactiveAnonymousUserIds,
+  inactiveAnonymousUsers,
   revokePendingConnections,
   schema,
   touchHeartbeat,
   withdrawConsent,
 } from '@refund/db';
 import { and, eq, isNull } from 'drizzle-orm';
+import { eraseUser } from '../account/delete.ts';
 import type { Capabilities } from '../capabilities.ts';
+import { todayBrt } from '../company/profile.ts';
 import {
   deleteItemAtPluggy,
   type PluggyPort,
@@ -26,6 +29,7 @@ import {
 } from '../connection/connections.ts';
 import { type Secrets, safeEqual } from '../crypto.ts';
 import { activePlanWith } from '../entitlements.ts';
+import { logger } from '../log.ts';
 import { PLANS } from '../plans/catalog.ts';
 
 // `GET /api/cron/diario` (ARCHITECTURE §4.8, §9.6, §10.4; ADR-011). Every step is idempotent and independent: one
@@ -39,6 +43,10 @@ export const ORPHAN_COMPANY_DAYS = 30;
 export const CONSENT_DAYS = 365;
 /** §9.4: rate-limit windows older than 14 days. */
 export const RATE_LIMIT_DAYS = 14;
+/** Extra days an inactive user waits when Pluggy fails to delete an item (code review E14, M2). */
+export const PLUGGY_GRACE_DAYS = 7;
+/** The waitlist is deleted from this day on (90 days after the final, 12/12/2026; /privacidade says so). */
+export const WAITLIST_DELETE_FROM = '2027-03-12';
 
 export interface CronDeps {
   db: Db;
@@ -52,6 +60,8 @@ export interface CronReport {
   cleaned: {
     users: number;
     usersKeptForPluggy: number;
+    auditActors: number;
+    waitlist: number;
     companies: number;
     revokeRetried: number;
     revokeStillPending: number;
@@ -76,6 +86,8 @@ export async function runDailyCron(deps: CronDeps): Promise<CronReport> {
     cleaned: {
       users: 0,
       usersKeptForPluggy: 0,
+      auditActors: 0,
+      waitlist: 0,
       companies: 0,
       revokeRetried: 0,
       revokeStillPending: 0,
@@ -91,7 +103,8 @@ export async function runDailyCron(deps: CronDeps): Promise<CronReport> {
   const step = async (name: string, work: () => Promise<void>) => {
     try {
       await work();
-    } catch {
+    } catch (error) {
+      logger.error('cron.step_failed', { step: name, error });
       report.failed.push(name);
     }
   };
@@ -104,7 +117,7 @@ export async function runDailyCron(deps: CronDeps): Promise<CronReport> {
   // Pluggy items whose deletion failed earlier (EXECUTION §9, E11 M2): retry, then forget the id.
   await step('revoke_pending', async () => {
     for (const row of await revokePendingConnections(deps.db, REVOKE_PENDING)) {
-      if (await deleteItemAtPluggy(deps, row)) {
+      if ((await deleteItemAtPluggy(deps, row)) === 'done') {
         await clearRevokedItem(deps.db, row.id);
         report.cleaned.revokeRetried += 1;
       } else report.cleaned.revokeStillPending += 1;
@@ -145,19 +158,43 @@ export async function runDailyCron(deps: CronDeps): Promise<CronReport> {
     }
   });
 
-  // §9.6 retention: anonymous users inactive for 30 days. Their Pluggy items go first; a user whose item could
-  // not be deleted is kept until the next run (the encrypted id would be lost with the row).
+  // §9.6 retention: anonymous users inactive for 30 days. Their Pluggy items go first. When Pluggy answers with an
+  // error the user waits for the next run, at most PLUGGY_GRACE_DAYS more; with no Pluggy client at all (nothing could
+  // ever delete the item) or past the grace, the user is deleted anyway and the PII-free audit row keeps the count of
+  // items left at Pluggy (code review E14, M2).
   await step('inactive_users', async () => {
-    for (const userId of await inactiveAnonymousUserIds(deps.db, INACTIVE_DAYS)) {
-      let blocked = false;
-      for (const row of await connectionsWithItem(deps.db, [userId]))
-        if (!(await deleteItemAtPluggy(deps, row))) blocked = true;
-      if (blocked) {
+    for (const user of await inactiveAnonymousUsers(deps.db, INACTIVE_DAYS)) {
+      let failed = 0;
+      let pending = 0;
+      for (const row of await connectionsWithItem(deps.db, [user.id])) {
+        const r = await deleteItemAtPluggy(deps, row);
+        if (r !== 'done') pending += 1;
+        if (r === 'failed') failed += 1;
+      }
+      const overdue =
+        now - user.lastAccessAt.getTime() > (INACTIVE_DAYS + PLUGGY_GRACE_DAYS) * 86_400_000;
+      if (failed > 0 && !overdue) {
         report.cleaned.usersKeptForPluggy += 1;
         continue;
       }
-      if (await deleteUser(deps.db, userId)) report.cleaned.users += 1;
+      await eraseUser(
+        { db: deps.db, userId: user.id, secrets: deps.secrets, caps: deps.caps },
+        'system',
+        pending,
+      );
+      report.cleaned.users += 1;
     }
+  });
+
+  // SCHEMA §2.9: audit rows outlive their user; the id goes once the user is gone.
+  await step('audit_actors', async () => {
+    report.cleaned.auditActors = await clearDeletedAuditActors(deps.db);
+  });
+
+  // Landing waitlist: kept only to say when the list opens, until 90 days after the final (12/12/2026).
+  await step('waitlist', async () => {
+    if (todayBrt(now) >= WAITLIST_DELETE_FROM)
+      report.cleaned.waitlist = await deleteWaitlist(deps.db);
   });
 
   await step('orphan_companies', async () => {

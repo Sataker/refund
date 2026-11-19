@@ -8,6 +8,7 @@ import {
   PersonaFinancial,
   type SourceItem,
 } from '@refund/sources';
+import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentStep } from '@/features/track/steps.ts';
 import type { Capabilities } from '@/server/capabilities.ts';
@@ -674,6 +675,36 @@ describe('Pluggy connection (ARCHITECTURE §2.4; TESTS §4 "Pluggy connection")'
     expect((await h.db.select().from(schema.connections)).some((c) => c.itemIdHash === hash)).toBe(
       false,
     );
+  });
+
+  it('a real bank item whose deletion fails keeps only the encrypted id, REVOKE_PENDING (E14 H7)', async () => {
+    const userId = await newUser();
+    await heroThroughEstimate(userId);
+    await consent(userId);
+    const fake = fakePluggy(userId, 'UPDATED', { sandbox: false, revokeFails: true });
+    const r = await registerPluggyItemWith(
+      { itemId: fake.itemId, holder: 'PJ' },
+      connDeps(userId, { pluggy: fake.provider }),
+    );
+    expect(r).toMatchObject({ ok: false, error: { code: 'FORBIDDEN', message: SANDBOX_ONLY } });
+    const hash = hmac(fake.itemId, secrets.pepper);
+    const rows = (await h.db.select().from(schema.connections)).filter(
+      (c) => c.itemIdHash === hash,
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      status: 'revoked',
+      errorCode: REVOKE_PENDING,
+      connectorName: null,
+      companyId: null,
+      consentId: null,
+    });
+    expect(decrypt(rows[0]?.itemIdEncrypted ?? '', secrets.encryption)).toBe(fake.itemId);
+    const accounts = await h.db
+      .select()
+      .from(schema.accounts)
+      .where(eq(schema.accounts.connectionId, rows[0]?.id ?? ''));
+    expect(accounts).toEqual([]);
   });
 
   it('without the sandbox connector list the widget is not offered (C1)', async () => {

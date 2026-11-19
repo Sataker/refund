@@ -8,7 +8,7 @@ import {
   PersonaFinancial,
   type SourceItem,
 } from '@refund/sources';
-import { and, eq, isNull, lt, ne, or } from 'drizzle-orm';
+import { and, eq, inArray, isNull, lt, ne, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { type ConnectionStatus, nextAfter, stepPath } from '@/features/track/steps.ts';
 import type { Capabilities } from '../capabilities.ts';
@@ -32,7 +32,7 @@ import { syncConnection } from './sync.ts';
 // Consent and connection actions (ARCHITECTURE §4.7, §2.4; IDENTITY-AND-UI Screens 2–3; ADR-012).
 // Everything after getSession/requireCapability: rate limit → (entitlement) → zod → work.
 
-const { connections, accounts } = schema;
+const { connections, accounts, transactions, classifications, analysisEvents } = schema;
 
 /** The Pluggy client as used here: the provider plus the sandbox-only connector list (C1). */
 export type PluggyPort = FinancialProvider & {
@@ -141,26 +141,57 @@ export const REVOKE_PENDING = 'REVOKE_PENDING';
  */
 export type RetireDeps = Pick<ConnectionDeps, 'db' | 'secrets' | 'caps' | 'pluggy'>;
 
+/** Outcome of asking Pluggy to delete an item: gone (or nothing to do), no client configured, or a failed call. */
+export type PluggyDeletion = 'done' | 'no_client' | 'failed';
+
 /**
- * Deletes the item at Pluggy when the row still holds one. True when nothing is left there (done, or nothing to do);
- * false when Pluggy (or its client) failed and the id must be kept for a retry.
+ * Deletes the item at Pluggy when the row still holds one. `done` when nothing is left there (deleted, or nothing to
+ * do); `no_client` / `failed` when the id must be kept for a retry.
  */
 export async function deleteItemAtPluggy(
   deps: RetireDeps,
   row: Pick<ConnectionRow, 'provider' | 'itemIdEncrypted'>,
-): Promise<boolean> {
-  if (row.provider !== 'pluggy' || !row.itemIdEncrypted) return true;
+): Promise<PluggyDeletion> {
+  if (row.provider !== 'pluggy' || !row.itemIdEncrypted) return 'done';
   const itemId = decrypt(row.itemIdEncrypted, deps.secrets.encryption);
-  if (!itemId) return true; // undecryptable (rotated key): nothing we can ever send to Pluggy
+  if (!itemId) return 'done'; // undecryptable (rotated key): nothing we can ever send to Pluggy
   const provider = configuredPluggy(deps);
-  const r = provider?.revokeItem ? await provider.revokeItem(itemId, { mode: 'live' }) : null;
-  if (!r?.ok)
-    logger.warn('pluggy.revoke_failed', { code: r?.ok === false ? r.error.code : 'NO_CLIENT' });
-  return r?.ok === true;
+  if (!provider?.revokeItem) {
+    logger.warn('pluggy.revoke_failed', { code: 'NO_CLIENT' });
+    return 'no_client';
+  }
+  const r = await provider.revokeItem(itemId, { mode: 'live' });
+  if (r.ok) return 'done';
+  logger.warn('pluggy.revoke_failed', { code: r.error.code });
+  return 'failed';
+}
+
+/**
+ * The `transaction_sample` events (up to 8 masked transactions each) of the analyses that read this connection: they
+ * go with the copied transactions (compliance review E14, H3). Findings and totals stay until "Apagar meus dados".
+ */
+async function deleteSamplesOf(db: Db, connectionId: string): Promise<void> {
+  const used = await db
+    .selectDistinct({ id: classifications.analysisId })
+    .from(classifications)
+    .innerJoin(transactions, eq(transactions.id, classifications.transactionId))
+    .innerJoin(accounts, eq(accounts.id, transactions.accountId))
+    .where(eq(accounts.connectionId, connectionId));
+  if (used.length === 0) return;
+  await db.delete(analysisEvents).where(
+    and(
+      inArray(
+        analysisEvents.analysisId,
+        used.map((u) => u.id),
+      ),
+      eq(analysisEvents.type, 'transaction_sample'),
+    ),
+  );
 }
 
 export async function retireConnection(deps: RetireDeps, row: ConnectionRow): Promise<void> {
-  const pending = !(await deleteItemAtPluggy(deps, row));
+  const pending = (await deleteItemAtPluggy(deps, row)) !== 'done';
+  await deleteSamplesOf(deps.db, row.id);
   await deps.db.transaction(async (tx) => {
     await tx.delete(accounts).where(eq(accounts.connectionId, row.id));
     await tx
@@ -370,6 +401,24 @@ export async function registerPluggyItemWith(
   if (!item.value.connector.sandbox) {
     const r = provider.revokeItem ? await provider.revokeItem(itemId, { mode: 'live' }) : null;
     logger.warn('pluggy.item_not_sandbox', { holder, revoked: r?.ok === true });
+    if (r?.ok !== true) {
+      // Compliance review E14, H7: nothing of the bank is kept, only the encrypted item id, so the cron can delete it
+      // at Pluggy later (REVOKE_PENDING). No account, no transaction, no connector name.
+      await deps.db
+        .insert(connections)
+        .values({
+          userId: deps.userId,
+          provider: 'pluggy',
+          holder,
+          itemIdEncrypted: encrypt(itemId, deps.secrets.encryption),
+          itemIdHash: hmac(itemId, deps.secrets.pepper),
+          connectorSandbox: 0,
+          status: 'revoked',
+          errorCode: REVOKE_PENDING,
+          revokedAt: new Date(),
+        })
+        .onConflictDoNothing({ target: connections.itemIdHash });
+    }
     return fail('FORBIDDEN', SANDBOX_ONLY);
   }
   const itemIdHash = hmac(itemId, deps.secrets.pepper);

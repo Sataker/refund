@@ -1,10 +1,13 @@
+import { randomUUID } from 'node:crypto';
 import { createMemoryDb, type DbHandle, schema } from '@refund/db';
 import { sumCents } from '@refund/engine';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { deleteMyDataWith } from '@/server/account/delete.ts';
 import {
   answerQuestionWith,
+  confirmProLaboreWith,
+  markFindingWith,
   questionsOf,
   reanalyzeWith,
   setFinanceExclusionsWith,
@@ -19,11 +22,13 @@ import {
   CONSENT_SCOPES,
   type ConnectionDeps,
   connectSampleWith,
+  type PluggyPort,
   recordConsentWith,
+  revokeConnectionWith,
   TERMS_VERSION,
 } from '@/server/connection/connections.ts';
 import { cronAuthorized, runDailyCron } from '@/server/cron/daily.ts';
-import type { Secrets } from '@/server/crypto.ts';
+import { encrypt, type Secrets } from '@/server/crypto.ts';
 import { migrationsFolder } from '@/server/db.ts';
 import { liveFinance } from '@/server/financial-view.ts';
 import { PLANS } from '@/server/plans/catalog.ts';
@@ -32,6 +37,7 @@ import type { ReportEmail } from '@/server/report/email.ts';
 import {
   decideReportWith,
   reportByToken,
+  reportStatusFrames,
   reportStatusOf,
   sendReportWith,
 } from '@/server/report/report.ts';
@@ -418,7 +424,28 @@ describe('report (A6; TESTS §4 "Report")', () => {
 describe('LGPD (A9; cron)', () => {
   it('deleteMyData removes everything in cascade and leaves a PII-free audit row', async () => {
     const userId = await heroUser();
-    await startAndRun(userId);
+    const analysisId = await startAndRun(userId);
+    await sendReportWith(
+      { analysisId, include: { calculations: true, laws: true, transactions: false } },
+      { db: h.db, userId, secrets, caps: CAPS, origin: 'http://localhost', nowMs: NOW },
+    );
+    const q = (await questionsOf(h.db, analysisId))[0];
+    if (q) await answerQuestionWith({ analysisId, questionId: q.id, answer: null }, deps(userId));
+    const [link] = await h.db
+      .select()
+      .from(schema.companyLinks)
+      .where(eq(schema.companyLinks.userId, userId));
+    const accountIds = (
+      await h.db
+        .select({ id: schema.accounts.id })
+        .from(schema.accounts)
+        .innerJoin(schema.connections, eq(schema.connections.id, schema.accounts.connectionId))
+        .where(eq(schema.connections.userId, userId))
+    ).map((a) => a.id);
+    expect(accountIds.length).toBeGreaterThan(0);
+    expect(
+      (await h.db.select().from(schema.rateLimits)).some((r) => r.key.endsWith(`:u:${userId}`)),
+    ).toBe(true);
     expect(
       await deleteMyDataWith({ confirmation: 'apagar' }, { db: h.db, userId, secrets, caps: CAPS }),
     ).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
@@ -427,8 +454,43 @@ describe('LGPD (A9; cron)', () => {
       { db: h.db, userId, secrets, caps: CAPS },
     );
     expect(r.ok).toBe(true);
-    for (const t of [schema.analyses, schema.connections, schema.consents, schema.companyLinks])
+    for (const t of [
+      schema.analyses,
+      schema.connections,
+      schema.consents,
+      schema.companyLinks,
+      schema.userAssumptions,
+    ])
       expect(await h.db.select().from(t).where(eq(t.userId, userId))).toEqual([]);
+    // M4: everything under the analysis and the connections, the report and the linked company row.
+    for (const t of [
+      schema.reports,
+      schema.analysisEvents,
+      schema.findings,
+      schema.classifications,
+    ])
+      expect(await h.db.select().from(t).where(eq(t.analysisId, analysisId))).toEqual([]);
+    for (const id of accountIds) {
+      expect(await h.db.select().from(schema.accounts).where(eq(schema.accounts.id, id))).toEqual(
+        [],
+      );
+      expect(
+        await h.db.select().from(schema.transactions).where(eq(schema.transactions.accountId, id)),
+      ).toEqual([]);
+    }
+    // The hero CNPJ is shared by every test user of this file: it stays while another one still links it.
+    const stillLinked = await h.db
+      .select()
+      .from(schema.companyLinks)
+      .where(eq(schema.companyLinks.companyId, link?.companyId ?? ''));
+    const company = await h.db
+      .select()
+      .from(schema.companies)
+      .where(eq(schema.companies.id, link?.companyId ?? ''));
+    expect(company.length).toBe(stillLinked.length > 0 ? 1 : 0);
+    expect(
+      (await h.db.select().from(schema.rateLimits)).some((r) => r.key.endsWith(`:u:${userId}`)),
+    ).toBe(false);
     const audit = await h.db
       .select()
       .from(schema.auditEvents)
@@ -480,5 +542,215 @@ describe('LGPD (A9; cron)', () => {
       .where(eq(schema.connections.userId, userId));
     expect(after.find((c) => c.id === pj.id)?.status).toBe('revoked');
     expect(after.find((c) => c.id === pf.id)?.status).toBe('active');
+  });
+});
+
+describe('code and compliance review fixes (E14)', () => {
+  const day = 86_400_000;
+  const failingPluggy = {
+    name: 'pluggy',
+    revokeItem: async () => ({
+      ok: false as const,
+      error: { code: 'UNAVAILABLE' as const, source: 'pluggy', message: 'x', recoverable: true },
+    }),
+  } as unknown as PluggyPort;
+
+  async function staleUserWithItem(daysAgo: number): Promise<string> {
+    const [u] = await h.db
+      .insert(schema.users)
+      .values({ lastAccessAt: new Date(Date.now() - daysAgo * day) })
+      .returning();
+    const userId = u?.id as string;
+    await h.db.insert(schema.connections).values({
+      userId,
+      provider: 'pluggy',
+      holder: 'PF',
+      itemIdEncrypted: encrypt(randomUUID(), secrets.encryption),
+      itemIdHash: `ih-${randomUUID()}`,
+      status: 'active',
+    });
+    return userId;
+  }
+
+  const exists = async (id: string) =>
+    (await h.db.select().from(schema.users).where(eq(schema.users.id, id))).length === 1;
+
+  it('M1: reanalyze runs only after an answer changed, from the latest analysis', async () => {
+    const userId = await heroUser();
+    const id = await startAndRun(userId);
+    expect(await reanalyzeWith({ analysisId: id }, deps(userId))).toEqual({
+      ok: true,
+      value: { analysisId: id },
+    });
+    const q = (await questionsOf(h.db, id)).find((x) => x.type === 'monthly_pro_labore');
+    if (!q) throw new Error('pró-labore card');
+    await answerQuestionWith({ analysisId: id, questionId: q.id, answer: 'yes' }, deps(userId));
+    const next = await reanalyzeWith({ analysisId: id }, deps(userId));
+    if (!next.ok) throw new Error(next.error.code);
+    expect(next.value.analysisId).not.toBe(id);
+    // The old one is no longer the latest: it points to the new one, and nothing new is created.
+    expect(await reanalyzeWith({ analysisId: id }, deps(userId))).toEqual({
+      ok: true,
+      value: { analysisId: next.value.analysisId },
+    });
+    // The new one has not run yet (pending): same id back.
+    expect(await reanalyzeWith({ analysisId: next.value.analysisId }, deps(userId))).toEqual({
+      ok: true,
+      value: { analysisId: next.value.analysisId },
+    });
+    const rows = await h.db
+      .select()
+      .from(schema.analyses)
+      .where(eq(schema.analyses.userId, userId));
+    expect(rows).toHaveLength(2);
+  });
+
+  it('M2: no Pluggy client → the inactive user is deleted anyway, the audit row keeps the count', async () => {
+    const userId = await staleUserWithItem(31);
+    await runDailyCron({ db: h.db, secrets, caps: CAPS, pluggy: null });
+    expect(await exists(userId)).toBe(false);
+    const audit = await h.db
+      .select()
+      .from(schema.auditEvents)
+      .where(eq(schema.auditEvents.actorType, 'system'));
+    expect(audit.some((a) => (a.data as { pendingAtPluggy?: number }).pendingAtPluggy === 1)).toBe(
+      true,
+    );
+    expect(JSON.stringify(audit)).not.toContain(userId);
+  });
+
+  it('M2: Pluggy failing → kept until 30 + 7 days, then deleted anyway', async () => {
+    const kept = await staleUserWithItem(32);
+    const gone = await staleUserWithItem(38);
+    const report = await runDailyCron({ db: h.db, secrets, caps: CAPS, pluggy: failingPluggy });
+    expect(report.failed).toEqual([]);
+    expect(await exists(kept)).toBe(true);
+    expect(await exists(gone)).toBe(false);
+  });
+
+  it('H3: disconnecting deletes the transaction samples of the analyses that read it', async () => {
+    const userId = await heroUser();
+    const id = await startAndRun(userId);
+    const samples = async () =>
+      (
+        await h.db
+          .select()
+          .from(schema.analysisEvents)
+          .where(eq(schema.analysisEvents.analysisId, id))
+      ).filter((e) => e.type === 'transaction_sample');
+    expect(await samples()).toHaveLength(1);
+    const [pf] = await h.db
+      .select()
+      .from(schema.connections)
+      .where(and(eq(schema.connections.userId, userId), eq(schema.connections.holder, 'PF')));
+    expect(await revokeConnectionWith({ connectionId: pf?.id }, connDeps(userId))).toEqual({
+      ok: true,
+      value: undefined,
+    });
+    expect(await samples()).toHaveLength(0);
+    // The analysis itself stays (findings) until "Apagar meus dados".
+    expect((await loadLiveAnalysis(h.db, userId, id))?.rows.length).toBeGreaterThan(0);
+  });
+
+  it('H4: the waitlist is deleted by the cron from 12/03/2027 on, not before', async () => {
+    await h.db.insert(schema.waitlist).values({
+      emailEncrypted: 'v1.x',
+      emailHash: `wh-${randomUUID()}`,
+      hasCnpj: true,
+      origin: 'landing',
+      consentedAt: new Date(),
+    });
+    await runDailyCron({
+      db: h.db,
+      secrets,
+      caps: CAPS,
+      pluggy: null,
+      nowMs: Date.parse('2027-03-11T15:00:00Z'),
+    });
+    expect((await h.db.select().from(schema.waitlist)).length).toBeGreaterThan(0);
+    const r = await runDailyCron({
+      db: h.db,
+      secrets,
+      caps: CAPS,
+      pluggy: null,
+      nowMs: Date.parse('2027-03-12T15:00:00Z'),
+    });
+    expect(r.cleaned.waitlist).toBeGreaterThan(0);
+    expect(await h.db.select().from(schema.waitlist)).toEqual([]);
+  });
+
+  it('M3: audit rows lose the id of a user that no longer exists', async () => {
+    const [u] = await h.db.insert(schema.users).values({}).returning();
+    await h.db
+      .insert(schema.auditEvents)
+      .values({ actorType: 'user', actorUserId: u?.id ?? null, action: 'test' });
+    await h.db.delete(schema.users).where(eq(schema.users.id, u?.id ?? ''));
+    await runDailyCron({ db: h.db, secrets, caps: CAPS, pluggy: null });
+    const left = await h.db
+      .select()
+      .from(schema.auditEvents)
+      .where(eq(schema.auditEvents.action, 'test'));
+    expect(left.every((a) => a.actorUserId === null)).toBe(true);
+  });
+
+  it('L8: another user gets nothing from any analysis action or the report status', async () => {
+    const owner = await heroUser();
+    const id = await startAndRun(owner);
+    const [other] = await h.db.insert(schema.users).values({}).returning();
+    const intruder = other?.id as string;
+    const live = await loadLiveAnalysis(h.db, owner, id);
+    const finding = live?.rows[0]?.id as string;
+    const q = (await questionsOf(h.db, id))[0]?.id as string;
+    const notFound = { ok: false, error: { code: 'NOT_FOUND' } };
+    expect(
+      await markFindingWith({ findingId: finding, status: 'marked' }, deps(intruder)),
+    ).toMatchObject(notFound);
+    expect(
+      await answerQuestionWith({ analysisId: id, questionId: q, answer: 'yes' }, deps(intruder)),
+    ).toMatchObject(notFound);
+    expect(
+      await confirmProLaboreWith({ analysisId: id, monthlyAmountCents: 100_00 }, deps(intruder)),
+    ).toMatchObject(notFound);
+    expect(
+      await setFinanceExclusionsWith(
+        { analysisId: id, excluded: [] },
+        { ...deps(intruder), removable: async () => new Set() },
+      ),
+    ).toMatchObject(notFound);
+    expect(
+      await sendReportWith(
+        { analysisId: id, include: { calculations: true, laws: true, transactions: false } },
+        { db: h.db, userId: intruder, secrets, caps: CAPS, origin: 'http://localhost', nowMs: NOW },
+      ),
+    ).toMatchObject(notFound);
+    const sent = await sendReportWith(
+      { analysisId: id, include: { calculations: true, laws: true, transactions: false } },
+      { db: h.db, userId: owner, secrets, caps: CAPS, origin: 'http://localhost', nowMs: NOW },
+    );
+    if (!sent.ok) throw new Error(sent.error.code);
+    const frames: string[] = [];
+    for await (const f of reportStatusFrames({
+      db: h.db,
+      userId: intruder,
+      reportId: sent.value.reportId,
+      wait: async () => {},
+      aborted: () => false,
+      deadlineMs: Date.now() + 5_000,
+    }))
+      frames.push(f);
+    expect(frames).toEqual([]);
+    expect(await reanalyzeWith({ analysisId: id }, deps(intruder))).toMatchObject(notFound);
+  });
+
+  it('L3: link-only reports do not use the 3/day e-mail limit', async () => {
+    const userId = await heroUser();
+    const id = await startAndRun(userId);
+    for (let i = 0; i < 4; i += 1) {
+      const r = await sendReportWith(
+        { analysisId: id, include: { calculations: true, laws: true, transactions: false } },
+        { db: h.db, userId, secrets, caps: CAPS, origin: 'http://localhost', nowMs: NOW },
+      );
+      expect(r.ok).toBe(true);
+    }
   });
 });
