@@ -72,7 +72,7 @@ test.describe('first-access track @app', () => {
     if (todayBrt() <= '2026-11-30') {
       await expect(range).toHaveAttribute('data-cents-min', '1246338');
       await expect(range).toHaveAttribute('data-cents-max', '9077928');
-      await expect(range).toContainText('de R$ 12 mil a R$ 91 mil por ano');
+      await expect(range).toContainText(/de R\$\s12 mil a R\$\s91 mil por ano/);
     } else {
       const min = Number(await range.getAttribute('data-cents-min'));
       const max = Number(await range.getAttribute('data-cents-max'));
