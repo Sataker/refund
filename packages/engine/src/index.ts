@@ -10,9 +10,11 @@ export {
   legalRefOf,
   OFFICIAL_SET_ID,
   PARAMETERS_VERSION,
+  type ParameterScenario,
   param,
   parameterSets,
 } from './parameters/index.ts';
+export { PARAMETER_SCENARIOS } from './parameters/scenarios/index.ts';
 export type * from './parameters/types.ts';
 export { monthlyWithholding, type WithholdingResult } from './primitives/dividends.ts';
 export { cppOutsideDas, inssEmployee, inssPartner } from './primitives/inss.ts';

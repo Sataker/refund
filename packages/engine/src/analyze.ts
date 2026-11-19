@@ -3,9 +3,15 @@
 // Public entry points return `Result`: no exception crosses the package (CLAUDE.md; EXECUTION §9, E5).
 import { applyActionPlans } from './actions/build.ts';
 import { resolveAssumptions } from './assumptions.ts';
-import { EngineError, toDomainError } from './errors.ts';
+import { toDomainError } from './errors.ts';
 import { canonicalJson, sha256Hex } from './hash.ts';
-import { ALL_PARAMETERS, OFFICIAL_SET_ID, PARAMETERS_VERSION, param } from './parameters/index.ts';
+import {
+  OFFICIAL_SET_ID,
+  PARAMETERS_VERSION,
+  param,
+  parameterEntries,
+  withParameterSet,
+} from './parameters/index.ts';
 import { inferPgdas, type PgdasInference } from './pgdas.ts';
 import { costReads, irMonths, projectedParametersStep } from './projected.ts';
 import { type Ctx, createCtx } from './projection.ts';
@@ -46,10 +52,15 @@ import { ENGINE_VERSION } from './version.ts';
 /** C.6 `threshold(R05) = threshold(R06) = threshold(R04)` = R$ 1,00. */
 const THRESHOLD_OTHERS = cents(100);
 
-let parametersHashMemo: string | undefined;
-const parametersHash = (): string => {
-  parametersHashMemo ??= sha256Hex(canonicalJson(ALL_PARAMETERS));
-  return parametersHashMemo;
+const parametersHashMemo = new Map<string, string>();
+/** Hash of the records of the set in use (a scenario hashes differently from the official set). */
+const parametersHash = (setId: string): string => {
+  let hash = parametersHashMemo.get(setId);
+  if (hash === undefined) {
+    hash = sha256Hex(canonicalJson(parameterEntries(setId) ?? []));
+    parametersHashMemo.set(setId, hash);
+  }
+  return hash;
 };
 
 const isAssumption = (o: { provenance: { origin: string } }) =>
@@ -213,9 +224,12 @@ function runChain(
 }
 
 function run(facts: Facts, options?: { parameters?: string }): EngineResult {
-  if (options?.parameters !== undefined && options.parameters !== OFFICIAL_SET_ID) {
-    throw new EngineError('UNKNOWN_PARAMETER_SET', `unknown parameter set ${options.parameters}`);
-  }
+  // ADR-013: an alternative set (parameters/scenarios/) is read only inside this call.
+  const setId = options?.parameters ?? OFFICIAL_SET_ID;
+  return withParameterSet(setId, () => runWith(facts, setId));
+}
+
+function runWith(facts: Facts, setId: string): EngineResult {
   const ctx = createCtx(facts, resolveAssumptions(facts));
   const findings: Finding[] = [];
   let total: Total = {
@@ -301,10 +315,8 @@ function run(facts: Facts, options?: { parameters?: string }): EngineResult {
   const result: EngineResult = {
     engineVersion: ENGINE_VERSION,
     parametersVersion: PARAMETERS_VERSION,
-    parametersHash: parametersHash(),
-    inputsHash: sha256Hex(
-      canonicalJson({ facts, parameters: options?.parameters ?? OFFICIAL_SET_ID }),
-    ),
+    parametersHash: parametersHash(setId),
+    inputsHash: sha256Hex(canonicalJson({ facts, parameters: setId })),
     findings,
     total,
   };
