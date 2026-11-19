@@ -147,7 +147,7 @@ function sealFinding(persona: string, f: Omit<Finding, 'trace'>): SealFinding {
 }
 
 /** Accordion rows: masked label (CPF → mask only; person names and documents redacted, ARCHITECTURE §6.3). */
-function txRows(data: PersonaData, result: PipelineResult): Record<string, TxRow> {
+export function txRows(data: PersonaData, result: PipelineResult): Record<string, TxRow> {
   const accounts = data.items.flatMap((i) => i.accounts.map((a) => a.account));
   const source: SourceTransaction[] = data.items.flatMap((i) =>
     i.accounts.flatMap((a) => a.transactions),

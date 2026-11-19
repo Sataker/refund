@@ -148,23 +148,50 @@ async function drain(
   }
 }
 
-const answersCache = new Map<string, Promise<QuestionAnswer[]>>();
+export interface DemoQuestions {
+  /** The cards the pipeline asks before any answer, in its order (D23: biggest effect on the total first). */
+  questions: ConfirmationQuestion[];
+  /** The persona's own answers to those cards (ENGINE-SPEC F.2). */
+  answers: QuestionAnswer[];
+}
+
+const questionsCache = new Map<string, Promise<DemoQuestions>>();
 
 /** First pass (instant, cached per process): which cards the pipeline asks, answered as the persona would. */
-function personaAnswers(p: DemoPersona, accounts: DemoAccounts): Promise<QuestionAnswer[]> {
+export function demoQuestions(
+  p: DemoPersona,
+  accounts: DemoAccounts = 'all',
+): Promise<DemoQuestions> {
   const key = `${p.id}:${accounts}`;
-  let cached = answersCache.get(key);
+  let cached = questionsCache.get(key);
   if (!cached) {
     cached = (async () => {
       const input = await baseInput(p, accounts, 'questions');
       const { result } = await drain(runAnalysis(input, demoDeps(p, 'instant')));
-      return addressAnswers(p, result.questions);
+      return { questions: result.questions, answers: addressAnswers(p, result.questions) };
     })();
     // A failed run is not cached: the next request tries again.
-    cached.catch(() => answersCache.delete(key));
-    answersCache.set(key, cached);
+    cached.catch(() => questionsCache.delete(key));
+    questionsCache.set(key, cached);
   }
   return cached;
+}
+
+async function personaAnswers(p: DemoPersona, accounts: DemoAccounts): Promise<QuestionAnswer[]> {
+  return (await demoQuestions(p, accounts)).answers;
+}
+
+/**
+ * Screen 7 on /demo: the real pipeline again with the visitor's answers (ENGINE-SPEC C.9: only the engine
+ * computes). No pace, no events kept: the result is all the caller needs.
+ */
+export async function runDemoWithAnswers(
+  p: DemoPersona,
+  answers: QuestionAnswer[],
+): Promise<PipelineResult> {
+  const input = await baseInput(p, 'all', 'answers');
+  const { result } = await drain(runAnalysis({ ...input, answers }, demoDeps(p, 'instant')));
+  return result;
 }
 
 export interface DemoRunOptions {
