@@ -26,7 +26,14 @@ export interface VisitorAnswers {
   custom: boolean;
   status: RecalcStatus;
   choose: (cardId: string, value: string) => void;
+  /** "Confirmar as respostas da {nome}": every card marked as reviewed, answers unchanged. */
+  reviewAll: () => void;
   retry: () => void;
+}
+
+/** Order-independent key of a set of choices. */
+function keyOf(choices: Readonly<Record<string, string>>): string {
+  return JSON.stringify(Object.entries(choices).sort(([a], [b]) => a.localeCompare(b)));
 }
 
 export function useVisitorAnswers(
@@ -37,7 +44,9 @@ export function useVisitorAnswers(
   const [ready, setReady] = useState(false);
   const [choices, setChoices] = useState<Record<string, string>>({});
   const [reviewed, setReviewed] = useState<string[]>([]);
-  const [result, setResult] = useState<Recalculated | null>(null);
+  // Each result carries the answers it was computed for; it shows only while they are the current answers
+  // (engine review M3: never a stale total after an error or a newer answer).
+  const [result, setResult] = useState<{ key: string; value: Recalculated } | null>(null);
   const [status, setStatus] = useState<RecalcStatus>('idle');
   const request = useRef(0);
   const custom = !isPersonaDefault(cards, choices);
@@ -72,7 +81,7 @@ export function useVisitorAnswers(
         if (!res.ok) throw new Error(String(res.status));
         const value = (await res.json()) as Recalculated;
         if (id !== request.current) return; // a newer answer already went out
-        setResult(value);
+        setResult({ key: keyOf(next), value });
         setStatus('idle');
       } catch {
         if (id === request.current) setStatus('error');
@@ -101,15 +110,23 @@ export function useVisitorAnswers(
     [cards, choices, reviewed, persona],
   );
 
+  const reviewAll = useCallback(() => {
+    const all = cards.map((c) => c.id);
+    setReviewed(all);
+    updatePersonaState(persona, { choices, reviewed: all });
+  }, [cards, choices, persona]);
+
+  const current = custom && result !== null && result.key === keyOf(choices) ? result.value : null;
   return {
     ready,
     choices,
     reviewed,
-    model: custom && result ? result.dashboard : base,
-    open: custom && result ? result.open : 0,
+    model: current ? current.dashboard : base,
+    open: current ? current.open : 0,
     custom,
-    status: custom && result === null && status === 'idle' ? 'loading' : status,
+    status: custom && current === null && status !== 'error' ? 'loading' : status,
     choose,
+    reviewAll,
     retry: () => void recalc(choices),
   };
 }

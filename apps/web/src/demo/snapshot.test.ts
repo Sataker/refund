@@ -1,6 +1,17 @@
 import { recalculate } from '@refund/engine';
 import { describe, expect, it } from 'vitest';
-import { answersFromChoices, DONT_KNOW, isPersonaDefault } from '@/features/findings/confirm';
+import {
+  cleanEngineText,
+  TRACE_INPUT_LABEL,
+  traceTextValue,
+} from '@/components/brand/trace-labels';
+import {
+  answersFromChoices,
+  DONT_KNOW,
+  isPersonaDefault,
+  otherCents,
+  parseReaisToCents,
+} from '@/features/findings/confirm';
 import {
   MARGIN_STEPS,
   marginOf,
@@ -31,6 +42,19 @@ describe('Screen 5 dashboard model (ENGINE-SPEC C.9, F.4)', () => {
     expect(d.estimated).toBe(0);
     expect(d.recoveryRange).toEqual([3978768, 19893840]);
     expect(d.byHolder).toEqual({ PJ: 6231892, PF: 0 });
+    expect(d.annualPending).toBe(false);
+  });
+
+  it('engine review H1: with an estimated part, no steady-state line under the confirmed-only number', async () => {
+    const r = await recalculateDemo('dev-exportador', { 'pro-labore-gross': DONT_KNOW });
+    if (!r.ok) throw new Error(r.error);
+    const d = r.value.dashboard;
+    expect(d.estimated).toBeGreaterThan(0);
+    expect(d.annual).toBeNull();
+    expect(d.annualPending).toBe(true);
+    expect(d.savings.find((f) => f.ruleId === 'R01')?.confidence).toBe('estimated');
+    // "a partir de" only from the single counted confirmed finding with a regimeFrom: R01 is no longer confirmed.
+    expect(d.regimeFrom).toBeNull();
   });
 
   it('orders savings by R$ (R05 34.002,40 before R01 28.316,52) and keeps alerts out of the total', async () => {
@@ -67,6 +91,30 @@ describe('Screen 6 and 6b', () => {
     expect(sources['R01.FS12_WITHOUT_PRO_LABORE']).toHaveLength(40);
     for (const ids of Object.values(sources))
       for (const id of ids) expect(rows[id], id).toBeDefined();
+    // Engine review L2: only steps whose result is the sum of those transactions.
+    expect(sources['R01.COST_12M_BEFORE']).toBeUndefined();
+    expect(sources['R01.P_STAR']).toBeUndefined();
+    const a01 = result.findings.find((f) => f.ruleId === 'A01');
+    if (!a01) throw new Error('A01 missing');
+    const perMerchant = traceSources(a01.trace, facts);
+    expect(perMerchant['A01.MERCHANT.1']).toHaveLength(12);
+    expect(perMerchant['A01.MERCHANT.2']).toHaveLength(1);
+    expect(perMerchant['A01.MARGINAL_12M']).toBeUndefined();
+    for (const ids of Object.values(perMerchant))
+      for (const id of ids) expect(rows[id], id).toBeDefined();
+  });
+
+  it('every trace input key has a Portuguese label (UX review H2: never a raw variable name)', async () => {
+    const { result } = await hero();
+    const keys = new Set(
+      result.findings.flatMap((f) => f.trace.flatMap((s) => Object.keys(s.inputs))),
+    );
+    const missing = [...keys].filter((k) => !(k in TRACE_INPUT_LABEL));
+    expect(missing).toEqual([]);
+    expect(traceTextValue('fatorR', '0.27')).toBe('27%');
+    expect(cleanEngineText('a (ENGINE-SPEC C.1, item 4)')).toBe('a');
+    expect(cleanEngineText('2 parâmetro(s) projetado(s)')).toBe('2 parâmetros projetados');
+    expect(cleanEngineText('1 parâmetro(s) projetado(s)')).toBe('1 parâmetro projetado');
   });
 
   it('every cited ref resolves to a verbatim excerpt of @refund/law', async () => {
@@ -153,5 +201,25 @@ describe('D9: Screen 7 cards and the recalculation', () => {
     });
     expect(a.map((x) => x.questionId)).not.toContain('nope');
     expect(a.map((x) => x.questionId)).not.toContain('export-qualification');
+  });
+
+  it('"Outro valor" on the pró-labore card sends the typed cents (ENGINE-SPEC E.2)', async () => {
+    const { cards, personaAnswers } = await hero();
+    expect(cards.find((c) => c.id === 'pro-labore-gross')?.options.map((o) => o.label)).toEqual([
+      'Sim',
+      'Outro valor',
+      'Não sei',
+    ]);
+    expect(parseReaisToCents('2.500,00')).toBe(250000);
+    expect(parseReaisToCents('R$ 1621')).toBe(162100);
+    expect(parseReaisToCents('2500,5')).toBe(250050);
+    expect(parseReaisToCents('abc')).toBeNull();
+    expect(parseReaisToCents('0')).toBeNull();
+    expect(otherCents('other:250000')).toBe(250000);
+    expect(otherCents('other:-1')).toBeNull();
+    const a = answersFromChoices(cards, personaAnswers, { 'pro-labore-gross': 'other:250000' });
+    expect(a.find((x) => x.questionId === 'pro-labore-gross')?.value).toBe(250000);
+    const bad = answersFromChoices(cards, personaAnswers, { 'export-qualification': 'other:5' });
+    expect(bad.map((x) => x.questionId)).not.toContain('export-qualification');
   });
 });

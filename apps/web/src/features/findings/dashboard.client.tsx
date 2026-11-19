@@ -4,11 +4,12 @@ import { CalendarClock, ChevronRight, RotateCcw, Send, TriangleAlert, Undo2 } fr
 import type { Route } from 'next';
 import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
+import { ConfidenceBadge, confidenceLabel } from '@/components/brand/confidence-badge';
 import { FindingCard } from '@/components/brand/finding-card';
 import { LawSeal } from '@/components/brand/law-seal';
 import { MoneyHero } from '@/components/brand/money-hero';
 import { Button } from '@/components/ui/button';
-import { keepCurrency } from '@/features/demo/display';
+import { keepCurrency, RISK_LINE } from '@/features/demo/display';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ConfirmCard } from './confirm';
@@ -105,6 +106,10 @@ export function Dashboard({
                   e {formatBRL(m.annual)} por ano
                   {m.regimeFrom ? ` a partir de ${formatYearMonth(m.regimeFrom)}` : ''}
                 </span>
+              ) : m.annualPending ? (
+                <span data-testid="dashboard/regime-pending">
+                  Valor por ano aparece quando tudo estiver confirmado.
+                </span>
               ) : null}
               {m.estimated > 0 ? (
                 <span data-testid="dashboard/estimated" data-cents={m.estimated} className="num">
@@ -130,15 +135,37 @@ export function Dashboard({
                 {formatBRL(m.byHolder.PJ)}
               </span>
               <span className="type-small text-muted-foreground"> em 12 meses</span>
+              {m.savings.some((f) => f.ruleId === 'R01' && f.holder === 'PJ' && f.countsInTotal) ? (
+                <span className="type-caption block text-muted-foreground" data-testid="pj-note">
+                  R01 já desconta o INSS maior do sócio
+                </span>
+              ) : null}
             </MiniCard>
             <MiniCard label="PF · na sua pessoa" testId="dashboard/pf">
-              <span className="type-money-md num text-foreground" data-cents={m.byHolder.PF}>
-                {formatBRL(m.byHolder.PF)}
-              </span>
-              <span className="type-small text-muted-foreground"> em 12 meses</span>
+              {m.byHolder.PF === 0 ? (
+                <>
+                  <span className="block text-base font-medium text-foreground" data-cents={0}>
+                    Nada a ajustar na pessoa física
+                  </span>
+                  <span className="type-caption block text-muted-foreground">
+                    pelas regras que checamos.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="type-money-md num text-foreground" data-cents={m.byHolder.PF}>
+                    {formatBRL(m.byHolder.PF)}
+                  </span>
+                  <span className="type-small text-muted-foreground"> em 12 meses</span>
+                </>
+              )}
             </MiniCard>
             {m.recoveryRange ? (
-              <MiniCard label="Recuperar (5 anos) · estimativa" testId="dashboard/recovery" chart>
+              <MiniCard
+                label={`Recuperar (5 anos)${m.recovery[0] ? ` · ${confidenceLabel(m.recovery[0].confidence)}` : ''}`}
+                testId="dashboard/recovery"
+                chart
+              >
                 <span className="type-small num text-foreground">
                   <span data-testid="dashboard/recovery-min" data-cents={m.recoveryRange[0]}>
                     {formatBRL(m.recoveryRange[0])}
@@ -250,8 +277,9 @@ export function Dashboard({
               className="flex flex-col gap-3 rounded-lg border border-border border-l-4 border-l-chart-5 bg-surface p-5"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="type-small font-medium text-muted-foreground">
-                  ↺ Para recuperar · estimativa · não entra no total
+                <p className="type-small inline-flex flex-wrap items-center gap-x-2 font-medium text-muted-foreground">
+                  ↺ Para recuperar · não entra no total
+                  <ConfidenceBadge level={f.confidence} />
                 </p>
                 {m.urgency ? (
                   <span
@@ -268,8 +296,10 @@ export function Dashboard({
                   {formatBRL(f.range[0])} a {formatBRL(f.range[1])}
                 </p>
               ) : null}
-              <p className="type-small text-muted-foreground">
-                {keepCurrency(f.engineTitle)}
+              <p className="type-small text-muted-foreground" data-testid="recovery-sentence">
+                Pagos a mais nos últimos 5 anos (
+                {f.confidence === 'estimated' ? 'estimativa' : confidenceLabel(f.confidence)}; o
+                contador confirma).
                 {m.urgency
                   ? ` Prazo contado na data da análise (${formatCivilDate(m.analysisDate)}).`
                   : ''}
@@ -315,6 +345,7 @@ export function Dashboard({
                   aria-hidden="true"
                 />
                 {f.type === 'risk' ? 'Risco' : 'Alerta'}
+                <ConfidenceBadge level={f.confidence} />
                 {f.cents > 0 ? (
                   <>
                     {' · custo de caixa '}
@@ -328,7 +359,15 @@ export function Dashboard({
                   </>
                 ) : null}
               </p>
-              <p className="text-base text-foreground">{keepCurrency(f.engineTitle)}</p>
+              <p className="text-base font-medium text-foreground">{keepCurrency(f.title)}</p>
+              {f.title !== f.engineTitle ? (
+                <p className="type-small text-muted-foreground">{keepCurrency(f.engineTitle)}</p>
+              ) : null}
+              {f.type === 'risk' ? (
+                <p className="type-small font-medium text-risk" data-testid="risk-line">
+                  {RISK_LINE}
+                </p>
+              ) : null}
               <div className="flex flex-wrap items-center gap-3">
                 {f.ref ? <LawSeal lawRef={f.ref} /> : null}
                 <Link
@@ -391,42 +430,55 @@ function MiniCard({
   );
 }
 
-/** Where the total comes from: one segment per counted finding, its width = its share (flex-grow by cents). */
+/**
+ * Where the total comes from: one segment per confirmed finding in the total, its width = its share (flex-grow by
+ * cents). Estimated savings sit apart, hatched, and are not part of the number (engine review M1).
+ */
 function Composition({ savings }: { savings: DashboardFinding[] }) {
-  const parts = savings.filter((f) => f.countsInTotal && f.cents > 0);
-  if (parts.length === 0) return null;
+  const parts = savings.filter(
+    (f) => f.countsInTotal && f.cents > 0 && f.confidence === 'confirmed',
+  );
+  const estimated = savings.filter((f) => f.cents > 0 && f.confidence !== 'confirmed');
+  if (parts.length === 0 && estimated.length === 0) return null;
+  const color = (i: number) => (i % 2 === 0 ? 'bg-found-chart' : 'bg-chart-3');
   return (
     <div className="flex flex-col gap-2" data-testid="composition">
-      <div
-        className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full bg-surface-2"
-        aria-hidden="true"
-      >
-        {parts.map((f, i) => (
-          <span
-            key={f.ruleId}
-            className={cn(
-              'h-full',
-              f.confidence === 'confirmed'
-                ? i % 2 === 0
-                  ? 'bg-found-chart'
-                  : 'bg-chart-3'
-                : 'hatch',
-            )}
-            style={{ flexGrow: f.cents, flexBasis: 0 }}
-          />
-        ))}
-      </div>
+      {parts.length > 0 ? (
+        <div
+          className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full bg-surface-2"
+          aria-hidden="true"
+        >
+          {parts.map((f, i) => (
+            <span
+              key={f.ruleId}
+              className={cn('h-full', color(i))}
+              style={{ flexGrow: f.cents, flexBasis: 0 }}
+            />
+          ))}
+        </div>
+      ) : null}
       <ul className="type-caption flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
         {parts.map((f, i) => (
           <li key={f.ruleId} className="inline-flex items-center gap-1.5">
             <span
               aria-hidden="true"
-              className={cn(
-                'inline-block size-2.5 rounded-[3px]',
-                i % 2 === 0 ? 'bg-found-chart' : 'bg-chart-3',
-              )}
+              className={cn('inline-block size-2.5 rounded-[3px]', color(i))}
             />
             {f.title}: <span className="num text-foreground">{formatBRL(f.cents)}</span>
+          </li>
+        ))}
+        {estimated.map((f) => (
+          <li
+            key={f.ruleId}
+            className="inline-flex items-center gap-1.5"
+            data-testid={`composition-estimated-${f.ruleId}`}
+          >
+            <span
+              aria-hidden="true"
+              className="hatch inline-block size-2.5 rounded-[3px] border border-current text-conf-estimated"
+            />
+            {f.title}: <span className="num text-foreground">{formatBRL(f.cents)}</span> (estimado,
+            fora do número)
           </li>
         ))}
       </ul>

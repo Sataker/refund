@@ -7,6 +7,23 @@ export const SHORT_TITLE: Readonly<Record<string, string>> = {
   R05: 'Separar a receita de exportação no PGDAS-D',
 };
 
+/**
+ * Alerts and risks on Screens 5–8 get a display headline; the engine title stays as the card body, unchanged (UX
+ * review M5). Screen 4 keeps the engine title for them.
+ */
+export const ALERT_TITLE: Readonly<Record<string, string>> = {
+  R02: 'Lucro acima de R$ 50 mil no mês teve 10% de IR retido',
+  A01: 'Despesa pessoal no cartão da empresa',
+};
+
+/** Display headline for any finding on Screens 5–8: short title, alert title, or the engine title. */
+export function displayTitle(ruleId: string, engineTitle: string): string {
+  return SHORT_TITLE[ruleId] ?? ALERT_TITLE[ruleId] ?? engineTitle;
+}
+
+/** IDENTITY-AND-UI §2.3, "Risk (illicit)": the fixed line under a risk card. */
+export const RISK_LINE = 'Isso parece economia, mas é risco. Não recomendamos. Veja por quê.';
+
 export function shortTitle(ruleId: string, engineTitle: string): string {
   return SHORT_TITLE[ruleId] ?? engineTitle;
 }

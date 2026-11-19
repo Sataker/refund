@@ -9,7 +9,7 @@ import {
   type RecoveryItem,
   sumCents,
 } from '@refund/engine';
-import { shortTitle } from '@/features/demo/display';
+import { displayTitle } from '@/features/demo/display';
 import { URGENT_DAYS, type Urgency } from './text';
 
 export { ACTOR_LABEL, formatCivilDate, URGENT_DAYS, type Urgency, urgencyText } from './text';
@@ -68,8 +68,13 @@ export interface DashboardFinding {
 export interface DashboardModel {
   /** ENGINE-SPEC C.9: Σ marginalValue12m of the confirmed savings (`total.byConfidence.confirmed`). */
   total: number;
-  /** Steady-state line ("e R$ Y por ano a partir de <mês>"). */
+  /**
+   * Steady-state line ("e R$ Y por ano a partir de <mês>"). The engine's `annualRegimeSavings` has no confirmed-only
+   * split, so it is shown only when nothing is estimated (engine review H1); otherwise null and `annualPending`.
+   */
   annual: number | null;
+  annualPending: boolean;
+  /** "a partir de <mês>": only the regimeFrom of the single counted confirmed finding that has one (no derivation). */
   regimeFrom: string | null;
   /** Savings that are still `estimated`: shown beside the total as a range, never inside it. */
   estimated: number;
@@ -95,7 +100,7 @@ function view(f: Omit<Finding, 'trace'>): DashboardFinding {
   return {
     ruleId: f.ruleId,
     type: f.type,
-    title: shortTitle(f.ruleId, f.title),
+    title: displayTitle(f.ruleId, f.title),
     engineTitle: f.title,
     cents: f.marginalValue12m,
     annualRegimeValue: f.annualRegimeValue ?? null,
@@ -119,18 +124,15 @@ export function dashboardModel(result: EngineResult, analysisDate: string): Dash
   const counted = savings.filter((f) => f.countsInTotal && f.confidence === 'confirmed');
   const byHolder = (h: Holder): number =>
     sumCents(counted.filter((f) => f.holder === h).map((f) => f.cents as Cents));
-  // The steady-state month: when the last counted finding reaches its regime (R01: Anexo III from abr/2027).
-  const regimeFrom =
-    counted
-      .map((f) => f.regimeFrom)
-      .filter((m): m is string => m !== null)
-      .sort()
-      .at(-1) ?? null;
+  const withRegime = counted.filter((f) => f.regimeFrom !== null);
+  const regimeFrom = withRegime.length === 1 ? (withRegime[0]?.regimeFrom ?? null) : null;
+  const annualPending = result.total.byConfidence.estimated > 0;
   const recoveryFindings = result.findings.filter((f) => f.type === 'recovery');
   const urgency = urgencyOf(recoveryFindings.flatMap((f) => f.recoveryItems ?? []));
   return {
     total: result.total.byConfidence.confirmed,
-    annual: result.total.annualRegimeSavings,
+    annual: annualPending ? null : result.total.annualRegimeSavings,
+    annualPending,
     regimeFrom,
     estimated: result.total.byConfidence.estimated,
     byHolder: { PJ: byHolder('PJ'), PF: byHolder('PF') },
@@ -162,7 +164,7 @@ export function stepsByActor(
       [...f.actionPlan]
         .sort((a, b) => a.order - b.order)
         .filter((s) => s.who === who)
-        .map((step) => ({ ruleId: f.ruleId, title: shortTitle(f.ruleId, f.title), step })),
+        .map((step) => ({ ruleId: f.ruleId, title: displayTitle(f.ruleId, f.title), step })),
     );
     if (steps.length > 0) groups.push({ who, steps });
   }
@@ -171,47 +173,35 @@ export function stepsByActor(
 
 // ---------- Screen 6: trace numbers → source transactions ----------
 
-type FactPath =
-  | 'monthlyRevenue'
-  | 'monthlyExportRevenue'
-  | 'monthlyPayroll'
-  | 'monthlyProLabore'
-  | 'dasPaid'
-  | 'partner.distributions'
-  | 'personalExpensesInPj';
+type FactPath = 'monthlyRevenue' | 'monthlyPayroll';
 
 /**
  * Which facts back a trace step's number (D7: "click a number in the trace → its source transactions"). The ids are
  * the facts' own provenance (`Provenance.transactionIds`), so the list is exactly what the engine read.
  */
 const STEP_SOURCES: readonly { match: RegExp; facts: readonly FactPath[] }[] = [
+  // Only steps whose result IS the sum of those transactions (engine review L2).
   { match: /^R01\.RBT12_REGIME$/, facts: ['monthlyRevenue'] },
   { match: /^R01\.FS12_WITHOUT_PRO_LABORE$/, facts: ['monthlyPayroll'] },
-  { match: /^R01\.P_STAR$/, facts: ['monthlyProLabore'] },
-  { match: /^R01\.COST_12M_BEFORE$/, facts: ['dasPaid', 'monthlyProLabore'] },
-  { match: /^R05\.MARGINAL_12M$/, facts: ['monthlyExportRevenue'] },
-  { match: /^R05-REC\.RANGE$/, facts: ['dasPaid'] },
-  { match: /^R02\.FINANCIAL_COST\./, facts: ['partner.distributions'] },
-  { match: /^A01\./, facts: ['personalExpensesInPj'] },
 ];
 
 function provenanceIds(facts: Facts, path: FactPath): string[] {
-  const fact =
-    path === 'partner.distributions'
-      ? facts.partner.distributions
-      : path === 'personalExpensesInPj'
-        ? facts.personalExpensesInPj
-        : facts[path];
-  return fact?.provenance.transactionIds ?? [];
+  return facts[path].provenance.transactionIds ?? [];
 }
 
 /** stepId → the transaction ids behind it (only steps with at least one id). */
 export function traceSources(
-  trace: readonly { id: string }[],
+  trace: readonly Pick<Finding['trace'][number], 'id' | 'inputs'>[],
   facts: Facts,
 ): Record<string, string[]> {
   const out: Record<string, string[]> = {};
   for (const step of trace) {
+    // A step that names its own transactions (A01, one per merchant) lists exactly those.
+    const own = step.inputs.transactionIds?.value;
+    if (typeof own === 'string' && own !== '') {
+      out[step.id] = own.split(',').filter((x) => x !== '');
+      continue;
+    }
     const rule = STEP_SOURCES.find((s) => s.match.test(step.id));
     if (!rule) continue;
     const ids = [...new Set(rule.facts.flatMap((p) => provenanceIds(facts, p)))];

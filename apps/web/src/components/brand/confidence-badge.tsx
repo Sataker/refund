@@ -23,6 +23,11 @@ const LEVELS: Record<Confidence, { label: string; hint: string; text: string; sw
   },
 };
 
+/** The level's label in running text ("estimado"), for lines that name the confidence without the badge. */
+export function confidenceLabel(level: Confidence): string {
+  return LEVELS[level].label.toLowerCase();
+}
+
 export function ConfidenceBadge({ level, className }: { level: Confidence; className?: string }) {
   const l = LEVELS[level];
   return (
