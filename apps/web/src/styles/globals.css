@@ -596,7 +596,7 @@
 .confetti > span {
   position: absolute;
   left: 30%;
-  bottom: 18%;
+  bottom: 10%;
   width: 4px;
   height: 8px;
   border-radius: 1px;

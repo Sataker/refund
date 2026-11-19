@@ -5,7 +5,6 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import { ConfidenceBadge } from '@/components/brand/confidence-badge';
 import { FindingCard } from '@/components/brand/finding-card';
 import { LawSeal, type LawSealRef } from '@/components/brand/law-seal';
 import { MoneyCounter } from '@/components/brand/money-counter.client';
@@ -23,6 +22,7 @@ import {
   type StageStatus,
 } from './analysis-state';
 import { RestartDemo } from './demo-track.client';
+import { keepCurrency, sampleDescription, shortTitle } from './display';
 import { demoBase, demoProgress } from './progress';
 import type { DemoPersonaView } from './types';
 
@@ -130,7 +130,12 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
           const seq = Number((e as MessageEvent).lastEventId) || 0;
           if (seq !== 0 && seq <= lastSeq.current) return;
           lastSeq.current = Math.max(lastSeq.current, seq);
-          const event = JSON.parse((e as MessageEvent<string>).data);
+          let event: Parameters<typeof reduceAnalysis>[1];
+          try {
+            event = JSON.parse((e as MessageEvent<string>).data);
+          } catch {
+            return; // a malformed frame is skipped; the next ones still apply
+          }
           dispatch({ event, seq });
           if (type === 'end') {
             done.current = true;
@@ -224,31 +229,26 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
               )}
             >
               <p className="type-overline text-muted-foreground">Encontrado até agora</p>
-              <MoneyCounter
-                cents={view.target}
-                testId="analysis/money-hero"
-                settled={finished}
-                srLabel="Encontramos"
-                onFirstMoney={onFirstMoney}
-                className="mt-2"
-                subline={
-                  finished && total ? (
-                    <span className="enter inline-flex flex-wrap items-center gap-x-3 gap-y-1">
-                      {total.byConfidence.estimated === 0 &&
-                      total.byConfidence.depends_on_regulation === 0 ? (
-                        <ConfidenceBadge level="confirmed" />
-                      ) : (
-                        <span className="num">
-                          {formatBRL(total.byConfidence.confirmed)} confirmados ·{' '}
-                          {formatBRL(total.savings12m - total.byConfidence.confirmed)} a confirmar
-                        </span>
-                      )}
-                    </span>
-                  ) : (
-                    'nos próximos 12 meses'
-                  )
-                }
-              />
+              <div className="relative">
+                <MoneyCounter
+                  cents={view.target}
+                  testId="analysis/money-hero"
+                  settled={finished}
+                  srLabel="Encontramos"
+                  onFirstMoney={onFirstMoney}
+                  className="mt-2"
+                  subline={
+                    finished && total ? (
+                      <span className="enter" data-testid="analysis-basis">
+                        Com as respostas da {persona.holderName} · seu contador valida
+                      </span>
+                    ) : (
+                      'nos próximos 12 meses'
+                    )
+                  }
+                />
+                {finished && view.target > 0 ? <Confetti /> : null}
+              </div>
               <StageLine
                 view={view}
                 rules={rules}
@@ -263,7 +263,6 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
                   dashboard={dashboard}
                 />
               ) : null}
-              {finished && view.target > 0 ? <Confetti /> : null}
             </div>
 
             {view.errors.length > 0 ? <ErrorBanner errors={view.errors} /> : null}
@@ -287,9 +286,8 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
                 <li key={f.id} className="enter">
                   <FindingCard
                     testId={`finding-${f.ruleId}`}
-                    title={f.title}
+                    title={shortTitle(f.ruleId, keepCurrency(f.title))}
                     cents={f.marginalValue12m}
-                    confidence={f.confidence}
                     lawRef={f.refs[0] ?? { label: 'Ver cálculo', url: '#' }}
                     {...(f.annualRegimeValue !== undefined && f.regimeFrom !== undefined
                       ? {
@@ -335,7 +333,6 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   {f.refs[0] ? <LawSeal lawRef={f.refs[0]} /> : null}
-                  <ConfidenceBadge level={f.confidence} />
                 </div>
               </section>
             ))}
@@ -359,7 +356,7 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
                       />
                       {f.type === 'risk' ? 'Risco' : 'Alerta'} · não entra no total
                     </p>
-                    <p className="type-body-lg mt-2 text-foreground">{f.title}</p>
+                    <p className="type-body-lg mt-2 text-foreground">{keepCurrency(f.title)}</p>
                     {f.refs[0] ? <LawSeal lawRef={f.refs[0]} className="mt-3" /> : null}
                   </article>
                 ))}
@@ -568,7 +565,9 @@ function TransactionScroll({ view }: { view: AnalysisView }) {
             <span className="num w-11 shrink-0">
               {t.date.slice(8, 10)}/{t.date.slice(5, 7)}
             </span>
-            <span className="min-w-0 flex-1 truncate">{t.description}</span>
+            <span className="min-w-0 flex-1 truncate">
+              {sampleDescription(t.description, t.amountCents)}
+            </span>
             <span
               className={cn('num shrink-0', t.amountCents > 0 ? 'text-success' : 'text-foreground')}
             >
@@ -691,8 +690,8 @@ function Confetti() {
           // biome-ignore lint/suspicious/noArrayIndexKey: fixed set of particles.
           key={i}
           style={{
-            ['--x' as string]: `${Math.sin((c.angle * Math.PI) / 180) * c.speed * 22}px`,
-            ['--y' as string]: `${-Math.cos((c.angle * Math.PI) / 180) * c.speed * 22}px`,
+            ['--x' as string]: `${Math.sin((c.angle * Math.PI) / 180) * c.speed * 12}px`,
+            ['--y' as string]: `${-Math.cos((c.angle * Math.PI) / 180) * c.speed * 12}px`,
             ['--r' as string]: `${c.rot}deg`,
             ['--c' as string]: c.color,
             animationDelay: `${c.delay}ms`,

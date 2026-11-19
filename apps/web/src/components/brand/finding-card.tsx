@@ -16,7 +16,8 @@ interface FindingCardProps {
   period?: string;
   testId?: string;
   lawRef: LawSealRef;
-  confidence: Confidence;
+  /** Omitted on Screen 4 (the analysis), where the total carries one line for all; shown on Screens 5/6. */
+  confidence?: Confidence;
   /** "1 decisão com seu contador". */
   effort?: string;
   /** Warning chip when the deadline is < 60 days away (the caller decides). */
@@ -60,7 +61,7 @@ export function FindingCard({
       {footnote ? <div className="type-small text-muted-foreground">{footnote}</div> : null}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <LawSeal lawRef={lawRef} />
-        <ConfidenceBadge level={confidence} />
+        {confidence ? <ConfidenceBadge level={confidence} /> : null}
         {effort ? <span className="type-caption text-muted-foreground">{effort}</span> : null}
         {deadline ? (
           <span
