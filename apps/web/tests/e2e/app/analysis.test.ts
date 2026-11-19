@@ -71,6 +71,16 @@ test.describe('live analysis @app', () => {
     await finishTrack(page);
     const id = await analyze(page);
     await expect(page.getByTestId('finding-R01')).toBeVisible();
+    // D36: open cards → the first button leads to Confirmar, with N and X from the run; the dashboard comes after.
+    const confirm = page.getByTestId('open-confirm');
+    await expect(confirm).toHaveText(/^Responda \d+ perguntas? para confirmar/);
+    const n = Number(await confirm.getAttribute('data-count'));
+    expect(n).toBeGreaterThan(0);
+    await confirm.click();
+    await expect(page).toHaveURL(new RegExp(`/app/analises/${id}/confirmar$`));
+    await expect(page.locator('[data-testid^="card-"]')).toHaveCount(n);
+    await page.goto(`/app/analises/${id}`);
+    await expect(page.getByTestId('analysis')).toHaveAttribute('data-status', 'done');
     await page.getByTestId('open-dashboard').click();
     await expect(page).toHaveURL(new RegExp(`/app/analises/${id}/painel$`));
     await expect(page.getByTestId('dashboard')).toBeVisible();

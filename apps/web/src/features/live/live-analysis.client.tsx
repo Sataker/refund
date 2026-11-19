@@ -61,6 +61,12 @@ function writeSeen(id: string, seq: number): void {
   }
 }
 
+/** D36: "Responda N perguntas para confirmar até R$ X" (N and X from the run). */
+export function confirmLabel(n: number, cents: number): string {
+  const what = n === 1 ? 'Responda 1 pergunta' : `Responda ${n} perguntas`;
+  return cents > 0 ? `${what} para confirmar até ${formatBRL(cents)}` : `${what} para confirmar`;
+}
+
 const STAGES: { key: keyof AnalysisView['stages']; label: string }[] = [
   { key: 'reading', label: 'Lendo as transações' },
   { key: 'separating', label: 'Separando empresa e pessoa' },
@@ -76,6 +82,8 @@ export function LiveAnalysis({
 }) {
   const [view, dispatch] = useReducer(reducer, INITIAL_VIEW);
   const [lost, setLost] = useState(false);
+  /** Card ids the run asked (D36: the end button counts them). */
+  const [questions, setQuestions] = useState<readonly string[]>([]);
   const source = useRef<EventSource | null>(null);
   const done = useRef(false);
   const base = `/app/analises/${analysisId}`;
@@ -95,6 +103,10 @@ export function LiveAnalysis({
           return;
         }
         dispatch({ event, seq });
+        if (event.type === 'question') {
+          const id = event.question.id;
+          setQuestions((q) => (q.includes(id) ? q : [...q, id]));
+        }
         if (seq > readSeen(analysisId)) writeSeen(analysisId, seq);
         if (
           type === 'end' ||
@@ -124,6 +136,11 @@ export function LiveAnalysis({
   const recovery = view.cards.filter((c) => c.finding.type === 'recovery');
   const alerts = view.cards.filter((c) => c.kind === 'alert');
   const pct = progressPercent(view);
+  const confirmFirst = view.endStatus === 'awaiting_confirmation' && questions.length > 0;
+  // "até R$ X": what is still not confirmed in the engine's total (estimated + depends on regulation).
+  const pendingCents =
+    (view.total?.byConfidence.estimated ?? 0) +
+    (view.total?.byConfidence.depends_on_regulation ?? 0);
 
   return (
     <div className="flex flex-col gap-6" data-testid="analysis" data-status={view.status}>
@@ -212,24 +229,35 @@ export function LiveAnalysis({
               subline="nos próximos 12 meses · seu contador valida"
             />
             {finished ? (
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link
-                  href={`${base}/painel` as Route}
-                  data-testid="open-dashboard"
-                  className="inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-5 font-medium text-primary-foreground"
-                >
-                  Ver o painel
-                  <ArrowRight className="size-4" strokeWidth={1.5} aria-hidden="true" />
-                </Link>
-                {view.endStatus === 'awaiting_confirmation' ? (
+              // D36 (19/11): with open cards, Confirmar comes first (the cards are already ordered by effect, D23)
+              // and the dashboard after; the big number above stays the run's own counter.
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                {confirmFirst ? (
                   <Link
                     href={`${base}/confirmar` as Route}
                     data-testid="open-confirm"
-                    className="type-small inline-flex min-h-11 items-center font-medium text-cobalt underline-offset-4 hover:underline"
+                    data-count={questions.length}
+                    data-cents={pendingCents}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-5 font-medium text-primary-foreground"
                   >
-                    Responder as perguntas
+                    {confirmLabel(questions.length, pendingCents)}
+                    <ArrowRight className="size-4" strokeWidth={1.5} aria-hidden="true" />
                   </Link>
                 ) : null}
+                <Link
+                  href={`${base}/painel` as Route}
+                  data-testid="open-dashboard"
+                  className={
+                    confirmFirst
+                      ? 'type-small inline-flex min-h-11 items-center font-medium text-cobalt underline-offset-4 hover:underline'
+                      : 'inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-5 font-medium text-primary-foreground'
+                  }
+                >
+                  Ver o painel
+                  {confirmFirst ? null : (
+                    <ArrowRight className="size-4" strokeWidth={1.5} aria-hidden="true" />
+                  )}
+                </Link>
               </div>
             ) : null}
           </div>
