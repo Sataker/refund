@@ -55,10 +55,10 @@ const R05_DO_NOT = [
 ];
 // R05 is about the months ahead (nothing is amended there); R05-REC amends past PGDAS-D (E10 UX review, M6).
 const R05_TRADEOFFS = [
-  'A prefeitura pode questionar o ISS dessa receita. Guarde os contratos, as faturas emitidas ao cliente e os contratos de câmbio.',
+  'A prefeitura pode questionar o ISS dessa receita. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento).',
 ];
 const REC_TRADEOFFS = [
-  'Ao retificar, a prefeitura pode questionar o ISS. Guarde os contratos, as faturas emitidas ao cliente e os contratos de câmbio; o contador precisa validar.',
+  'Ao retificar, a prefeitura pode questionar o ISS. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento).',
 ];
 
 export const R05_REFS = refsOf([

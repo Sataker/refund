@@ -56,7 +56,7 @@ describe('templateExplanation (hero, ENGINE-SPEC F.3; product review 16/11)', ()
     );
     // R05 is about the months ahead: no "ao retificar" (E10 UX review, M6).
     expect(text).toContain(
-      'Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os contratos, as faturas emitidas ao cliente e os contratos de câmbio.',
+      'Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento).',
     );
     expect(text).not.toContain('invoices');
     expect(text).toContain('Não peça a restituição sem antes retificar o PGDAS-D.');

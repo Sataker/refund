@@ -49,30 +49,30 @@
         "citation": "ok"
       }
     },
-    "sha256:bf766b63e7263ae826fceaa71239778a3de75af1608304e17f0b74e2ff069af9": {
+    "sha256:9fdaeb17aff89bfa90236c814fc758cb3d9463fb5722fd0088551655e18f9e08": {
       "task": "explain",
-      "ruleId": "R05",
+      "ruleId": "R05-REC",
       "origin": "template",
       "promptVersion": "template@3",
-      "recordedAt": "2026-11-16T15:05:41.913Z",
+      "recordedAt": "2026-11-19T17:17:43.380Z",
       "output": {
-        "text": "Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D. Com a empresa já no Anexo III, esta mudança vale R$ 31.109,76 por ano. Somada aos ajustes acima, esta mudança leva o custo dos próximos 12 meses de R$ 80.923,20 para R$ 46.920,80. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os contratos, as faturas emitidas ao cliente e os contratos de câmbio. Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”.",
-        "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D. Com a empresa já no {{regimeAnexo}}, esta mudança vale {{annualRegimeValue}} por ano. Somada aos ajustes acima, esta mudança leva o custo dos próximos {{horizon}} de {{costBefore}} para {{costAfter}}. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os contratos, as faturas emitidas ao cliente e os contratos de câmbio. Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”."
+        "text": "Nos 12 meses do extrato, a empresa pagou R$ 39.787,68 a mais. Se o mesmo padrão valeu nos 48 meses anteriores, chega a R$ 198.938,40 (estimativa, sem a correção pela Selic). A parte federal volta da Receita; o ISS, da Prefeitura. Esse dinheiro é do passado e não entra no total de economia dos próximos 12 meses. Há prazo: o mês mais antigo só pode ser pedido até 23/11/2026; depois dessa data, esse mês não pode mais ser pedido. Contrapartida: ao retificar, a prefeitura pode questionar o ISS. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento). Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”.",
+        "source": "Nos {{measuredMonths}} do extrato, a empresa pagou {{measured}} a mais. Se o mesmo padrão valeu nos {{projectedMonths}} anteriores, chega a {{rangeMax}} (estimativa, sem a correção pela Selic). A parte federal volta da Receita; o ISS, da Prefeitura. Esse dinheiro é do passado e não entra no total de economia dos próximos {{horizon}}. Há prazo: o mês mais antigo só pode ser pedido até {{deadline}}; depois dessa data, esse mês não pode mais ser pedido. Contrapartida: ao retificar, a prefeitura pode questionar o ISS. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento). Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”."
       },
       "guards": {
         "numeric": "ok",
         "citation": "ok"
       }
     },
-    "sha256:f6e7a46cc74f9f3face758f743b8d7653e7b95de7e2cf88a428d5c119237d4d3": {
+    "sha256:b9c31db054ff6068ca114e7c21efb4aaf1b0439158f518f3e139755accda1ae7": {
       "task": "explain",
-      "ruleId": "R05-REC",
+      "ruleId": "R05",
       "origin": "template",
       "promptVersion": "template@3",
-      "recordedAt": "2026-11-16T15:05:41.913Z",
+      "recordedAt": "2026-11-19T17:17:43.380Z",
       "output": {
-        "text": "Nos 12 meses do extrato, a empresa pagou R$ 39.787,68 a mais. Se o mesmo padrão valeu nos 48 meses anteriores, chega a R$ 198.938,40 (estimativa, sem a correção pela Selic). A parte federal volta da Receita; o ISS, da Prefeitura. Esse dinheiro é do passado e não entra no total de economia dos próximos 12 meses. Há prazo: o mês mais antigo só pode ser pedido até 23/11/2026; depois dessa data, esse mês não pode mais ser pedido. Contrapartida: ao retificar, a prefeitura pode questionar o ISS. Guarde os contratos, as faturas emitidas ao cliente e os contratos de câmbio; o contador precisa validar. Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”.",
-        "source": "Nos {{measuredMonths}} do extrato, a empresa pagou {{measured}} a mais. Se o mesmo padrão valeu nos {{projectedMonths}} anteriores, chega a {{rangeMax}} (estimativa, sem a correção pela Selic). A parte federal volta da Receita; o ISS, da Prefeitura. Esse dinheiro é do passado e não entra no total de economia dos próximos {{horizon}}. Há prazo: o mês mais antigo só pode ser pedido até {{deadline}}; depois dessa data, esse mês não pode mais ser pedido. Contrapartida: ao retificar, a prefeitura pode questionar o ISS. Guarde os contratos, as faturas emitidas ao cliente e os contratos de câmbio; o contador precisa validar. Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”."
+        "text": "Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D. Com a empresa já no Anexo III, esta mudança vale R$ 31.109,76 por ano. Somada aos ajustes acima, esta mudança leva o custo dos próximos 12 meses de R$ 80.923,20 para R$ 46.920,80. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento). Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”.",
+        "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D. Com a empresa já no {{regimeAnexo}}, esta mudança vale {{annualRegimeValue}} por ano. Somada aos ajustes acima, esta mudança leva o custo dos próximos {{horizon}} de {{costBefore}} para {{costAfter}}. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento). Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”."
       },
       "guards": {
         "numeric": "ok",
