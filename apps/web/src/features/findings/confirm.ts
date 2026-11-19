@@ -58,7 +58,39 @@ function optionsOf(q: ConfirmationQuestion): ConfirmOption[] {
       : q.id === 'clt-payroll-gross'
         ? [{ value: 'yes', label: 'Usar o relatório do contador' }]
         : [YES];
-  return [...base.map((o) => ({ value: o.value, label: o.label })), DONT_KNOW_OPTION];
+  // ENGINE-SPEC E.2 / IDENTITY-AND-UI §2.3: the pró-labore card also takes "Outro valor" (typed, in cents).
+  // "Enviar contracheque" needs an upload and stays out of /demo.
+  const other = q.options.find((o) => o.value === 'other' && q.type === 'monthly_pro_labore');
+  return [
+    ...base.map((o) => ({ value: o.value, label: o.label })),
+    ...(other ? [{ value: OTHER, label: other.label }] : []),
+    DONT_KNOW_OPTION,
+  ];
+}
+
+/** "Outro valor": the choice is `other:<cents>`, a positive integer amount typed by the visitor. */
+export const OTHER = 'other';
+
+export function otherCents(choice: string): number | null {
+  const m = /^other:(\d{1,10})$/.exec(choice);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isSafeInteger(n) && n > 0 ? n : null;
+}
+
+/** "2.500,00" / "2500" / "2500,5" → cents (string parsing only; no float). Null when it is not an amount. */
+export function parseReaisToCents(text: string): number | null {
+  const m = /^\s*(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*|\d+)(?:,(\d{1,2}))?\s*$/.exec(text);
+  if (!m) return null;
+  const reais = (m[1] ?? '').replaceAll('.', '');
+  const cents = (m[2] ?? '').padEnd(2, '0');
+  const n = Number(`${reais}${cents}`);
+  return Number.isSafeInteger(n) && n > 0 ? n : null;
+}
+
+function optionAllowed(card: ConfirmCard, choice: string): boolean {
+  if (otherCents(choice) !== null) return card.options.some((o) => o.value === OTHER);
+  return choice !== OTHER && card.options.some((o) => o.value === choice);
 }
 
 export function confirmCards(
@@ -91,7 +123,12 @@ export function answersFromChoices(
   for (const card of cards) {
     const choice = choices[card.id] ?? card.personaChoice;
     const persona = personaAnswers.find((a) => a.questionId === card.id);
-    if (choice === DONT_KNOW || !card.options.some((o) => o.value === choice)) continue;
+    if (choice === DONT_KNOW || !optionAllowed(card, choice)) continue;
+    const typed = otherCents(choice);
+    if (typed !== null) {
+      out.push({ questionId: card.id, value: typed });
+      continue;
+    }
     if (choice === card.personaChoice && persona) {
       out.push(persona);
       continue;
