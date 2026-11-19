@@ -118,7 +118,23 @@ test.describe('demo screens 5–8 @demo', () => {
       await page.goto(`${BASE}/achados/R01`);
       await expect(page.getByTestId('detail/money')).toHaveAttribute('data-cents', '2831652');
       await expect(page.getByTestId('detail/regime')).toHaveAttribute('data-cents', '4289652');
+      // UX review H1: simulator first, then the plan collapsed after 3 steps, then "Ver cálculo".
+      const order = await page.evaluate(() =>
+        ['simulator', 'action-plan', 'calc-trace'].map((id) => {
+          const el = document.querySelector(`[data-testid="${id}"]`);
+          return el ? el.getBoundingClientRect().top + window.scrollY : -1;
+        }),
+      );
+      expect(order).toEqual([...order].sort((a, b) => a - b));
+      await expect(page.getByTestId('more-steps').locator(':scope > summary')).toHaveText(
+        /Ver os 7 passos/,
+      );
+      await expect(page.getByTestId('action-plan')).toContainText('Quando o efeito começa');
       await page.getByTestId('calc-trace').locator('summary').first().click();
+      // UX review H2: Portuguese labels, never raw keys; rates in pt-BR percent.
+      await expect(page.getByTestId('calc-trace')).toContainText('Folha 12 meses sem pró-labore');
+      await expect(page.getByTestId('calc-trace')).not.toContainText('fs12WithoutProLabore');
+      await expect(page.getByTestId('calc-trace')).not.toContainText('ENGINE-SPEC');
       const revenue = page.getByTestId('trace-sources/R01.RBT12_REGIME');
       await expect(revenue.getByTestId('trace/R01.RBT12_REGIME')).toHaveAttribute(
         'data-cents',
@@ -191,50 +207,91 @@ test.describe('demo screens 5–8 @demo', () => {
       await expect(page.getByTestId('optimizer-curve')).toHaveAttribute('data-target', '226000');
     });
 
-    test('D9: confirm cards come answered by the persona; the counter drops; answers recalculate the total', async ({
+    test('D9: confirm cards come answered by the persona; "Não sei" opens one; answers recalculate the total', async ({
       page,
     }) => {
       await page.goto(`${BASE}/confirmar`);
       const pending = page.getByTestId('confirm-pending');
-      await expect(pending).toHaveAttribute('data-count', '9');
+      // UX review H3: the persona's answers count as answered.
+      await expect(pending).toHaveAttribute('data-count', '0');
+      await expect(pending).toHaveText('9 de 9 respondidas');
       const total = page.getByTestId('confirm/total');
       await expect(total).toHaveAttribute('data-cents', TOTAL);
-      const card = page.getByTestId('card-export-qualification');
-      await expect(card).toHaveAttribute('data-choice', 'yes');
+      await expect(page.getByTestId('card-export-qualification')).toHaveAttribute(
+        'data-choice',
+        'yes',
+      );
+      await expect(page.getByTestId('card-clt-employee:3b86c125a1a3')).toContainText(
+        'pessoa 1 de 2',
+      );
+      await expect(page.getByTestId('card-export-qualification')).not.toContainText('[pessoa]');
 
-      await page.getByTestId('answer-export-qualification-yes').click();
-      await expect(pending).toHaveAttribute('data-count', '8');
-      await expect(total).toHaveAttribute('data-cents', TOTAL);
-
+      // "Não sei" leaves the card open: the pending counter goes up, then drops when answered.
+      await page.getByTestId('answer-export-qualification-dont_know').click();
+      await expect(pending).toHaveAttribute('data-count', '1');
+      await expect(total).not.toHaveAttribute('data-cents', TOTAL, { timeout: 15_000 });
       // "Não": not an export → R05 leaves; the real pipeline answers 28.316,52 (R01 alone).
       await page.getByTestId('answer-export-qualification-no').click();
+      await expect(pending).toHaveAttribute('data-count', '0');
       await expect(total).toHaveAttribute('data-cents', '2831652', { timeout: 15_000 });
-      await expect(pending).toHaveAttribute('data-count', '8');
 
       await page.goto(`${BASE}/painel`);
       await expect(page.getByTestId('dashboard/money-hero')).toHaveAttribute(
         'data-cents',
         '2831652',
-        {
-          timeout: 15_000,
-        },
+        { timeout: 15_000 },
       );
       await expect(page.getByTestId('custom-answers')).toBeVisible();
       await expect(page.getByTestId('finance-default-note')).toContainText(
         'Finanças mostram as respostas padrão da Marina.',
       );
+      // UX review H4: the detail and the report say they use the persona's answers; R05 dropped out.
+      await page.goto(`${BASE}/achados/R05`);
+      await expect(page.getByTestId('visitor-notice')).toHaveAttribute('data-dropped', 'true', {
+        timeout: 15_000,
+      });
+      await page.goto(`${BASE}/relatorio`);
+      await expect(page.getByTestId('visitor-notice')).toContainText(
+        'Estes números usam as respostas da Marina.',
+      );
 
       await page.goto(`${BASE}/confirmar`);
       await page.getByTestId('answer-export-qualification-yes').click();
       await expect(total).toHaveAttribute('data-cents', TOTAL);
-      for (const id of await page
-        .locator('[data-testid^="card-"]')
-        .evaluateAll((els) => els.map((e) => e.getAttribute('data-testid')?.slice(5) ?? ''))) {
-        const choice = await page.getByTestId(`card-${id}`).getAttribute('data-choice');
-        await page.getByTestId(`answer-${id}-${choice}`).click();
-      }
-      await expect(pending).toHaveAttribute('data-count', '0');
+      await page.getByTestId('confirm-all').click();
       await expect(page.getByTestId('confirm-done')).toContainText('R$ 62.318,92');
+      await page.goto(`${BASE}/achados/R05`);
+      await expect(page.getByTestId('visitor-notice')).toHaveCount(0);
+    });
+
+    test('engine review H1: an estimated R01 hides the steady-state line under the confirmed number', async ({
+      page,
+    }) => {
+      await page.goto(`${BASE}/confirmar`);
+      await page.getByTestId('answer-pro-labore-gross-dont_know').click();
+      await page.goto(`${BASE}/painel`);
+      await expect(page.getByTestId('dashboard/regime-pending')).toHaveText(
+        'Valor por ano aparece quando tudo estiver confirmado.',
+        { timeout: 15_000 },
+      );
+      await expect(page.getByTestId('dashboard/regime-total')).toHaveCount(0);
+      await expect(page.getByTestId('composition-estimated-R01')).toContainText('fora do número');
+    });
+
+    test('L7: alert A01 sits in the risk block, outside the total, hidden under the PF filter', async ({
+      page,
+    }) => {
+      await page.goto(`${BASE}/painel`);
+      const a01 = page.getByTestId('alerts').getByTestId('alert-A01');
+      await expect(a01).toBeVisible();
+      await expect(a01).toContainText('Despesa pessoal no cartão da empresa');
+      await expect(a01.getByTestId('risk-line')).toContainText('Não recomendamos');
+      await expect(page.getByTestId('savings-list').getByTestId('alert-A01')).toHaveCount(0);
+      await expect(page.getByTestId('dashboard/money-hero')).toHaveAttribute('data-cents', TOTAL);
+      await page.getByTestId('filter-pf').click();
+      await expect(page.getByTestId('alert-A01')).toHaveCount(0);
+      await page.getByTestId('filter-pj').click();
+      await expect(page.getByTestId('alert-A01')).toBeVisible();
     });
 
     test('D10: the accountant approves in another tab and the report tab shows "Aprovado" without reloading', async ({
@@ -258,7 +315,8 @@ test.describe('demo screens 5–8 @demo', () => {
       await accountant.getByTestId('approve-report').click();
       await expect(accountant.getByTestId('accountant-status')).toContainText('Aprovado');
       await expect(page.getByTestId('report-status')).toHaveAttribute('data-status', 'approved');
-      await expect(page.getByTestId('report-status')).toContainText('Aprovado');
+      await expect(page.getByTestId('report-status')).toContainText('Aprovado por Ana Lima');
+      await expect(page.getByTestId('report-approval')).toHaveAttribute('data-status', 'approved');
       await accountant.close();
     });
 

@@ -29,5 +29,10 @@ for (const width of [390, 1280] as const)
         await page.screenshot({ path: `${DIR}/${width}-${scheme}-${name}.png`, fullPage: true });
         await page.screenshot({ path: `${DIR}/${width}-${scheme}-${name}-fold.png` });
       }
+      if (width === 1280 && scheme === 'light') {
+        await page.goto(`${BASE}/relatorio`);
+        await page.emulateMedia({ media: 'print' });
+        await page.pdf({ path: `${DIR}/report.pdf`, format: 'A4', printBackground: true });
+      }
     });
   }
