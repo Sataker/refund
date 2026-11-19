@@ -184,6 +184,18 @@ test.describe('demo track @demo', () => {
     );
     await expect(page.getByTestId('confidence-badge')).toHaveCount(0);
     await expect(page.getByTestId('alert-R02')).toBeVisible();
+    // A01 (D.7): the risk card goes in the alerts area, after R02, and moves no number.
+    const alerts = page.getByRole('region', { name: 'Alertas, fora do total' });
+    await expect(alerts.getByTestId('alert-A01')).toContainText('Risco · não entra no total');
+    await expect(alerts.getByTestId('alert-A01')).toContainText(
+      'despesa da empresa não reduz imposto',
+    );
+    await expect(alerts.locator('[data-testid^="alert-"]')).toHaveCount(2);
+    await expect(alerts.locator('[data-testid^="alert-"]').last()).toHaveAttribute(
+      'data-testid',
+      'alert-A01',
+    );
+    await expect(hero).toHaveAttribute('data-cents', String(TOTAL));
     await expect(page.getByTestId('analysis-error')).toHaveCount(0);
     await expect(page.getByTestId('analysis-result')).toContainText('R$ 62.318,92 a menos');
     await expect(page.getByTestId('see-dashboard')).toHaveAttribute('href', `/demo/${HERO}/painel`);
@@ -237,6 +249,7 @@ test.describe('demo track @demo', () => {
     expect(choreography).toBeGreaterThanOrEqual(6000);
     expect(choreography).toBeLessThanOrEqual(12_000);
     await expect(hero).toHaveAttribute('data-cents', String(TOTAL));
+    await expect(page.getByTestId('alert-A01')).toBeVisible();
     await expect(page.getByTestId('first-money-timer')).toContainText(/primeiro R\$ em \d+,\d s/);
   });
 
