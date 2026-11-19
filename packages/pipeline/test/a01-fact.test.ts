@@ -3,7 +3,10 @@
 import type { YearMonth } from '@refund/engine';
 import { describe, expect, it } from 'vitest';
 import type { Classified } from '../src/classify/index.ts';
+import { PERSONAL_MCC, PHARMACY_MCC } from '../src/classify/regex.ts';
 import {
+  ALLOWED_MERCHANT_LABELS,
+  keywordLabel,
   OTHER_PERSONAL_LABEL,
   PERSON_PAYEE_LABEL,
   personalExpensesFact,
@@ -103,6 +106,78 @@ describe('A01 fact: which classifications count (D.7, E.7, E.9.2)', () => {
     expect(personalExpensesFact(list, 'MEI', WINDOW)?.value).toHaveLength(1);
     for (const regime of ['PRESUMIDO', 'REAL', 'OTHER'] as const)
       expect(personalExpensesFact(list, regime, WINDOW)).toBeUndefined();
+  });
+});
+
+describe('A01 merchant allowlist (ARCHITECTURE §6.1)', () => {
+  it('every label the module can return is in the allowlist', () => {
+    // Each E.7 regex alternative as the regex captures it, plus the SUPERMERC\w* forms.
+    const keywords = [
+      'NETFLIX',
+      'SPOTIFY',
+      'DISNEY',
+      'HBO',
+      'MAX',
+      'PRIME VIDEO',
+      'GLOBOPLAY',
+      'DEEZER',
+      'YOUTUBE PREMIUM',
+      'APPLE.COM/BILL',
+      'SMART FIT',
+      'SMARTFIT',
+      'BLUEFIT',
+      'SUPERMERC',
+      'SUPERMERCADO',
+      'ATACADAO',
+      'ASSAI',
+      'CARREFOUR',
+      'PAO DE ACUCAR',
+      'HORTIFRUTI',
+    ];
+    const seen = new Set<string>();
+    for (const k of keywords) {
+      const fired = personalMerchant(tx({ description: `COMPRA ${k} 123`, mcc: null }));
+      expect(fired, k).not.toBe(OTHER_PERSONAL_LABEL);
+      seen.add(fired);
+    }
+    for (const mcc of [...PERSONAL_MCC, PHARMACY_MCC])
+      seen.add(personalMerchant(tx({ description: 'COMPRA LOJA', mcc })));
+    seen.add(
+      personalMerchant(
+        tx({
+          description: 'BOLETO COLEGIO ABC',
+          method: 'BOLETO',
+          mcc: null,
+          counterparty: {
+            document: { type: 'CNPJ', hmac: null, publicValue: 'RFESCOLA0001', mask: 'x' },
+            name: null,
+            cnae: '8513-9/00',
+          },
+        }),
+      ),
+    );
+    seen.add(personalMerchant(tx({ description: 'COMPRA LOJA', mcc: null })));
+    seen.add(
+      personalMerchant(
+        tx({
+          counterparty: {
+            document: { type: 'CPF', hmac: null, publicValue: null, mask: '***.456.789-**' },
+            name: null,
+            cnae: null,
+          },
+        }),
+      ),
+    );
+    for (const label of seen) expect(ALLOWED_MERCHANT_LABELS.has(label), label).toBe(true);
+    expect(seen).toContain('ESCOLA');
+    expect(seen).toContain(OTHER_PERSONAL_LABEL);
+    expect(seen).toContain(PERSON_PAYEE_LABEL);
+  });
+
+  it('an unknown keyword (a widened regex) falls back to the generic label, never the text', () => {
+    expect(keywordLabel('JOAO DA SILVA')).toBe(OTHER_PERSONAL_LABEL);
+    expect(keywordLabel('PADARIA DO ZE')).toBe(OTHER_PERSONAL_LABEL);
+    expect(keywordLabel('NETFLIX')).toBe('NETFLIX');
   });
 });
 

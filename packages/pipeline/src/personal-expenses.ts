@@ -8,10 +8,26 @@ import type { Classified } from './classify/index.ts';
 import { PERSONAL_MCC, PHARMACY_MCC, RX_PERSONAL } from './classify/regex.ts';
 import type { NormalizedTransaction } from './types.ts';
 
-/** E.7 keyword → the label shown. Brands only (companies); the regex alternatives are the whole list. */
+/** E.7 keyword (exact regex alternative) → the label shown. Brands only (companies). */
 const KEYWORD_LABEL: Readonly<Record<string, string>> = {
+  NETFLIX: 'NETFLIX',
+  SPOTIFY: 'SPOTIFY',
+  DISNEY: 'DISNEY',
+  HBO: 'HBO',
+  MAX: 'MAX',
+  'PRIME VIDEO': 'PRIME VIDEO',
+  GLOBOPLAY: 'GLOBOPLAY',
+  DEEZER: 'DEEZER',
+  'YOUTUBE PREMIUM': 'YOUTUBE PREMIUM',
+  'APPLE.COM/BILL': 'APPLE.COM/BILL',
   'SMART FIT': 'SMART FIT',
   SMARTFIT: 'SMART FIT',
+  BLUEFIT: 'BLUEFIT',
+  ATACADAO: 'ATACADAO',
+  ASSAI: 'ASSAI',
+  CARREFOUR: 'CARREFOUR',
+  'PAO DE ACUCAR': 'PAO DE ACUCAR',
+  HORTIFRUTI: 'HORTIFRUTI',
 };
 
 const MCC_LABEL: Readonly<Record<string, string>> = {
@@ -29,21 +45,42 @@ const MCC_LABEL: Readonly<Record<string, string>> = {
 
 export const PERSON_PAYEE_LABEL = 'PAGAMENTO A PESSOA FÍSICA';
 export const OTHER_PERSONAL_LABEL = 'OUTRO GASTO PESSOAL';
+const SCHOOL_LABEL = 'ESCOLA';
+const SUPERMARKET_LABEL = 'SUPERMERCADO';
+
+/**
+ * Every label A01 may show (ARCHITECTURE §6.1 "allow explicitly"). Anything else becomes OTHER_PERSONAL_LABEL, so a
+ * widened E.7 regex can never echo statement text into the trace.
+ */
+export const ALLOWED_MERCHANT_LABELS: ReadonlySet<string> = new Set([
+  ...Object.values(KEYWORD_LABEL),
+  ...Object.values(MCC_LABEL),
+  SUPERMARKET_LABEL,
+  SCHOOL_LABEL,
+  OTHER_PERSONAL_LABEL,
+  PERSON_PAYEE_LABEL,
+]);
+
+const allowed = (label: string): string =>
+  ALLOWED_MERCHANT_LABELS.has(label) ? label : OTHER_PERSONAL_LABEL;
+
+/** The label of an E.7 keyword match; an unknown keyword (e.g. a widened regex) gets the generic label. */
+export function keywordLabel(keyword: string): string {
+  if (keyword.startsWith('SUPERMERC')) return SUPERMARKET_LABEL;
+  return allowed(KEYWORD_LABEL[keyword] ?? OTHER_PERSONAL_LABEL);
+}
 
 /** The trace label of one personal PJ outflow: E.7 keyword, else MCC, else school CNAE, else a generic label. */
 export function personalMerchant(t: NormalizedTransaction): string {
   // A payment to a CPF: whatever the description says, it names a person. Never echo it.
   if (t.counterparty?.document?.type === 'CPF') return PERSON_PAYEE_LABEL;
   const keyword = RX_PERSONAL.exec(t.description)?.[1];
-  if (keyword !== undefined) {
-    if (keyword.startsWith('SUPERMERC')) return 'SUPERMERCADO';
-    return KEYWORD_LABEL[keyword] ?? keyword;
-  }
+  if (keyword !== undefined) return keywordLabel(keyword);
   if (t.mcc !== null && (PERSONAL_MCC.has(t.mcc) || t.mcc === PHARMACY_MCC)) {
-    return MCC_LABEL[t.mcc] ?? OTHER_PERSONAL_LABEL;
+    return allowed(MCC_LABEL[t.mcc] ?? OTHER_PERSONAL_LABEL);
   }
   if (t.counterparty?.document?.type === 'CNPJ' && isRegularSchool(t.counterparty.cnae))
-    return 'ESCOLA';
+    return SCHOOL_LABEL;
   return OTHER_PERSONAL_LABEL;
 }
 
