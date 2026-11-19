@@ -137,7 +137,9 @@ test.describe('first-access track @app', () => {
     await page.goto('/app/comecar/conta-pj');
     await expect(page).toHaveURL(/\/confirmar-empresa$/);
     await page.goto('/app/comecar/nao-existe');
-    await expect(page.getByText(/não encontrad|could not be found|404/i).first()).toBeVisible();
+    await expect(
+      page.getByText(/não achamos|não encontrad|could not be found|404/i).first(),
+    ).toBeVisible();
   });
 
   test('a Lucro Presumido company skips the optional questions and gets the reason, no R$', async ({
