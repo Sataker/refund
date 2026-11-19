@@ -10,6 +10,7 @@ import {
   updatePersonaState,
 } from '@/demo/demo-session';
 import { cn } from '@/lib/utils';
+import { DEMO_ACCOUNTANT, DEMO_ACCOUNTANT_FULL } from './text';
 
 // Screen 8 on /demo (ARCHITECTURE §4.7 note): "Mandar para meu contador" opens the accountant view in another tab;
 // the approval there reaches this tab through BroadcastChannel (demo-session.ts), with no server and no e-mail.
@@ -53,20 +54,26 @@ export function ReportPanel({ persona }: { persona: string }) {
     { id: 'sent', label: 'Enviado', at: report?.sentAt, on: report?.sentAt !== undefined },
     {
       id: 'opened',
-      label: 'Aberto pelo contador',
+      label: `Aberto por ${DEMO_ACCOUNTANT}`,
       at: report?.openedAt,
       on: report?.openedAt !== undefined,
     },
     status === 'adjust'
       ? { id: 'adjust', label: 'Ajuste pedido', at: undefined, on: true }
-      : { id: 'approved', label: 'Aprovado', at: report?.approvedAt, on: status === 'approved' },
+      : {
+          id: 'approved',
+          label: status === 'approved' ? `Aprovado por ${DEMO_ACCOUNTANT}` : 'Aprovado',
+          at: report?.approvedAt,
+          on: status === 'approved',
+        },
   ];
   return (
     <aside className="grid gap-4 md:grid-cols-2 print:hidden" aria-label="Mandar para seu contador">
       <section className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5">
         <h2 className="type-h4 text-foreground">Mandar para seu contador</h2>
         <p className="type-small text-muted-foreground">
-          Na demo nada sai por e-mail: o contador abre o relatório em outra aba e aprova por lá.
+          Na demo nada sai por e-mail: {DEMO_ACCOUNTANT_FULL} abre o relatório em outra aba e aprova
+          por lá.
         </p>
         <Button type="button" size="lg" onClick={send} data-testid="open-accountant">
           <ExternalLink className="size-4" strokeWidth={1.5} aria-hidden="true" />
@@ -119,5 +126,23 @@ export function ReportPanel({ persona }: { persona: string }) {
         ) : null}
       </section>
     </aside>
+  );
+}
+
+/** Printed under the total on the report paper (UX review M2): the approval status in one line. */
+export function ReportApprovalLine({ persona }: { persona: string }) {
+  const report = useReport(persona);
+  const status = statusOf(report);
+  const text: Record<ReportStatus, string> = {
+    draft: 'Situação: ainda não enviado ao contador.',
+    sent: 'Situação: enviado ao contador.',
+    opened: `Situação: aberto por ${DEMO_ACCOUNTANT_FULL}.`,
+    adjust: `Situação: ${DEMO_ACCOUNTANT_FULL} pediu ajuste.`,
+    approved: `Situação: aprovado por ${DEMO_ACCOUNTANT_FULL}.`,
+  };
+  return (
+    <p className="text-[12px] text-neutral-700" data-testid="report-approval" data-status={status}>
+      {text[status]}
+    </p>
   );
 }

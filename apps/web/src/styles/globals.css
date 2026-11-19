@@ -712,6 +712,25 @@ html {
   .report-paper table {
     min-width: 0;
   }
+  /* Rows and headings keep together; whole sections may break (UX review M2: page 1 is never empty). */
+  .report-paper tr {
+    break-inside: avoid;
+  }
+  .report-paper h2,
+  .report-paper h3,
+  .report-paper .report-head {
+    break-after: avoid;
+  }
+  .report-paper .overflow-x-auto {
+    overflow: visible;
+  }
+  /* Regulation version and short hash on every printed page. */
+  .report-print-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
 }
 
 /* The report is white paper in both themes (Screen 8): its tokens are the light palette, whatever the page theme. */

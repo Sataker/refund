@@ -5,8 +5,10 @@ import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { DEMO_PERSONAS } from '@/demo/catalog.ts';
 import { requireSnapshot } from '@/demo/snapshot.ts';
-import { shortTitle } from '@/features/demo/display';
+import { displayTitle } from '@/features/demo/display';
 import { type AccountantItem, AccountantReview } from '@/features/findings/accountant.client';
+import { DEMO_ACCOUNTANT_FULL } from '@/features/findings/text';
+import { VisitorNotice } from '@/features/findings/visitor-notice.client';
 import { formatBRL } from '@/lib/format';
 
 // The accountant's tab on /demo (ARCHITECTURE §13 `/demo/[persona]/contador`, §4.7 note): the live product sends a
@@ -31,14 +33,34 @@ export default async function DemoAccountantPage({
   const { persona } = await params;
   const snap = await requireSnapshot(persona);
   if (!snap) notFound();
-  const items: AccountantItem[] = snap.result.findings.flatMap((f): AccountantItem[] => {
-    const title = shortTitle(f.ruleId, f.title);
+  const ordered = [...snap.result.findings].sort(
+    (a, b) => b.marginalValue12m - a.marginalValue12m || a.order - b.order,
+  );
+  const savingsFirst = [
+    ...ordered.filter((f) => f.type === 'savings'),
+    ...ordered.filter((f) => f.type === 'recovery'),
+    ...ordered.filter((f) => f.type === 'alert' || f.type === 'risk'),
+  ];
+  const items: AccountantItem[] = savingsFirst.flatMap((f): AccountantItem[] => {
+    const title = displayTitle(f.ruleId, f.title);
     if (f.type === 'savings')
       return [
         {
           ruleId: f.ruleId,
           title,
           value: `${formatBRL(f.marginalValue12m)} nos próximos 12 meses`,
+        },
+      ];
+    if ((f.type === 'alert' || f.type === 'risk') && f.marginalValue12m >= 0)
+      return [
+        {
+          ruleId: f.ruleId,
+          title,
+          value:
+            f.marginalValue12m > 0
+              ? `custo de caixa ${formatBRL(f.marginalValue12m)} · fora do total`
+              : 'fora do total',
+          readOnly: true,
         },
       ];
     if (f.type === 'recovery' && f.range)
@@ -68,7 +90,7 @@ export default async function DemoAccountantPage({
         <header className="flex flex-col gap-2">
           <p className="type-small text-muted-foreground">Visão do contador · demo, sem login</p>
           <h1 className="font-serif text-[32px] leading-[36px] font-normal text-foreground lg:text-[40px] lg:leading-[44px]">
-            Relatório de {snap.view.companyName}
+            Relatório de {snap.view.companyName} para {DEMO_ACCOUNTANT_FULL}
           </h1>
           <p className="text-base text-muted-foreground">
             Total confirmado nos próximos 12 meses:{' '}
@@ -78,6 +100,12 @@ export default async function DemoAccountantPage({
             . Revise cada achado e aprove.
           </p>
         </header>
+        <VisitorNotice
+          persona={persona}
+          holderName={snap.view.holderName}
+          cards={snap.cards}
+          base={snap.dashboard}
+        />
         <AccountantReview persona={persona} items={items} />
       </main>
       <footer className="border-t border-border">

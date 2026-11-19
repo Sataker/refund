@@ -30,3 +30,10 @@ export const ACTOR_LABEL: Readonly<Record<Actor, string>> = {
   you_or_accountant: 'Você ou contador',
   lawyer: 'Advogado',
 };
+
+/**
+ * The fictitious accountant of the demo, exactly as IDENTITY-AND-UI §2.3 and Screen 8 name her ("Ana Lima, CRC-SP").
+ * The registration number is left out on purpose: a made-up CRC number could belong to a real professional.
+ */
+export const DEMO_ACCOUNTANT = 'Ana Lima';
+export const DEMO_ACCOUNTANT_FULL = 'Ana Lima, CRC-SP (contadora fictícia)';

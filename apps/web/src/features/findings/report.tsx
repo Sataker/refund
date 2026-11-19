@@ -1,9 +1,12 @@
 import type { EngineResult, Finding, LegalRef } from '@refund/engine';
 import type { ReactNode } from 'react';
+import { inputText } from '@/components/brand/calc-trace';
+import { confidenceLabel } from '@/components/brand/confidence-badge';
 import { DISCLAIMER_TEXT } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
-import { keepCurrency, shortTitle } from '@/features/demo/display';
-import { formatBRL, formatYearMonth } from '@/lib/format';
+import { cleanEngineText, traceInputLabel } from '@/components/brand/trace-labels';
+import { displayTitle, keepCurrency } from '@/features/demo/display';
+import { formatBRL, formatRatePercent, formatYearMonth } from '@/lib/format';
 import { formatWhen, NO_MONEY_TEXT, RecoveryTable } from './action-plan';
 import { ACTOR_LABEL, type DashboardModel, formatCivilDate, stepsByActor } from './model';
 
@@ -18,14 +21,16 @@ interface ReportProps {
   result: EngineResult;
   model: DashboardModel;
   labelOf: (refId: string) => string | undefined;
+  /** The approval status line (client), printed under the total. */
+  approval?: ReactNode;
 }
 
 function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
   return (
-    <section className="flex break-inside-avoid-page flex-col gap-3" aria-labelledby={id}>
+    <section className="flex flex-col gap-3" aria-labelledby={id}>
       <h2
         id={id}
-        className="border-b border-neutral-300 pb-1 text-[15px] font-semibold text-neutral-900"
+        className="report-head border-b border-neutral-300 pb-1 text-[15px] font-semibold text-neutral-900"
       >
         {title}
       </h2>
@@ -34,47 +39,218 @@ function Section({ title, children, id }: { title: string; children: ReactNode; 
   );
 }
 
-function TraceTable({ f }: { f: Finding }) {
+type TraceStep = Finding['trace'][number];
+
+function resultText(r: TraceStep['result']): string {
+  if (r.unit === 'cents' && typeof r.value === 'number') return formatBRL(r.value);
+  if (r.unit === 'rate') return formatRatePercent(String(r.value));
+  return cleanEngineText(String(r.value));
+}
+
+/**
+ * Per-period steps collapse into one compact table (UX review M2: the report fits in few pages). Columns are trace
+ * inputs and the result, exactly as the engine wrote them.
+ */
+const PERIOD_GROUPS: readonly {
+  match: RegExp;
+  title: string;
+  cols: readonly string[];
+  result: string;
+}[] = [
+  { match: /^R01\.PA\./, title: 'Período a período', cols: ['fatorR', 'anexo'], result: 'DAS' },
+  {
+    match: /^PGDAS\.INFERENCE\./,
+    title: 'Como cada PGDAS-D foi declarado (deduzido do DAS pago)',
+    cols: ['paid'],
+    result: 'Declarado',
+  },
+  {
+    match: /^R05\.DAS\./,
+    title: 'DAS com a exportação separada',
+    cols: ['dasNotSegregated'],
+    result: 'DAS separando',
+  },
+  {
+    match: /^R05-REC\.OVERPAYMENT\./,
+    title: 'Pago a mais, mês a mês',
+    cols: ['paid', 'segregated'],
+    result: 'Pago a mais',
+  },
+];
+
+type Block =
+  | { kind: 'step'; step: TraceStep }
+  | { kind: 'group'; group: (typeof PERIOD_GROUPS)[number]; steps: TraceStep[] };
+
+function blocksOf(trace: readonly TraceStep[]): Block[] {
+  const out: Block[] = [];
+  for (const step of trace) {
+    const group = PERIOD_GROUPS.find((g) => g.match.test(step.id));
+    const last = out.at(-1);
+    if (group && last?.kind === 'group' && last.group === group) last.steps.push(step);
+    else if (group) out.push({ kind: 'group', group, steps: [step] });
+    else out.push({ kind: 'step', step });
+  }
+  return out;
+}
+
+function GroupTable({
+  group,
+  steps,
+}: {
+  group: (typeof PERIOD_GROUPS)[number];
+  steps: TraceStep[];
+}) {
+  const first = steps[0];
   return (
-    <table className="w-full text-left text-[12px] text-neutral-800">
-      <thead className="text-neutral-500">
-        <tr>
-          <th scope="col" className="py-1 pr-3 font-medium">
-            Passo
-          </th>
-          <th scope="col" className="py-1 pr-3 font-medium">
-            Fórmula
-          </th>
-          <th scope="col" className="py-1 pr-3 text-right font-medium">
-            Resultado
-          </th>
-          <th scope="col" className="py-1 font-medium">
-            Norma
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {f.trace.map((s) => (
-          <tr key={s.id} className="border-t border-neutral-200 align-top">
-            <td className="py-1 pr-3">{s.label}</td>
-            <td className="py-1 pr-3 font-mono text-[11px] text-neutral-600">{s.formula}</td>
-            <td className="num py-1 pr-3 text-right whitespace-nowrap">
-              {s.result.unit === 'cents' && typeof s.result.value === 'number'
-                ? formatBRL(s.result.value)
-                : String(s.result.value)}
-            </td>
-            <td className="py-1 text-neutral-600">{s.ref?.label ?? ''}</td>
+    <div className="flex flex-col gap-1">
+      <p className="text-[12px] font-medium text-neutral-800">
+        {group.title}
+        {first?.ref ? (
+          <span className="font-normal text-neutral-600"> · {first.ref.label}</span>
+        ) : null}
+      </p>
+      <table className="w-full text-left text-[11px] text-neutral-800">
+        <thead className="text-neutral-600">
+          <tr>
+            <th scope="col" className="py-0.5 pr-3 font-medium">
+              Período
+            </th>
+            {group.cols.map((c) => (
+              <th key={c} scope="col" className="py-0.5 pr-3 text-right font-medium">
+                {traceInputLabel(c) ?? ''}
+              </th>
+            ))}
+            <th scope="col" className="py-0.5 text-right font-medium">
+              {group.result}
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {steps.map((s) => (
+            <tr key={s.id} className="border-t border-neutral-200">
+              <td className="num py-0.5 pr-3">{s.month ? formatYearMonth(s.month) : s.id}</td>
+              {group.cols.map((c) => {
+                const input = s.inputs[c];
+                return (
+                  <td key={c} className="num py-0.5 pr-3 text-right whitespace-nowrap">
+                    {input ? inputText(c, input) : ''}
+                  </td>
+                );
+              })}
+              <td className="num py-0.5 text-right whitespace-nowrap">{resultText(s.result)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-export function Report({ company, holderName, analysisDate, result, model, labelOf }: ReportProps) {
-  const counted = result.findings.filter((f) => f.type === 'savings' && f.countsInTotal);
+function TraceTable({ f }: { f: Finding }) {
+  const blocks = blocksOf(f.trace);
+  return (
+    <div className="flex flex-col gap-3">
+      {blocks.map((b) =>
+        b.kind === 'group' ? (
+          <GroupTable key={b.steps[0]?.id ?? b.group.title} group={b.group} steps={b.steps} />
+        ) : null,
+      )}
+      <table className="w-full text-left text-[12px] text-neutral-800">
+        <thead className="text-neutral-600">
+          <tr>
+            <th scope="col" className="py-1 pr-3 font-medium">
+              Passo
+            </th>
+            <th scope="col" className="py-1 pr-3 font-medium">
+              Fórmula
+            </th>
+            <th scope="col" className="py-1 pr-3 text-right font-medium">
+              Resultado
+            </th>
+            <th scope="col" className="py-1 font-medium">
+              Norma
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {blocks.flatMap((b) =>
+            b.kind === 'step'
+              ? [
+                  <tr key={b.step.id} className="border-t border-neutral-200 align-top">
+                    <td className="py-1 pr-3">{cleanEngineText(b.step.label)}</td>
+                    <td className="py-1 pr-3 font-mono text-[11px] text-neutral-600">
+                      {cleanEngineText(b.step.formula)}
+                    </td>
+                    <td className="num py-1 pr-3 text-right whitespace-nowrap">
+                      {resultText(b.step.result)}
+                    </td>
+                    <td className="py-1 text-neutral-600">{b.step.ref?.label ?? ''}</td>
+                  </tr>,
+                ]
+              : [],
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Scroll({ children }: { children: ReactNode }) {
+  return (
+    <section
+      className="overflow-x-auto"
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be reachable by keyboard (axe scrollable-region-focusable)
+      tabIndex={0}
+      aria-label="Cálculo"
+    >
+      {children}
+    </section>
+  );
+}
+
+function FindingBlock({ f, n, value }: { f: Finding; n: number; value: ReactNode }) {
+  return (
+    <li className="flex flex-col gap-2" data-testid={`report-finding-${f.ruleId}`}>
+      <p className="report-head flex flex-wrap items-baseline justify-between gap-2 text-[14px] font-semibold">
+        <span>
+          {n}. {displayTitle(f.ruleId, f.title)}
+        </span>
+        {value}
+      </p>
+      <p className="text-[12px] text-neutral-700">
+        <span className="font-medium" data-testid={`report-confidence-${f.ruleId}`}>
+          Confiança: {confidenceLabel(f.confidence)}
+        </span>{' '}
+        · {keepCurrency(f.title)}
+      </p>
+      <Scroll>
+        <TraceTable f={f} />
+      </Scroll>
+    </li>
+  );
+}
+
+const byValue = (a: Finding, b: Finding) =>
+  b.marginalValue12m - a.marginalValue12m || a.order - b.order;
+
+export function Report({
+  company,
+  holderName,
+  analysisDate,
+  result,
+  model,
+  labelOf,
+  approval,
+}: ReportProps) {
+  // One order everywhere (UX review): biggest effect first, ties in the engine order.
+  const savings = result.findings.filter((f) => f.type === 'savings').sort(byValue);
+  const counted = savings.filter((f) => f.countsInTotal && f.confidence === 'confirmed');
+  const estimated = savings.filter((f) => !counted.includes(f));
   const recovery = result.findings.filter((f) => f.type === 'recovery');
-  const alerts = result.findings.filter((f) => f.type === 'alert' || f.type === 'risk');
+  const alerts = result.findings
+    .filter((f) => f.type === 'alert' || f.type === 'risk')
+    .sort(byValue);
   const citations = new Map<string, LegalRef>();
   for (const f of result.findings) for (const r of f.refs) citations.set(r.id, r);
   const assumptions = [...new Set(result.findings.flatMap((f) => f.assumptionsUsed))];
@@ -112,43 +288,57 @@ export function Report({ company, holderName, analysisDate, result, model, label
             e {formatBRL(model.annual)} por ano
             {model.regimeFrom ? ` a partir de ${formatYearMonth(model.regimeFrom)}` : ''}
           </p>
+        ) : model.annualPending ? (
+          <p className="text-[13px] text-neutral-700">
+            Valor por ano aparece quando tudo estiver confirmado.
+          </p>
         ) : null}
+        {approval}
       </header>
 
-      <Section title="Achados que entram no total" id="r-achados">
+      <Section title="Achados que entram no total (confirmados)" id="r-achados">
         <ol className="flex flex-col gap-5">
           {counted.map((f, i) => (
-            <li
+            <FindingBlock
               key={f.ruleId}
-              className="flex flex-col gap-2"
-              data-testid={`report-finding-${f.ruleId}`}
-            >
-              <p className="flex flex-wrap items-baseline justify-between gap-2 text-[14px] font-semibold">
-                <span>
-                  {i + 1}. {shortTitle(f.ruleId, f.title)}
-                </span>
+              f={f}
+              n={i + 1}
+              value={
                 <span className="num" data-cents={f.marginalValue12m}>
                   {formatBRL(f.marginalValue12m)}
                 </span>
-              </p>
-              <p className="text-[12px] text-neutral-700">{keepCurrency(f.title)}</p>
-              <section
-                className="overflow-x-auto"
-                // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be reachable by keyboard (axe scrollable-region-focusable)
-                tabIndex={0}
-                aria-label="Cálculo"
-              >
-                <TraceTable f={f} />
-              </section>
-            </li>
+              }
+            />
           ))}
         </ol>
       </Section>
 
+      {estimated.length > 0 ? (
+        <Section title="Estimados (fora do número)" id="r-estimados">
+          <ol className="flex flex-col gap-5">
+            {estimated.map((f, i) => (
+              <FindingBlock
+                key={f.ruleId}
+                f={f}
+                n={i + 1}
+                value={
+                  <span className="num" data-cents={f.marginalValue12m}>
+                    {formatBRL(f.marginalValue12m)}
+                  </span>
+                }
+              />
+            ))}
+          </ol>
+        </Section>
+      ) : null}
+
       {recovery.length > 0 ? (
-        <Section title="Para recuperar (estimativa, fora do total)" id="r-recuperar">
+        <Section title="Para recuperar (fora do total)" id="r-recuperar">
           {recovery.map((f) => (
             <div key={f.ruleId} className="flex flex-col gap-2">
+              <p className="text-[12px] font-medium text-neutral-700">
+                Confiança: {confidenceLabel(f.confidence)}
+              </p>
               {f.range ? (
                 <p
                   className="num text-[14px] font-semibold"
@@ -174,17 +364,27 @@ export function Report({ company, holderName, analysisDate, result, model, label
 
       {alerts.length > 0 ? (
         <Section title="Riscos e alertas (fora do total)" id="r-alertas">
-          <ul className="flex flex-col gap-2 text-[13px]">
-            {alerts.map((f) => (
-              <li key={f.ruleId}>
-                <span className="font-medium">{f.type === 'risk' ? 'Risco' : 'Alerta'}:</span>{' '}
-                {keepCurrency(f.title)}
-                {f.howToReceive.length === 0 ? (
-                  <span className="text-neutral-600"> {NO_MONEY_TEXT}</span>
-                ) : null}
-              </li>
+          <ol className="flex flex-col gap-5">
+            {alerts.map((f, i) => (
+              <FindingBlock
+                key={f.ruleId}
+                f={f}
+                n={i + 1}
+                value={
+                  f.marginalValue12m > 0 ? (
+                    <span className="num" data-cents={f.marginalValue12m}>
+                      custo de caixa {formatBRL(f.marginalValue12m)}
+                    </span>
+                  ) : (
+                    <span className="text-[12px] font-normal text-neutral-600">
+                      {f.type === 'risk' ? 'risco' : 'alerta'}
+                      {f.howToReceive.length === 0 ? ` · ${NO_MONEY_TEXT}` : ''}
+                    </span>
+                  )
+                }
+              />
             ))}
-          </ul>
+          </ol>
         </Section>
       ) : null}
 
@@ -251,6 +451,10 @@ export function Report({ company, holderName, analysisDate, result, model, label
         </ul>
       </Section>
 
+      <div className="report-print-footer hidden text-[9px] text-neutral-500 print:block">
+        Refund · memória de cálculo · normas {result.parametersVersion} · hash{' '}
+        {result.parametersHash.replace(/^sha256:/, '').slice(0, 12)}
+      </div>
       <footer className="flex flex-col gap-1 border-t border-neutral-300 pt-3 text-[11px] text-neutral-600">
         <p>
           Versão das normas {result.parametersVersion} · motor {result.engineVersion}
