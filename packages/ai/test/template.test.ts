@@ -98,8 +98,8 @@ describe('templateExplanation (hero, ENGINE-SPEC F.3; product review 16/11)', ()
     expect(text).toContain('A empresa pode pagar R$ 28.316,52 a menos');
     expect(text).toContain('subindo o pró-labore do sócio');
     expect(text).toContain('o que o cliente confirmou');
-    expect(text).toContain('Base legal: LC 123/2006, art. 18, § 1º-A;');
-    expect(text).toContain('LC 123/2006, art. 18, § 5º-J');
+    expect(text).toContain('Base legal: LC 123/2006, art. 18, § 5º-J;');
+    expect(text).toContain('LC 123/2006, art. 18, § 1º-A');
     expect(text).not.toMatch(/\bvocê\b/i);
   });
 

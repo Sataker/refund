@@ -5,11 +5,11 @@
 export const REAL_EXPLANATIONS: { ruleId: string; text: string }[] = [
   {
     ruleId: 'R01',
-    text: 'Para isso, o pró-labore sobe de {{proLaboreCurrent}} para {{proLaboreTarget}} por mês. Com a folha de pagamento pesando mais em relação ao faturamento (o Fator R), a empresa vai para o {{regimeAnexo}} a partir de {{regimeFrom}} ({{ref:3}}).',
+    text: 'Para isso, o pró-labore sobe de {{proLaboreCurrent}} para {{proLaboreTarget}} por mês. Com a folha de pagamento pesando mais em relação ao faturamento (o Fator R), a empresa vai para o {{regimeAnexo}} a partir de {{regimeFrom}} ({{ref:0}}).',
   },
   {
     ruleId: 'R01',
-    text: 'O Fator R é a folha de pagamento dividida pelo faturamento. Hoje ele está abaixo do mínimo que a regra pede para o {{regimeAnexo}} ({{ref:3}} e {{ref:5}}). Subindo o pró-labore para {{proLaboreTarget}}, ele chega lá em {{regimeFrom}}.',
+    text: 'O Fator R é a folha de pagamento dividida pelo faturamento. Hoje ele está abaixo do mínimo que a regra pede para o {{regimeAnexo}} ({{ref:0}} e {{ref:5}}). Subindo o pró-labore para {{proLaboreTarget}}, ele chega lá em {{regimeFrom}}.',
   },
   {
     ruleId: 'R01',
@@ -22,7 +22,7 @@ export const REAL_EXPLANATIONS: { ruleId: string; text: string }[] = [
   { ruleId: 'R01', text: 'Valor confirmado, dentro da lei.' },
   {
     ruleId: 'R01',
-    text: 'Pró-labore recomendado de {{proLaboreTarget}} para o Fator R atingir o mínimo do {{regimeAnexo}} a partir de {{regimeFrom}} ({{ref:3}}; {{ref:5}}; {{ref:7}}).',
+    text: 'Pró-labore recomendado de {{proLaboreTarget}} para o Fator R atingir o mínimo do {{regimeAnexo}} a partir de {{regimeFrom}} ({{ref:0}}; {{ref:5}}; {{ref:7}}).',
   },
   { ruleId: 'R01', text: 'O INSS do sócio sobe um pouco, mas a conta já desconta isso.' },
   {

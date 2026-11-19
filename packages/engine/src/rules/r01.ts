@@ -328,10 +328,11 @@ export function thresholdR01(ctx: Ctx, rbt: Cents): Cents {
 }
 
 export const R01_REFS = refsOf([
+  // First = the citation on screen (ENGINE-SPEC C.11.6; IDENTITY-AND-UI §2.3 "LC 123/2006, art. 18, § 5º-J").
+  'lc123-2006/art18/p5-j',
   'lc123-2006/art18/p1-a',
   'lc123-2006/art18/p5-d',
   'lc123-2006/art18/p5-i',
-  'lc123-2006/art18/p5-j',
   'lc123-2006/art18/p5-k',
   'lc123-2006/art18/p5-m',
   'lc123-2006/art18/p24',

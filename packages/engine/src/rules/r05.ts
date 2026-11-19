@@ -62,9 +62,10 @@ const REC_TRADEOFFS = [
 ];
 
 export const R05_REFS = refsOf([
+  // First = the citation on screen (ENGINE-SPEC C.11.6; IDENTITY-AND-UI §5 "LC 123, art. 18, § 4º-A").
+  'lc123-2006/art18/p4-a',
   'lc123-2006/art3/p14',
   'lc123-2006/art3/p15',
-  'lc123-2006/art18/p4-a',
   'lc123-2006/art18/p14',
   'res-cgsn140-2018/art16/p3',
   'res-cgsn140-2018/art25/p3',
