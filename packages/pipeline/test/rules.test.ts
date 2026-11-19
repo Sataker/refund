@@ -20,7 +20,8 @@ describe('A01 personal expense in the PJ (ENGINE-SPEC D.7 / E.7)', () => {
     ['TA1-02', card('SUPERMERCADO X', '5411'), true],
     ['TA1-03', card('AMAZON WEB SERVICES', '7372'), false],
     ['TA1-04', card('RESTAURANTE BOM PRATO', '5812'), false],
-    ['TA1-05', tx({ description: 'SMART FIT', method: 'PIX' }), true],
+    // ENGINE-SPEC TA1-05 is a "PJ debit" purchase: Pluggy gives it no paymentMethod and no card metadata (OTHER).
+    ['TA1-05', tx({ description: 'SMART FIT', method: 'OTHER' }), true],
     [
       'TA1-06',
       tx({
@@ -36,6 +37,34 @@ describe('A01 personal expense in the PJ (ENGINE-SPEC D.7 / E.7)', () => {
     ['TA1-11', card('LATAM AIRLINES', '4511'), false],
   ])('%s', (_id, t, personal) => {
     expect(labelOf(t)?.label === 'personal_in_pj').toBe(personal);
+  });
+
+  // D34 (ENGINE-SPEC E.7): the text patterns only on card and debit purchases; on Pix, TED and boletos the
+  // description names a person or a supplier. The MCC and the school-CNAE paths are unchanged.
+  it.each([
+    ['Pix to a person', tx({ description: 'PIX ENVIADO MAX PEREIRA', method: 'PIX' })],
+    ['supplier boleto', tx({ description: 'DISTRIBUIDORA SUPERMERCADISTA', method: 'BOLETO' })],
+    ['boleto to ATACADAO', tx({ description: 'ATACADAO', method: 'BOLETO' })],
+    ['TED', tx({ description: 'TED NETFLIX', method: 'TED' })],
+    ['DOC', tx({ description: 'DOC SMART FIT', method: 'DOC' })],
+    ['Pix SMART FIT', tx({ description: 'SMART FIT', method: 'PIX' })],
+  ])('D34: the E.7 regex does not fire on %s', (_name, t) => {
+    expect(labelOf(t)?.label).not.toBe('personal_in_pj');
+  });
+
+  it('D34: a card purchase "NETFLIX.COM" still fires, by the regex alone (no MCC)', () => {
+    expect(labelOf(card('NETFLIX.COM', null))?.label).toBe('personal_in_pj');
+  });
+
+  it('D34: the MCC path ignores the method; a Pix to a school CNPJ still fires', () => {
+    expect(labelOf(tx({ description: 'X', mcc: '5411', method: 'OTHER' }))?.label).toBe(
+      'personal_in_pj',
+    );
+    expect(
+      labelOf(
+        tx({ description: 'PIX ESCOLA', method: 'PIX', cnpj: 'RFESC001000100', cnae: '8513-9/00' }),
+      )?.label,
+    ).toBe('personal_in_pj');
   });
 
   it('TA1-07: pharmacy at a health company (CNAE 86xx) is not personal', () => {

@@ -24,6 +24,13 @@ export const darfCode = (description: string, code: '1841' | '0561' | '0588' | '
 export const RX_PERSONAL =
   /\b(NETFLIX|SPOTIFY|DISNEY|HBO|MAX|PRIME VIDEO|GLOBOPLAY|DEEZER|YOUTUBE PREMIUM|APPLE\.COM\/BILL|SMART ?FIT|BLUEFIT|SUPERMERC\w*|ATACADAO|ASSAI|CARREFOUR|PAO DE ACUCAR|HORTIFRUTI)\b/u;
 
+/**
+ * D34 (ENGINE-SPEC E.7): RX_PERSONAL runs only on card and debit purchases, never on Pix, TED, DOC or boletos, whose
+ * description carries a person's or a supplier's name ("PIX ENVIADO MAX PEREIRA", "DISTRIBUIDORA SUPERMERCADISTA").
+ * A debit purchase has no Pluggy `paymentMethod` and no card metadata, so the whitelist maps it to OTHER.
+ */
+export const PERSONAL_TEXT_METHODS: ReadonlySet<string> = new Set(['CARD', 'OTHER']);
+
 /** E.7 MCCs: supermarket, streaming/digital goods, clubs and gyms, schools. 5912 (pharmacy) is handled apart. */
 export const PERSONAL_MCC = new Set([
   '5411',

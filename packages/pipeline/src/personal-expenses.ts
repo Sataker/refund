@@ -5,7 +5,12 @@
 import type { Facts, PersonalExpense } from '@refund/engine';
 import { isRegularSchool } from './classify/cnae.ts';
 import type { Classified } from './classify/index.ts';
-import { PERSONAL_MCC, PHARMACY_MCC, RX_PERSONAL } from './classify/regex.ts';
+import {
+  PERSONAL_MCC,
+  PERSONAL_TEXT_METHODS,
+  PHARMACY_MCC,
+  RX_PERSONAL,
+} from './classify/regex.ts';
 import type { NormalizedTransaction } from './types.ts';
 
 /** E.7 keyword (exact regex alternative) → the label shown. Brands only (companies). */
@@ -74,7 +79,10 @@ export function keywordLabel(keyword: string): string {
 export function personalMerchant(t: NormalizedTransaction): string {
   // A payment to a CPF: whatever the description says, it names a person. Never echo it.
   if (t.counterparty?.document?.type === 'CPF') return PERSON_PAYEE_LABEL;
-  const keyword = RX_PERSONAL.exec(t.description)?.[1];
+  // D34: the keyword names the merchant only where E.7 reads the text (card and debit purchases).
+  const keyword = PERSONAL_TEXT_METHODS.has(t.method)
+    ? RX_PERSONAL.exec(t.description)?.[1]
+    : undefined;
   if (keyword !== undefined) return keywordLabel(keyword);
   if (t.mcc !== null && (PERSONAL_MCC.has(t.mcc) || t.mcc === PHARMACY_MCC)) {
     return allowed(MCC_LABEL[t.mcc] ?? OTHER_PERSONAL_LABEL);

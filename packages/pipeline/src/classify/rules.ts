@@ -18,6 +18,7 @@ import {
   accrualMonth,
   darfCode,
   PERSONAL_MCC,
+  PERSONAL_TEXT_METHODS,
   PHARMACY_MCC,
   RX_DAS,
   RX_DAS_MEI,
@@ -160,7 +161,7 @@ function personalInPj(t: NormalizedTransaction, primaryCnae: string): RuleHit | 
   );
   if (t.mcc !== null && PERSONAL_MCC.has(t.mcc)) return personal;
   if (t.mcc === PHARMACY_MCC && !isHealthCompany(primaryCnae)) return personal;
-  if (RX_PERSONAL.test(t.description)) return personal;
+  if (PERSONAL_TEXT_METHODS.has(t.method) && RX_PERSONAL.test(t.description)) return personal;
   if (
     (t.method === 'BOLETO' || t.method === 'PIX') &&
     t.counterparty?.document?.type === 'CNPJ' &&
