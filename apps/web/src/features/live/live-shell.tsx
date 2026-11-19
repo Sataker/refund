@@ -1,4 +1,4 @@
-import { Send, UserRound } from 'lucide-react';
+import { Gem, Send, UserRound } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -43,7 +43,14 @@ export function LiveShell({
           <div className="flex flex-col">
             <span className="type-small font-medium text-foreground">{companyName}</span>
             <span className="type-caption text-muted-foreground" data-testid="plan-label">
-              Plano {planLabel}
+              Plano {planLabel} ·{' '}
+              <Link
+                href={'/app/plano' as Route}
+                data-testid="nav-plano"
+                className="text-cobalt underline-offset-4 hover:underline"
+              >
+                ver planos
+              </Link>
             </span>
           </div>
           <Link
@@ -74,6 +81,14 @@ export function LiveShell({
             <div className="flex items-center gap-2">
               <SandboxSeal live compact className="lg:hidden" />
               <Link
+                href={'/app/plano' as Route}
+                aria-label="Planos"
+                data-testid="header-plano"
+                className="inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-2 lg:hidden"
+              >
+                <Gem className="size-4" strokeWidth={1.5} aria-hidden="true" />
+              </Link>
+              <Link
                 href={'/app/conta' as Route}
                 aria-label="Conta e privacidade"
                 className="inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-2 lg:hidden"
@@ -100,12 +115,21 @@ export function LiveShell({
         <footer className="border-t border-border pb-20 lg:pb-0 print:hidden">
           <div className="mx-auto flex max-w-[1080px] flex-wrap items-center justify-between gap-3 px-4 py-4 lg:px-8">
             <Disclaimer />
-            <Link
-              href={'/privacidade' as Route}
-              className="type-small text-muted-foreground underline underline-offset-4 hover:text-foreground"
-            >
-              Privacidade
-            </Link>
+            <span className="flex items-center gap-4">
+              <Link
+                href={'/app/plano' as Route}
+                data-testid="footer-plano"
+                className="type-small text-muted-foreground underline underline-offset-4 hover:text-foreground"
+              >
+                Planos
+              </Link>
+              <Link
+                href={'/privacidade' as Route}
+                className="type-small text-muted-foreground underline underline-offset-4 hover:text-foreground"
+              >
+                Privacidade
+              </Link>
+            </span>
           </div>
         </footer>
       </div>

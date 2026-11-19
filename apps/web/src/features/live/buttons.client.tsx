@@ -2,6 +2,7 @@
 
 import { Check, Loader2 } from 'lucide-react';
 import type { Route } from 'next';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
@@ -58,9 +59,20 @@ export function StartAnalysisButton({
           data-code={error.code}
           className="type-small max-w-[48ch] rounded-md border border-warning bg-warning-soft px-3 py-2 text-foreground"
         >
-          {error.code === 'PLAN_LIMIT'
-            ? 'Você usou as 3 análises do plano Grátis neste mês. No plano Empresa são 30 por mês.'
-            : error.message}
+          {error.code === 'PLAN_LIMIT' ? (
+            <>
+              Você usou as 3 análises do plano Grátis neste mês. No plano Empresa são 30 por mês.{' '}
+              <Link
+                href={'/app/plano' as Route}
+                data-testid="paywall-upgrade"
+                className="font-medium text-cobalt underline underline-offset-4"
+              >
+                Ver os planos
+              </Link>
+            </>
+          ) : (
+            error.message
+          )}
         </p>
       ) : null}
     </div>

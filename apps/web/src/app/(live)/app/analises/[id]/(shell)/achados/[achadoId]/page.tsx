@@ -173,6 +173,13 @@ export default async function LiveFindingPage({
               (entradas, fórmula e artigo) abre só no maior achado. Seu contador vê tudo pelo link
               do relatório.
             </p>
+            <Link
+              href={'/app/plano' as Route}
+              data-testid="trace-locked-upgrade"
+              className="type-small w-fit font-medium text-cobalt underline-offset-4 hover:underline"
+            >
+              Ver os planos →
+            </Link>
           </div>
         ) : (
           <CalcTrace

@@ -7,6 +7,7 @@ import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { DisconnectButton } from '@/features/connection/disconnect-button.client';
 import { DeleteData } from '@/features/live/delete-data.client';
+import { PLAN_LABEL } from '@/features/live/live-shell';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { CONNECTION_STATUS_LABEL } from '@/features/track/steps';
 import { activePlanWith } from '@/server/entitlements.ts';
@@ -65,7 +66,14 @@ export default async function AccountPage() {
           <h1 className="type-h1 text-foreground">Conta e privacidade</h1>
           <p className="text-base text-muted-foreground">
             Você usa o Refund sem cadastro: um cookie desta navegação identifica sua sessão. Plano:{' '}
-            {plan === 'free' ? 'Grátis' : plan}.
+            <span data-testid="account-plan" data-plan={plan}>
+              {PLAN_LABEL[plan] ?? plan}
+            </span>{' '}
+            (
+            <Link href={'/app/plano' as Route} className="text-cobalt underline underline-offset-4">
+              ver planos
+            </Link>
+            ).
           </p>
         </div>
 
