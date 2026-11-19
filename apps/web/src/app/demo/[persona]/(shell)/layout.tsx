@@ -1,4 +1,4 @@
-import { Send } from 'lucide-react';
+import { Bell, Send } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -71,6 +71,15 @@ export default async function DemoShell({
             </p>
             <div className="flex items-center gap-2">
               <SandboxSeal compact className="lg:hidden" />
+              {/* Screen 9 (P1, E16): outside the 5-item nav (D30), one icon in the header. */}
+              <Link
+                href={`/demo/${id}/alertas` as Route}
+                aria-label="Alertas"
+                data-testid="nav-alertas"
+                className="inline-flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-surface-2 hover:text-foreground"
+              >
+                <Bell className="size-4" strokeWidth={1.5} aria-hidden="true" />
+              </Link>
               <span className="lg:hidden">
                 <ThemeToggle compact shortcut={false} />
               </span>
