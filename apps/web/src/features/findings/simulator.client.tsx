@@ -1,0 +1,158 @@
+'use client';
+
+import { type EngineResult, type Facts, recalculate } from '@refund/engine';
+import { useId, useState } from 'react';
+import { formatBRL, formatRatePercent } from '@/lib/format';
+import { MARGIN_STEPS, type ProLaborePoint, proLaborePoint } from './model';
+import { type CurvePoint, OptimizerCurve } from './optimizer-curve';
+
+// Screen 6 "SIMULE" (IDENTITY-AND-UI Screen 6; ARCHITECTURE §7.3; TESTS D8): the browser runs the SAME engine
+// (`recalculate()` over the persona's Facts) when the slider moves the engine's own assumption, the safety margin of
+// the Fator R (ENGINE-SPEC D.1, D13). The engine answers with the pró-labore, the curve and every value; at the
+// default position the snapshot is shown untouched, so going back gives the exact original number.
+
+interface SimulatorProps {
+  facts: Facts;
+  /** The default margin (D13 '0.01' for the hero) and the snapshot's numbers at it. */
+  defaultMargin: string;
+  base: ProLaborePoint;
+  baseCurve: CurvePoint[];
+}
+
+interface Point {
+  point: ProLaborePoint;
+  curve: CurvePoint[];
+}
+
+function run(facts: Facts, margin: string): Point | null {
+  const r = recalculate(facts, {
+    ...facts.assumptions,
+    fatorRMargin: { value: margin, origin: 'user', editable: true, source: 'slider' },
+  });
+  if (!r.ok) return null;
+  const point = proLaborePoint(r.value as EngineResult);
+  return point ? { point, curve: r.value.optimizerCurve ?? [] } : null;
+}
+
+export default function Simulator({ facts, defaultMargin, base, baseCurve }: SimulatorProps) {
+  const labelId = useId();
+  const defaultIndex = Math.max(0, MARGIN_STEPS.indexOf(defaultMargin));
+  const [index, setIndex] = useState(defaultIndex);
+  const [ms, setMs] = useState<number | null>(null);
+  const [state, setState] = useState<Point | null>({ point: base, curve: baseCurve });
+  const margin = MARGIN_STEPS[index] ?? defaultMargin;
+  const move = (next: number) => {
+    setIndex(next);
+    if (next === defaultIndex) {
+      setState({ point: base, curve: baseCurve });
+      return;
+    }
+    const t = performance.now();
+    setState(run(facts, MARGIN_STEPS[next] ?? defaultMargin));
+    setMs(Math.round(performance.now() - t));
+  };
+  const point = state?.point ?? null;
+
+  return (
+    <section
+      aria-labelledby={labelId}
+      data-testid="simulator"
+      data-margin={margin}
+      className="flex flex-col gap-5 rounded-xl border border-border bg-surface p-5 shadow-sm lg:p-6"
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id={labelId} className="type-h4 text-foreground">
+          Simule o pró-labore
+        </h2>
+        <span className="type-caption text-muted-foreground">
+          calculado no seu navegador pelo mesmo motor
+          {ms !== null ? ` · ${ms} ms` : ''}
+        </span>
+      </div>
+
+      {point === null ? (
+        <p className="type-small text-muted-foreground" role="status">
+          Com essa folga, o motor não recomenda mudar o pró-labore.
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-col gap-1">
+            <span className="type-small text-muted-foreground">Pró-labore mensal</span>
+            <span
+              className="type-money-md num text-foreground"
+              data-testid="sim/pro-labore"
+              data-cents={point.target}
+            >
+              {formatBRL(point.target)}
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            <input
+              type="range"
+              min={0}
+              max={MARGIN_STEPS.length - 1}
+              step={1}
+              value={index}
+              onChange={(e) => move(Number(e.target.value))}
+              aria-label="Folga de segurança acima de 28% no Fator R"
+              aria-valuetext={`pró-labore de ${formatBRL(point.target)} por mês, folga de ${formatRatePercent(margin)}`}
+              data-testid="sim/slider"
+              className="h-7 w-full cursor-pointer accent-[var(--accent-c)]"
+            />
+            <div className="type-caption flex flex-wrap justify-between gap-2 text-muted-foreground">
+              <span>
+                hoje <span className="num text-foreground">{formatBRL(point.current)}</span>
+              </span>
+              <span>
+                folga acima de 28%:{' '}
+                <span className="num text-foreground">{formatRatePercent(margin)}</span>
+                {index === defaultIndex ? ' (recomendada)' : ''}
+              </span>
+            </div>
+          </div>
+          <OptimizerCurve
+            points={state?.curve ?? []}
+            current={point.current}
+            target={point.target}
+          />
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-0.5">
+              <dt className="type-small text-muted-foreground">
+                Economia nesse ponto, nos próximos 12 meses
+              </dt>
+              <dd
+                className="type-money-md num text-found-ink"
+                data-testid="sim/value"
+                data-cents={point.value}
+              >
+                {formatBRL(point.value)}
+              </dd>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <dt className="type-small text-muted-foreground">
+                Total do painel com esse pró-labore
+              </dt>
+              <dd
+                className="type-money-md num text-foreground"
+                data-testid="sim/total"
+                data-cents={point.total}
+              >
+                {formatBRL(point.total)}
+              </dd>
+            </div>
+          </dl>
+          {index !== defaultIndex ? (
+            <button
+              type="button"
+              onClick={() => move(defaultIndex)}
+              data-testid="sim/reset"
+              className="type-small self-start font-medium text-cobalt underline-offset-4 hover:underline"
+            >
+              Voltar ao recomendado
+            </button>
+          ) : null}
+        </>
+      )}
+    </section>
+  );
+}
