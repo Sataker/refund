@@ -1,6 +1,6 @@
 // "Law changed" (SCHEMA §2.7; ARCHITECTURE §2.6; ADR-013). Writes to the database only: a change is reviewed by a
 // person, and a parameter changes only through a commit in the engine.
-import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import type { Db } from '../client.ts';
 import { analyses, findings, lawChanges, monitoredRegulations, users } from '../schema/index.ts';
 
@@ -76,6 +76,60 @@ export async function insertLawChange(db: Db, input: LawChangeInput): Promise<st
     .onConflictDoNothing({ target: lawChanges.eventId })
     .returning({ id: lawChanges.id });
   return rows[0]?.id ?? null;
+}
+
+export interface RecordedLawChange {
+  id: string;
+  /** false when the same delivery (event id) or the same diff of the same regulation was already recorded. */
+  created: boolean;
+  /** Analyses whose findings this call marked as outdated (only newly marked ones). */
+  analysisIds: string[];
+}
+
+/**
+ * The durable half of "law changed" (code review E16, H1): the change and the outdated findings in ONE transaction,
+ * before any summary or e-mail. Deduplicated on the event id and on (regulation, diff text) (L2). On a repeat it still
+ * re-marks the findings of the affected rules: idempotent, and it covers findings saved after the first delivery.
+ */
+export async function recordLawChange(db: Db, input: LawChangeInput): Promise<RecordedLawChange> {
+  return db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: lawChanges.id, affectedRules: lawChanges.affectedRules })
+      .from(lawChanges)
+      .where(
+        or(
+          eq(lawChanges.eventId, input.eventId),
+          and(
+            eq(lawChanges.regulationId, input.regulationId),
+            eq(lawChanges.diffText, input.diffText),
+          ),
+        ),
+      )
+      .limit(1);
+    let id = existing?.id ?? null;
+    let created = false;
+    if (id === null) {
+      const [row] = await tx
+        .insert(lawChanges)
+        .values(input)
+        .onConflictDoNothing({ target: lawChanges.eventId })
+        .returning({ id: lawChanges.id });
+      id = row?.id ?? null;
+      created = id !== null;
+    }
+    if (id === null) {
+      // Lost a race on event_id with a concurrent delivery: the other transaction holds the row.
+      const [row] = await tx
+        .select({ id: lawChanges.id })
+        .from(lawChanges)
+        .where(eq(lawChanges.eventId, input.eventId));
+      if (!row) throw new Error('law change vanished');
+      id = row.id;
+    }
+    const rules = existing?.affectedRules ?? input.affectedRules;
+    const analysisIds = await markRuleFindingsOutdated(tx as unknown as Db, rules, id);
+    return { id, created, analysisIds };
+  });
 }
 
 export async function setLawChangeSummary(

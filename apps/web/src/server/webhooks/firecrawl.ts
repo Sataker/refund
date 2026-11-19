@@ -9,6 +9,9 @@ import type { WebhookVerifier } from './types.ts';
 
 export const FIRECRAWL_SIGNATURE_HEADER = 'x-firecrawl-signature';
 
+/** 1 MB: the Firecrawl cap only (code review E16, M3); every other provider keeps the 64 KB default. */
+export const FIRECRAWL_MAX_BODY_BYTES = 1024 * 1024;
+
 /** The header value Firecrawl sends for `body` (also what the tests sign with). */
 export function firecrawlSignature(body: string, secret: string): string {
   return `sha256=${createHmac('sha256', secret).update(body, 'utf8').digest('hex')}`;
@@ -17,6 +20,8 @@ export function firecrawlSignature(body: string, secret: string): string {
 export function firecrawlVerifier(config: { secret: string | undefined }): WebhookVerifier {
   return {
     provider: 'firecrawl',
+    // A monitor.page delivery carries whole page diffs (up to 50 pages); each diff is still cut at MAX_DIFF_CHARS.
+    maxBodyBytes: FIRECRAWL_MAX_BODY_BYTES,
     // webhook_events keeps the event type and the page count only (ADR-010); the diff goes to law_changes.
     stored(payload) {
       const p = (payload ?? {}) as { type?: unknown; data?: unknown };

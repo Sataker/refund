@@ -1,5 +1,5 @@
 import 'server-only';
-import { DEFAULT_BUDGET, summarizeLawChange } from '@refund/ai';
+import { templateDiffSummary } from '@refund/ai';
 import type { Db } from '@refund/db';
 import type { Capabilities } from '../capabilities.ts';
 import { decrypt, type Secrets } from '../crypto.ts';
@@ -9,24 +9,16 @@ import { sendEmail } from '../report/email.ts';
 import { lawAlertEmailBody } from './alert-email.ts';
 import type { LawProcessDeps } from './process.ts';
 
-// Production wiring of the "law changed" flow: the model only with the AI capability (template otherwise), the
-// e-mail only with the e-mail capability (INFRA-CI §1.1). Without either, the change still lands in law_changes and
-// on the outdated findings.
+// Production wiring of the "law changed" flow. The summary is the template, which names provisions only from the
+// @refund/law labels: no scraped diff goes to the model until a slotted summarizeDiff exists (code review E16, M2;
+// EXECUTION §9). The e-mail only with the e-mail capability (INFRA-CI §1.1). Without it, the change still lands in
+// law_changes and on the outdated findings.
 
 export function lawProcessDeps(db: Db, secrets: Secrets, caps: Capabilities): LawProcessDeps {
   const site = readEnv().values.NEXT_PUBLIC_SITE_URL;
   return {
     db,
-    summarize: (input) =>
-      summarizeLawChange(
-        input,
-        caps.ai
-          ? {
-              budget: DEFAULT_BUDGET,
-              log: (e) => logger.info(e.event, { ...e }),
-            }
-          : null,
-      ),
+    summarize: async (input) => ({ summary: templateDiffSummary(input), origin: 'template' }),
     notify: async (recipients, regulationLabel) => {
       if (!caps.email || !site) return;
       const body = lawAlertEmailBody({ regulationLabel, link: new URL('/app', site).toString() });

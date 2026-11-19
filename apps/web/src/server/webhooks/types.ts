@@ -28,6 +28,8 @@ export interface WebhookVerifier {
    * stored only as an HMAC (ARCHITECTURE §9.3). Default: event name, event id and trigger only.
    */
   stored?(payload: unknown): Record<string, unknown>;
+  /** Body cap for this provider; default MAX_WEBHOOK_BODY_BYTES (Firecrawl diffs are larger: code review E16, M3). */
+  maxBodyBytes?: number;
 }
 
 /** Larger bodies are refused before parsing (code review E11). */
@@ -51,10 +53,16 @@ export async function receiveWebhook(
   deps: ReceiveDeps,
   process: (ev: VerifiedEvent) => Promise<'processed' | 'ignored'>,
 ): Promise<Response> {
+  const max = v.maxBodyBytes ?? MAX_WEBHOOK_BODY_BYTES;
+  const tooLarge = (size: number) => {
+    logger.warn('webhook.too_large', { provider: v.provider, size, max });
+    return json(413, { ok: false });
+  };
   const declared = Number(req.headers.get('content-length') ?? '0');
-  if (declared > MAX_WEBHOOK_BODY_BYTES) return json(413, { ok: false });
+  if (declared > max) return tooLarge(declared);
   const body = await req.text();
-  if (Buffer.byteLength(body, 'utf8') > MAX_WEBHOOK_BODY_BYTES) return json(413, { ok: false });
+  const actual = Buffer.byteLength(body, 'utf8');
+  if (actual > max) return tooLarge(actual);
   const verified = await v.verify({ body, headers: req.headers, url: new URL(req.url) });
   if (!verified.ok) {
     logger.warn('webhook.rejected', { provider: v.provider, code: verified.error.code });

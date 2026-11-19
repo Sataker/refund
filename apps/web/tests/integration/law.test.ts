@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { companyRow, createMemoryDb, type DbHandle, schema } from '@refund/db';
 import { param } from '@refund/engine';
+import { article } from '@refund/law';
 import { lawChangeFixture, type MonitorPage, type PublicCompany } from '@refund/sources';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Capabilities } from '@/server/capabilities.ts';
 import { encrypt, type Secrets } from '@/server/crypto.ts';
@@ -87,10 +88,15 @@ function testDeps(notify = vi.fn(async () => {})): LawProcessDeps & { notify: ty
 }
 
 /** Runs receiveWebhook and waits for the deferred processing. */
-async function deliver(body: string, deps: LawProcessDeps, signature?: string | null) {
+async function deliver(
+  body: string,
+  deps: LawProcessDeps,
+  signature?: string | null,
+  options: { summaryTimeoutMs?: number } = {},
+) {
   const deferred: Promise<unknown>[] = [];
   const process = vi.fn((ev: Parameters<typeof processFirecrawlEvent>[0]) =>
-    processFirecrawlEvent(ev, deps),
+    processFirecrawlEvent(ev, deps, options),
   );
   const res = await receiveWebhook(
     verifier,
@@ -207,6 +213,15 @@ describe('Firecrawl webhook: signature (ARCHITECTURE §4.9)', () => {
     expect(await h.db.select().from(schema.webhookEvents)).toEqual([]);
   });
 
+  it('Firecrawl accepts bodies up to 1 MB (code review E16, M3); above it → 413', async () => {
+    const big = monitorPageBody([{ isMeaningful: false, diffText: 'x'.repeat(200_000) }], 'b');
+    expect((await deliver(big, testDeps())).res.status).toBe(200);
+    const huge = monitorPageBody([{ isMeaningful: false, diffText: 'x'.repeat(1024 * 1024) }], 'c');
+    const { res, process } = await deliver(huge, testDeps());
+    expect(res.status).toBe(413);
+    expect(process).not.toHaveBeenCalled();
+  });
+
   it('a signed body that is not JSON or has no type → 400', async () => {
     expect((await deliver('{not json', testDeps())).res.status).toBe(400);
     expect((await deliver('{"data":[]}', testDeps())).res.status).toBe(400);
@@ -281,6 +296,9 @@ describe('Firecrawl webhook: law changed (ARCHITECTURE §2.6; ADR-013)', () => {
 
   it('a change judged irrelevant, an unchanged page or an unknown page is ignored', async () => {
     const deps = testDeps();
+    const ignored = async () =>
+      (await h.db.select().from(schema.webhookEvents)).filter((e) => e.status === 'ignored').length;
+    const before = await ignored();
     for (const [nonce, pages] of [
       ['4', [{ isMeaningful: false }]],
       ['5', [{ status: 'same' as const, diffText: null }]],
@@ -290,8 +308,7 @@ describe('Firecrawl webhook: law changed (ARCHITECTURE §2.6; ADR-013)', () => {
       expect(res.status).toBe(200);
     }
     expect(await h.db.select().from(schema.lawChanges)).toHaveLength(1);
-    const statuses = (await h.db.select().from(schema.webhookEvents)).map((e) => e.status);
-    expect(statuses.filter((s) => s === 'ignored')).toHaveLength(3);
+    expect((await ignored()) - before).toBe(3);
   });
 
   it('a change outside the corpus provisions is recorded for review with no rule and no alert', async () => {
@@ -334,6 +351,86 @@ describe('Firecrawl webhook: law changed (ARCHITECTURE §2.6; ADR-013)', () => {
       .from(schema.monitoredRegulations)
       .where(eq(schema.monitoredRegulations.regulationId, 'lc123-2006'));
     expect(reg?.lastCheckedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe('Firecrawl webhook: durability (code review E16, H1 and L2)', () => {
+  const p5j = (() => {
+    const a = article('lc123-2006/art18/p5-j');
+    if (!a) throw new Error('corpus');
+    return a.text.split('\n')[0] ?? '';
+  })();
+  const outdatedOf = async (id: string) =>
+    (await h.db.select().from(schema.findings).where(eq(schema.findings.id, id)))[0];
+
+  it('a summary that throws leaves the findings outdated and still sends the alert', async () => {
+    const owner = await ownerWithFinding('R01', 'r01@example.com');
+    const notify = vi.fn(async () => {});
+    const deps: LawProcessDeps = {
+      ...testDeps(notify),
+      summarize: async () => {
+        throw new Error('summary down');
+      },
+    };
+    const diff = `-${p5j}\n+${p5j} (nova redação)`;
+    const { res } = await deliver(monitorPageBody([{ diffText: diff }], '8'), deps);
+    expect(res.status).toBe(200);
+    expect((await outdatedOf(owner.finding.id))?.outdated).toBe(true);
+    const [change] = await h.db
+      .select()
+      .from(schema.lawChanges)
+      .where(eq(schema.lawChanges.diffText, diff));
+    expect(change).toMatchObject({ affectedRules: ['R01'], summary: null });
+    expect(notify).toHaveBeenCalledTimes(1);
+    const [event] = await h.db
+      .select()
+      .from(schema.webhookEvents)
+      .where(eq(schema.webhookEvents.status, 'processed'))
+      .orderBy(desc(schema.webhookEvents.id))
+      .limit(1);
+    expect(event?.type).toBe('monitor.page');
+  });
+
+  it('a summary slower than the bound is abandoned; the change is already durable', async () => {
+    const owner = await ownerWithFinding('R01', null);
+    const deps: LawProcessDeps = {
+      ...testDeps(),
+      summarize: () => new Promise(() => {}),
+    };
+    const diff = `-${p5j}\n+${p5j} (outra redação)`;
+    const { res } = await deliver(monitorPageBody([{ diffText: diff }], '9'), deps, undefined, {
+      summaryTimeoutMs: 20,
+    });
+    expect(res.status).toBe(200);
+    expect((await outdatedOf(owner.finding.id))?.outdated).toBe(true);
+  });
+
+  it('the same diff in another delivery is not recorded twice but re-marks findings saved since', async () => {
+    const before = await h.db
+      .select()
+      .from(schema.lawChanges)
+      .where(eq(schema.lawChanges.regulationId, 'lc123-2006'));
+    const original = before.find((c) => c.diffText === fixturePage.diffText);
+    if (!original) throw new Error('first change missing');
+    const late = await ownerWithFinding('R03', 'tarde@example.com');
+    const deps = testDeps();
+    // Another body (other webhookId) → another event id, same regulation and diff text.
+    const { res, process } = await deliver(monitorPageBody([{}], 'a'), deps);
+    expect(res.status).toBe(200);
+    expect(process).toHaveBeenCalledTimes(1);
+    const after = await h.db
+      .select()
+      .from(schema.lawChanges)
+      .where(eq(schema.lawChanges.diffText, fixturePage.diffText ?? ''));
+    expect(after).toHaveLength(1);
+    expect(await outdatedOf(late.finding.id)).toMatchObject({
+      outdated: true,
+      lawChangeId: original.id,
+    });
+    expect(deps.notify).toHaveBeenCalledWith(
+      [{ userId: late.user.id, emailEncrypted: expect.any(String) }],
+      'LC 123/2006',
+    );
   });
 });
 

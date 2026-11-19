@@ -44,6 +44,8 @@ export {
   listLawChanges,
   markMonitorChecked,
   markRuleFindingsOutdated,
+  type RecordedLawChange,
+  recordLawChange,
   reviewLawChange,
   setFirecrawlMonitorId,
   setLawChangeSummary,

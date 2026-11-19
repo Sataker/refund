@@ -51,11 +51,8 @@ export function diffLines(diffText: string): DiffLines {
 }
 
 /** A changed line belongs to a provision when one holds the other (old wording: removed lines; new: added). */
-function touches(p: Provision, line: string): boolean {
-  const l = normalize(line);
-  if (l.length < MIN_MATCH_CHARS) return false;
-  const text = normalize(p.text);
-  return text.includes(l) || l.includes(text.slice(0, Math.max(MIN_MATCH_CHARS, 80)));
+function touches(text: string, line: string): boolean {
+  return text.includes(line) || line.includes(text.slice(0, Math.max(MIN_MATCH_CHARS, 80)));
 }
 
 /** Ids of the corpus provisions of `regulationId` the diff touches, in corpus order. */
@@ -63,8 +60,13 @@ export function affectedArticles(regulationId: string, diffText: string): string
   const reg = regulation(regulationId);
   if (!reg) return [];
   const { removed, added } = diffLines(diffText);
-  const lines = [...removed, ...added];
-  return reg.provisions.filter((p) => lines.some((l) => touches(p, l))).map((p) => p.id);
+  // Normalized once per call (code review E16, L1): each line and each provision text.
+  const lines = [...removed, ...added].map(normalize).filter((l) => l.length >= MIN_MATCH_CHARS);
+  if (lines.length === 0) return [];
+  return reg.provisions
+    .map((p): [Provision, string] => [p, normalize(p.text)])
+    .filter(([, text]) => lines.some((l) => touches(text, l)))
+    .map(([p]) => p.id);
 }
 
 /** Rules that read any of the provisions (rule metadata or parameters), in the engine's display order. */
