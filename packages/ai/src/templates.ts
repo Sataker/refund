@@ -107,7 +107,7 @@ function savings(ctx: Ctx): Parts {
     // In the combined scenario (ENGINE-SPEC C.6) a later rule starts from the cost the earlier ones left.
     out.push(
       f.order > 1
-        ? 'Somada aos ajustes acima, esta mudança leva o custo dos próximos {{horizon}} de {{costBefore}} para {{costAfter}}.'
+        ? 'Junto com as outras mudanças recomendadas, esta leva o custo dos próximos {{horizon}} de {{costBefore}} para {{costAfter}}.'
         : 'Somando os impostos da empresa e os do sócio, o custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}.',
     );
   return { lead, rest: out };

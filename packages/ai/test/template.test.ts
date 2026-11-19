@@ -52,7 +52,7 @@ describe('templateExplanation (hero, ENGINE-SPEC F.3; product review 16/11)', ()
       'Com a empresa já no Anexo III, esta mudança vale R$ 31.109,76 por ano.',
     );
     expect(text).toContain(
-      'Somada aos ajustes acima, esta mudança leva o custo dos próximos 12 meses de R$ 80.923,20 para R$ 46.920,80.',
+      'Junto com as outras mudanças recomendadas, esta leva o custo dos próximos 12 meses de R$ 80.923,20 para R$ 46.920,80.',
     );
     // R05 is about the months ahead: no "ao retificar" (E10 UX review, M6).
     expect(text).toContain(
