@@ -63,10 +63,13 @@ export function TrackProgressBar({
   step,
   progress,
   className,
+  seal,
 }: {
   step: TrackFrameProps['step'];
   progress: TrackProgress;
   className?: string;
+  /** The compact SandboxSeal on mobile, so the seal is always on screen (IDENTITY-AND-UI §5). */
+  seal?: ReactNode;
 }) {
   const stage = step === 'analysis' ? STAGES[3] : stageOf(step);
   const fill = stageFill(step, progress);
@@ -86,9 +89,12 @@ export function TrackProgressBar({
           );
         })}
       </div>
-      <p className="type-caption mt-2 text-muted-foreground">
-        {stage.id} de 4 · {stage.name}
-      </p>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <p className="type-caption text-muted-foreground">
+          {stage.id} de 4 · {stage.name}
+        </p>
+        {seal}
+      </div>
     </div>
   );
 }
@@ -203,6 +209,7 @@ export function TrackHeader({
       <TrackProgressBar
         step={step}
         progress={progress}
+        seal={<SandboxSeal live={live} compact className="px-2 py-0.5 md:hidden" />}
         className={cn('mx-auto max-w-[1120px] px-4 pb-3', step !== 'analysis' && 'lg:hidden')}
       />
     </header>

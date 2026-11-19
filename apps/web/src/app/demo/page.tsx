@@ -79,13 +79,13 @@ export default async function DemoPage() {
                   {total !== null ? (
                     <div className="mt-6 border-t border-border pt-6">
                       <p className="type-small text-muted-foreground">
-                        O motor achou, nos próximos 12 meses:
+                        Imposto a menos nos próximos 12 meses, dentro da lei:
                       </p>
                       <MoneyHero
                         cents={total}
                         size="lg"
                         testId={`demo/persona-total-${p.id}`}
-                        srLabel="O motor achou"
+                        srLabel="Imposto a menos nos próximos 12 meses"
                         className="mt-2"
                       />
                     </div>

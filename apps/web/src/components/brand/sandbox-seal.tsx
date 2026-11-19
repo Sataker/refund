@@ -11,7 +11,19 @@ const LIVE_LABEL = 'Open Finance sandbox · dados públicos da Receita';
  * Permanent seal (IDENTITY-AND-UI §4.8, §6.1 item 6; regulation rule 6.9): every number in the demo comes from
  * synthetic personas and Open Finance runs in the sandbox.
  */
-export function SandboxSeal({ className, live = false }: { className?: string; live?: boolean }) {
+/** Compact labels for the mobile track header, where the full seal does not fit (IDENTITY-AND-UI §5). */
+const DEMO_SHORT = 'Dados sintéticos';
+const LIVE_SHORT = 'Open Finance sandbox';
+
+export function SandboxSeal({
+  className,
+  live = false,
+  compact = false,
+}: {
+  className?: string;
+  live?: boolean;
+  compact?: boolean;
+}) {
   return (
     <span
       data-testid="sandbox-seal"
@@ -21,7 +33,7 @@ export function SandboxSeal({ className, live = false }: { className?: string; l
       )}
     >
       <span className="seal-dot size-1.5 rounded-full bg-cobalt" aria-hidden="true" />
-      {live ? LIVE_LABEL : DEMO_LABEL}
+      {compact ? (live ? LIVE_SHORT : DEMO_SHORT) : live ? LIVE_LABEL : DEMO_LABEL}
     </span>
   );
 }

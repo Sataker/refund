@@ -82,9 +82,13 @@ export function EstimateView({ estimate, cnae }: { estimate: ProfileEstimate; cn
             data-cents-min={estimate.total[0]}
             data-cents-max={estimate.total[1]}
           >
-            Com o seu perfil, estas regras valem{' '}
-            <Highlight>
-              <span className="num">{formatProfileRange(estimate.total)} por ano</span>
+            {/* The highlight wraps line by line (variant text); "valem" and each "R$" stay glued to what
+                follows, so 390 px gets no clipped band and no orphan word (E12 UX review). */}
+            Com o seu perfil, estas regras valem{'\u00a0'}
+            <Highlight variant="text">
+              <span className="num">
+                {`${formatProfileRange(estimate.total)} por ano`.replaceAll('R$ ', 'R$\u00a0')}
+              </span>
             </Highlight>{' '}
             a menos de imposto.
           </p>

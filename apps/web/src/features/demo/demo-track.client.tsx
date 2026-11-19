@@ -181,6 +181,7 @@ export function DemoTrack({ persona, step, defaults, slots }: DemoTrackProps) {
       const q = {
         faturamento: {
           title: 'Quanto a empresa fatura por mês, em média?',
+          help: undefined,
           name: 'Faturamento médio por mês',
           options: REVENUE_OPTIONS,
           selected: state.answers.monthlyRevenueBracket,
@@ -191,6 +192,7 @@ export function DemoTrack({ persona, step, defaults, slots }: DemoTrackProps) {
         },
         funcionarios: {
           title: 'Tem funcionários com carteira assinada?',
+          help: undefined,
           name: 'Funcionários com carteira assinada',
           options: EMPLOYEES_OPTIONS,
           selected: state.answers.hasEmployees,
@@ -199,6 +201,7 @@ export function DemoTrack({ persona, step, defaults, slots }: DemoTrackProps) {
         },
         exterior: {
           title: 'Recebe de clientes no exterior?',
+          help: 'Da receita da empresa nos últimos 12 meses.',
           name: 'Receita de clientes no exterior',
           options: ABROAD_OPTIONS,
           selected: state.answers.receivesFromAbroad,
@@ -208,7 +211,7 @@ export function DemoTrack({ persona, step, defaults, slots }: DemoTrackProps) {
       }[step];
       body = (
         <>
-          <StepTitle title={q.title} />
+          <StepTitle title={q.title} {...(q.help ? { help: q.help } : {})} />
           <ChoiceStep
             key={q.selected}
             name={q.name}
@@ -217,7 +220,10 @@ export function DemoTrack({ persona, step, defaults, slots }: DemoTrackProps) {
             save={(v) => q.save(v)()}
             footnote={FOOTNOTE}
           />
-          <Advance label="Continuar" onClick={() => go(next)} className="mt-4" />
+          {/* Mobile: the highlighted button stays in reach below 8 chips (sticky bar). */}
+          <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-border bg-background px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+            <Advance label="Continuar" onClick={() => go(next)} />
+          </div>
         </>
       );
       break;
@@ -240,7 +246,6 @@ export function DemoTrack({ persona, step, defaults, slots }: DemoTrackProps) {
       body = (
         <>
           <StepTitle title="O que vamos ler e o que nunca fazemos" />
-          <ConnectSeal />
           {slots.consent}
           <Advance label="Conectar com Open Finance" onClick={() => go(next)} className="mt-8" />
         </>

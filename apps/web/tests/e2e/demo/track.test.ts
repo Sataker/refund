@@ -125,13 +125,11 @@ test.describe('demo track @demo', () => {
   test('D3: consent and the widget replica carry the persona seal', async ({ page }) => {
     await toEstimate(page);
     await advance(page, 'permissoes');
-    const seal = page.getByTestId('demo-connect-seal');
-    await expect(seal).toHaveText(
-      'dados da persona sintética · integração real demonstrada no sandbox',
-    );
     await expect(page.getByTestId('consent')).toBeVisible();
     await advance(page, 'conta-pj');
-    await expect(page.getByTestId('demo-connect-seal')).toBeVisible();
+    await expect(page.getByTestId('demo-connect-seal')).toHaveText(
+      'dados da persona sintética · integração real demonstrada no sandbox',
+    );
     await expect(page.getByTestId('widget-replica')).toBeVisible();
     await expect(page.getByTestId('account-card-PJ')).toHaveAttribute('data-status', 'active');
     await advance(page, 'conta-pf');
@@ -175,8 +173,16 @@ test.describe('demo track @demo', () => {
     await expect(hero).toHaveAttribute('data-settled', 'true', { timeout: 15_000 });
     await expect(hero).toHaveAttribute('data-cents', String(TOTAL));
     await expect(hero).toHaveAttribute('data-shown', String(TOTAL));
-    await expect(page.getByTestId('finding-R01')).toBeVisible();
-    await expect(page.getByTestId('finding-R05')).toBeVisible();
+    await expect(page.getByTestId('finding-R01')).toContainText(
+      'Aumentar seu pró-labore reduz seu imposto',
+    );
+    await expect(page.getByTestId('finding-R05')).toContainText(
+      'Separar a receita de exportação no PGDAS-D',
+    );
+    await expect(page.getByTestId('analysis-basis')).toHaveText(
+      'Com as respostas da Marina · seu contador valida',
+    );
+    await expect(page.getByTestId('confidence-badge')).toHaveCount(0);
     await expect(page.getByTestId('alert-R02')).toBeVisible();
     await expect(page.getByTestId('analysis-error')).toHaveCount(0);
     await expect(page.getByTestId('analysis-result')).toContainText('R$ 62.318,92 a menos');
@@ -299,7 +305,30 @@ test.describe('demo track @demo', () => {
       'conta-pf',
     ]) {
       await noHorizontalScroll(page);
+      await expect(
+        page.getByTestId('sandbox-seal').filter({ visible: true }).first(),
+      ).toBeVisible();
       await advance(page, s);
+      if (s === 'estimativa') {
+        // The range highlight wraps instead of being clipped (UX review, 390 px).
+        await page.setViewportSize({ width: 390, height: 844 });
+        await settled(page); // the step slides in from 24 px to the right
+        const width = page.viewportSize()?.width ?? 390;
+        for (const id of ['profile-range']) {
+          const box = await page.getByTestId(id).boundingBox();
+          expect(box, id).not.toBeNull();
+          expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(width);
+        }
+        const mark = await page
+          .getByTestId('profile-range')
+          .locator('mark')
+          .evaluate((el) => {
+            const r = el.getBoundingClientRect();
+            return { left: r.left, right: r.right };
+          });
+        expect(mark.left).toBeGreaterThanOrEqual(0);
+        expect(mark.right).toBeLessThanOrEqual(width);
+      }
     }
     await noHorizontalScroll(page);
     await page.goto(`/demo/${HERO}/analise?pace=instant`);
@@ -308,7 +337,10 @@ test.describe('demo track @demo', () => {
     await expect(hero).toHaveAttribute('data-cents', String(TOTAL));
     await noHorizontalScroll(page);
     const box = await hero.boundingBox();
-    expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(260);
+    // Number at the top: in the first half of a 390×844 screen and above every card.
+    expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(422);
+    const firstCard = await page.getByTestId('finding-R01').boundingBox();
+    expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(firstCard?.y ?? 0);
     await expect(page.getByTestId('stage-line')).toContainText('Pronto');
   });
 
