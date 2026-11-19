@@ -23,12 +23,16 @@ export {
   toSseFrame,
 } from './events.ts';
 export {
+  type AccountLine,
   buildFinancialView,
   type ChargeRow,
   type DuplicateSuspect,
+  duplicateRemovals,
+  type ExcludedTransaction,
   FINANCIAL_GROUPS,
   type FinancialGroupId,
   type FinancialView,
+  type FinancialViewAccount,
   type FinancialViewFinding,
   type FinancialViewInput,
   financialViewOfRun,

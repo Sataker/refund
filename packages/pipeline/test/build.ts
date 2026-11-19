@@ -28,7 +28,7 @@ export function tx(p: TxInput = {}): NormalizedTransaction {
         : null;
   return {
     id: p.id ?? `t${String(seq).padStart(4, '0')}`,
-    accountId: p.holder === 'PF' ? 'acc-pf' : 'acc-pj',
+    accountId: p.accountId ?? (p.holder === 'PF' ? 'acc-pf' : 'acc-pj'),
     holder: p.holder ?? 'PJ',
     date,
     month: date.slice(0, 7) as YearMonth,

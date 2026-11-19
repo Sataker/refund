@@ -89,6 +89,19 @@ export interface FinancialViewInput {
   findings: readonly FinancialViewFinding[];
   /** Open card ids (e.g. 'das:2026-05') so a duplicate can link to its card on Screen 7. */
   openQuestionIds?: readonly string[];
+  /** [D31] Display names of the bank accounts ("Banco Meridiano · Conta Corrente PJ"); never a number or an id. */
+  accounts?: readonly FinancialViewAccount[];
+  /**
+   * [D31] Transactions the account owner removed as a duplicate. The view is rebuilt without them (totals, groups,
+   * seals, detectors); the engine analysis is NOT re-run. /demo keeps them client-side, /app will persist them (E14).
+   */
+  excludedTransactionIds?: readonly string[];
+}
+
+export interface FinancialViewAccount {
+  id: string;
+  holder: 'PF' | 'PJ';
+  label: string;
 }
 
 export interface MonthValue {
@@ -165,6 +178,32 @@ export interface HolderView {
   duplicates: DuplicateSuspect[];
   highlights: MonthHighlight[]; // top 3 month-over-month increases of outflow
   outflowChange: OutflowChange;
+  /** [D31] The tiles split per bank account (Σ = the tiles), largest outflow first. */
+  accounts: AccountLine[];
+  /** [D31] Own-account transfers inside the tiles ("Entre contas da empresa": they enter one account, leave another). */
+  internalTransfers: { inflow: Cents; outflow: Cents };
+}
+
+/** [D31] One bank account of a holder. `internal*` are its transfers to/from the holder's other accounts. */
+export interface AccountLine {
+  accountId: string;
+  label: string;
+  inflow12m: Cents;
+  outflow12m: Cents;
+  internalIn: Cents;
+  internalOut: Cents;
+  count: number;
+}
+
+/** [D31] A transaction the owner excluded, listed so the screen can offer "Desfazer". */
+export interface ExcludedTransaction {
+  transactionId: string;
+  holder: 'PF' | 'PJ';
+  accountId: string;
+  date: CivilDate;
+  amount: Cents;
+  groupId: FinancialGroupId;
+  label: string;
 }
 
 export interface FinancialView {
@@ -173,6 +212,8 @@ export interface FinancialView {
   basis: 'cash'; // as the money left/entered the account (net), not the gross facts
   pj: HolderView | null; // null when the PJ account was not connected
   pf: HolderView | null; // null when the user skipped the PF
+  /** [D31] The owner's exclusions, in date order (empty without any). */
+  excluded: ExcludedTransaction[];
 }
 
 // ---------- Fixed group table (ARCHITECTURE §4.4; label and slug are user-visible, so PT) ----------
@@ -698,6 +739,42 @@ function highlights(
     .slice(0, TOP_HIGHLIGHTS);
 }
 
+/** [D31] The tiles per account, largest outflow first; an account the input does not name gets "Conta n". */
+function accountLines(rows: readonly Row[], named: readonly FinancialViewAccount[]): AccountLine[] {
+  const byAccount = new Map<string, Row[]>();
+  for (const r of rows)
+    byAccount.set(r.tx.accountId, [...(byAccount.get(r.tx.accountId) ?? []), r]);
+  const sum = (list: readonly Row[]) => sumCents(list.map((r) => r.tx.amountCents as Cents));
+  const lines = [...byAccount.entries()].map(([accountId, list]) => {
+    const inn = list.filter((r) => r.tx.direction === 'inflow');
+    const out = list.filter((r) => r.tx.direction === 'outflow');
+    return {
+      accountId,
+      label: named.find((a) => a.id === accountId)?.label ?? '',
+      inflow12m: sum(inn),
+      outflow12m: sum(out),
+      internalIn: sum(inn.filter((r) => r.groupId === 'internal_transfer')),
+      internalOut: sum(out.filter((r) => r.groupId === 'internal_transfer')),
+      count: list.length,
+    };
+  });
+  lines.sort(
+    (a, b) =>
+      b.outflow12m - a.outflow12m ||
+      b.inflow12m - a.inflow12m ||
+      (a.accountId < b.accountId ? -1 : 1),
+  );
+  return lines.map((l, i) => (l.label === '' ? { ...l, label: `Conta ${i + 1}` } : l));
+}
+
+/**
+ * [D31] What the owner may remove from a duplicate suspect: every occurrence but the first (the payment that
+ * stays). Pure, so /demo (client state) and /app (persisted, E14) exclude the same ids.
+ */
+export function duplicateRemovals(suspect: DuplicateSuspect): string[] {
+  return suspect.transactionIds.slice(1);
+}
+
 function holderView(
   holder: 'PF' | 'PJ',
   rows: readonly Row[],
@@ -740,6 +817,19 @@ function holderView(
     fees: fees(rows),
     duplicates: duplicates(outflows, openQuestions),
     highlights: highlights(monthly, outGroups),
+    accounts: accountLines(rows, input.accounts ?? []),
+    internalTransfers: {
+      inflow: sumCents(
+        inflows
+          .filter((r) => r.groupId === 'internal_transfer')
+          .map((r) => r.tx.amountCents as Cents),
+      ),
+      outflow: sumCents(
+        outflows
+          .filter((r) => r.groupId === 'internal_transfer')
+          .map((r) => r.tx.amountCents as Cents),
+      ),
+    },
     outflowChange: {
       month: last.month,
       cents: last.outflow,
@@ -784,8 +874,10 @@ export function buildFinancialView(input: FinancialViewInput): Result<FinancialV
     if (byTx.has(c.transactionId)) return invalid('two classifications for one transaction');
     byTx.set(c.transactionId, c);
   }
+  const excludedIds = new Set(input.excludedTransactionIds ?? []);
+  for (const id of excludedIds) if (!seen.has(id)) return invalid('exclusion without transaction');
   const rows: Row[] = input.transactions
-    .filter((t) => window.has(t.month))
+    .filter((t) => window.has(t.month) && !excludedIds.has(t.id))
     .map((tx) => {
       const c = byTx.get(tx.id);
       return { tx, c, groupId: groupOf(c) };
@@ -809,6 +901,18 @@ export function buildFinancialView(input: FinancialViewInput): Result<FinancialV
       basis: 'cash',
       pj: viewOf('PJ'),
       pf: viewOf('PF'),
+      excluded: input.transactions
+        .filter((t) => excludedIds.has(t.id))
+        .sort(byDateThenId)
+        .map((t) => ({
+          transactionId: t.id,
+          holder: t.holder,
+          accountId: t.accountId,
+          date: t.date,
+          amount: t.amountCents as Cents,
+          groupId: groupOf(byTx.get(t.id)),
+          label: counterpartyLabel(t),
+        })),
     },
   };
 }
@@ -823,8 +927,15 @@ export function financialViewOfRun(
     transactions: readonly SourceTransaction[];
   },
   result: Pick<PipelineResult, 'classifications' | 'engineResult' | 'questions'>,
+  excludedTransactionIds: readonly string[] = [],
 ): Result<FinancialView, DomainError> {
   return buildFinancialView({
+    accounts: input.accounts.map((a) => ({
+      id: a.sourceId,
+      holder: a.holder,
+      label: `${a.institution} · ${a.productName}`,
+    })),
+    excludedTransactionIds,
     referenceMonth: input.referenceMonth,
     regime: regimeOf(input.company),
     transactions: normalizeTransactions(input.accounts, input.transactions),
