@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { formatBRL, formatRatePercent } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { LawSeal } from './law-seal';
+import { cleanEngineText, traceInputLabel, traceTextValue } from './trace-labels';
 
 type Value = Step['result'];
 
@@ -17,10 +18,10 @@ function StepValue({ value, testId }: { value: Value; testId?: string }) {
   }
   if (value.unit === 'rate')
     return <span className="num">{formatRatePercent(String(value.value))}</span>;
-  return <span>{String(value.value)}</span>;
+  return <span>{cleanEngineText(String(value.value))}</span>;
 }
 
-function inputText(input: Step['inputs'][string]): string {
+export function inputText(key: string, input: Step['inputs'][string]): string {
   switch (input.unit) {
     case 'cents':
       return typeof input.value === 'number' ? formatBRL(input.value) : String(input.value);
@@ -29,7 +30,7 @@ function inputText(input: Step['inputs'][string]): string {
     case 'months':
       return `${input.value} meses`;
     default:
-      return String(input.value);
+      return traceTextValue(key, cleanEngineText(String(input.value)));
   }
 }
 
@@ -89,16 +90,27 @@ export function CalcTrace({
               {i + 1}
             </span>
             <div className="min-w-0 space-y-1.5">
-              <p className="type-small font-medium text-foreground">{step.label}</p>
-              <p className="type-mono break-words text-muted-foreground">{step.formula}</p>
-              {Object.keys(step.inputs).length > 0 ? (
-                <dl className="type-mono grid grid-cols-[auto_1fr] gap-x-3 text-muted-foreground">
-                  {Object.entries(step.inputs).map(([name, input]) => (
-                    <div key={name} className="contents">
-                      <dt>{name}</dt>
-                      <dd className="num text-foreground">{inputText(input)}</dd>
-                    </div>
-                  ))}
+              <p className="type-small font-medium text-foreground">
+                {cleanEngineText(step.label)}
+              </p>
+              <p className="type-mono break-words text-muted-foreground">
+                {cleanEngineText(step.formula)}
+              </p>
+              {Object.keys(step.inputs).some((k) => traceInputLabel(k) !== null) ? (
+                <dl className="type-small grid grid-cols-[auto_1fr] gap-x-3 text-muted-foreground">
+                  {Object.entries(step.inputs).flatMap(([name, input]) => {
+                    const label = traceInputLabel(name);
+                    return label === null
+                      ? []
+                      : [
+                          <div key={name} className="contents">
+                            <dt>{label}</dt>
+                            <dd className="num break-words text-foreground">
+                              {inputText(name, input)}
+                            </dd>
+                          </div>,
+                        ];
+                  })}
                 </dl>
               ) : null}
               {sources?.[step.id]?.length ? (
