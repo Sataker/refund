@@ -1,0 +1,99 @@
+name: Production (scheduled health and E2E)
+
+# INFRA-CI §2.2. Reads the repository and calls public URLs; writes nothing to Git, so it keeps running during the
+# freeze. The primary monitor is UptimeRobot every 5 min (ARCHITECTURE §10.3); this is the secondary one, and its
+# hourly deep health is also one of the three keep-alives of the production database (§10.4).
+# Needs the repository variables PROD_URL and BACKUP_URL (INFRA-CI §1.4); no secret.
+
+on:
+  schedule:
+    - cron: "17 * * * *" # deep health every hour (secondary to UptimeRobot)
+    - cron: "0 10 * * *" # daily E2E at 07h00 BRT
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "production | backup | both"
+        type: choice
+        options: [both, production, backup]
+        default: both
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-${{ github.event.schedule || 'manual' }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "24"
+  NEXT_TELEMETRY_DISABLED: "1"
+  FORCE_COLOR: "1"
+
+jobs:
+  health:
+    name: Health (production and backup)
+    if: github.event.schedule == '17 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      TARGET: ${{ inputs.target || 'both' }}
+      PROD_URL: ${{ vars.PROD_URL }}
+      BACKUP_URL: ${{ vars.BACKUP_URL }}
+    steps:
+      - name: Production (deep; also keeps Supabase active)
+        if: env.TARGET != 'backup'
+        run: |
+          test -n "$PROD_URL" || { echo "repository variable PROD_URL is not set"; exit 1; }
+          curl -fsS --retry 3 --retry-delay 10 --max-time 20 "$PROD_URL/api/health?deep=1" -o prod.json
+          cat prod.json
+          jq -e '.status != "failed" and .checks.database.ok == true and .demo.recordingsComplete == true and .demo.videoNumbers == "ok"' prod.json
+      - name: Backup (basic, zero variables)
+        if: env.TARGET != 'production'
+        run: |
+          test -n "$BACKUP_URL" || { echo "repository variable BACKUP_URL is not set"; exit 1; }
+          curl -fsS --retry 3 --retry-delay 10 --max-time 20 "$BACKUP_URL/api/health" -o backup.json
+          cat backup.json
+          jq -e '.status == "ok" and .demo.videoNumbers == "ok"' backup.json
+
+  e2e:
+    name: E2E against ${{ matrix.target }}
+    if: github.event.schedule == '0 10 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [production, backup]
+    steps:
+      - name: Skip a target the manual run left out
+        id: pick
+        run: |
+          wanted="${{ inputs.target || 'both' }}"
+          if [ "$wanted" = both ] || [ "$wanted" = "${{ matrix.target }}" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pick.outputs.run == 'true'
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1 (reads packageManager from package.json)
+        if: steps.pick.outputs.run == 'true'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.pick.outputs.run == 'true'
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.pick.outputs.run == 'true'
+      - run: pnpm --filter @refund/web exec playwright install --with-deps chromium webkit
+        if: steps.pick.outputs.run == 'true'
+      - name: Smoke + video numbers + headers (TESTS §6.4 P1–P6)
+        if: steps.pick.outputs.run == 'true'
+        env:
+          E2E_BASE_URL: ${{ matrix.target == 'production' && vars.PROD_URL || vars.BACKUP_URL }}
+          E2E_TARGET: ${{ matrix.target }}
+        run: |
+          test -n "$E2E_BASE_URL" || { echo "repository variable for ${{ matrix.target }} is not set"; exit 1; }
+          pnpm --filter @refund/web exec playwright test --project=production-chromium --project=production-webkit-mobile
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: e2e-${{ matrix.target }}
+          path: apps/web/test-results/
+          retention-days: 14
