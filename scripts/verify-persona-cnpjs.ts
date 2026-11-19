@@ -14,7 +14,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { ALL_PERSONA_CNPJS } from '../packages/personas/src/cnpjs.ts';
+import { ALL_SYNTHETIC_CNPJS } from '../packages/personas/src/cnpjs.ts';
 
 const BRASILAPI = 'https://brasilapi.com.br/api/cnpj/v1/';
 const CNPJWS = 'https://publica.cnpj.ws/cnpj/';
@@ -133,7 +133,7 @@ async function main(): Promise<void> {
   const control = await probe(`${BRASILAPI}${CONTROL_CNPJ}`);
   const brasilApiTrusted = control.status === 200;
   console.log(`control ${mask(CONTROL_CNPJ)}: BrasilAPI ${control.status ?? '-'}`);
-  for (const { cnpj, role } of ALL_PERSONA_CNPJS) {
+  for (const { cnpj, role } of ALL_SYNTHETIC_CNPJS) {
     const brasilApi = await probe(`${BRASILAPI}${cnpj}`);
     let cnpjWs: Probe | null = null;
     if (!brasilApiTrusted || (brasilApi.status !== 404 && brasilApi.status !== 200)) {

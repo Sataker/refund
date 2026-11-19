@@ -1,6 +1,6 @@
 import { validateCnpj } from '@refund/sources';
 import { describe, expect, it } from 'vitest';
-import { ALL_PERSONA_CNPJS, PERSONA_CNPJS } from '../src/index.ts';
+import { ALL_PERSONA_CNPJS, ALL_SYNTHETIC_CNPJS, PERSONA_CNPJS } from '../src/index.ts';
 import { committedData } from './helpers.ts';
 
 describe('persona CNPJs (ARCHITECTURE §7.5)', () => {
@@ -10,6 +10,17 @@ describe('persona CNPJs (ARCHITECTURE §7.5)', () => {
       expect(cnpj).toMatch(/^RF[0-9A-Z]{6}0001\d{2}$/);
     }
     expect(new Set(ALL_PERSONA_CNPJS.map((c) => c.cnpj)).size).toBe(ALL_PERSONA_CNPJS.length);
+  });
+
+  it('the CNPJ check covers the synthetic CNPJs outside the personas too (compliance G2 M2)', () => {
+    const all = ALL_SYNTHETIC_CNPJS.map((c) => c.cnpj);
+    for (const c of ['RFPRES01000137', 'RFNONE01000122', 'RFDEV002000100'])
+      expect(all).toContain(c);
+    for (const { cnpj } of ALL_SYNTHETIC_CNPJS) {
+      expect(validateCnpj(cnpj)).toEqual({ ok: true, value: cnpj });
+      expect(cnpj.startsWith('RF')).toBe(true);
+    }
+    expect(new Set(all).size).toBe(all.length);
   });
 
   it('use the stable roots of §7.5', () => {
