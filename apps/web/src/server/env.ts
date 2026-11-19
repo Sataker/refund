@@ -33,6 +33,8 @@ const fields = {
   RESEND_WEBHOOK_SECRET: text,
   ABACATEPAY_API_KEY: text,
   ABACATEPAY_WEBHOOK_SECRET: text,
+  /** Only honoured with a Test Mode key (`abc_dev_…`): the local fake AbacatePay of the e2e tests. */
+  ABACATEPAY_API_BASE_URL: url,
   FIRECRAWL_WEBHOOK_SECRET: text,
   WORKOS_CLIENT_ID: text,
   WORKOS_API_KEY: text,
