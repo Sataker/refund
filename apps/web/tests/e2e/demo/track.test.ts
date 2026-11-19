@@ -91,6 +91,8 @@ test.describe('demo track @demo', () => {
     await expect(range).toHaveAttribute('data-cents-min', RANGE.min);
     await expect(range).toHaveAttribute('data-cents-max', RANGE.max);
     await expect(range).toContainText('de R$ 12 mil a R$ 91 mil por ano');
+    // D33 (ENGINE-SPEC C.11.7): k counts only the ranged rules (R01, R05), never the R02 alert.
+    await expect(range).toContainText('Com o seu perfil, duas dessas regras valem de R$ 12 mil');
     await expect(page.getByText('estimativa por perfil', { exact: true })).toBeVisible();
     // No exact number before the data: no R$ with cents and no money-hero on the estimate.
     // innerText on purpose: what is on screen, not the closed "Por que essa faixa?".

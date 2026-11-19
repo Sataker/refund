@@ -64,6 +64,8 @@ test.describe('first-access track @app', () => {
 
     const range = page.getByTestId('profile-range');
     await expect(range).toContainText(/de R\$ \d+ mil a R\$ \d+ mil por ano/);
+    // D33 (ENGINE-SPEC C.11.7): R01 and R05 carry a range; the R02 alert never counts.
+    await expect(range).toContainText('Com o seu perfil, duas dessas regras valem');
     // ENGINE-SPEC C.11.10 hero values. The server uses today in BRT as `analysisDate`; they hold while
     // the steady state is 2028 and the minimum wage of the month after the analysis is 2026's, i.e.
     // through 30/11/2026. From December (freeze, final) only the shape is checked (EXECUTION §9, E11).

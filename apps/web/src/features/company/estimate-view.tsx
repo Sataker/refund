@@ -3,6 +3,7 @@ import { formatProfileRange, NO_RANGE_MESSAGES, rangeInThousands } from '@refund
 import { Highlight } from '@/components/brand/highlight';
 import { LawSeal } from '@/components/brand/law-seal';
 import { formatRatePercent } from '@/lib/format';
+import { rangeLead } from './range-sentence';
 
 // Step `estimativa` (ENGINE-SPEC C.11.6–C.11.7, governing the Screen 1 wireframe): the rules that may
 // apply with the why and the `§`, then the "estimativa por perfil" range, or the reason there is none.
@@ -82,9 +83,10 @@ export function EstimateView({ estimate, cnae }: { estimate: ProfileEstimate; cn
             data-cents-min={estimate.total[0]}
             data-cents-max={estimate.total[1]}
           >
-            {/* The highlight wraps line by line (variant text); "valem" and each "R$" stay glued to what
+            {/* The highlight wraps line by line (variant text); the verb and each "R$" stay glued to what
                 follows, so 390 px gets no clipped band and no orphan word (E12 UX review). */}
-            Com o seu perfil, estas regras valem{'\u00a0'}
+            {rangeLead(estimate.rules)}
+            {'\u00a0'}
             <Highlight variant="text">
               <span className="num">
                 {`${formatProfileRange(estimate.total)} por ano`.replaceAll('R$ ', 'R$\u00a0')}
