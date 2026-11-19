@@ -164,6 +164,57 @@ describe('D8: the pró-labore simulator recalculates through the engine', () => 
   });
 });
 
+describe('D32: the simulator steps, per year (steady state) and in 12 months', () => {
+  // Recorded from the engine (PLAN §18 D32 verification): [margin, P*, annualRegimeValue, marginalValue12m].
+  // The per-year value falls as the margin grows (P_target rises, so does the INSS), so the best per-year step is
+  // margin 0 (P_28), not the D13 "recomendada" 1 p.p.; at margin 0 the 12-month value is negative (ramp to 2028-01).
+  const STEPS: readonly [string, number, number, number][] = [
+    ['0', 176000, 4355652, -18348],
+    ['0.0025', 188500, 4339152, 1423152],
+    ['0.005', 201000, 4322652, 2135652],
+    ['0.0075', 213500, 4306152, 2483652],
+    ['0.01', 226000, 4289652, 2831652],
+    ['0.0125', 238500, 4273152, 2815152],
+    ['0.015', 251000, 4256652, 3163152],
+    ['0.0175', 263500, 4240152, 3146652],
+    ['0.02', 276000, 4223652, 3130152],
+    ['0.0225', 288500, 4207152, 3113652],
+    ['0.025', 301000, 4190652, 3097152],
+    ['0.0275', 313500, 4174152, 3080652],
+    ['0.03', 326000, 4157652, 3064152],
+    ['0.0325', 338500, 4141152, 3412152],
+    ['0.035', 351000, 4124652, 3395652],
+    ['0.0375', 363500, 4108152, 3379152],
+    ['0.04', 376000, 4091652, 3362652],
+    ['0.0425', 388500, 4075152, 3346152],
+    ['0.045', 401000, 4058652, 3329652],
+    ['0.0475', 413500, 4042152, 3313152],
+    ['0.05', 426000, 4025652, 3296652],
+  ];
+
+  it('records P*, the per-year and the 12-month value at every slider step', async () => {
+    const { facts } = await hero();
+    expect(STEPS.map((s) => s[0])).toEqual(MARGIN_STEPS);
+    const got = MARGIN_STEPS.map((margin) => {
+      const r = recalculate(facts, {
+        ...facts.assumptions,
+        fatorRMargin: { value: margin, origin: 'user', editable: true, source: 'slider' },
+      });
+      if (!r.ok) throw new Error(r.error.code);
+      const p = proLaborePoint(r.value);
+      return [margin, p?.target, p?.annual, p?.value];
+    });
+    expect(got).toEqual(STEPS);
+  });
+
+  it('the recommended step is the minimum P that keeps the margin, not the best per year', async () => {
+    const { facts } = await hero();
+    const best = STEPS.reduce((a, b) => (b[2] > a[2] ? b : a));
+    expect(best[0]).toBe('0');
+    expect(best[0]).not.toBe(marginOf(facts));
+  });
+});
+
 describe('D9: Screen 7 cards and the recalculation', () => {
   it('lists the pipeline cards answered as the persona, impact first (D23)', async () => {
     const { cards } = await hero();
