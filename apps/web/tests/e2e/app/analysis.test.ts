@@ -161,6 +161,9 @@ test.describe('live analysis @app', () => {
     const id = await analyze(page);
     await page.goto(`/app/analises/${id}/relatorio`);
     await expect(page.getByTestId('report-sender')).toContainText('copie o link');
+    // Compliance G2 M1: a real company's report never says "dados sintéticos".
+    await expect(page.getByTestId('report-seal')).toContainText('dados públicos da Receita');
+    await expect(page.getByTestId('report-seal')).not.toContainText('Dados sintéticos');
     await page.getByTestId('accountant-email').fill('contador@example.com');
     await page.getByTestId('create-report-link').click();
     const link = await page.getByTestId('report-link').textContent();
@@ -172,6 +175,7 @@ test.describe('live analysis @app', () => {
     const other = await accountant.newPage();
     await other.goto(new URL(link ?? '').pathname);
     await expect(other.getByTestId('accountant-page')).toBeVisible();
+    await expect(other.getByTestId('report-seal')).toContainText('dados públicos da Receita');
     await other.getByTestId('approve-report').click();
     await expect(other.getByTestId('accountant-done')).toHaveAttribute('data-decision', 'approved');
     await accountant.close();

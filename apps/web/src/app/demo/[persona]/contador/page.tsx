@@ -7,7 +7,7 @@ import { DEMO_PERSONAS } from '@/demo/catalog.ts';
 import { requireSnapshot } from '@/demo/snapshot.ts';
 import { displayTitle } from '@/features/demo/display';
 import { type AccountantItem, AccountantReview } from '@/features/findings/accountant.client';
-import { DEMO_ACCOUNTANT_FULL } from '@/features/findings/text';
+import { alertCostLabel, DEMO_ACCOUNTANT_FULL } from '@/features/findings/text';
 import { VisitorNotice } from '@/features/findings/visitor-notice.client';
 import { formatBRL } from '@/lib/format';
 
@@ -41,7 +41,7 @@ export default async function DemoAccountantPage({
     ...ordered.filter((f) => f.type === 'recovery'),
     ...ordered.filter((f) => f.type === 'alert' || f.type === 'risk'),
   ];
-  const items: AccountantItem[] = savingsFirst.flatMap((f): AccountantItem[] => {
+  const rows: AccountantItem[] = savingsFirst.flatMap((f): AccountantItem[] => {
     const title = displayTitle(f.ruleId, f.title);
     if (f.type === 'savings')
       return [
@@ -58,7 +58,7 @@ export default async function DemoAccountantPage({
           title,
           value:
             f.marginalValue12m > 0
-              ? `custo de caixa ${formatBRL(f.marginalValue12m)} · fora do total`
+              ? `${alertCostLabel(f.title)}: ${formatBRL(f.marginalValue12m)} · fora do total`
               : 'fora do total',
           readOnly: true,
         },
@@ -72,6 +72,11 @@ export default async function DemoAccountantPage({
         },
       ];
     return [];
+  });
+  // UX review G2 M10: each row carries the § chip of its finding's first LegalRef (rule metadata, rule 3).
+  const items = rows.map((it): AccountantItem => {
+    const ref = snap.result.findings.find((f) => f.ruleId === it.ruleId)?.refs[0];
+    return ref ? { ...it, lawRef: { label: ref.label, url: ref.url } } : it;
   });
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -92,6 +97,15 @@ export default async function DemoAccountantPage({
           <h1 className="font-serif text-[32px] leading-[36px] font-normal text-foreground lg:text-[40px] lg:leading-[44px]">
             Relatório de {snap.view.companyName} para {DEMO_ACCOUNTANT_FULL}
           </h1>
+          <a
+            href={`/demo/${persona}/relatorio`}
+            target="_blank"
+            rel="noopener"
+            data-testid="open-report"
+            className="type-small inline-flex min-h-10 w-fit items-center font-medium text-cobalt underline-offset-4 hover:underline"
+          >
+            Ver memória de cálculo
+          </a>
           <p className="text-base text-muted-foreground">
             Total confirmado nos próximos 12 meses:{' '}
             <span className="num font-medium text-foreground" data-cents={snap.dashboard.total}>

@@ -19,13 +19,22 @@ export const DEDUCTIBLE_TEXT = 'Dedutível no Imposto de Renda, na declaração 
  * What goes next to the chip (ENGINE-SPEC E.9.2 "Seal text on screen"): the linked finding's own amount or title.
  * money_to_receive → range (R02 has none: its title, EXECUTION §9 16/11); lower_tax → marginalValue12m;
  * risk and attention → title; deductible → "na declaração completa". On the chip a title is cut to its first
- * sentence (the popover shows it whole), never mid-sentence.
+ * sentence (the popover shows it whole), never mid-sentence. A range whose ends are equal is not a range (R02
+ * carries `[cost, cost]` from the engine): it never prints as "R$ X a R$ X" and falls back to the title, as E.9.2 says
+ * for R02 (UX review G2 H2).
  */
+/** A real interval: two different ends. */
+export function isRange(
+  range: readonly [number, number] | null,
+): range is readonly [number, number] {
+  return range !== null && range[0] !== range[1];
+}
+
 export function sealDetail(kind: TaxSealKind, finding: SealFinding | undefined): string {
   if (kind === 'deductible') return 'na declaração completa';
   if (finding === undefined) return '';
   if (kind === 'money_to_receive') {
-    return finding.range === null
+    return !isRange(finding.range)
       ? firstSentence(finding.title)
       : `${formatBRL(finding.range[0])} a ${formatBRL(finding.range[1])} · estimativa`;
   }

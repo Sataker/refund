@@ -124,6 +124,37 @@ export function updatePersonaState(persona: string, patch: DemoPersonaState): De
   return next;
 }
 
+const RETURN_KEY = (persona: string) => `${PREFIX}return:${persona}`;
+const SHELL_PATH = /^\/(painel|financas|achados(\/[A-Za-z0-9-]+)?|confirmar|relatorio)$/;
+
+/**
+ * UX review G2 L7: a deep link into the shell (e.g. a shared "/demo/<p>/achados/R01") that hits the track gate is
+ * remembered for this tab, so the end of the track goes back there. Only the shell's own routes are accepted.
+ */
+export function rememberReturn(persona: string, path: string): void {
+  if (safeReturn(persona, path) === null) return;
+  try {
+    window.sessionStorage.setItem(RETURN_KEY(persona), path);
+  } catch {
+    // No storage: the track ends on the dashboard, as before.
+  }
+}
+
+/** The remembered shell path, or null when none (or not one of this persona's shell routes). */
+export function returnPath(persona: string): string | null {
+  try {
+    return safeReturn(persona, window.sessionStorage.getItem(RETURN_KEY(persona)));
+  } catch {
+    return null;
+  }
+}
+
+export function safeReturn(persona: string, path: string | null): string | null {
+  const base = `/demo/${persona}`;
+  if (path === null || !path.startsWith(`${base}/`)) return null;
+  return SHELL_PATH.test(path.slice(base.length)) ? path : null;
+}
+
 /** "Recomeçar demo": deletes the session and every track answer of this tab. */
 export function restartDemo(): void {
   const store = storage();

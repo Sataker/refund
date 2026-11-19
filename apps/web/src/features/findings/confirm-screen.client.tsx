@@ -88,17 +88,31 @@ export function ConfirmScreen({ persona, holderName, base, cards }: ConfirmScree
             ))}
           </div>
         </div>
-        {allReviewed ? null : (
-          <Button
-            type="button"
-            size="lg"
-            className="self-start"
-            data-testid="confirm-all"
-            onClick={v.reviewAll}
-          >
-            <Check className="size-4" strokeWidth={1.5} aria-hidden="true" />
-            Confirmar as respostas da {holderName}
-          </Button>
+        {allReviewed && !v.custom ? null : (
+          // UX review G2 H1: once an answer differs from the persona's, the primary action confirms the visitor's
+          // answers and a secondary one brings the persona's back (the build-time total, to the cent).
+          <div className="flex flex-wrap items-center gap-3">
+            {allReviewed ? null : (
+              <Button type="button" size="lg" data-testid="confirm-all" onClick={v.reviewAll}>
+                <Check className="size-4" strokeWidth={1.5} aria-hidden="true" />
+                {v.custom
+                  ? 'Confirmar minhas respostas'
+                  : `Confirmar as respostas da ${holderName}`}
+              </Button>
+            )}
+            {v.custom ? (
+              <Button
+                type="button"
+                size="lg"
+                variant="outline"
+                data-testid="restore-persona"
+                onClick={v.restorePersona}
+              >
+                <RotateCcw className="size-4" strokeWidth={1.5} aria-hidden="true" />
+                Voltar às respostas da {holderName}
+              </Button>
+            ) : null}
+          </div>
         )}
       </header>
 

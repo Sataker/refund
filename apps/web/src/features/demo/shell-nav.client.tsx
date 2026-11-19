@@ -1,11 +1,18 @@
 'use client';
 
-import { FileText, LayoutDashboard, ListChecks, type LucideIcon, SearchCheck } from 'lucide-react';
+import {
+  FileText,
+  LayoutDashboard,
+  ListChecks,
+  type LucideIcon,
+  SearchCheck,
+  Send,
+} from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { demoSession, restartDemo } from '@/demo/demo-session';
+import { demoSession, rememberReturn, restartDemo } from '@/demo/demo-session';
 import { FINANCE_NAV } from '@/features/finance/entry';
 import { cn } from '@/lib/utils';
 
@@ -107,10 +114,28 @@ export function TabBar({ base }: { base: string }) {
 export function ShellLock({ persona }: { persona: string }) {
   const router = useRouter();
   useEffect(() => {
-    if (demoSession().personas[persona]?.trackDone !== true)
+    if (demoSession().personas[persona]?.trackDone !== true) {
+      rememberReturn(persona, window.location.pathname);
       router.replace(`/demo/${persona}/comecar/cnpj` as Route);
+    }
   }, [persona, router]);
   return null;
+}
+
+/** The header's "Mandar para meu contador", hidden on the report itself (UX review G2 L5). */
+export function SendToAccountant({ persona }: { persona: string }) {
+  const href = `/demo/${persona}/relatorio`;
+  if (usePathname() === href) return null;
+  return (
+    <Link
+      href={href as Route}
+      data-testid="send-to-accountant"
+      className="type-small hidden min-h-10 items-center gap-2 rounded-md bg-primary px-4 font-medium text-primary-foreground transition-opacity duration-(--dur-fast) hover:opacity-90 sm:inline-flex"
+    >
+      <Send className="size-4" strokeWidth={1.5} aria-hidden="true" />
+      Mandar para meu contador
+    </Link>
+  );
 }
 
 export function ShellRestart({ persona }: { persona: string }) {

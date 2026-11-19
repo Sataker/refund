@@ -11,6 +11,7 @@ import {
   lateStartText,
   type MarginStepValue,
   marginCostText,
+  marginTradeoffText,
   perYearText,
 } from './simulator-text';
 
@@ -58,7 +59,6 @@ export default function Simulator({
   // L6: fails closed. A default margin outside the steps could never be given back exactly (D8).
   const defaultIndex = MARGIN_STEPS.indexOf(defaultMargin);
   const [index, setIndex] = useState(defaultIndex);
-  const [ms, setMs] = useState<number | null>(null);
   const [state, setState] = useState<Point | null>({ point: base, curve: baseCurve });
   const margin = MARGIN_STEPS[index] ?? defaultMargin;
   const move = (next: number) => {
@@ -67,13 +67,13 @@ export default function Simulator({
       setState({ point: base, curve: baseCurve });
       return;
     }
-    const t = performance.now();
     setState(run(facts, MARGIN_STEPS[next] ?? defaultMargin));
-    setMs(Math.round(performance.now() - t));
   };
   const point = state?.point ?? null;
   if (defaultIndex < 0) return null;
-  const cost = marginCostText(steps, index);
+  const cost =
+    (point ? marginTradeoffText(steps, margin, point.regimeFrom) : null) ??
+    marginCostText(steps, index);
   const late = point ? lateStartText(point.regimeFrom, base.regimeFrom) : null;
   const perYear = point ? perYearText(point.annual, point.regimeFrom) : null;
 
@@ -90,7 +90,6 @@ export default function Simulator({
         </h2>
         <span className="type-caption text-muted-foreground">
           calculado no seu navegador pelo mesmo motor
-          {ms !== null ? ` · ${ms} ms` : ''}
         </span>
       </div>
 
@@ -157,11 +156,12 @@ export default function Simulator({
             points={state?.curve ?? []}
             current={point.current}
             target={point.target}
+            recommended={base.target}
           />
           <dl className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-0.5">
               <dt className="type-small text-muted-foreground">
-                {point.value < 0 ? 'Nesse ponto' : 'Economia nesse ponto, nos próximos 12 meses'}
+                {point.value < 0 ? 'Nesse ponto' : 'Nos próximos 12 meses'}
               </dt>
               <dd
                 className={cn(

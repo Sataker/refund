@@ -6,6 +6,7 @@ import { ConfidenceBadge } from '@/components/brand/confidence-badge';
 import { DEMO_PERSONAS } from '@/demo/catalog.ts';
 import { requireSnapshot } from '@/demo/snapshot.ts';
 import type { DashboardFinding } from '@/features/findings/model';
+import { alertCostLabel } from '@/features/findings/text';
 import { formatBRL } from '@/lib/format';
 
 // "Achados" in the shell (D30 tab bar): every finding of the persona's run, by kind, each opening Screen 6.
@@ -109,7 +110,7 @@ export default async function DemoFindingsPage({
                 f={f}
                 value={
                   f.cents > 0
-                    ? `custo de caixa ${formatBRL(f.cents)}`
+                    ? `${alertCostLabel(f.engineTitle)}: ${formatBRL(f.cents)}`
                     : f.type === 'risk'
                       ? 'risco'
                       : 'alerta'

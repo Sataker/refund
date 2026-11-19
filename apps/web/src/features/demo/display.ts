@@ -16,9 +16,16 @@ export const ALERT_TITLE: Readonly<Record<string, string>> = {
   A01: 'Despesa pessoal no cartão da empresa',
 };
 
+/**
+ * Recovery headline on Screens 5–8 (UX review G2 M7): short and plain; the engine title stays as the body under it.
+ */
+export const RECOVERY_TITLE: Readonly<Record<string, string>> = {
+  'R05-REC': 'Imposto pago a mais nos últimos 5 anos',
+};
+
 /** Display headline for any finding on Screens 5–8: short title, alert title, or the engine title. */
 export function displayTitle(ruleId: string, engineTitle: string): string {
-  return SHORT_TITLE[ruleId] ?? ALERT_TITLE[ruleId] ?? engineTitle;
+  return SHORT_TITLE[ruleId] ?? ALERT_TITLE[ruleId] ?? RECOVERY_TITLE[ruleId] ?? engineTitle;
 }
 
 /** IDENTITY-AND-UI §2.3, "Risk (illicit)": the fixed line under a risk card. */

@@ -10,7 +10,7 @@ import { LawSeal, type LawSealRef } from '@/components/brand/law-seal';
 import { MoneyCounter } from '@/components/brand/money-counter.client';
 import { Button } from '@/components/ui/button';
 import { type DemoTrackState, fromQuery, loadTrack } from '@/demo/answers';
-import { updatePersonaState } from '@/demo/demo-session';
+import { returnPath, updatePersonaState } from '@/demo/demo-session';
 import { TrackFooter, TrackHeader } from '@/features/track/track-frame';
 import { formatBRL, formatYearMonth, moneyParts } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -105,6 +105,9 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
   const router = useRouter();
   const [view, dispatch] = useReducer(reducer, INITIAL_VIEW);
   const [track, setTrack] = useState<DemoTrackState>(defaults);
+  // UX review G2 L7: a deep link that met the track gate is where the track ends.
+  const [back, setBack] = useState<string | null>(null);
+  useEffect(() => setBack(returnPath(persona.id)), [persona.id]);
   const [lost, setLost] = useState(false);
   const [firstMoneyMs, setFirstMoneyMs] = useState<number | null>(null);
   const openedAt = useRef(0);
@@ -181,7 +184,7 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
     (_rule, i) =>
       view.stages.rules === 'done' || rules.slice(i).some((x) => view.rulesSeen.includes(x.ruleId)),
   ).length;
-  const dashboard = `${demoBase(persona.id)}/painel` as Route;
+  const dashboard = (back ?? `${demoBase(persona.id)}/painel`) as Route;
   const progress = demoProgress('analysis', track, persona);
   const transactions =
     persona.accounts.PJ.transactions + (track.pfSkipped ? 0 : persona.accounts.PF.transactions);
@@ -192,7 +195,12 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
       data-testid="analysis"
       data-status={view.status}
     >
-      <TrackHeader step="analysis" progress={progress} exit={{ href: '/demo', label: 'Sair' }} />
+      <TrackHeader
+        step="analysis"
+        progress={progress}
+        exit={{ href: '/demo', label: 'Sair' }}
+        finished={finished}
+      />
       <main
         id="conteudo"
         className="mx-auto w-full max-w-[1120px] flex-1 px-4 py-6 sm:px-6 lg:py-10"
@@ -211,14 +219,14 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
             <Timer className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
             {firstMoneyMs === null
               ? 'cronômetro ligado'
-              : `primeiro R$ em ${seconds(firstMoneyMs)} s`}
+              : `primeiro valor em ${seconds(firstMoneyMs)} s`}
           </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-10">
           {/* Right column first on mobile: the number stays at the top (Screen 4, mobile). */}
           <section
-            aria-label="Encontrado até agora"
+            aria-label={finished ? 'Encontramos' : 'Encontrado até agora'}
             className="order-1 flex min-w-0 flex-col gap-4 lg:order-2"
           >
             <div
@@ -228,7 +236,9 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
                 finished ? 'relative' : 'sticky top-0',
               )}
             >
-              <p className="type-overline text-muted-foreground">Encontrado até agora</p>
+              <p className="type-overline text-muted-foreground" data-testid="found-label">
+                {finished ? 'Encontramos' : 'Encontrado até agora'}
+              </p>
               <div className="relative">
                 <MoneyCounter
                   cents={view.target}

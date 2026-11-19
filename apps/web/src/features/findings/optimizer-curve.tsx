@@ -16,18 +16,47 @@ interface OptimizerCurveProps {
   current: number;
   /** P* (amber dot). */
   target: number;
+  /** The recommended P* (default margin): anchors the x domain so it does not jump while the slider moves. */
+  recommended?: number;
+}
+
+/** Window around the recommended P*, as multiples of it (UX review G2 H3). */
+export const DOMAIN_LOW = 0.5;
+export const DOMAIN_HIGH = 1.25;
+
+/**
+ * The x window of the chart (UX review G2 H3): the engine's grid runs far past P*, which squeezed the Anexo V → III
+ * step and the savings area into a sliver. The window is 0,5× to 1,25× the recommended P* (the grid starts at today's
+ * pró-labore, so the right end is what decides how wide the area between "hoje" and P* looks), always widened to keep
+ * "hoje" and the slider's P* inside, and never wider than the grid. Positions only; no value is computed.
+ */
+export function curveDomain(
+  xs: readonly number[],
+  recommended: number,
+  keep: readonly number[],
+): [number, number] {
+  const [g0, g1] = [Math.min(...xs), Math.max(...xs)];
+  if (!(recommended > 0)) return [g0, g1];
+  const lo = Math.min(recommended * DOMAIN_LOW, ...keep);
+  const hi = Math.max(recommended * DOMAIN_HIGH, ...keep);
+  return [Math.max(g0, lo), Math.min(g1, hi)];
 }
 
 // Plot coordinates in percent of the plot box.
 const W = 100;
 const H = 100;
 
-export function OptimizerCurve({ points, current, target }: OptimizerCurveProps) {
-  const sorted = [...points].sort((a, b) => a.monthlyProLabore - b.monthlyProLabore);
-  if (sorted.length < 2) return null;
-  const xs = sorted.map((p) => p.monthlyProLabore);
+export function OptimizerCurve({ points, current, target, recommended }: OptimizerCurveProps) {
+  const all = [...points].sort((a, b) => a.monthlyProLabore - b.monthlyProLabore);
+  if (all.length < 2) return null;
+  const [x0, x1] = curveDomain(
+    all.map((p) => p.monthlyProLabore),
+    recommended ?? target,
+    [current, target],
+  );
+  const inside = all.filter((p) => p.monthlyProLabore >= x0 && p.monthlyProLabore <= x1);
+  const sorted = inside.length >= 2 ? inside : all;
   const ys = sorted.map((p) => p.annualTotalCost);
-  const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
   const [yMin, yMax] = [Math.min(...ys), Math.max(...ys)];
   const y0 = yMin - (yMax - yMin) * 0.08;
   const y1 = yMax + (yMax - yMin) * 0.05;
@@ -51,7 +80,13 @@ export function OptimizerCurve({ points, current, target }: OptimizerCurveProps)
   const yTicks = [yMax, (yMin + yMax) / 2, yMin];
   const xTicks = [x0, x0 + (x1 - x0) / 2, x1];
   return (
-    <figure className="flex flex-col gap-2" data-testid="optimizer-curve" data-target={target}>
+    <figure
+      className="flex flex-col gap-2"
+      data-testid="optimizer-curve"
+      data-target={target}
+      data-x0={x0}
+      data-x1={x1}
+    >
       <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-2">
         <div className="relative w-16" aria-hidden="true">
           {yTicks.map((t) => (

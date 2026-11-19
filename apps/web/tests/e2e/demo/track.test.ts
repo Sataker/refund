@@ -257,7 +257,7 @@ test.describe('demo track @demo', () => {
     expect(choreography).toBeLessThanOrEqual(12_000);
     await expect(hero).toHaveAttribute('data-cents', String(TOTAL));
     await expect(page.getByTestId('alert-A01')).toBeVisible();
-    await expect(page.getByTestId('first-money-timer')).toContainText(/primeiro R\$ em \d+,\d s/);
+    await expect(page.getByTestId('first-money-timer')).toContainText(/primeiro valor em \d+,\d s/);
   });
 
   test('D12: "Recomeçar demo" resets the answers; a new (incognito) context starts clean', async ({

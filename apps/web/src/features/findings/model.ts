@@ -63,6 +63,11 @@ export interface DashboardFinding {
   firstEffect: string | null;
   deadline: string | null;
   countsInTotal: boolean;
+  /**
+   * A01 only (UX review G2 M8): how many personal payments the PJ made and their sum, read from the engine's trace
+   * (the per-merchant `count` inputs and the `total` input of A01.MARGINAL_12M). Null without a trace.
+   */
+  personalSpend: { count: number; total: number } | null;
 }
 
 export interface DashboardModel {
@@ -95,7 +100,18 @@ export function urgencyOf(items: readonly RecoveryItem[] | undefined): Urgency |
   return { count: urgent.length, days: Math.min(...urgent.map((i) => i.daysLeft)) };
 }
 
-function view(f: Omit<Finding, 'trace'>): DashboardFinding {
+function personalSpendOf(f: Omit<Finding, 'trace'> & { trace?: Finding['trace'] }) {
+  if (f.ruleId !== 'A01' || f.trace === undefined) return null;
+  const total = f.trace.find((s) => s.id === 'A01.MARGINAL_12M')?.inputs.total?.value;
+  const counts = f.trace
+    .filter((s) => s.id.startsWith('A01.MERCHANT.'))
+    .map((s) => s.inputs.count?.value);
+  if (typeof total !== 'number' || counts.length === 0 || counts.some((c) => typeof c !== 'number'))
+    return null;
+  return { count: (counts as number[]).reduce((a, c) => a + c, 0), total };
+}
+
+function view(f: Omit<Finding, 'trace'> & { trace?: Finding['trace'] }): DashboardFinding {
   const ref = f.refs[0];
   return {
     ruleId: f.ruleId,
@@ -112,6 +128,7 @@ function view(f: Omit<Finding, 'trace'>): DashboardFinding {
     firstEffect: f.howToReceive.find((h) => h.firstEffect !== undefined)?.firstEffect ?? null,
     deadline: f.deadline ?? null,
     countsInTotal: f.countsInTotal,
+    personalSpend: personalSpendOf(f),
   };
 }
 

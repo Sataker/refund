@@ -1,4 +1,4 @@
-import { Bell, Send } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -9,7 +9,13 @@ import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { ThemeToggle } from '@/components/brand/theme-toggle.client';
 import { demoPersona } from '@/demo/catalog.ts';
 import { titleCase } from '@/demo/view.ts';
-import { ShellLock, ShellRestart, SidebarNav, TabBar } from '@/features/demo/shell-nav.client';
+import {
+  SendToAccountant,
+  ShellLock,
+  ShellRestart,
+  SidebarNav,
+  TabBar,
+} from '@/features/demo/shell-nav.client';
 
 // The /demo app shell (IDENTITY-AND-UI §5 "App shell"): 248px sidebar on desktop; on mobile a top bar with the seal
 // and the 5-item tab bar (D30). Logo, SandboxSeal and Disclaimer are always visible. Screens 5–8 and 5b live here.
@@ -83,14 +89,7 @@ export default async function DemoShell({
               <span className="lg:hidden">
                 <ThemeToggle compact shortcut={false} />
               </span>
-              <Link
-                href={`/demo/${id}/relatorio` as Route}
-                data-testid="send-to-accountant"
-                className="type-small hidden min-h-10 items-center gap-2 rounded-md bg-primary px-4 font-medium text-primary-foreground transition-opacity duration-(--dur-fast) hover:opacity-90 sm:inline-flex"
-              >
-                <Send className="size-4" strokeWidth={1.5} aria-hidden="true" />
-                Mandar para meu contador
-              </Link>
+              <SendToAccountant persona={id} />
             </div>
           </div>
         </header>

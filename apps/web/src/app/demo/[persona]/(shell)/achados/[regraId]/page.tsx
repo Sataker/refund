@@ -22,6 +22,7 @@ import { planAsText } from '@/features/findings/plan-text';
 import { type Excerpt, RefSheet } from '@/features/findings/ref-sheet';
 import { SimulatorLoader } from '@/features/findings/simulator-loader.client';
 import { marginStepValues } from '@/features/findings/simulator-steps';
+import { alertCostLabel, formatCivilDate, steadyStateSuffix } from '@/features/findings/text';
 import { VisitorNotice } from '@/features/findings/visitor-notice.client';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -77,7 +78,15 @@ function sourcesOf(f: Finding, snap: DemoSnapshot): Record<string, TraceSourceRo
   return out;
 }
 
-function Amount({ f }: { f: Finding }) {
+function Amount({
+  f,
+  regimeAnchor,
+  analysisDate,
+}: {
+  f: Finding;
+  regimeAnchor: string | null;
+  analysisDate: string;
+}) {
   if (f.type === 'savings')
     return (
       <MoneyHero
@@ -91,7 +100,7 @@ function Amount({ f }: { f: Finding }) {
             {f.annualRegimeValue !== undefined ? (
               <span className="num" data-testid="detail/regime" data-cents={f.annualRegimeValue}>
                 e {formatBRL(f.annualRegimeValue)} por ano
-                {f.regimeFrom ? ` a partir de ${formatYearMonth(f.regimeFrom)}` : ' em regime'}
+                {steadyStateSuffix(f.regimeFrom, regimeAnchor, formatYearMonth)}
               </span>
             ) : null}
           </span>
@@ -110,7 +119,8 @@ function Amount({ f }: { f: Finding }) {
           {formatBRL(f.range[0])} a {formatBRL(f.range[1])}
         </p>
         <p className="type-small text-muted-foreground">
-          estimativa · pagos a mais nos últimos 5 anos · não entra no total
+          estimativa · pagos a mais nos últimos 5 anos, na data da análise (
+          {formatCivilDate(analysisDate)}) · não entra no total
         </p>
       </div>
     );
@@ -124,7 +134,9 @@ function Amount({ f }: { f: Finding }) {
         >
           {formatBRL(f.marginalValue12m)}
         </p>
-        <p className="type-small text-muted-foreground">custo de caixa · fora do total</p>
+        <p className="type-small text-muted-foreground">
+          {alertCostLabel(f.title)} · fora do total
+        </p>
       </div>
     );
   return null;
@@ -181,11 +193,15 @@ export default async function DemoFindingPage({
           <h1 className="font-serif text-[32px] leading-[36px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]">
             {title}
           </h1>
-          <Amount f={f} />
+          <Amount
+            f={f}
+            regimeAnchor={snap.dashboard.regimeFrom}
+            analysisDate={snap.facts.analysisDate}
+          />
           {title !== f.title ? (
             <p className="type-body-lg max-w-[68ch] text-foreground">{keepCurrency(f.title)}</p>
           ) : null}
-          {f.type === 'risk' ? (
+          {f.type === 'risk' && !explanation ? (
             <p className="type-small font-medium text-risk" data-testid="risk-line">
               {RISK_LINE}
             </p>
@@ -228,7 +244,11 @@ export default async function DemoFindingPage({
         />
 
         <section aria-label="Cálculo" className="flex flex-col gap-2">
-          <CalcTrace trace={f.trace} sources={sources} />
+          <CalcTrace
+            trace={f.trace}
+            sources={sources}
+            {...(f.type === 'risk' ? { noMoneyText: 'sem valor de economia' } : {})}
+          />
         </section>
 
         {mainRefs.length > 0 ? (
@@ -237,9 +257,24 @@ export default async function DemoFindingPage({
               A lei
             </h2>
             <div className="flex flex-col gap-2">
-              {mainRefs.map((e, i) => (
-                <RefSheet key={e.id} excerpt={e} open={i === 0} />
+              {mainRefs.slice(0, 1).map((e) => (
+                <RefSheet key={e.id} excerpt={e} open />
               ))}
+              {mainRefs.length > 1 ? (
+                // UX review G2 L3: the main norm stays open; the others wait under one line.
+                <details className="group" data-testid="more-refs">
+                  <summary className="type-small inline-flex min-h-11 cursor-pointer items-center font-medium text-cobalt">
+                    {mainRefs.length === 2
+                      ? 'Outra norma usada'
+                      : `Outras ${mainRefs.length - 1} normas usadas`}
+                  </summary>
+                  <div className="mt-2 flex flex-col gap-2">
+                    {mainRefs.slice(1).map((e) => (
+                      <RefSheet key={e.id} excerpt={e} open={false} />
+                    ))}
+                  </div>
+                </details>
+              ) : null}
             </div>
           </section>
         ) : null}

@@ -12,6 +12,7 @@ import { lawExcerpt, refIdsOf } from '@/demo/snapshot.ts';
 import { displayTitle, keepCurrency, RISK_LINE } from '@/features/demo/display';
 import { ActionPlan, formatWhen } from '@/features/findings/action-plan';
 import { type Excerpt, RefSheet } from '@/features/findings/ref-sheet';
+import { steadyStateSuffix } from '@/features/findings/text';
 import { MarkFindingButton } from '@/features/live/buttons.client';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { formatBRL, formatYearMonth } from '@/lib/format';
@@ -102,7 +103,7 @@ export default async function LiveFindingPage({
                     data-cents={f.annualRegimeValue}
                   >
                     e {formatBRL(f.annualRegimeValue)} por ano
-                    {f.regimeFrom ? ` a partir de ${formatYearMonth(f.regimeFrom)}` : ' em regime'}
+                    {steadyStateSuffix(f.regimeFrom, null, formatYearMonth)}
                   </span>
                 ) : null}
               </span>
@@ -129,7 +130,7 @@ export default async function LiveFindingPage({
         {title !== f.title ? (
           <p className="type-body-lg max-w-[68ch] text-foreground">{keepCurrency(f.title)}</p>
         ) : null}
-        {f.type === 'risk' ? (
+        {f.type === 'risk' && dto.explanation === f.title ? (
           <p className="type-small font-medium text-risk" data-testid="risk-line">
             {RISK_LINE}
           </p>
@@ -174,7 +175,10 @@ export default async function LiveFindingPage({
             </p>
           </div>
         ) : (
-          <CalcTrace trace={dto.trace} />
+          <CalcTrace
+            trace={dto.trace}
+            {...(f.type === 'risk' ? { noMoneyText: 'sem valor de economia' } : {})}
+          />
         )}
       </section>
 

@@ -14,7 +14,13 @@ import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ConfirmCard } from './confirm';
 import type { DashboardFinding, DashboardModel, Holder } from './model';
-import { formatCivilDate, urgencyText } from './text';
+import {
+  alertCostLabel,
+  formatCivilDate,
+  personalPaymentsText,
+  steadyStateSuffix,
+  urgencyText,
+} from './text';
 import { useVisitorAnswers } from './visitor.client';
 
 // Screen 5, the dashboard (IDENTITY-AND-UI §5; ENGINE-SPEC C.9). The big number is ONLY the confirmed savings of the
@@ -124,7 +130,7 @@ export function DashboardView({
       <header className="flex flex-col gap-1.5">
         <p className="type-small text-muted-foreground">Painel · {title}</p>
         <h1 className="font-serif text-[36px] leading-[40px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]">
-          Você pode pagar a menos
+          Você pode pagar a menos, dentro da lei
         </h1>
         {actions}
       </header>
@@ -199,7 +205,7 @@ export function DashboardView({
               <span className="type-small text-muted-foreground"> em 12 meses</span>
               {m.savings.some((f) => f.ruleId === 'R01' && f.holder === 'PJ' && f.countsInTotal) ? (
                 <span className="type-caption block text-muted-foreground" data-testid="pj-note">
-                  R01 já desconta o INSS maior do sócio
+                  Já desconta o INSS maior do seu pró-labore
                 </span>
               ) : null}
             </MiniCard>
@@ -302,9 +308,7 @@ export function DashboardView({
                       {f.annualRegimeValue !== null ? (
                         <span className="num">
                           {formatBRL(f.annualRegimeValue)} por ano
-                          {f.regimeFrom
-                            ? ` a partir de ${formatYearMonth(f.regimeFrom)}`
-                            : ' em regime'}
+                          {steadyStateSuffix(f.regimeFrom, m.regimeFrom, formatYearMonth)}
                         </span>
                       ) : null}
                       {f.firstEffect ? (
@@ -410,7 +414,7 @@ export function DashboardView({
                 <ConfidenceBadge level={f.confidence} />
                 {f.cents > 0 ? (
                   <>
-                    {' · custo de caixa '}
+                    {` · ${alertCostLabel(f.engineTitle)}: `}
                     <span
                       className="num text-foreground"
                       data-testid={`dashboard/alert-${f.ruleId}-cost`}
@@ -424,6 +428,13 @@ export function DashboardView({
               <p className="text-base font-medium text-foreground">{keepCurrency(f.title)}</p>
               {f.title !== f.engineTitle ? (
                 <p className="type-small text-muted-foreground">{keepCurrency(f.engineTitle)}</p>
+              ) : null}
+              {f.personalSpend ? (
+                <p className="type-small num text-foreground" data-testid="personal-spend">
+                  {personalPaymentsText(f.personalSpend.count)} ·{' '}
+                  <span data-cents={f.personalSpend.total}>{formatBRL(f.personalSpend.total)}</span>{' '}
+                  em 12 meses
+                </p>
               ) : null}
               {f.type === 'risk' ? (
                 <p className="type-small font-medium text-risk" data-testid="risk-line">

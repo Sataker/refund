@@ -51,9 +51,12 @@ function stageState(stageId: number, step: TrackFrameProps['step'], p: TrackProg
     : 'current';
 }
 
-/** Fraction of the current stage already done (the mobile segment fills as its steps complete). */
-function stageFill(step: TrackFrameProps['step'], p: TrackProgress): number {
-  if (step === 'analysis') return 0.5;
+/**
+ * Fraction of the current stage already done (the mobile segment fills as its steps complete). The analysis is half
+ * full while it runs and full once it ends (UX review G2 M3).
+ */
+function stageFill(step: TrackFrameProps['step'], p: TrackProgress, finished = false): number {
+  if (step === 'analysis') return finished ? 1 : 0.5;
   const steps = (stageOf(step).steps as readonly Step[]).filter((s) => applies(s, p));
   if (steps.length === 0) return 0;
   return steps.filter((s) => isDone(s, p)).length / steps.length;
@@ -64,17 +67,20 @@ export function TrackProgressBar({
   progress,
   className,
   seal,
+  finished = false,
 }: {
   step: TrackFrameProps['step'];
   progress: TrackProgress;
   className?: string;
+  /** The analysis ended: its (4th) segment fills. */
+  finished?: boolean;
   /** The compact SandboxSeal on mobile, so the seal is always on screen (IDENTITY-AND-UI §5). */
   seal?: ReactNode;
 }) {
   const stage = step === 'analysis' ? STAGES[3] : stageOf(step);
-  const fill = stageFill(step, progress);
+  const fill = stageFill(step, progress, finished);
   return (
-    <div className={className} data-testid="track-progress">
+    <div className={className} data-testid="track-progress" data-fill={fill}>
       <div className="flex gap-1.5" aria-hidden="true">
         {STAGES.map((s) => {
           const state = stageState(s.id, step, progress);
@@ -188,7 +194,10 @@ export function TrackHeader({
   exit,
   topAction,
   live = false,
-}: Pick<TrackFrameProps, 'step' | 'progress' | 'exit' | 'topAction' | 'live'>) {
+  finished = false,
+}: Pick<TrackFrameProps, 'step' | 'progress' | 'exit' | 'topAction' | 'live'> & {
+  finished?: boolean;
+}) {
   return (
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex h-14 max-w-[1120px] items-center justify-between gap-4 px-4 sm:px-6">
@@ -210,6 +219,7 @@ export function TrackHeader({
         step={step}
         progress={progress}
         seal={<SandboxSeal live={live} compact className="px-2 py-0.5 md:hidden" />}
+        finished={finished}
         className={cn('mx-auto max-w-[1120px] px-4 pb-3', step !== 'analysis' && 'lg:hidden')}
       />
     </header>

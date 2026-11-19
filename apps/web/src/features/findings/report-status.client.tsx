@@ -10,7 +10,7 @@ import {
   updatePersonaState,
 } from '@/demo/demo-session';
 import { cn } from '@/lib/utils';
-import { DEMO_ACCOUNTANT, DEMO_ACCOUNTANT_FULL } from './text';
+import { DEMO_ACCOUNTANT_FULL, DEMO_ACCOUNTANT_SHORT } from './text';
 
 // Screen 8 on /demo (ARCHITECTURE §4.7 note): "Mandar para meu contador" opens the accountant view in another tab;
 // the approval there reaches this tab through BroadcastChannel (demo-session.ts), with no server and no e-mail.
@@ -54,7 +54,7 @@ export function ReportPanel({ persona }: { persona: string }) {
     { id: 'sent', label: 'Enviado', at: report?.sentAt, on: report?.sentAt !== undefined },
     {
       id: 'opened',
-      label: `Aberto por ${DEMO_ACCOUNTANT}`,
+      label: `Aberto por ${DEMO_ACCOUNTANT_SHORT}`,
       at: report?.openedAt,
       on: report?.openedAt !== undefined,
     },
@@ -62,7 +62,7 @@ export function ReportPanel({ persona }: { persona: string }) {
       ? { id: 'adjust', label: 'Ajuste pedido', at: undefined, on: true }
       : {
           id: 'approved',
-          label: status === 'approved' ? `Aprovado por ${DEMO_ACCOUNTANT}` : 'Aprovado',
+          label: status === 'approved' ? `Aprovado por ${DEMO_ACCOUNTANT_SHORT}` : 'Aprovado',
           at: report?.approvedAt,
           on: status === 'approved',
         },

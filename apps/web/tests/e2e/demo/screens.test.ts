@@ -224,10 +224,17 @@ test.describe('demo screens 5–8 @demo', () => {
       await expect(page.getByLabel('Folga de segurança acima de 28%')).toBeVisible();
       await expect(page.getByTestId('sim/margin')).toContainText('1 p.p. (recomendada)');
       await expect(page.getByTestId('sim/annual')).toHaveAttribute('data-cents', '4289652');
-      await expect(page.getByTestId('sim/annual')).toContainText('por ano a partir de abr/2027');
-      await expect(page.getByTestId('sim/cost')).toContainText(
-        /Cada 0,25 p\.p\. de folga custa R\$\s165,00 por ano/,
+      await expect(page.getByTestId('sim/annual')).toContainText(
+        'por ano depois, a partir de abr/2027',
       );
+      // UX review G2 H4: the trade-off of the margin, every value from the engine.
+      await expect(page.getByTestId('sim/cost')).toContainText(
+        /Mais folga antecipa o Anexo III \(abr\/2027 com 1 p\.p\.\), mas custa R\$\s165,00 por ano a cada 0,25 p\.p\. depois disso\./,
+      );
+      // UX review G2 H3: the x window ends at 1,25× the recommended P* (R$ 2.260,00); it starts where the engine's
+      // grid starts, at "hoje" (R$ 1.621,00), which is above 0,5× P*.
+      await expect(page.getByTestId('optimizer-curve')).toHaveAttribute('data-x0', '162100');
+      await expect(page.getByTestId('optimizer-curve')).toHaveAttribute('data-x1', '282500');
       await expect(page.getByTestId('sim/late')).toHaveCount(0);
 
       // Timed inside the page: from the input event to the new number on screen.
@@ -382,7 +389,9 @@ test.describe('demo screens 5–8 @demo', () => {
       await accountant.getByTestId('approve-report').click();
       await expect(accountant.getByTestId('accountant-status')).toContainText('Aprovado');
       await expect(page.getByTestId('report-status')).toHaveAttribute('data-status', 'approved');
-      await expect(page.getByTestId('report-status')).toContainText('Aprovado por Ana Lima');
+      await expect(page.getByTestId('report-status')).toContainText(
+        'Aprovado por Ana Lima (fictícia)',
+      );
       await expect(page.getByTestId('report-approval')).toHaveAttribute('data-status', 'approved');
       await accountant.close();
     });

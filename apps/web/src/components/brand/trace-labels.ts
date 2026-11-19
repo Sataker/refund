@@ -1,4 +1,4 @@
-import { formatRatePercent } from '@/lib/format';
+import { formatRatePercent, formatYearMonth } from '@/lib/format';
 
 // Portuguese names for the engine's trace input keys (UX review H2): "Ver cálculo" and the report never show a raw
 // variable name. `null` = an internal input that is not shown (e.g. the transaction ids, which open as a list).
@@ -63,8 +63,22 @@ export function traceInputLabel(key: string): string | null {
 }
 
 /** Formats a text input: the engine's display rate becomes pt-BR percent (no recomputation). */
+/**
+ * A value that is only months ("2025-12", "2026-10, 2026-11", or the engine's "11/2025, 12/2025"): data, shown as
+ * "dez/2025" (UX review G2 M5). Months inside engine prose are left alone.
+ */
+const YEAR_MONTHS = /^\d{4}-(0[1-9]|1[0-2])(, \d{4}-(0[1-9]|1[0-2]))*$/;
+const MONTHS_YEAR = /^(0[1-9]|1[0-2])\/\d{4}(, (0[1-9]|1[0-2])\/\d{4})*$/;
+
 export function traceTextValue(key: string, value: string): string {
-  return RATE_TEXT_KEYS.has(key) && /^\d+(\.\d+)?$/.test(value) ? formatRatePercent(value) : value;
+  if (RATE_TEXT_KEYS.has(key) && /^\d+(\.\d+)?$/.test(value)) return formatRatePercent(value);
+  if (YEAR_MONTHS.test(value)) return value.split(', ').map(formatYearMonth).join(', ');
+  if (MONTHS_YEAR.test(value))
+    return value
+      .split(', ')
+      .map((m) => formatYearMonth(`${m.slice(3)}-${m.slice(0, 2)}`))
+      .join(', ');
+  return value;
 }
 
 /**

@@ -215,11 +215,13 @@ export function LiveAnalysis({
         </section>
 
         <section
-          aria-label="Encontrado até agora"
+          aria-label={finished ? 'Encontramos' : 'Encontrado até agora'}
           className="order-1 flex min-w-0 flex-col gap-4 lg:order-2"
         >
           <div className="rounded-xl border border-border bg-surface p-6">
-            <p className="type-overline text-muted-foreground">Encontrado até agora</p>
+            <p className="type-overline text-muted-foreground" data-testid="found-label">
+              {finished ? 'Encontramos' : 'Encontrado até agora'}
+            </p>
             <MoneyCounter
               cents={view.target}
               testId="analysis/money-hero"

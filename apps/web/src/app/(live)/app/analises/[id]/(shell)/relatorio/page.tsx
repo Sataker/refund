@@ -54,6 +54,7 @@ export default async function LiveReportPage({ params }: { params: Promise<{ id:
         result={result}
         model={live.dashboard}
         labelOf={(ref) => labels.get(ref)}
+        live
       />
     </div>
   );

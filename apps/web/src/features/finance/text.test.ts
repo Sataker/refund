@@ -72,6 +72,20 @@ describe('Finanças copy (Screen 5b)', () => {
     expect(
       plain(sealDetail('money_to_receive', finding({ ruleId: 'R02', type: 'alert', title: 'T' }))),
     ).toBe('T');
+    // The engine's R02 carries [cost, cost]: never "R$ 1.111,70 a R$ 1.111,70" (UX review G2 H2).
+    expect(
+      plain(
+        sealDetail(
+          'money_to_receive',
+          finding({
+            ruleId: 'R02',
+            type: 'alert',
+            title: 'R$ 9.000,00 retidos.',
+            range: [111_170, 111_170],
+          }),
+        ),
+      ),
+    ).toBe('R$ 9.000,00 retidos.');
     expect(plain(sealDetail('risk', finding({ title: 'Risco' })))).toBe('Risco');
     expect(plain(sealDetail('attention', finding({ title: 'Atenção' })))).toBe('Atenção');
     expect(plain(sealDetail('deductible', undefined))).toBe('na declaração completa');

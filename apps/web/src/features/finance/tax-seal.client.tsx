@@ -5,7 +5,7 @@ import { type CSSProperties, useId, useLayoutEffect, useRef, useState } from 're
 import { LawSeal } from '@/components/brand/law-seal';
 import { cn } from '@/lib/utils';
 import { SEAL_STYLE } from './seal-style.tsx';
-import { DEDUCTIBLE_TEXT, SEAL_LABEL, sealDetail } from './text.ts';
+import { DEDUCTIBLE_TEXT, isRange, SEAL_LABEL, sealDetail } from './text.ts';
 import type { SealFinding, TaxSeal as TaxSealData, TaxSealKind } from './types.ts';
 
 // TaxSeal (IDENTITY-AND-UI §4.8, Screen 5b): icon + label, never color alone. Tap opens the linked finding's title,
@@ -55,7 +55,7 @@ function SealBody({
             <p className="type-small font-medium text-foreground">{f.title}</p>
             {kind === 'risk' ||
             kind === 'attention' ||
-            (kind === 'money_to_receive' && f.range === null) ? null : (
+            (kind === 'money_to_receive' && !isRange(f.range)) ? null : (
               <p className="num type-small text-found-ink">{sealDetail(kind, f)}</p>
             )}
             <a

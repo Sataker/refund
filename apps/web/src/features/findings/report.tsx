@@ -4,11 +4,13 @@ import { inputText } from '@/components/brand/calc-trace';
 import { confidenceLabel } from '@/components/brand/confidence-badge';
 import { DISCLAIMER_TEXT } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
-import { cleanEngineText, traceInputLabel } from '@/components/brand/trace-labels';
+import { sealLabel } from '@/components/brand/sandbox-seal';
+import { cleanEngineText, traceInputLabel, traceTextValue } from '@/components/brand/trace-labels';
 import { displayTitle, keepCurrency } from '@/features/demo/display';
 import { formatBRL, formatRatePercent, formatYearMonth } from '@/lib/format';
 import { formatWhen, NO_MONEY_TEXT, RecoveryTable } from './action-plan';
 import { ACTOR_LABEL, type DashboardModel, formatCivilDate, stepsByActor } from './model';
+import { alertCostLabel } from './text';
 
 // Screen 8, the printable report (IDENTITY-AND-UI §5 Screen 8; no @react-pdf: browser print with print CSS). It is
 // the calculation record the accountant receives: totals, each finding's trace, assumptions, citations, the action
@@ -23,6 +25,11 @@ interface ReportProps {
   labelOf: (refId: string) => string | undefined;
   /** The approval status line (client), printed under the total. */
   approval?: ReactNode;
+  /**
+   * /app and /r/[token] (a real company's public data): the footer seal must not say "dados sintéticos"
+   * (compliance review G2 M1, same rule as SandboxSeal). /demo leaves it false.
+   */
+  live?: boolean;
 }
 
 function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
@@ -44,7 +51,7 @@ type TraceStep = Finding['trace'][number];
 function resultText(r: TraceStep['result']): string {
   if (r.unit === 'cents' && typeof r.value === 'number') return formatBRL(r.value);
   if (r.unit === 'rate') return formatRatePercent(String(r.value));
-  return cleanEngineText(String(r.value));
+  return traceTextValue('', cleanEngineText(String(r.value)));
 }
 
 /**
@@ -242,6 +249,7 @@ export function Report({
   model,
   labelOf,
   approval,
+  live = false,
 }: ReportProps) {
   // One order everywhere (UX review): biggest effect first, ties in the engine order.
   const savings = result.findings.filter((f) => f.type === 'savings').sort(byValue);
@@ -292,6 +300,18 @@ export function Report({
         ) : model.annualPending ? (
           <p className="text-[13px] text-neutral-700">
             Valor por ano aparece quando tudo estiver confirmado.
+          </p>
+        ) : null}
+        {model.recoveryRange ? (
+          // UX review G2 L6: the whole recovery range on the first page, apart from the total.
+          <p
+            className="num text-[13px] text-neutral-700"
+            data-testid="report/recovery"
+            data-cents-min={model.recoveryRange[0]}
+            data-cents-max={model.recoveryRange[1]}
+          >
+            Para recuperar, fora do total: {formatBRL(model.recoveryRange[0])} a{' '}
+            {formatBRL(model.recoveryRange[1])} (estimativa)
           </p>
         ) : null}
         {approval}
@@ -374,7 +394,7 @@ export function Report({
                 value={
                   f.marginalValue12m > 0 ? (
                     <span className="num" data-cents={f.marginalValue12m}>
-                      custo de caixa {formatBRL(f.marginalValue12m)}
+                      {alertCostLabel(f.title)}: {formatBRL(f.marginalValue12m)}
                     </span>
                   ) : (
                     <span className="text-[12px] font-normal text-neutral-600">
@@ -395,7 +415,7 @@ export function Report({
             <div key={g.who} className="flex flex-col gap-2" data-testid={`report-plan-${g.who}`}>
               <h3 className="text-[13px] font-semibold">{ACTOR_LABEL[g.who]}</h3>
               <ol className="flex list-decimal flex-col gap-1.5 pl-5 text-[12px]">
-                {g.steps.map(({ ruleId, title, step }) => (
+                {g.steps.map(({ title, step }) => (
                   <li
                     key={step.id}
                     className={step.noSource ? 'text-neutral-500 italic' : undefined}
@@ -418,7 +438,6 @@ export function Report({
                         ({step.refIds.map(labelOf).filter(Boolean).join('; ')})
                       </span>
                     ) : null}
-                    <span className="sr-only"> ({ruleId})</span>
                   </li>
                 ))}
               </ol>
@@ -463,7 +482,9 @@ export function Report({
         <p className="font-mono break-all" data-testid="report-hash">
           Hash dos parâmetros {result.parametersHash} · hash das entradas {result.inputsHash}
         </p>
-        <p>{DISCLAIMER_TEXT} Dados sintéticos · Open Finance sandbox.</p>
+        <p data-testid="report-seal">
+          {DISCLAIMER_TEXT} {sealLabel(live)}.
+        </p>
       </footer>
     </article>
   );

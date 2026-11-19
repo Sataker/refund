@@ -28,6 +28,8 @@ export interface VisitorAnswers {
   choose: (cardId: string, value: string) => void;
   /** "Confirmar as respostas da {nome}": every card marked as reviewed, answers unchanged. */
   reviewAll: () => void;
+  /** "Voltar às respostas da {nome}" (UX review G2 H1): every card back to the persona's own answer. */
+  restorePersona: () => void;
   retry: () => void;
 }
 
@@ -116,6 +118,11 @@ export function useVisitorAnswers(
     updatePersonaState(persona, { choices, reviewed: all });
   }, [cards, choices, persona]);
 
+  const restorePersona = useCallback(() => {
+    setChoices({});
+    updatePersonaState(persona, { choices: {}, reviewed });
+  }, [persona, reviewed]);
+
   const current = custom && result !== null && result.key === keyOf(choices) ? result.value : null;
   return {
     ready,
@@ -127,6 +134,7 @@ export function useVisitorAnswers(
     status: custom && current === null && status !== 'error' ? 'loading' : status,
     choose,
     reviewAll,
+    restorePersona,
     retry: () => void recalc(choices),
   };
 }

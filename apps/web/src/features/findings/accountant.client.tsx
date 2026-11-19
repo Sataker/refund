@@ -2,6 +2,7 @@
 
 import { Check, MessageSquareWarning } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { LawSeal } from '@/components/brand/law-seal';
 import { Button } from '@/components/ui/button';
 import { demoSession, updatePersonaState } from '@/demo/demo-session';
 import { cn } from '@/lib/utils';
@@ -19,6 +20,8 @@ export interface AccountantItem {
   value: string;
   /** Alerts and risks: shown for reading, outside the total; nothing to approve (engine review L1). */
   readOnly?: boolean;
+  /** The finding's first LegalRef (rule metadata), as the § chip of the row (UX review G2 M10). */
+  lawRef?: { label: string; url: string };
 }
 
 export function AccountantReview({ persona, items }: { persona: string; items: AccountantItem[] }) {
@@ -62,9 +65,10 @@ export function AccountantReview({ persona, items }: { persona: string; items: A
                 data-decision={d ?? 'pending'}
                 className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 sm:flex-row sm:items-center sm:justify-between"
               >
-                <span className="flex flex-col gap-0.5">
+                <span className="flex flex-col gap-1.5">
                   <span className="text-base font-medium text-foreground">{it.title}</span>
                   <span className="type-small num text-muted-foreground">{it.value}</span>
+                  {it.lawRef ? <LawSeal lawRef={it.lawRef} /> : null}
                 </span>
                 <span className="flex gap-2">
                   <Button
@@ -73,8 +77,14 @@ export function AccountantReview({ persona, items }: { persona: string; items: A
                     aria-pressed={d === 'approved'}
                     onClick={() => decide(it.ruleId, 'approved')}
                   >
-                    <Check className="size-4" strokeWidth={1.5} aria-hidden="true" />
-                    Aprovar
+                    {d === 'approved' ? (
+                      'Aprovado ✓'
+                    ) : (
+                      <>
+                        <Check className="size-4" strokeWidth={1.5} aria-hidden="true" />
+                        Aprovar
+                      </>
+                    )}
                   </Button>
                   <Button
                     type="button"
@@ -107,6 +117,7 @@ export function AccountantReview({ persona, items }: { persona: string; items: A
                 >
                   <span className="text-base text-foreground">{it.title}</span>
                   <span className="type-small num text-muted-foreground">{it.value}</span>
+                  {it.lawRef ? <LawSeal lawRef={it.lawRef} className="mt-1" /> : null}
                 </li>
               ))}
           </ul>

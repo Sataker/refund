@@ -7,6 +7,7 @@ import {
   lateStartText,
   type MarginStepValue,
   marginCostText,
+  marginTradeoffText,
   perYearText,
 } from './simulator-text';
 
@@ -30,6 +31,21 @@ describe('D32 simulator strings', () => {
     ];
     expect(s(marginCostText(steps, 2))).toBe('Cada 0,25 p.p. de folga custa R$ 100,00 por ano');
     expect(s(marginCostText(steps, 0))).toBe('Cada 0,25 p.p. de folga custa R$ 100,00 por ano');
+    // UX review G2 H4: the trade-off line under the slider, every value from the engine.
+    expect(s(marginTradeoffText(steps, '0.005', '2027-04'))).toBe(
+      'Mais folga antecipa o Anexo III (abr/2027 com 0,5 p.p.), mas custa R$ 100,00 por ano a cada 0,25 p.p. depois disso.',
+    );
+    expect(marginTradeoffText(steps, '0.005', null)).toBeNull();
+    expect(
+      marginTradeoffText(
+        [
+          { margin: '0', annual: 1 },
+          { margin: '0.0025', annual: 1 },
+        ],
+        '0',
+        '2027-04',
+      ),
+    ).toBeNull();
   });
 
   it('uneven steps: "Essa folga custa R$ y por ano", y = margin 0 − chosen step; nothing at margin 0', () => {
@@ -63,7 +79,9 @@ describe('D32 simulator strings', () => {
   });
 
   it('per-year line: "{valor} por ano a partir de {mês/ano}"', () => {
-    expect(s(perYearText(4289652, '2027-04'))).toBe('R$ 42.896,52 por ano a partir de abr/2027');
+    expect(s(perYearText(4289652, '2027-04'))).toBe(
+      'R$ 42.896,52 por ano depois, a partir de abr/2027',
+    );
     expect(perYearText(null, '2027-04')).toBeNull();
     expect(perYearText(4289652, null)).toBeNull();
   });

@@ -112,6 +112,13 @@ describe('Screen 6 and 6b', () => {
     const missing = [...keys].filter((k) => !(k in TRACE_INPUT_LABEL));
     expect(missing).toEqual([]);
     expect(traceTextValue('fatorR', '0.27')).toBe('27%');
+    // UX review G2 M5: a value made only of YearMonths is data, shown as "abr/2027"; engine prose stays.
+    expect(traceTextValue('windowFrom', '2025-12')).toBe('dez/2025');
+    expect(traceTextValue('months', '2026-10, 2026-11')).toBe('out/2026, nov/2026');
+    expect(traceTextValue('months', '11/2025, 12/2025')).toBe('nov/2025, dez/2025');
+    expect(traceTextValue('note', '2027-01 a 2028-12: usado o de 2026')).toBe(
+      '2027-01 a 2028-12: usado o de 2026',
+    );
     expect(cleanEngineText('a (ENGINE-SPEC C.1, item 4)')).toBe('a');
     expect(cleanEngineText('2 parâmetro(s) projetado(s)')).toBe('2 parâmetros projetados');
     expect(cleanEngineText('1 parâmetro(s) projetado(s)')).toBe('1 parâmetro projetado');

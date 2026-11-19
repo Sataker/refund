@@ -85,6 +85,7 @@ export default async function AccountantReportPage({
           result={result}
           model={live.dashboard}
           labelOf={(ref) => labels.get(ref)}
+          live
         />
         <Disclaimer />
       </main>

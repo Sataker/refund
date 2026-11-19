@@ -18,7 +18,7 @@ function StepValue({ value, testId }: { value: Value; testId?: string }) {
   }
   if (value.unit === 'rate')
     return <span className="num">{formatRatePercent(String(value.value))}</span>;
-  return <span>{cleanEngineText(String(value.value))}</span>;
+  return <span>{traceTextValue('', cleanEngineText(String(value.value)))}</span>;
 }
 
 export function inputText(key: string, input: Step['inputs'][string]): string {
@@ -56,6 +56,11 @@ interface CalcTraceProps {
   /** Prefix for the result test ids: `${testIdPrefix}/${step.id}`. */
   testIdPrefix?: string;
   className?: string;
+  /**
+   * A risk has no money: a step whose result is R$ 0,00 reads "sem valor de economia" instead of "= R$ 0,00"
+   * (UX review G2 L2). The data-cents stays on the element for the tests.
+   */
+  noMoneyText?: string;
 }
 
 /**
@@ -68,6 +73,7 @@ export function CalcTrace({
   testIdPrefix = 'trace',
   sources,
   className,
+  noMoneyText,
 }: CalcTraceProps) {
   return (
     <details open={open} className={cn('group', className)} data-testid="calc-trace">
@@ -119,6 +125,14 @@ export function CalcTrace({
                   value={<StepValue value={step.result} testId={`${testIdPrefix}/${step.id}`} />}
                   testId={`${testIdPrefix}-sources/${step.id}`}
                 />
+              ) : noMoneyText && step.result.unit === 'cents' && step.result.value === 0 ? (
+                <p
+                  className="type-small font-medium text-muted-foreground"
+                  data-testid={`${testIdPrefix}/${step.id}`}
+                  data-cents={0}
+                >
+                  {noMoneyText}
+                </p>
               ) : (
                 <p className="type-mono font-medium text-foreground">
                   = <StepValue value={step.result} testId={`${testIdPrefix}/${step.id}`} />
