@@ -38,7 +38,12 @@ export default defineConfig({
         resolve: webResolve,
         test: {
           name: 'unit',
-          include: ['packages/*/test/**/*.test.ts', 'apps/web/src/**/*.test.ts'],
+          include: [
+            'packages/*/test/**/*.test.ts',
+            'apps/web/src/**/*.test.ts',
+            // Vitest tests of the scripts (the other scripts/test files run under `node --test` in CI).
+            'scripts/test/**/*.unit.test.ts',
+          ],
           exclude: [
             '**/node_modules/**',
             '**/golden/**',
