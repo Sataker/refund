@@ -12,7 +12,7 @@ export interface ReportEmail {
   findings: number;
 }
 
-const escapeHtml = (s: string) =>
+export const escapeHtml = (s: string) =>
   s
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -30,9 +30,23 @@ export function reportEmailBody(e: ReportEmail): { subject: string; html: string
 export async function sendReportEmail(
   e: ReportEmail,
 ): Promise<{ ok: true; id: string } | { ok: false }> {
+  return sendEmail(e.to, reportEmailBody(e), 'report');
+}
+
+export interface EmailBody {
+  subject: string;
+  html: string;
+  text: string;
+}
+
+/** One message through Resend (capability-gated by the caller); the report and the "law changed" alert use it. */
+export async function sendEmail(
+  to: string,
+  body: EmailBody,
+  kind: 'report' | 'law_alert',
+): Promise<{ ok: true; id: string } | { ok: false }> {
   const env = readEnv().values;
   if (!env.RESEND_API_KEY || !env.RESEND_FROM) return { ok: false };
-  const body = reportEmailBody(e);
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -42,7 +56,7 @@ export async function sendReportEmail(
       },
       body: JSON.stringify({
         from: env.RESEND_FROM,
-        to: [e.to],
+        to: [to],
         subject: body.subject,
         html: body.html,
         text: body.text,
@@ -50,13 +64,13 @@ export async function sendReportEmail(
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) {
-      logger.warn('report.resend_status', { status: res.status });
+      logger.warn(`${kind}.resend_status`, { status: res.status });
       return { ok: false };
     }
     const json = (await res.json()) as { id?: unknown };
     return typeof json.id === 'string' ? { ok: true, id: json.id.slice(0, 80) } : { ok: false };
   } catch (err) {
-    logger.warn('report.resend_error', { error: err });
+    logger.warn(`${kind}.resend_error`, { error: err });
     return { ok: false };
   }
 }
