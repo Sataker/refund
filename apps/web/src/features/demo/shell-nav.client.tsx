@@ -29,13 +29,14 @@ export const SHELL_NAV: readonly NavItem[] = [
 /** ARCHITECTURE §13 shell lock: the segments that wait for the first-access track. */
 export const LOCKED_SEGMENTS: readonly string[] = SHELL_NAV.map((n) => n.segment);
 
-function useActive(persona: string): (segment: string) => boolean {
+function useActive(base: string): (segment: string) => boolean {
   const path = usePathname();
-  return (segment) => path.startsWith(`/demo/${persona}/${segment}`);
+  return (segment) => path.startsWith(`${base}/${segment}`);
 }
 
-export function SidebarNav({ persona }: { persona: string }) {
-  const active = useActive(persona);
+/** `base`: '/demo/<persona>' or '/app/analises/<id>' (the same 5 destinations under it). */
+export function SidebarNav({ base }: { base: string }) {
+  const active = useActive(base);
   return (
     <nav aria-label="Seções" className="flex flex-col gap-1">
       {SHELL_NAV.map(({ label, segment, icon: Icon }) => {
@@ -43,7 +44,7 @@ export function SidebarNav({ persona }: { persona: string }) {
         return (
           <Link
             key={segment}
-            href={`/demo/${persona}/${segment}` as Route}
+            href={`${base}/${segment}` as Route}
             aria-current={on ? 'page' : undefined}
             data-testid={`nav-${segment}`}
             className={cn(
@@ -62,8 +63,8 @@ export function SidebarNav({ persona }: { persona: string }) {
   );
 }
 
-export function TabBar({ persona }: { persona: string }) {
-  const active = useActive(persona);
+export function TabBar({ base }: { base: string }) {
+  const active = useActive(base);
   return (
     <nav
       aria-label="Seções"
@@ -76,7 +77,7 @@ export function TabBar({ persona }: { persona: string }) {
           return (
             <li key={segment}>
               <Link
-                href={`/demo/${persona}/${segment}` as Route}
+                href={`${base}/${segment}` as Route}
                 aria-current={on ? 'page' : undefined}
                 data-testid={`tab-${segment}`}
                 className={cn(

@@ -39,6 +39,7 @@ const FILTERS: { id: Filter; label: string }[] = [
   { id: 'PF', label: 'PF' },
 ];
 
+/** /demo: the persona's model, swapped for the visitor's own Screen 7 answers when they differ. */
 export function Dashboard({
   persona,
   title,
@@ -48,35 +49,96 @@ export function Dashboard({
   financeCard,
 }: DashboardProps) {
   const visitor = useVisitorAnswers(persona, cards, base);
-  const m = visitor.model;
+  const hrefs = Object.fromEntries(
+    [...visitor.model.savings, ...visitor.model.recovery, ...visitor.model.alerts].map((f) => [
+      f.ruleId,
+      `/demo/${persona}/achados/${f.ruleId}`,
+    ]),
+  );
+  return (
+    <DashboardView
+      title={title}
+      model={visitor.model}
+      hrefs={hrefs}
+      links={{ confirm: `/demo/${persona}/confirmar`, report: `/demo/${persona}/relatorio` }}
+      open={visitor.open}
+      loading={visitor.status === 'loading'}
+      custom={visitor.custom}
+      banner={
+        visitor.custom ? (
+          <CustomBanner persona={persona} status={visitor.status} onRetry={visitor.retry} />
+        ) : null
+      }
+      finance={
+        <>
+          {financeCard}
+          {visitor.custom ? (
+            <p className="type-caption text-muted-foreground" data-testid="finance-default-note">
+              Finanças mostram as respostas padrão da {holderName}.
+            </p>
+          ) : null}
+        </>
+      }
+    />
+  );
+}
+
+interface DashboardViewProps {
+  title: string;
+  model: DashboardModel;
+  /** ruleId → the finding's detail page (/demo by rule id, /app by finding id). */
+  hrefs: Record<string, string>;
+  links: { confirm: string; report: string };
+  /** Cards still open ("Não sei"). */
+  open: number;
+  loading?: boolean;
+  custom?: boolean;
+  banner?: ReactNode;
+  finance: ReactNode;
+  /** Shown under the title (e.g. "Nova análise" in /app). */
+  actions?: ReactNode;
+}
+
+/** Screen 5 itself, shared by /demo and /app: every amount comes in `model` (the engine's). */
+export function DashboardView({
+  title,
+  model: m,
+  hrefs,
+  links,
+  open,
+  loading = false,
+  custom = false,
+  banner,
+  finance,
+  actions,
+}: DashboardViewProps) {
   const [filter, setFilter] = useState<Filter>('all');
   const show = (f: DashboardFinding) => filter === 'all' || f.holder === filter;
-  const href = (ruleId: string) => `/demo/${persona}/achados/${ruleId}` as Route;
+  const href = (ruleId: string) => (hrefs[ruleId] ?? links.confirm) as Route;
   const savings = m.savings.filter(show);
   const recovery = m.recovery.filter(show);
   const alerts = m.alerts.filter(show);
 
   return (
-    <div className="flex flex-col gap-8" data-testid="dashboard" data-custom={visitor.custom}>
+    <div className="flex flex-col gap-8" data-testid="dashboard" data-custom={custom}>
       <header className="flex flex-col gap-1.5">
         <p className="type-small text-muted-foreground">Painel · {title}</p>
         <h1 className="font-serif text-[36px] leading-[40px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]">
           Você pode pagar a menos
         </h1>
+        {actions}
       </header>
 
-      {visitor.custom ? (
-        <CustomBanner persona={persona} status={visitor.status} onRetry={visitor.retry} />
-      ) : null}
-      {visitor.open > 0 ? (
+      {banner}
+      {open > 0 ? (
         <Link
-          href={`/demo/${persona}/confirmar` as Route}
+          href={links.confirm as Route}
           data-testid="pending-banner"
           className="type-small flex items-center justify-between gap-3 rounded-lg border border-warning bg-warning-soft px-4 py-3 text-foreground"
         >
-          {visitor.open === 1
+          {open === 1
             ? '1 resposta ficou em aberto. Responda para virar "confirmado".'
-            : `${visitor.open} respostas ficaram em aberto. Responda para virar "confirmado".`}
+            : `${open} respostas ficaram em aberto. Responda para virar "confirmado".`}
           <ChevronRight className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
         </Link>
       ) : null}
@@ -85,7 +147,7 @@ export function Dashboard({
         aria-label="Total"
         className={cn(
           'flex flex-col gap-4 transition-opacity duration-(--dur-base)',
-          visitor.status === 'loading' && 'opacity-60',
+          loading && 'opacity-60',
         )}
       >
         <MoneyHero
@@ -384,17 +446,12 @@ export function Dashboard({
       ) : null}
 
       <section aria-label="Finanças" className="flex flex-col gap-2">
-        {financeCard}
-        {visitor.custom ? (
-          <p className="type-caption text-muted-foreground" data-testid="finance-default-note">
-            Finanças mostram as respostas padrão da {holderName}.
-          </p>
-        ) : null}
+        {finance}
       </section>
 
       <div className="fixed inset-x-0 bottom-14 z-30 border-t border-border bg-background/95 px-4 py-2 backdrop-blur sm:hidden print:hidden">
         <Link
-          href={`/demo/${persona}/relatorio` as Route}
+          href={links.report as Route}
           className="flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary font-medium text-primary-foreground"
         >
           <Send className="size-4" strokeWidth={1.5} aria-hidden="true" />

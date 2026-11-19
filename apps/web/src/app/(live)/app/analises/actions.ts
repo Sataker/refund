@@ -62,6 +62,35 @@ export async function markFinding(input: {
   );
 }
 
+/** Bound per analysis on Screen 8. */
+export async function sendReportFor(
+  analysisId: string,
+  input: {
+    accountantEmail: string;
+    message: string;
+    include: { calculations: boolean; laws: boolean; transactions: boolean };
+  },
+): Promise<ActionResult<SentReport>> {
+  return sendReport({ analysisId, ...input });
+}
+
+/** Bound per analysis on Screen 7: the card passes its id and the chosen value (null = "Não sei"). */
+export async function answerCard(
+  analysisId: string,
+  questionId: string,
+  answer: string | number | null,
+): Promise<ActionResult<{ reanalyze: boolean }>> {
+  return answerQuestion({ analysisId, questionId, answer });
+}
+
+/** Bound per finding in the detail page: the button passes only the status. */
+export async function setFindingMark(
+  findingId: string,
+  status: 'marked' | 'new',
+): Promise<ActionResult<void>> {
+  return markFinding({ findingId, status });
+}
+
 /** Bound per analysis in the Finanças page: the client passes the whole excluded set. */
 export async function saveFinanceExclusions(
   analysisId: string,

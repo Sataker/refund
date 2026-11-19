@@ -16,7 +16,7 @@ import { ACTOR_LABEL, type DashboardModel, formatCivilDate, stepsByActor } from 
 
 interface ReportProps {
   company: string;
-  holderName: string;
+  holderName?: string;
   analysisDate: string;
   result: EngineResult;
   model: DashboardModel;
@@ -269,7 +269,8 @@ export function Report({
           <span className="text-[13px] text-neutral-600">Memória de cálculo</span>
         </div>
         <p className="text-[14px] text-neutral-700">
-          {company} + {holderName} · análise de {formatCivilDate(analysisDate)}
+          {company}
+          {holderName ? ` + ${holderName}` : ''} · análise de {formatCivilDate(analysisDate)}
         </p>
         <p className="flex flex-wrap items-baseline gap-x-3 text-neutral-900">
           <span className="text-[13px] text-neutral-600">

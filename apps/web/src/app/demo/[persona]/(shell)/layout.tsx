@@ -42,7 +42,7 @@ export default async function DemoShell({
         >
           <Logo />
         </Link>
-        <SidebarNav persona={id} />
+        <SidebarNav base={`/demo/${id}`} />
         <div className="mt-auto flex flex-col items-start gap-3 px-3">
           <div className="flex flex-col">
             <span className="type-small font-medium text-foreground">
@@ -100,7 +100,7 @@ export default async function DemoShell({
           </div>
         </footer>
       </div>
-      <TabBar persona={id} />
+      <TabBar base={`/demo/${id}`} />
     </div>
   );
 }

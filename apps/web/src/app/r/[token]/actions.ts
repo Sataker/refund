@@ -9,6 +9,17 @@ import { type ActionResult, fail } from '@/server/result.ts';
 
 // ARCHITECTURE §4.7 decideReport: public, authenticated by the token (the accountant has no account). Limited per IP.
 
+/** Bound per token on the page. */
+export async function decideReportFor(
+  token: string,
+  input: {
+    decisions: { findingId: string; decision: 'approved' | 'adjustment'; comment?: string }[];
+    final: 'approved' | 'adjustments';
+  },
+): Promise<ActionResult<void>> {
+  return decideReport({ token, ...input });
+}
+
 export async function decideReport(input: {
   token: string;
   decisions: { findingId: string; decision: 'approved' | 'adjustment'; comment?: string }[];
