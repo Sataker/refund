@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { expect, test } from '../fixtures.ts';
+import { expect, test, unlockShell } from '../fixtures.ts';
 
 // Screen 5b, Finanças (EXECUTION E14b; TESTS §6.1 D17, D15 and D16 on /financas). Values through data-cents, from
 // ENGINE-SPEC E.9.3 (Marina's view). The network guard of fixtures.ts fails any external request.
@@ -13,6 +13,10 @@ async function settled(page: Page): Promise<void> {
 }
 
 test.describe('financas @demo', () => {
+  test.beforeEach(async ({ page }) => {
+    await unlockShell(page);
+  });
+
   test('D17 financial view of the hero: totals, DAS seal → R05-REC, PF health deductible, empty states', async ({
     page,
   }) => {
