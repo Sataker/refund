@@ -34,6 +34,8 @@ export interface TrackFrameProps {
   topAction?: ReactNode;
   /** Discreet action in the footer, e.g. "Recomeçar demo". */
   footerAction?: ReactNode;
+  /** Live `/app`: the seal says the company data is public and real (SandboxSeal `live`). */
+  live?: boolean;
   children: ReactNode;
 }
 
@@ -179,7 +181,8 @@ export function TrackHeader({
   progress,
   exit,
   topAction,
-}: Pick<TrackFrameProps, 'step' | 'progress' | 'exit' | 'topAction'>) {
+  live = false,
+}: Pick<TrackFrameProps, 'step' | 'progress' | 'exit' | 'topAction' | 'live'>) {
   return (
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex h-14 max-w-[1120px] items-center justify-between gap-4 px-4 sm:px-6">
@@ -187,7 +190,7 @@ export function TrackHeader({
           <Logo />
         </Link>
         <div className="flex items-center gap-4">
-          <SandboxSeal className="hidden md:inline-flex" />
+          <SandboxSeal live={live} className="hidden md:inline-flex" />
           {topAction}
           <Link
             href={exit.href as Route}
@@ -206,13 +209,16 @@ export function TrackHeader({
   );
 }
 
-export function TrackFooter({ footerAction }: Pick<TrackFrameProps, 'footerAction'>) {
+export function TrackFooter({
+  footerAction,
+  live = false,
+}: Pick<TrackFrameProps, 'footerAction' | 'live'>) {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto flex max-w-[1120px] flex-col gap-3 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <Disclaimer size="caption" />
         <div className="flex flex-wrap items-center gap-4">
-          <SandboxSeal className="md:hidden" />
+          <SandboxSeal live={live} className="md:hidden" />
           {footerAction}
         </div>
       </div>
@@ -227,6 +233,7 @@ export function TrackFrame({
   exit,
   topAction,
   footerAction,
+  live = false,
   children,
 }: TrackFrameProps) {
   const back = step === 'analysis' ? null : previousStep(step, progress);
@@ -236,7 +243,7 @@ export function TrackFrame({
       data-testid="track"
       data-step={step}
     >
-      <TrackHeader step={step} progress={progress} exit={exit} topAction={topAction} />
+      <TrackHeader step={step} progress={progress} exit={exit} topAction={topAction} live={live} />
       <div className="mx-auto grid w-full max-w-[1120px] flex-1 gap-10 px-4 py-6 sm:px-6 lg:grid-cols-[240px_minmax(0,560px)] lg:justify-center lg:gap-16 lg:py-12">
         <Timeline step={step} progress={progress} hrefOf={hrefOf} />
         <main id="conteudo" className="flex min-w-0 flex-col">
@@ -257,7 +264,7 @@ export function TrackFrame({
           </div>
         </main>
       </div>
-      <TrackFooter footerAction={footerAction} />
+      <TrackFooter footerAction={footerAction} live={live} />
     </div>
   );
 }

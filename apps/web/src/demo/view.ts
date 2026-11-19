@@ -1,8 +1,8 @@
 import 'server-only';
 import type { DemoAccountView, DemoPersonaView } from '@/features/demo/types';
+import { profileQuestions } from '@/server/company/profile.ts';
 import type { DemoPersona } from './catalog.ts';
 import { transactionCount } from './catalog.ts';
-import { profileQuestions } from './estimates.ts';
 
 const SYNTHETIC_SUFFIX = /\s*\(persona sintética\)\s*$/i;
 

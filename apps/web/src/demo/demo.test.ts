@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { profileQuestions } from '@/server/company/profile.ts';
 import { percentToRate, runDemoAnalysis } from './analysis.ts';
 import { answersKey, effectiveAnswers, fromQuery, toQuery } from './answers.ts';
 import { DEMO_PERSONAS, demoPersona, transactionCount } from './catalog.ts';
-import { estimateTable, profileQuestions } from './estimates.ts';
+import { estimateTable } from './estimates.ts';
 
 // E12 (EXECUTION): the /demo data path. Numbers from ENGINE-SPEC F.4 and C.11 (T11-02, T11-09).
 
@@ -73,7 +74,7 @@ describe('profile estimate table (computed at build)', () => {
   });
 
   it('asks both optional questions for the hero CNAE', () => {
-    expect(profileQuestions(hero.data.company)).toEqual({ employees: true, abroad: true });
+    expect(profileQuestions(hero.data.company)).toMatchObject({ employees: true, abroad: true });
   });
 });
 
