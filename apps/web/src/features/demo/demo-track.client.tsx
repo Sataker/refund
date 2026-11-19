@@ -31,7 +31,7 @@ import { demoBase, demoProgress, demoStepHref } from './progress';
 import type { DemoPersonaView } from './types';
 
 // The first-access track on /demo (D19; IDENTITY-AND-UI §5 "On /demo"): the same track as /app, with the
-// persona's answers pre-selected and the advance button highlighted, so the jury reaches the analysis with
+// persona's answers pre-selected and the advance button highlighted, so the visitor reaches the analysis with
 // one tap per step. Answers live in the URL and in sessionStorage (ARCHITECTURE §13), never on a server.
 
 export interface DemoTrackSlots {

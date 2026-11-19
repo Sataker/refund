@@ -246,7 +246,7 @@ describe('lookupCnpj + estimateByRevenue (ARCHITECTURE §4.7; E11 definition of 
       ok: false,
       error: { code: 'RATE_LIMITED' },
     });
-    // Another juror behind the same NAT has their own 5.
+    // Another visitor behind the same NAT has their own 5.
     const other = await newUser();
     expect((await lookupCnpjWith(other, { cnpj: HERO, context: 'live' }, deps())).ok).toBe(true);
     const replay = () => companyDeps({ headers: ip });

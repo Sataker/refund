@@ -34,7 +34,7 @@ import { cnpjProvider } from './providers.ts';
 
 /**
  * 07 §3.5 `cnpj_estimate` (ARCHITECTURE §9.4), adjusted in the E11 code review (M4): 5 per day per
- * session + IP (jurors may share the venue's NAT at the final), plus a coarse 50 per day per IP so
+ * session + IP (visitors may share the venue's NAT at the final), plus a coarse 50 per day per IP so
  * rotating anonymous sessions cannot scrape the public APIs. Live data only; replay lookups never
  * leave the process and are bounded by the per-session track limit.
  */

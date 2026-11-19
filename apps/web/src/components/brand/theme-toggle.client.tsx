@@ -32,7 +32,7 @@ function isTyping(target: EventTarget | null): boolean {
 }
 
 /**
- * Light/dark switch (IDENTITY-AND-UI §5.12 footer toggle; §6.1 item 4: shortcut `D` during the pitch).
+ * Light/dark switch (IDENTITY-AND-UI §5.12 footer toggle; §6.1 item 4: shortcut `D` while presenting to the visitor).
  * The icon is chosen by CSS (`dark:`), so the server HTML never disagrees with theme-init.js.
  */
 export function ThemeToggle({
