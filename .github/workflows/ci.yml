@@ -122,8 +122,11 @@ jobs:
       - run: pnpm --filter @refund/web exec playwright install --with-deps chromium
       - name: Build without any app variable
         run: env -i PATH="$PATH" HOME="$HOME" CI=1 pnpm --filter @refund/web build
+      # E2E_TARGET=zero-env (apps/web/playwright.config.ts): refuses to run if an app variable is set; the browser
+      # guard fails any request to a non-local host; `next start` runs with a preload that refuses and logs every
+      # server connection to a non-loopback host, and the global teardown fails the job if one happened.
       - name: E2E @demo against `next start` without variables (fails if any external network call goes out)
-        run: env -i PATH="$PATH" HOME="$HOME" CI=1 E2E_TARGET=zero-env pnpm --filter @refund/web exec playwright test --project=demo-chromium --project=demo-mobile --pass-with-no-tests
+        run: env -i PATH="$PATH" HOME="$HOME" CI=1 E2E_TARGET=zero-env pnpm --filter @refund/web exec playwright test --project=demo-chromium --project=demo-mobile
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
