@@ -1,5 +1,6 @@
 import type { Step, Trace } from '@refund/engine';
 import { ChevronDown } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { formatBRL, formatRatePercent } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { LawSeal } from './law-seal';
@@ -32,9 +33,23 @@ function inputText(input: Step['inputs'][string]): string {
   }
 }
 
+/** One source transaction behind a trace number (already masked by the whitelist, CLAUDE.md rule 4). */
+export interface TraceSourceRow {
+  id: string;
+  /** CivilDate "2026-07-10". */
+  date: string;
+  label: string;
+  amountCents: number;
+}
+
 interface CalcTraceProps {
   /** The engine's trace, rendered as is (the UI never computes, CLAUDE.md rule 1). */
   trace: Trace;
+  /**
+   * stepId → the transactions behind that step's number (the facts' provenance). When present, the number opens
+   * the list (IDENTITY-AND-UI Screen 6: "clickable numbers open a table of the source transactions").
+   */
+  sources?: Readonly<Record<string, readonly TraceSourceRow[]>>;
   /** Open by default (e.g. on the landing's "a conta é o produto" block). */
   open?: boolean;
   /** Prefix for the result test ids: `${testIdPrefix}/${step.id}`. */
@@ -50,6 +65,7 @@ export function CalcTrace({
   trace,
   open = false,
   testIdPrefix = 'trace',
+  sources,
   className,
 }: CalcTraceProps) {
   return (
@@ -85,14 +101,86 @@ export function CalcTrace({
                   ))}
                 </dl>
               ) : null}
-              <p className="type-mono font-medium text-foreground">
-                = <StepValue value={step.result} testId={`${testIdPrefix}/${step.id}`} />
-              </p>
+              {sources?.[step.id]?.length ? (
+                <SourceList
+                  rows={sources[step.id] ?? []}
+                  value={<StepValue value={step.result} testId={`${testIdPrefix}/${step.id}`} />}
+                  testId={`${testIdPrefix}-sources/${step.id}`}
+                />
+              ) : (
+                <p className="type-mono font-medium text-foreground">
+                  = <StepValue value={step.result} testId={`${testIdPrefix}/${step.id}`} />
+                </p>
+              )}
               {step.ref ? <LawSeal lawRef={step.ref} /> : null}
             </div>
           </li>
         ))}
       </ol>
+    </details>
+  );
+}
+
+function formatDate(date: string): string {
+  const [y, m, d] = date.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+/** The step result as a toggle: open it to see the transactions the engine read (no JS: <details>). */
+function SourceList({
+  rows,
+  value,
+  testId,
+}: {
+  rows: readonly TraceSourceRow[];
+  value: ReactNode;
+  testId: string;
+}) {
+  return (
+    <details className="group/src" data-testid={testId}>
+      <summary className="type-mono inline-flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-2 rounded-md font-medium text-foreground [&::-webkit-details-marker]:hidden">
+        <span>
+          = <span className="underline decoration-dotted underline-offset-4">{value}</span>
+        </span>
+        <span className="type-caption font-sans text-cobalt">
+          <span className="group-open/src:hidden">ver {rows.length} transações</span>
+          <span className="hidden group-open/src:inline">esconder transações</span>
+        </span>
+      </summary>
+      <div className="mt-2 max-h-72 overflow-auto rounded-md border border-border">
+        <table className="type-mono w-full text-left" data-testid="source-transactions">
+          <caption className="sr-only">Transações de origem deste número</caption>
+          <thead className="sticky top-0 bg-surface-2 text-muted-foreground">
+            <tr>
+              <th scope="col" className="px-3 py-1.5 font-normal">
+                Data
+              </th>
+              <th scope="col" className="px-3 py-1.5 font-normal">
+                Lançamento
+              </th>
+              <th scope="col" className="px-3 py-1.5 text-right font-normal">
+                Valor
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="border-t border-border" data-testid="source-row">
+                <td className="num px-3 py-1.5 whitespace-nowrap text-muted-foreground">
+                  {formatDate(r.date)}
+                </td>
+                <td className="px-3 py-1.5 break-words text-foreground">{r.label}</td>
+                <td
+                  className="num px-3 py-1.5 text-right whitespace-nowrap text-foreground"
+                  data-cents={r.amountCents}
+                >
+                  {formatBRL(r.amountCents)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </details>
   );
 }
