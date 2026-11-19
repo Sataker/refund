@@ -1,12 +1,17 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
+import type { AnswerKey } from '@refund/personas';
+import answerKeyJson from '@refund/personas/data/dev-exportador.answer-key.json' with {
+  type: 'json',
+};
 import { expect, test } from '../fixtures.ts';
 
 // E12 definition of done (TESTS §6.1 D1–D5, D12, D16): from choosing the persona to the live analysis.
 // Numbers are compared through data-cents against the hero answer key (ENGINE-SPEC F.4 and C.11, T11-02/T11-09).
 
 const HERO = 'dev-exportador';
-const TOTAL = 6231892;
+// D4 (TESTS §6.1): the answer key's total.savings12m, read from the key itself (ENGINE-SPEC F.4: 6.231.892).
+const TOTAL = (answerKeyJson as unknown as AnswerKey).total.savings12m;
 const RANGE = { min: '1246338', max: '9077928' };
 const step = (s: string) => new RegExp(`/demo/${HERO}/comecar/${s}(\\?|$)`);
 

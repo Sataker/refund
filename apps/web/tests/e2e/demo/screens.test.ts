@@ -48,6 +48,57 @@ test.describe('demo screens 5–8 @demo', () => {
     await expect(page.getByTestId('dashboard/money-hero')).toHaveAttribute('data-cents', TOTAL);
   });
 
+  test('D12: "Recomeçar demo" in the shell clears answers, approval and the unlock; incognito sees none of it', async ({
+    page,
+    browser,
+  }) => {
+    test.setTimeout(60_000);
+    // A real visitor: the shell unlocks by watching the analysis (no unlockShell, which would re-unlock on reload).
+    const watch = async () => {
+      await page.goto(`${BASE}/analise?pace=instant`);
+      await expect(page.getByTestId('analysis/money-hero')).toHaveAttribute(
+        'data-settled',
+        'true',
+        {
+          timeout: 15_000,
+        },
+      );
+    };
+    await watch();
+    await page.goto(`${BASE}/confirmar`);
+    await page.getByTestId('answer-export-qualification-no').click();
+    await expect(page.getByTestId('confirm/total')).toHaveAttribute('data-cents', '2831652', {
+      timeout: 15_000,
+    });
+    await page.goto(`${BASE}/contador`);
+    await page.getByTestId('approve-report').click();
+    await page.goto(`${BASE}/relatorio`);
+    await expect(page.getByTestId('report-status')).toHaveAttribute('data-status', 'approved');
+
+    await page.getByTestId('restart-demo').filter({ visible: true }).first().click();
+    await expect(page).toHaveURL(new RegExp(`${BASE}/comecar/cnpj`));
+    // The shell is locked again: the dashboard sends the visitor back to the track.
+    await page.goto(`${BASE}/painel`);
+    await expect(page).toHaveURL(new RegExp(`${BASE}/comecar/cnpj`));
+
+    await watch();
+    await page.goto(`${BASE}/painel`);
+    await expect(page.getByTestId('dashboard/money-hero')).toHaveAttribute('data-cents', TOTAL);
+    await expect(page.getByTestId('custom-answers')).toHaveCount(0);
+    await page.goto(`${BASE}/relatorio`);
+    await expect(page.getByTestId('report-status')).toHaveAttribute('data-status', 'draft');
+
+    // Another session (incognito) carries nothing of this one: no unlock, no answers.
+    const other = await browser.newContext();
+    try {
+      const incognito = await other.newPage();
+      await incognito.goto(`${BASE}/painel`);
+      await expect(incognito).toHaveURL(new RegExp(`${BASE}/comecar/cnpj`));
+    } finally {
+      await other.close();
+    }
+  });
+
   test.describe('unlocked', () => {
     test.beforeEach(async ({ page }) => {
       await unlockShell(page);
