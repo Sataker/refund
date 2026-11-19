@@ -104,3 +104,46 @@ export function minimal(payload: unknown): Record<string, unknown> {
   }
   return out;
 }
+
+/**
+ * Payments variant (ARCHITECTURE §4.9: "payment is processed before responding"): verify → in ONE transaction record
+ * the event (idempotent) and process it → 200. A processing error rolls the event row back too and answers 500, so
+ * the provider's retry processes it again instead of being taken for a duplicate.
+ */
+export async function receiveWebhookInline(
+  v: WebhookVerifier,
+  req: Request,
+  db: Db,
+  process: (ev: VerifiedEvent, tx: Db) => Promise<'processed' | 'ignored'>,
+): Promise<Response> {
+  const declared = Number(req.headers.get('content-length') ?? '0');
+  if (declared > MAX_WEBHOOK_BODY_BYTES) return json(413, { ok: false });
+  const body = await req.text();
+  if (Buffer.byteLength(body, 'utf8') > MAX_WEBHOOK_BODY_BYTES) return json(413, { ok: false });
+  const verified = await v.verify({ body, headers: req.headers, url: new URL(req.url) });
+  if (!verified.ok) {
+    logger.warn('webhook.rejected', { provider: v.provider, code: verified.error.code });
+    return json(verified.error.code === 'INVALID_PAYLOAD' ? 400 : 401, { ok: false });
+  }
+  const ev = verified.value;
+  try {
+    const outcome = await db.transaction(async (txRaw) => {
+      const tx = txRaw as unknown as Db;
+      const id = await recordWebhookEvent(tx, {
+        provider: v.provider,
+        eventId: ev.eventId,
+        type: ev.type,
+        payload: v.stored ? v.stored(ev.payload) : minimal(ev.payload),
+      });
+      if (id === null) return 'duplicate' as const;
+      const status = await process(ev, tx);
+      await finishWebhookEvent(tx, id, status);
+      return status;
+    });
+    if (outcome === 'duplicate') return json(200, { ok: true, duplicate: true });
+    return json(200, { ok: true });
+  } catch (err) {
+    logger.error('webhook.failed', { provider: v.provider, type: ev.type, error: err });
+    return json(500, { ok: false });
+  }
+}

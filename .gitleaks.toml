@@ -5,8 +5,9 @@ useDefault = true
 
 # The CI-only secrets in ci.yml are fixed, public, base64 of obvious phrases (INFRA-CI §2.1).
 [allowlist]
-description = "Public CI-only test secrets"
+description = "Public CI-only test secrets; AbacatePay's public webhook HMAC key (the same for every account, E17)"
 paths = ['''^\.github/workflows/ci\.yml$''']
+regexes = ['''t9dXRhHHo3yDEj5pVDYz0frf7q6bMKyMRmxx[A-Za-z0-9]+''']
 
 # ARCHITECTURE §6.4: AbacatePay keys and generic secret keys.
 [[rules]]
