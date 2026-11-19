@@ -1,6 +1,7 @@
 'use client';
 
 import { type FormEvent, useId, useState, useTransition } from 'react';
+import { CONTACT_EMAIL } from '@/lib/contact';
 import { cx } from '@/lib/cx';
 
 type JoinResult =
@@ -75,7 +76,7 @@ export function WaitlistForm({ join }: { join: WaitlistJoin }) {
           Pronto. Avisamos quando a análise com a sua conta abrir.
         </p>
         <p className="type-small mt-2 text-muted-foreground">
-          Guardamos o e-mail cifrado e só para esse aviso.
+          Guardamos o e-mail cifrado e só para esse aviso. Para sair, escreva para {CONTACT_EMAIL}.
         </p>
       </div>
     );

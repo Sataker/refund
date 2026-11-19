@@ -1,6 +1,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { insertSystemEvent } from '@refund/db';
+import { stripDocuments } from '@refund/sources';
 import { peekDb } from './db.ts';
 
 // ARCHITECTURE §10.1 and §6.5: one JSON object per line, everything through redactLog(). warn/error
@@ -25,11 +26,14 @@ const DOCUMENT_PATTERNS: readonly RegExp[] = [
 ];
 const EMAIL = /[^\s@"'<>]+@[^\s@"'<>]+\.[^\s@"'<>]+/g;
 
-/** Removes documents and e-mails from free text. */
+/**
+ * Removes documents and e-mails from free text: the patterns above, then the same stripDocuments the sources use on
+ * transaction descriptions (valid CPFs with loose or spread separators, numeric CNPJ runs; compliance review E14, H6).
+ */
 export function redactText(text: string): string {
   let out = text.length > MAX_STRING ? `${text.slice(0, MAX_STRING)}…` : text;
   for (const re of DOCUMENT_PATTERNS) out = out.replace(re, '[doc]');
-  return out.replace(EMAIL, '[email]');
+  return stripDocuments(out).replace(EMAIL, '[email]');
 }
 
 /**

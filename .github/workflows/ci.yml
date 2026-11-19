@@ -100,7 +100,7 @@ jobs:
       - name: Personal data (QSA, CPF, e-mail, phone, forbidden keys)
         run: node scripts/pii-guard.ts --ci
       - name: Tests of the guard itself (poisoned fixtures)
-        run: node --test scripts/test/pii-guard.test.ts
+        run: node --test scripts/test/pii-guard.test.ts scripts/test/freeze-check.test.ts
       - name: Secrets (gitleaks)
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:

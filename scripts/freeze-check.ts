@@ -28,6 +28,21 @@ function trackedFiles(): string[] {
 
 type Check = { id: number; name: string; run: () => string[] };
 
+export const CONTACT_FILE = 'apps/web/src/lib/contact.ts';
+
+/**
+ * /privacidade and the waitlist promise a contact address (compliance review E14, M1). It lives in one constant;
+ * while it is the placeholder (or anything that is not an e-mail), the freeze cannot pass.
+ */
+export function contactProblems(source: string): string[] {
+  const line = source.split('\n').find((l) => /export const CONTACT_EMAIL\b/.test(l));
+  if (line === undefined) return [`${CONTACT_FILE}: CONTACT_EMAIL not found`];
+  const value = /=\s*'([^']*)'/.exec(line)?.[1];
+  if (value === undefined || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+    return [`${CONTACT_FILE}: CONTACT_EMAIL is not an e-mail yet (placeholder CONTATO_PENDENTE)`];
+  return [];
+}
+
 const checks: Check[] = [
   {
     id: 1,
@@ -79,6 +94,11 @@ const checks: Check[] = [
     id: 5,
     name: 'no private doc is versioned',
     run: () => trackedFiles().filter((f) => PRIVATE_PATHS.some((p) => p.test(f))),
+  },
+  {
+    id: 11,
+    name: 'contact e-mail set (/privacidade, waitlist)',
+    run: () => contactProblems(readFileSync(CONTACT_FILE, 'utf8')),
   },
   {
     id: 10,

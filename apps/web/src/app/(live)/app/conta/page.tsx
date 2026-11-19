@@ -106,8 +106,8 @@ export default async function AccountPage() {
             ))}
           </ul>
           <p className="type-caption text-muted-foreground">
-            Desconectar apaga as transações copiadas daquela conta. Desconectar a última conta
-            retira o consentimento.
+            Desconectar apaga as transações copiadas daquela conta (as análises já feitas continuam
+            até você apagar seus dados). Desconectar a última conta retira o consentimento.
           </p>
         </section>
 
@@ -119,9 +119,9 @@ export default async function AccountPage() {
             Apagar meus dados
           </h2>
           <p className="type-small text-muted-foreground">
-            Apaga agora a empresa vinculada, as contas e transações copiadas, as análises, os
-            relatórios e as respostas. Pedimos à Pluggy para remover a conexão. Não dá para
-            desfazer.
+            Apaga agora as contas e transações copiadas, as análises, os relatórios, as respostas e
+            os dados públicos da empresa vinculada (se nenhuma outra sessão usa o mesmo CNPJ). Se
+            houver conexão na Pluggy, pedimos que ela seja removida. Não dá para desfazer.
           </p>
           <DeleteData remove={deleteMyData} />
         </section>

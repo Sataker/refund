@@ -1,3 +1,4 @@
+import { isValidCpf } from '@refund/sources';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { log, logger, redactLog, redactText, requestIdFrom, safeRoute } from './log.ts';
 
@@ -32,6 +33,17 @@ describe('redactLog (ARCHITECTURE §6.5; TESTS §5)', () => {
   it('strips documents and e-mails from strings', () => {
     const text = `PIX ${CPF} para 12.ABC.345/01DE-35, doc ${BARE_CPF} e ana@exemplo.com.br`;
     expect(redactText(text)).toBe('PIX [doc] para [doc], doc [doc] e [email]');
+  });
+
+  it('strips valid CPFs with loose or spread separators (stripDocuments)', () => {
+    // A valid CPF built at runtime (pii-guard rule 3): the base with the check pair that passes.
+    const base = ['529', '982', '247'];
+    const dv = Array.from({ length: 100 }, (_, i) => String(i).padStart(2, '0')).find((d) =>
+      isValidCpf(`${base.join('')}${d}`),
+    );
+    expect(dv).toBeDefined();
+    expect(redactText(`cpf ${base.join('')}-${dv}`)).toBe('cpf [doc]');
+    expect(redactText(`cpf ${base.join(' ')} ${dv}`)).toBe('cpf [doc]');
   });
 
   it('handles errors, dates, cycles, bigint and long strings', () => {
