@@ -43,8 +43,11 @@ export function parameterEntries(setId: string): readonly AnyParameterEntry[] | 
   return scenario === undefined ? undefined : scenarioEntries(scenario);
 }
 
-// The set `param()` reads. The engine is synchronous, so `withParameterSet` scopes it to one `analyze` call and always
-// restores the official set (ADR-013: a scenario never leaks into another calculation).
+// The set `param()` reads. `withParameterSet` scopes it to one `analyze` call and always restores the previous set
+// (ADR-013: a scenario never leaks into another calculation). This is only safe because THE ENGINE MUST STAY
+// SYNCHRONOUS: an `await` inside `fn` would let another calculation run while the scenario is active, so a thenable
+// result throws (code review E16, M1). Threading the set through Ctx instead would change ~80 `param()` call sites
+// and the public primitives' signatures; kept module-scoped and internal (not exported from the package index).
 let active: { id: string; entries: readonly AnyParameterEntry[] } = {
   id: OFFICIAL_SET_ID,
   entries: ALL_PARAMETERS,
@@ -59,7 +62,18 @@ export function withParameterSet<T>(setId: string, fn: () => T): T {
   const previous = active;
   active = { id: setId, entries };
   try {
-    return fn();
+    const out = fn();
+    if (
+      out !== null &&
+      (typeof out === 'object' || typeof out === 'function') &&
+      typeof (out as { then?: unknown }).then === 'function'
+    ) {
+      throw new EngineError(
+        'ENGINE_INTERNAL_ERROR',
+        'withParameterSet needs a synchronous calculation (the set would outlive this call)',
+      );
+    }
+    return out;
   } finally {
     active = previous;
   }

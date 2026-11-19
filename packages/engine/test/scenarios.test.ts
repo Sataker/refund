@@ -67,6 +67,13 @@ describe('parameter scenarios', () => {
     expect(sum).toBe(simulated.value.total.savings12m);
   });
 
+  it('refuses an async calculation (the engine must stay synchronous; code review E16, M1)', () => {
+    expect(() => withParameterSet('test-double', () => Promise.resolve(1))).toThrow('synchronous');
+    expect(param('minimumWage', '2026-06').value).toBe(
+      withParameterSet(OFFICIAL_SET_ID, () => param('minimumWage', '2026-06').value),
+    );
+  });
+
   it('an unknown set id is UNKNOWN_PARAMETER_SET', () => {
     const r = analyze(heroFacts(), { parameters: 'nope' });
     expect(r.ok ? 'OK' : r.error.code).toBe('UNKNOWN_PARAMETER_SET');
