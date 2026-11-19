@@ -443,6 +443,13 @@ export async function registerPluggyItemWith(
   const company = holder === 'PJ' ? await trackCompany(deps.db, deps.userId) : null;
   if (holder === 'PJ' && !company) return fail('FORBIDDEN', NO_COMPANY);
   await retireUnfinished(deps, holder);
+  // §8.2: the ceiling is checked here too, not only when the widget opened (code review E17, M6). A refused item is
+  // deleted at Pluggy at once: nothing of it is kept.
+  const room = await requireLiveRoomWith(deps.db, deps.userId, roomOf(holder));
+  if (!room.ok) {
+    if (provider.revokeItem) await provider.revokeItem(itemId, { mode: 'live' });
+    return room;
+  }
   const [row] = await deps.db
     .insert(connections)
     .values({

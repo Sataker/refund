@@ -1,6 +1,7 @@
 import { createMemoryDb, type DbHandle, schema } from '@refund/db';
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { REPLAY_COMPANIES } from '@/server/company/replay-companies.ts';
 import { migrationsFolder } from '@/server/db.ts';
 import {
   activePlanWith,
@@ -21,6 +22,7 @@ import {
   startPixCheckoutWith,
 } from '@/server/payments/checkout.ts';
 import { liveAnalysesPerMonth } from '@/server/plans/catalog.ts';
+import { insertConsent, linkCompany } from '@/server/track/state.ts';
 import { receiveAbacatePayWebhook } from '@/server/webhooks/abacatepay.ts';
 
 // E17 (TESTS §4; ARCHITECTURE §2.5, §4.9, §8.4): charge → simulate-payment → webhook → Empresa unlocked, against PGlite
@@ -442,5 +444,153 @@ describe('plan limits on the server (ARCHITECTURE §8.2)', () => {
       error: { code: 'PLAN_LIMIT', upgrade: { resource: 'connections_pj' } },
     });
     expect((await requireLiveRoomWith(h.db, userId, 'connections_pf')).ok).toBe(true);
+  });
+});
+
+describe('review fixes (code review E17)', () => {
+  function event(
+    type: string,
+    eventId: string,
+    chargeId: string,
+    amount: number,
+    status: string,
+    meta: Record<string, unknown> = {},
+  ) {
+    return JSON.stringify({
+      id: eventId,
+      event: type,
+      apiVersion: 2,
+      devMode: true,
+      data: {
+        transparent: {
+          id: chargeId,
+          externalId: null,
+          amount,
+          status,
+          devMode: true,
+          metadata: meta,
+        },
+        customer: { id: '', name: null, email: null, taxId: null },
+      },
+    });
+  }
+
+  async function pending() {
+    const userId = await newUserId();
+    const gateway = new FakeAbacatePay('test');
+    const s = await startPixCheckoutWith(
+      { planId: 'business', period: 'monthly' },
+      { db: h.db, userId, gateway },
+    );
+    if (!s.ok) throw new Error(s.error.code);
+    const providerId = [...gateway.charges.keys()].at(-1) as string;
+    return { userId, providerId };
+  }
+
+  it('a refund that arrives before the completion wins: the late completion grants nothing', async () => {
+    const { userId, providerId } = await pending();
+    const refund = event('transparent.refunded', 'log_r1', providerId, 6990, 'REFUNDED');
+    expect((await webhook(deliver(refund))).status).toBe(200);
+    const paid = event('transparent.completed', 'log_c1', providerId, 6990, 'PAID');
+    expect((await webhook(deliver(paid))).status).toBe(200);
+    expect((await activePlanWith(h.db, userId)).plan).toBe('free');
+  });
+
+  it('a lost dispute (transparent.lost, or disputed with REFUNDED) takes the period back', async () => {
+    for (const [type, status] of [
+      ['transparent.lost', 'PAID'],
+      ['transparent.disputed', 'REFUNDED'],
+    ] as const) {
+      const { userId, providerId } = await pending();
+      await webhook(
+        deliver(event('transparent.completed', `log_ok_${type}`, providerId, 6990, 'PAID')),
+      );
+      expect((await activePlanWith(h.db, userId)).plan).toBe('business');
+      await webhook(deliver(event(type, `log_lost_${type}`, providerId, 6990, status)));
+      expect((await activePlanWith(h.db, userId)).plan).toBe('free');
+    }
+  });
+
+  it('a dispute still open (UNDER_DISPUTE) changes nothing', async () => {
+    const { userId, providerId } = await pending();
+    await webhook(deliver(event('transparent.completed', 'log_ok_open', providerId, 6990, 'PAID')));
+    await webhook(
+      deliver(event('transparent.disputed', 'log_open', providerId, 6990, 'UNDER_DISPUTE')),
+    );
+    expect((await activePlanWith(h.db, userId)).plan).toBe('business');
+  });
+
+  it('a webhook that beats our own update finds the charge by the chargeId sent as metadata', async () => {
+    const userId = await newUserId();
+    const [row] = await h.db
+      .insert(schema.charges)
+      .values({
+        userId,
+        planId: 'business',
+        period: 'monthly',
+        amountCents: 6990,
+        devMode: true,
+        expiresAt: new Date(Date.now() + 900_000),
+      })
+      .returning();
+    const early = event(
+      'transparent.completed',
+      'log_meta',
+      'pix_char_not_attached',
+      6990,
+      'PAID',
+      {
+        chargeId: row?.id,
+      },
+    );
+    expect((await webhook(deliver(early))).status).toBe(200);
+    expect((await activePlanWith(h.db, userId)).plan).toBe('business');
+  });
+
+  it('validation offer: once per person; an expired reservation frees its slot; no race at the ceiling', async () => {
+    await h.db.delete(schema.charges).where(eq(schema.charges.period, 'validation'));
+    const gateway = new FakeAbacatePay('test');
+    const userId = await newUserId();
+    const deps = { db: h.db, userId, gateway };
+    const input = { planId: 'business', period: 'validation' } as const;
+    expect((await startPixCheckoutWith(input, deps)).ok).toBe(true);
+    expect(await startPixCheckoutWith(input, deps)).toMatchObject({
+      ok: false,
+      error: { code: 'SOLD_OUT', message: 'Esta oferta vale uma vez por pessoa.' },
+    });
+    await h.db
+      .update(schema.charges)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(schema.charges.userId, userId));
+    expect((await startPixCheckoutWith(input, deps)).ok).toBe(true);
+    const buyers = await Promise.all(Array.from({ length: 5 }, () => newUserId()));
+    const results = await Promise.all(
+      buyers.map((u) => startPixCheckoutWith(input, { db: h.db, userId: u, gateway })),
+    );
+    expect(results.filter((r) => r.ok)).toHaveLength(4);
+  });
+
+  it('a PJ connection of a company no longer linked does not count against the plan', async () => {
+    const userId = await newUserId();
+    const [hero, other] = REPLAY_COMPANIES;
+    if (!hero || !other) throw new Error('replay companies missing');
+    const companyId = await linkCompany(h.db, userId, hero);
+    const consentId = await insertConsent(h.db, {
+      userId,
+      scopes: ['accounts'],
+      termsVersion: 'test',
+      ipHash: null,
+    });
+    await h.db.insert(schema.connections).values({
+      userId,
+      companyId,
+      consentId,
+      provider: 'persona',
+      holder: 'PJ',
+      status: 'active',
+    });
+    expect((await requireLiveRoomWith(h.db, userId, 'connections_pj')).ok).toBe(false);
+    await linkCompany(h.db, userId, other);
+    expect((await requireLiveRoomWith(h.db, userId, 'connections_pj')).ok).toBe(true);
   });
 });

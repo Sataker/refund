@@ -1,6 +1,5 @@
 import 'server-only';
-import { type Db, findChargeByProviderId, schema } from '@refund/db';
-import { and, eq } from 'drizzle-orm';
+import { type Db, findChargeById, findChargeByProviderId, refundCharge } from '@refund/db';
 import { safeEqual } from '../crypto.ts';
 import { logger } from '../log.ts';
 import { type KeyMode, validAbacatePaySignature } from '../payments/abacatepay.ts';
@@ -75,7 +74,11 @@ interface TransparentData {
   amount: number;
   status: string;
   devMode: boolean;
+  /** Our `charges.id`, sent as metadata at creation. */
+  chargeId: string | null;
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 function transparentOf(payload: unknown): TransparentData | null {
   const data = ((payload ?? {}) as { data?: unknown }).data;
@@ -84,23 +87,49 @@ function transparentOf(payload: unknown): TransparentData | null {
     | undefined;
   if (!t || typeof t.id !== 'string' || typeof t.amount !== 'number') return null;
   if (typeof t.status !== 'string' || typeof t.devMode !== 'boolean') return null;
-  return { id: t.id, amount: t.amount, status: t.status, devMode: t.devMode };
+  const meta = (t.metadata ?? {}) as Record<string, unknown>;
+  const chargeId =
+    typeof meta.chargeId === 'string' && UUID.test(meta.chargeId) ? meta.chargeId : null;
+  return { id: t.id, amount: t.amount, status: t.status, devMode: t.devMode, chargeId };
 }
 
+/** Events that take the money back: a refund, or a dispute lost (Pix MED). */
+function isClawback(type: string, status: string): boolean {
+  return (
+    (type === 'transparent.refunded' && status === 'REFUNDED') ||
+    (type === 'transparent.disputed' && status === 'REFUNDED') ||
+    type === 'transparent.lost'
+  );
+}
+
+const HANDLED = new Set([
+  'transparent.completed',
+  'transparent.refunded',
+  'transparent.disputed',
+  'transparent.lost',
+]);
+
 /**
- * `transparent.completed` with a Pix PAID → charge paid + period granted (same transaction as the event row);
- * `transparent.refunded` → charge refunded and its period cancelled (the 30-day guarantee goes through AbacatePay's
- * customer portal). `subscription.*` (Pix Automático) and `checkout.*` are recorded and ignored: out of the MVP.
+ * `transparent.completed` with a Pix PAID: charge paid + period granted (same transaction as the event row). A
+ * refund or a lost dispute: charge refunded and its period cancelled, also when it arrives before the completion
+ * (events come in any order). `subscription.*` (Pix Automatico) and `checkout.*` are recorded and ignored: out of
+ * the MVP. The charge is found by AbacatePay's id; if the webhook arrived before our own update, by the `chargeId`
+ * we sent as metadata (code review E17, L12).
  */
 export async function processAbacatePayEvent(
   ev: VerifiedEvent,
   tx: Db,
   nowMs: number = Date.now(),
 ): Promise<'processed' | 'ignored'> {
-  if (ev.type !== 'transparent.completed' && ev.type !== 'transparent.refunded') return 'ignored';
+  if (!HANDLED.has(ev.type)) return 'ignored';
   const t = transparentOf(ev.payload);
   if (!t) return 'ignored';
-  const charge = await findChargeByProviderId(tx, t.id);
+  let charge = await findChargeByProviderId(tx, t.id);
+  if (!charge && t.chargeId) {
+    const byMeta = await findChargeById(tx, t.chargeId);
+    if (byMeta && (byMeta.providerChargeId === null || byMeta.providerChargeId === t.id))
+      charge = byMeta;
+  }
   if (!charge) {
     logger.warn('payments.unknown_charge', { event: ev.type });
     return 'ignored';
@@ -120,19 +149,9 @@ export async function processAbacatePayEvent(
       ? 'processed'
       : 'ignored';
   }
-  if (t.status !== 'REFUNDED') return 'ignored';
-  const { charges, subscriptions } = schema;
-  const refunded = await tx
-    .update(charges)
-    .set({ status: 'refunded' })
-    .where(and(eq(charges.id, charge.id), eq(charges.status, 'paid')))
-    .returning({ id: charges.id });
-  if (refunded.length === 0) return 'ignored';
-  await tx
-    .update(subscriptions)
-    .set({ status: 'cancelled' })
-    .where(eq(subscriptions.chargeId, charge.id));
-  logger.info('payments.charge_refunded', { period: charge.period });
+  if (!isClawback(ev.type, t.status)) return 'ignored';
+  if (!(await refundCharge(tx, charge.id))) return 'ignored';
+  logger.info('payments.charge_refunded', { period: charge.period, event: ev.type });
   return 'processed';
 }
 

@@ -150,5 +150,32 @@ describe('HTTP adapter', () => {
       'p',
     );
     expect(String(g.mock.calls[0]?.[0])).toBe(`${ABACATEPAY_API_BASE_URL}/transparents/check?id=p`);
+    // Never a remote host, even with a Test Mode key: the Bearer key would go there.
+    const r = fetchReturning(200, created);
+    await abacatePayHttp({
+      apiKey: TEST_KEY,
+      baseUrl: 'https://evil.example/v2',
+      fetch: r,
+    }).checkPix('p');
+    expect(String(r.mock.calls[0]?.[0])).toBe(`${ABACATEPAY_API_BASE_URL}/transparents/check?id=p`);
+  });
+
+  it('the QR image must be an inline PNG, never a URL', async () => {
+    const gw = abacatePayHttp({
+      apiKey: TEST_KEY,
+      fetch: fetchReturning(200, {
+        ...created,
+        data: { ...created.data, brCodeBase64: 'https://evil.example/qr.png' },
+      }),
+    });
+    expect(
+      await gw.createPix({
+        amountCents: 59900,
+        description: 'x',
+        expiresInSeconds: 900,
+        externalId: 'c',
+        metadata: {},
+      }),
+    ).toMatchObject({ ok: false, error: { code: 'INVALID_RESPONSE' } });
   });
 });

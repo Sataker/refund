@@ -111,16 +111,26 @@ const TIMEOUT_MS = 10_000;
 
 export interface HttpGatewayOptions {
   apiKey: string;
-  /** Defaults to the official URL; another base is honoured only for a Test Mode key (local fake in e2e). */
+  /** Defaults to the official URL; a loopback base is honoured only for a Test Mode key (local fake in e2e). */
   baseUrl?: string;
   fetch?: typeof fetch;
+}
+
+/** The override exists only for a local fake (e2e): a loopback host, never a remote one (code review E17, L9). */
+function isLoopback(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === '127.0.0.1' || host === 'localhost' || host === '[::1]';
+  } catch {
+    return false;
+  }
 }
 
 /** The HTTP adapter of the port. */
 export function abacatePayHttp(options: HttpGatewayOptions): PixGateway {
   const keyMode = keyModeOf(options.apiKey);
   const base =
-    keyMode === 'test' && options.baseUrl
+    keyMode === 'test' && options.baseUrl && isLoopback(options.baseUrl)
       ? options.baseUrl.replace(/\/+$/, '')
       : ABACATEPAY_API_BASE_URL;
   const doFetch = options.fetch ?? fetch;
@@ -191,6 +201,8 @@ export function abacatePayHttp(options: HttpGatewayOptions): PixGateway {
         typeof d.devMode !== 'boolean' ||
         !str(d.brCode) ||
         !str(d.brCodeBase64) ||
+        // The image goes straight into <img src>: only an inline PNG, never a URL.
+        !d.brCodeBase64.startsWith('data:image/png;base64,') ||
         !str(d.expiresAt)
       ) {
         return { ok: false, error: { code: 'INVALID_RESPONSE' } };

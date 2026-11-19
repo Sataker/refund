@@ -5,10 +5,10 @@ import {
   type ChargeStatus,
   cancelCharge,
   closePendingCharge,
-  countPeriodSales,
   type Db,
   findOwnedCharge,
   insertCharge,
+  reserveCappedCharge,
   settleCharge,
 } from '@refund/db';
 import { z } from 'zod';
@@ -88,20 +88,30 @@ export async function startPixCheckoutWith(
   const { planId, period } = parsed.data;
   const amountCents = pixAmountCents(planId, period);
   if (amountCents === null) return fail('INVALID_INPUT', 'Plano inválido.');
-  if (
-    period === 'validation' &&
-    (await countPeriodSales(db, 'validation')) >= VALIDATION_OFFER.maxSales
-  ) {
-    return fail('SOLD_OUT', 'Esta oferta já foi encerrada.');
-  }
-
-  const charge = await insertCharge(db, {
+  const draft = {
     userId,
     planId,
     period,
     amountCents,
     devMode: gateway.keyMode === 'test',
-  });
+    // Provisional; AbacatePay's own expiry replaces it. A margin covers the provider call.
+    expiresAt: new Date((deps.nowMs ?? Date.now()) + (PIX_EXPIRES_IN_SECONDS + 120) * 1000),
+  };
+  let charge: ChargeRow;
+  if (period === 'validation') {
+    const reserved = await reserveCappedCharge(db, draft, VALIDATION_OFFER.maxSales);
+    if (!reserved.ok) {
+      return fail(
+        'SOLD_OUT',
+        reserved.reason === 'SOLD_OUT'
+          ? 'Esta oferta já foi encerrada.'
+          : 'Esta oferta vale uma vez por pessoa.',
+      );
+    }
+    charge = reserved.charge;
+  } else {
+    charge = await insertCharge(db, draft);
+  }
   const created = await gateway.createPix({
     amountCents,
     // AbacatePay refuses emoji and other characters in the description: plain ASCII only.

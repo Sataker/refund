@@ -2,7 +2,7 @@
 // a period lasts are business rules and stay in `apps/web/src/server/plans`; this file only reads and writes rows.
 import { and, count, desc, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
 import type { Db } from '../client.ts';
-import { charges, companyLinks, connections, subscriptions } from '../schema/index.ts';
+import { charges, companyLinks, connections, subscriptions, users } from '../schema/index.ts';
 
 export type ChargeStatus = (typeof charges.status.enumValues)[number];
 export type ChargeRow = typeof charges.$inferSelect;
@@ -13,6 +13,11 @@ export interface ChargeInsert {
   period: string;
   amountCents: number;
   devMode: boolean;
+  /**
+   * Provisional expiry, set at insert (code review E17, M4): a row whose provider call never came back still ages
+   * out of the sales ceiling. Replaced by AbacatePay's own `expiresAt` once attached.
+   */
+  expiresAt: Date;
 }
 
 /** Step 1 of §2.5: the row exists before AbacatePay is called (its id is the `externalId`). */
@@ -23,6 +28,47 @@ export async function insertCharge(db: Db, input: ChargeInsert): Promise<ChargeR
     .returning();
   if (!row) throw new Error('insertCharge: no row returned');
   return row;
+}
+
+export type ReserveOutcome =
+  | { ok: true; charge: ChargeRow }
+  | { ok: false; reason: 'SOLD_OUT' | 'ALREADY_TAKEN' };
+
+/**
+ * A charge of a period with a global ceiling (the validation offer): count and insert under one transaction-scoped
+ * advisory lock, so two requests at the last slot cannot both pass; at most one such charge (pending or paid) per
+ * user, so nobody can hold every slot.
+ */
+export async function reserveCappedCharge(
+  db: Db,
+  input: ChargeInsert,
+  maxSales: number,
+): Promise<ReserveOutcome> {
+  return db.transaction(async (txRaw) => {
+    const tx = txRaw as unknown as Db;
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtext(${`refund.charges:${input.period}`}))`,
+    );
+    const [mine] = await tx
+      .select({ n: count() })
+      .from(charges)
+      .where(and(eq(charges.userId, input.userId), eq(charges.period, input.period), sellable()));
+    if ((mine?.n ?? 0) > 0) return { ok: false, reason: 'ALREADY_TAKEN' } as const;
+    if ((await countPeriodSales(tx, input.period)) >= maxSales) {
+      return { ok: false, reason: 'SOLD_OUT' } as const;
+    }
+    return { ok: true, charge: await insertCharge(tx, input) } as const;
+  });
+}
+
+/** Paid, or pending with a QR that may still be paid. */
+function sellable() {
+  return sql`(${charges.status} = 'paid' OR (${charges.status} = 'pending' AND ${charges.expiresAt} > now()))`;
+}
+
+export async function findChargeById(db: Db, id: string): Promise<ChargeRow | null> {
+  const [row] = await db.select().from(charges).where(eq(charges.id, id)).limit(1);
+  return row ?? null;
 }
 
 /** Step 2 of §2.5: what AbacatePay answered. */
@@ -76,12 +122,7 @@ export async function countPeriodSales(db: Db, period: string): Promise<number> 
   const [row] = await db
     .select({ n: count() })
     .from(charges)
-    .where(
-      and(
-        eq(charges.period, period),
-        sql`(${charges.status} = 'paid' OR (${charges.status} = 'pending' AND (${charges.expiresAt} IS NULL OR ${charges.expiresAt} > now())))`,
-      ),
-    );
+    .where(and(eq(charges.period, period), sellable()));
   return row?.n ?? 0;
 }
 
@@ -119,6 +160,10 @@ const DAY_MS = 86_400_000;
  */
 export async function settleCharge(db: Db, input: SettleInput): Promise<SettleOutcome> {
   return db.transaction(async (tx) => {
+    // One settlement per user at a time (code review E17, L8): two periods of the same plan chain, never overlap.
+    await tx.execute(
+      sql`SELECT 1 FROM ${users} WHERE ${users.id} = (SELECT ${charges.userId} FROM ${charges} WHERE ${charges.id} = ${input.chargeId}) FOR UPDATE`,
+    );
     const [paid] = await tx
       .update(charges)
       .set({ status: 'paid', paidAt: input.paidAt })
@@ -157,7 +202,32 @@ export async function settleCharge(db: Db, input: SettleInput): Promise<SettleOu
   });
 }
 
-/** §8.2 live counts: linked companies, and connections in force (syncing or active, not revoked) per holder. */
+/**
+ * Refund or lost dispute: the charge leaves `pending` or `paid` for `refunded` and its period is cancelled. A refund
+ * that arrives before the completion (events come in any order) makes the late completion a no-op, since
+ * `settleCharge` only settles a pending charge.
+ */
+export async function refundCharge(db: Db, chargeId: string): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const rows = await tx
+      .update(charges)
+      .set({ status: 'refunded' })
+      .where(and(eq(charges.id, chargeId), inArray(charges.status, ['pending', 'paid'])))
+      .returning({ id: charges.id });
+    if (rows.length === 0) return false;
+    await tx
+      .update(subscriptions)
+      .set({ status: 'cancelled' })
+      .where(eq(subscriptions.chargeId, chargeId));
+    return true;
+  });
+}
+
+/**
+ * §8.2 live counts: linked companies, and ACTIVE connections per holder (a stuck `syncing` row is retired by the
+ * connect flow and must not block the sample-data fallback). A PJ connection counts only for a company the user
+ * still has linked (code review E17, H1).
+ */
 export async function countLiveResource(
   db: Db,
   userId: string,
@@ -170,15 +240,19 @@ export async function countLiveResource(
       .where(eq(companyLinks.userId, userId));
     return row?.n ?? 0;
   }
+  const pj = resource === 'connections_pj';
   const [row] = await db
     .select({ n: count() })
     .from(connections)
     .where(
       and(
         eq(connections.userId, userId),
-        eq(connections.holder, resource === 'connections_pf' ? 'PF' : 'PJ'),
+        eq(connections.holder, pj ? 'PJ' : 'PF'),
         isNull(connections.revokedAt),
-        inArray(connections.status, ['syncing', 'active']),
+        eq(connections.status, 'active'),
+        pj
+          ? sql`${connections.companyId} IN (SELECT ${companyLinks.companyId} FROM ${companyLinks} WHERE ${companyLinks.userId} = ${userId})`
+          : undefined,
       ),
     );
   return row?.n ?? 0;
