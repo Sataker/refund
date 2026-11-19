@@ -1,6 +1,6 @@
 import 'server-only';
 import type { ProfileAnswers } from '@refund/engine';
-import type { AnswerKey, CardAnswer, PersonaData, PersonaId } from '@refund/personas';
+import type { AnswerKey, CardAnswer, PersonaData, PersonaId, VideoNumber } from '@refund/personas';
 import answerKeyJson from '@refund/personas/data/dev-exportador.answer-key.json' with {
   type: 'json',
 };
@@ -29,6 +29,8 @@ export interface DemoPersona {
   cardAnswers: CardAnswer[];
   /** The profession on the health card (F.2: "psychologist = care for the holder"). */
   healthProfession: string;
+  /** The numbers the video shows, by screen and testId (answer key, ENGINE-SPEC F.4; TESTS §6.4 P3). */
+  videoNumbers: readonly VideoNumber[];
 }
 
 const heroKey = answerKeyJson as unknown as AnswerKey;
@@ -47,6 +49,7 @@ const HERO: DemoPersona = {
   healthProfession:
     heroKey.expectedFacts.pfDetails.healthExpenses.find((h) => !/^\d/.test(h.cnaeOrProfession))
       ?.cnaeOrProfession ?? '',
+  videoNumbers: heroKey.videoNumbers,
 };
 
 export const DEMO_PERSONAS: readonly DemoPersona[] = [HERO];

@@ -1,8 +1,12 @@
+import { emptyRecordings, recordingsFor } from '@refund/ai';
 import { createMemoryDb } from '@refund/db';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GET } from '@/app/api/health/route.ts';
+import { recordingsComplete } from '@/demo/analysis.ts';
+import { DEMO_PERSONAS } from '@/demo/catalog.ts';
+import { demoHealth, screenNumbers, videoNumbersOf } from '@/demo/health.ts';
 import { migrationsFolder, resetDb } from '@/server/db.ts';
-import { checkDatabase } from '@/server/health.ts';
+import { checkDatabase, checkDemo } from '@/server/health.ts';
 
 // ARCHITECTURE §10.2; TESTS §4 "deep health with and without a database".
 
@@ -38,6 +42,8 @@ describe('GET /api/health', () => {
     expect(body.status).toBe('ok');
     expect(body.capabilities.database).toBe(false);
     expect(body.checks).toBeUndefined();
+    // ARCHITECTURE §10.2: the demo assembles, every AI call it makes is recorded, every video number holds.
+    expect(body.demo).toEqual({ personas: 1, recordingsComplete: true, videoNumbers: 'ok' });
   });
 
   it('deep without any database (backup deployment): ok, database not configured', async () => {
@@ -125,5 +131,84 @@ describe('GET /api/health', () => {
     const limited = await call('?deep=1', ip);
     expect(limited.status).toBe(429);
     expect((await call('', ip)).status).toBe(200);
+  });
+});
+
+// TESTS §6.4 P3 locked locally (ENGINE-SPEC F.4): the numbers the screens render are the video numbers. A change in
+// the engine that moves any of them turns health `failed` and breaks this test before it reaches production.
+describe('demo health and the video numbers', () => {
+  const hero = DEMO_PERSONAS.find((p) => p.hero);
+  if (!hero) throw new Error('no hero persona');
+
+  it('the video numbers are exactly F.4 (R$ 62.318,92 · 74.006,28 · 39.787,68–198.938,40 · R02 1.111,70)', () => {
+    expect(hero.videoNumbers).toEqual([
+      { screen: 'analysis', testId: 'analysis/money-hero', cents: 6_231_892 },
+      { screen: 'dashboard', testId: 'dashboard/money-hero', cents: 6_231_892 },
+      { screen: 'dashboard', testId: 'dashboard/regime-total', cents: 7_400_628 },
+      { screen: 'dashboard', testId: 'dashboard/recovery-min', cents: 3_978_768 },
+      { screen: 'dashboard', testId: 'dashboard/recovery-max', cents: 19_893_840 },
+      { screen: 'dashboard', testId: 'dashboard/alert-R02-cost', cents: 111_170 },
+    ]);
+  });
+
+  it('every screen number equals its video number', async () => {
+    const shown = await screenNumbers(hero);
+    for (const v of hero.videoNumbers) expect(shown?.[v.testId], v.testId).toBe(v.cents);
+    expect(await videoNumbersOf(hero)).toEqual({ status: 'ok', mismatches: [] });
+  }, 60_000);
+
+  it('a moved video number is reported by testId', async () => {
+    const moved = {
+      ...hero,
+      videoNumbers: hero.videoNumbers.map((v) =>
+        v.testId === 'dashboard/regime-total'
+          ? { ...v, cents: (v.cents + 1) as typeof v.cents }
+          : v,
+      ),
+    };
+    expect(await videoNumbersOf(moved)).toEqual({
+      status: 'mismatch',
+      mismatches: ['dashboard/regime-total'],
+    });
+  }, 60_000);
+
+  it('demo health: 1 persona, recordings complete, video numbers ok', async () => {
+    expect(await demoHealth()).toEqual({
+      personas: 1,
+      recordingsComplete: true,
+      videoNumbers: 'ok',
+    });
+  }, 60_000);
+
+  it('a persona whose recordings are missing is not complete', async () => {
+    expect(await recordingsComplete(hero)).toBe(true);
+    expect(await recordingsComplete(hero, emptyRecordings(hero.id))).toBe(false);
+    const full = recordingsFor(hero.id);
+    const [dropped] = Object.keys(full.items);
+    const partial = {
+      ...full,
+      items: Object.fromEntries(Object.entries(full.items).filter(([k]) => k !== dropped)),
+    };
+    expect(await recordingsComplete(hero, partial)).toBe(false);
+  }, 60_000);
+
+  it('status: mismatch or no persona → failed; missing recording → degraded; a throw → failed', async () => {
+    const ok = { personas: 1, recordingsComplete: true, videoNumbers: 'ok' as const };
+    expect((await checkDemo(async () => ok)).status).toBe('ok');
+    expect((await checkDemo(async () => ({ ...ok, recordingsComplete: false }))).status).toBe(
+      'degraded',
+    );
+    expect(
+      (await checkDemo(async () => ({ ...ok, videoNumbers: 'mismatch' as const }))).status,
+    ).toBe('failed');
+    expect((await checkDemo(async () => ({ ...ok, personas: 0 }))).status).toBe('failed');
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const thrown = await checkDemo(async () => {
+      throw new Error('boom');
+    });
+    expect(thrown).toEqual({
+      demo: { personas: 0, recordingsComplete: false, videoNumbers: 'unavailable' },
+      status: 'failed',
+    });
   });
 });

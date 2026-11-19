@@ -1,12 +1,13 @@
 import 'server-only';
-import { createLlmPort } from '@refund/ai';
-import type { CivilDate } from '@refund/engine';
+import { createLlmPort, type Recordings, recordingKey, recordingsFor } from '@refund/ai';
+import { type CivilDate, ENGINE_VERSION, PARAMETERS_VERSION } from '@refund/engine';
 import { article as lawArticle } from '@refund/law';
 import {
   type AnalysisDeps,
   type AnalysisEvent,
   type AnalysisInput,
   type ConfirmationQuestion,
+  type LlmPort,
   type Pace,
   type PipelineResult,
   type QuestionAnswer,
@@ -69,10 +70,15 @@ function demoClock(today: CivilDate): AnalysisDeps['clock'] {
   return { today: () => today, now: () => Date.now() };
 }
 
-export function demoDeps(p: DemoPersona, pace: Pace, wait?: AnalysisDeps['wait']): AnalysisDeps {
+export function demoDeps(
+  p: DemoPersona,
+  pace: Pace,
+  wait?: AnalysisDeps['wait'],
+  llm?: LlmPort,
+): AnalysisDeps {
   return {
     // One port per analysis (EXECUTION §9, E10 row: the transaction budget is per port instance).
-    llm: createLlmPort({ mode: 'template' }),
+    llm: llm ?? createLlmPort({ mode: 'template' }),
     article: (id) => {
       const a = lawArticle(id);
       return a === undefined ? undefined : { id: a.id, label: a.label, text: a.text };
@@ -230,4 +236,48 @@ export function runDemoAnalysis(
     resultCache.set(key, cached);
   }
   return cached;
+}
+
+/**
+ * ARCHITECTURE §7.4 and §10.2 (`demo.recordingsComplete`): the persona's recording file is stamped with this
+ * engine and these parameters, and holds an item for every AI call the two /demo runs make (before the cards and
+ * with the persona's answers). The runs still explain with the template; the port only counts the misses.
+ */
+export async function recordingsComplete(
+  p: DemoPersona,
+  recordings: Recordings = recordingsFor(p.id),
+): Promise<boolean> {
+  if (
+    recordings.engineVersion !== ENGINE_VERSION ||
+    recordings.parametersVersion !== PARAMETERS_VERSION
+  )
+    return false;
+  const template = createLlmPort({ mode: 'template' });
+  let missing = 0;
+  const counting = (): LlmPort => ({
+    mode: 'template',
+    classify: async (batch) => {
+      for (const input of batch)
+        if (recordings.items[recordingKey('classify', input)] === undefined) missing += 1;
+      return template.classify(batch);
+    },
+    explain: async (input) => {
+      if (recordings.items[recordingKey('explain', input)] === undefined) missing += 1;
+      return template.explain(input);
+    },
+  });
+  const unanswered = await drain(
+    runAnalysis(
+      await baseInput(p, 'all', 'recordings'),
+      demoDeps(p, 'instant', undefined, counting()),
+    ),
+  );
+  const answers = addressAnswers(p, unanswered.result.questions);
+  await drain(
+    runAnalysis(
+      { ...(await baseInput(p, 'all', 'recordings')), answers },
+      demoDeps(p, 'instant', undefined, counting()),
+    ),
+  );
+  return missing === 0;
 }

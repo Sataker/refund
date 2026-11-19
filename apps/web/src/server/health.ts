@@ -6,6 +6,7 @@ import {
   EXPECTED_MIGRATIONS,
   touchHeartbeat,
 } from '@refund/db';
+import { type DemoHealth, demoHealth } from '@/demo/health.ts';
 import { type BasicHealth, basicHealth, type HealthStatus } from '@/lib/health.ts';
 import { type Capabilities, capabilitiesFrom } from './capabilities.ts';
 import { getDb } from './db.ts';
@@ -16,7 +17,8 @@ import { logger } from './log.ts';
 // FEWER migrations than the bundled journal (the build expects a column that is not there).
 // degraded (200): a malformed variable, a database configured without its secrets, the database
 // AHEAD of the build (the normal window of SCHEMA §4.1: migrate before the merge, additive only),
-// or the database above 400 MB (SCHEMA §7).
+// or the database above 400 MB (SCHEMA §7). The demo (§7.4, §10.2): it does not assemble or a screen moved a video
+// number → failed; a missing AI recording → degraded (the demo still explains, with the template).
 
 export const DB_SIZE_ALERT_BYTES = 400 * 1024 * 1024;
 
@@ -36,6 +38,7 @@ export interface DatabaseCheck {
 
 export interface HealthReport extends BasicHealth {
   capabilities: Capabilities;
+  demo: DemoHealth | { personas: 0; recordingsComplete: false; videoNumbers: 'unavailable' };
   /** Malformed variables: names and reasons only. */
   problems?: { name: string; reason: string }[];
   checks?: { database: DatabaseCheck };
@@ -93,6 +96,27 @@ export async function checkDatabase(
   }
 }
 
+export async function checkDemo(
+  read: () => Promise<DemoHealth> = demoHealth,
+): Promise<{ demo: HealthReport['demo']; status: HealthStatus }> {
+  try {
+    const demo = await read();
+    const status: HealthStatus =
+      demo.personas === 0 || demo.videoNumbers !== 'ok'
+        ? 'failed'
+        : demo.recordingsComplete
+          ? 'ok'
+          : 'degraded';
+    return { demo, status };
+  } catch (err) {
+    logger.error('health.demo', { reason: 'unavailable', error: err });
+    return {
+      demo: { personas: 0, recordingsComplete: false, videoNumbers: 'unavailable' },
+      status: 'failed',
+    };
+  }
+}
+
 export async function healthReport(options: {
   deep: boolean;
 }): Promise<{ httpStatus: number; body: HealthReport }> {
@@ -103,7 +127,9 @@ export async function healthReport(options: {
     REFUND_BUILT_AT: process.env.REFUND_BUILT_AT,
   });
   let status: HealthStatus = base.status;
-  const body: HealthReport = { ...base, capabilities: capabilitiesFrom(env) };
+  const demo = await checkDemo();
+  status = worst(status, demo.status);
+  const body: HealthReport = { ...base, capabilities: capabilitiesFrom(env), demo: demo.demo };
   if (env.problems.length > 0) {
     status = worst(status, 'degraded');
     body.problems = env.problems.map((p) => ({ name: p.name, reason: p.reason }));
