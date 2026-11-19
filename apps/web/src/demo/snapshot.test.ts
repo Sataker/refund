@@ -147,6 +147,7 @@ describe('D8: the pró-labore simulator recalculates through the engine', () => 
       current: 162100,
       value: 2831652,
       annual: 4289652,
+      regimeFrom: '2027-04',
       total: 6231892,
     });
     const at = (margin: string) => {

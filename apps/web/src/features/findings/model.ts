@@ -257,6 +257,8 @@ export interface ProLaborePoint {
   value: number;
   /** R01's steady-state value. */
   annual: number | null;
+  /** R01's regimeFrom: the first PA in the steady-state anexo (D32 "a partir de"). */
+  regimeFrom: string | null;
   total: number;
 }
 
@@ -271,6 +273,7 @@ export function proLaborePoint(result: EngineResult): ProLaborePoint | null {
     current: typeof current === 'number' ? current : step.result.value,
     value: r01.marginalValue12m,
     annual: r01.annualRegimeValue ?? null,
+    regimeFrom: r01.regimeFrom ?? null,
     total: result.total.savings12m,
   };
 }

@@ -21,6 +21,7 @@ import { MARGIN_STEPS, marginOf, proLaborePoint, traceSources } from '@/features
 import { planAsText } from '@/features/findings/plan-text';
 import { type Excerpt, RefSheet } from '@/features/findings/ref-sheet';
 import { SimulatorLoader } from '@/features/findings/simulator-loader.client';
+import { marginStepValues } from '@/features/findings/simulator-steps';
 import { VisitorNotice } from '@/features/findings/visitor-notice.client';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -206,6 +207,7 @@ export default async function DemoFindingPage({
             defaultMargin={marginOf(snap.facts)}
             base={point}
             baseCurve={snap.result.optimizerCurve}
+            steps={marginStepValues(snap.facts)}
           />
         ) : null}
 

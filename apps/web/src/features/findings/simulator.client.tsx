@@ -2,15 +2,24 @@
 
 import { type EngineResult, type Facts, recalculate } from '@refund/engine';
 import { useId, useState } from 'react';
-import { formatBRL, formatRatePercent } from '@/lib/format';
+import { formatBRL } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { MARGIN_STEPS, type ProLaborePoint, proLaborePoint } from './model';
 import { type CurvePoint, OptimizerCurve } from './optimizer-curve';
+import {
+  formatMarginPp,
+  lateStartText,
+  type MarginStepValue,
+  marginCostText,
+  perYearText,
+} from './simulator-text';
 
 // Screen 6 "SIMULE" (IDENTITY-AND-UI Screen 6; ARCHITECTURE §7.3; TESTS D8): the browser runs the SAME engine
 // (`recalculate()` over the persona's Facts) when the slider moves the engine's own assumption, the safety margin of
 // the Fator R (ENGINE-SPEC D.1, D13). The engine answers with the pró-labore, the curve and every value; at the
 // default position the snapshot is shown untouched, so going back gives the exact original number.
+// D32 (PLAN §18): the slider is a safety margin. The 12-month value stays the main figure; the margin's cost comes
+// from the engine's per-year values of the steps (computed at build), the regime start from R01's regimeFrom.
 
 interface SimulatorProps {
   facts: Facts;
@@ -18,6 +27,8 @@ interface SimulatorProps {
   defaultMargin: string;
   base: ProLaborePoint;
   baseCurve: CurvePoint[];
+  /** R01's per-year value at every MARGIN_STEPS step (engine, at build). */
+  steps: MarginStepValue[];
 }
 
 interface Point {
@@ -35,8 +46,15 @@ function run(facts: Facts, margin: string): Point | null {
   return point ? { point, curve: r.value.optimizerCurve ?? [] } : null;
 }
 
-export default function Simulator({ facts, defaultMargin, base, baseCurve }: SimulatorProps) {
+export default function Simulator({
+  facts,
+  defaultMargin,
+  base,
+  baseCurve,
+  steps,
+}: SimulatorProps) {
   const labelId = useId();
+  const sliderId = useId();
   // L6: fails closed. A default margin outside the steps could never be given back exactly (D8).
   const defaultIndex = MARGIN_STEPS.indexOf(defaultMargin);
   const [index, setIndex] = useState(defaultIndex);
@@ -55,6 +73,9 @@ export default function Simulator({ facts, defaultMargin, base, baseCurve }: Sim
   };
   const point = state?.point ?? null;
   if (defaultIndex < 0) return null;
+  const cost = marginCostText(steps, index);
+  const late = point ? lateStartText(point.regimeFrom, base.regimeFrom) : null;
+  const perYear = point ? perYearText(point.annual, point.regimeFrom) : null;
 
   return (
     <section
@@ -90,31 +111,47 @@ export default function Simulator({ facts, defaultMargin, base, baseCurve }: Sim
             </span>
           </div>
           <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <label htmlFor={sliderId} className="type-small font-medium text-foreground">
+                Folga de segurança acima de 28%
+              </label>
+              <span className="type-small text-muted-foreground" data-testid="sim/margin">
+                <span className="num text-foreground">{formatMarginPp(margin)}</span>
+                {index === defaultIndex ? ' (recomendada)' : ''}
+              </span>
+            </div>
             <input
+              id={sliderId}
               type="range"
               min={0}
               max={MARGIN_STEPS.length - 1}
               step={1}
               value={index}
               onChange={(e) => move(Number(e.target.value))}
-              aria-label="Folga de segurança acima de 28% no Fator R"
-              aria-valuetext={`pró-labore de ${formatBRL(point.target)} por mês, folga de ${formatRatePercent(margin)}`}
+              aria-valuetext={`folga de ${formatMarginPp(margin)}, pró-labore de ${formatBRL(point.target)} por mês`}
               data-testid="sim/slider"
               className="h-7 w-full cursor-pointer accent-[var(--accent-c)]"
             />
             <p className="type-small text-muted-foreground" data-testid="sim/help">
               Arraste para mudar a folga acima de 28% (0 a 5 p.p.); o pró-labore acompanha.
             </p>
-            <div className="type-caption flex flex-wrap justify-between gap-2 text-muted-foreground">
-              <span>
-                hoje <span className="num text-foreground">{formatBRL(point.current)}</span>
-              </span>
-              <span>
-                folga acima de 28%:{' '}
-                <span className="num text-foreground">{formatRatePercent(margin)}</span>
-                {index === defaultIndex ? ' (recomendada)' : ''}
-              </span>
-            </div>
+            {cost ? (
+              <p className="type-small num text-foreground" data-testid="sim/cost">
+                {cost}
+              </p>
+            ) : null}
+            {late ? (
+              <p
+                className="type-small font-medium text-warning"
+                data-testid="sim/late"
+                role="status"
+              >
+                {late}
+              </p>
+            ) : null}
+            <p className="type-caption text-muted-foreground">
+              hoje <span className="num text-foreground">{formatBRL(point.current)}</span>
+            </p>
           </div>
           <OptimizerCurve
             points={state?.curve ?? []}
@@ -138,6 +175,15 @@ export default function Simulator({ facts, defaultMargin, base, baseCurve }: Sim
                   ? `Custa ${formatBRL(-point.value)} a mais nos próximos 12 meses`
                   : formatBRL(point.value)}
               </dd>
+              {perYear ? (
+                <dd
+                  className="type-small num text-muted-foreground"
+                  data-testid="sim/annual"
+                  data-cents={point.annual ?? undefined}
+                >
+                  {perYear}
+                </dd>
+              ) : null}
             </div>
             <div className="flex flex-col gap-0.5">
               <dt className="type-small text-muted-foreground">
