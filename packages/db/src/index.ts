@@ -51,6 +51,22 @@ export {
   setLawChangeSummary,
   touchMonitoredRegulation,
 } from './repos/law.ts';
+export {
+  attachProviderCharge,
+  type ChargeInsert,
+  type ChargeRow,
+  type ChargeStatus,
+  cancelCharge,
+  closePendingCharge,
+  countLiveResource,
+  countPeriodSales,
+  findChargeByProviderId,
+  findOwnedCharge,
+  insertCharge,
+  type SettleInput,
+  type SettleOutcome,
+  settleCharge,
+} from './repos/payments.ts';
 export { deleteRateLimitsBefore, hitRateLimit } from './repos/rate-limits.ts';
 export {
   decideReportRow,

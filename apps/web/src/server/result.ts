@@ -24,7 +24,9 @@ export type ActionErrorCode =
   | 'UNAVAILABLE'
   // DomainError codes surfaced by the company and connection actions (E11).
   | 'NOT_FOUND'
-  | 'CONSENT_REQUIRED';
+  | 'CONSENT_REQUIRED'
+  // Plans and Pix (E17): the R$ 1,00 validation offer reached its ceiling of sales.
+  | 'SOLD_OUT';
 
 export interface ActionError extends DomainError {
   code: ActionErrorCode | (string & {});

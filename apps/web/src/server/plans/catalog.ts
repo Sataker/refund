@@ -4,7 +4,7 @@ import type { PlanId } from '../result.ts';
 export type { PlanId } from '../result.ts';
 
 // ARCHITECTURE §8.1: constants in code (changing a price or a limit = a commit). Values from research 07 §3.1, §3.1b and
-// §3.5 (07 rules on values). E17 checks this file against 07 and adds VALIDATION_OFFER, the plan screen and Pix.
+// §3.5 (07 rules on values). Checked against 07 in E17 (catalog.test.ts pins every value to the 07 tables).
 
 /** Interface from 07 §3.5, with no name changes. */
 export interface Entitlements {
@@ -219,6 +219,49 @@ export const PLAN_TIER: readonly PlanId[] = [
 
 export function isPlanId(value: string): value is PlanId {
   return (PLAN_TIER as readonly string[]).includes(value);
+}
+
+/**
+ * Hidden offer for the founder's real R$ 1,00 Pix (ARCHITECTURE §8.1; PLAN §11): AbacatePay's minimum charge is 100
+ * cents. Grants 'business' for 7 days; at most 5 sales in total.
+ */
+export const VALIDATION_OFFER = {
+  plan: 'business',
+  amountCents: 100,
+  days: 7,
+  maxSales: 5,
+} as const;
+
+export type ChargePeriod = 'monthly' | 'yearly' | 'validation';
+
+/**
+ * Days a paid one-time Pix grants (ARCHITECTURE §8.4; ADR-009): yearly 366, monthly 31 ("Pix com lembrete", 07 §3.4,
+ * while Pix Automático is not enabled), validation 7.
+ */
+export const PERIOD_DAYS: Readonly<Record<ChargePeriod, number>> = {
+  yearly: 366,
+  monthly: 31,
+  validation: VALIDATION_OFFER.days,
+};
+
+/** Plans sold by Pix on the plans page (D3). B2B plans are "fale com a gente" or a free tier, never a Pix. */
+export const PIX_PLANS = ['personal', 'mei', 'business'] as const;
+export type PixPlanId = (typeof PIX_PLANS)[number];
+
+export function isPixPlan(plan: string): plan is PixPlanId {
+  return (PIX_PLANS as readonly string[]).includes(plan);
+}
+
+/**
+ * Amount of a one-time Pix, in cents, straight from the catalog; null when the plan has no such price. The validation
+ * period exists only for VALIDATION_OFFER.plan.
+ */
+export function pixAmountCents(plan: PlanId, period: ChargePeriod): number | null {
+  if (period === 'validation')
+    return plan === VALIDATION_OFFER.plan ? VALIDATION_OFFER.amountCents : null;
+  if (!isPixPlan(plan)) return null;
+  const cents = period === 'yearly' ? PLANS[plan].priceYearlyCents : PLANS[plan].priceMonthlyCents;
+  return cents !== null && cents >= 100 ? cents : null;
 }
 
 /** `live_analyses_month` (ARCHITECTURE §8.2: cost protection, not from 07): 3 on free, 30 on any paid plan. */

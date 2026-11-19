@@ -14,6 +14,7 @@ import { type ConnectionStatus, nextAfter, stepPath } from '@/features/track/ste
 import type { Capabilities } from '../capabilities.ts';
 import { todayBrt } from '../company/profile.ts';
 import { decrypt, encrypt, hmac, type Secrets } from '../crypto.ts';
+import { requireLiveRoomWith } from '../entitlements.ts';
 import { markPluggyDown, pluggyAvailable, pluggyProvider } from '../financial/availability.ts';
 import { logger } from '../log.ts';
 import { clientIp, rateLimit } from '../rate-limit.ts';
@@ -109,6 +110,8 @@ async function connectGuard(deps: ConnectionDeps): Promise<ActionResult<{ consen
 }
 
 type ConnectionRow = typeof connections.$inferSelect;
+
+const roomOf = (holder: 'PF' | 'PJ') => (holder === 'PF' ? 'connections_pf' : 'connections_pj');
 
 /** The holder's connections in force; a PJ one only for the track's current company. */
 async function activeOf(
@@ -248,6 +251,9 @@ export async function connectSampleWith(
     (c) => c.status === 'active',
   );
   if (existing) return ok(await statusOf(deps.db, existing));
+  // §8.2 max_connections_pf/_pj (live count; e.g. Pessoal has no PJ connection).
+  const room = await requireLiveRoomWith(deps.db, deps.userId, roomOf(holder));
+  if (!room.ok) return room;
 
   const item = SAMPLE_DATA.items.find((i) => i.holder === holder);
   if (!item) return fail('NOT_FOUND', 'Não há dados de exemplo para essa conta.');
@@ -341,7 +347,7 @@ export async function createConnectTokenWith(
   const { holder } = parsed.data;
   const company = holder === 'PJ' ? await trackCompany(deps.db, deps.userId) : null;
   if (holder === 'PJ' && !company) return fail('FORBIDDEN', NO_COMPANY);
-  // §8.2 `free`: one PF + one PJ connection (the plan catalog arrives in E14).
+  // The track holds one account per holder; the plan's ceiling (§8.2) is checked right after.
   const live = await activeOf(deps.db, deps.userId, holder, company?.id ?? null);
   if (live.some((c) => c.status === 'active')) {
     return fail(
@@ -352,6 +358,8 @@ export async function createConnectTokenWith(
       },
     );
   }
+  const room = await requireLiveRoomWith(deps.db, deps.userId, roomOf(holder));
+  if (!room.ok) return room;
   // Compliance C1: the widget lists only the sandbox connectors; without that list, no widget.
   const sandbox = await provider.sandboxConnectorIds({ mode: 'live' });
   if (!sandbox.ok || sandbox.value.length === 0) {

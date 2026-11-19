@@ -2,17 +2,24 @@
 // stays in `server/entitlements.ts`; this only lists what is active now.
 import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import type { Db } from '../client.ts';
-import { subscriptions } from '../schema/index.ts';
+import { charges, subscriptions } from '../schema/index.ts';
 
 export interface ActiveSubscription {
   planId: string;
   endsAt: Date;
+  /** The period of the charge that granted it ('monthly' | 'yearly' | 'validation'); null without a charge. */
+  chargePeriod: string | null;
 }
 
 export async function activeSubscriptions(db: Db, userId: string): Promise<ActiveSubscription[]> {
   return db
-    .select({ planId: subscriptions.planId, endsAt: subscriptions.endsAt })
+    .select({
+      planId: subscriptions.planId,
+      endsAt: subscriptions.endsAt,
+      chargePeriod: charges.period,
+    })
     .from(subscriptions)
+    .leftJoin(charges, eq(charges.id, subscriptions.chargeId))
     .where(
       and(
         eq(subscriptions.userId, userId),

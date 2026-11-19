@@ -15,6 +15,7 @@ import {
 } from '@refund/sources';
 import { z } from 'zod';
 import type { Secrets } from '../crypto.ts';
+import { requireEntitlementWith } from '../entitlements.ts';
 import { logger } from '../log.ts';
 import { ipKey, rateLimit } from '../rate-limit.ts';
 import { type ActionResult, fail, ok } from '../result.ts';
@@ -135,6 +136,16 @@ export async function lookupCnpjWith(
       if (!limited.ok) return limited;
     }
   }
+
+  // §8.2 max_cnpjs: the track keeps one linked company (a new lookup replaces it), so the plan must allow one.
+  const room = await requireEntitlementWith(
+    deps.db,
+    userId,
+    'maxCnpjs',
+    (max) => max >= 1,
+    'cnpjs',
+  );
+  if (!room.ok) return room;
 
   const provider = deps.provider ?? cnpjProvider(deps.db, deps.dataMode);
   const found = await provider.lookup(cnpj.value, {
