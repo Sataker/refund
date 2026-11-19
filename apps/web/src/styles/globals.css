@@ -691,3 +691,44 @@ html {
 .hl-logo .hl-band {
   clip-path: polygon(0.12em 0, 100% 0, calc(100% - 0.12em) 100%, 0 100%);
 }
+
+/* Screen 8: the report prints as an A4 page (no @react-pdf; the browser's "Salvar como PDF"). */
+@page {
+  size: A4;
+  margin: 16mm 14mm;
+}
+@media print {
+  html,
+  body {
+    background: #fff;
+  }
+  .report-paper details > summary {
+    display: none;
+  }
+  .report-paper [data-testid="recovery-details"] > div {
+    max-height: none;
+    overflow: visible;
+  }
+  .report-paper table {
+    min-width: 0;
+  }
+}
+
+/* The report is white paper in both themes (Screen 8): its tokens are the light palette, whatever the page theme. */
+.report-paper {
+  --surface: #ffffff;
+  --surface-2: #f0eee8;
+  --surface-3: #e7e4dc;
+  --border: #e3e1da;
+  --border-strong: #85827a;
+  --text: #0d1117;
+  --text-muted: #565c67;
+  --accent-c: #2f4be0;
+  --found: #ffc53d;
+  --found-soft: #fff1c7;
+  --risk: #c4321f;
+  --risk-soft: #fbe7e3;
+  --foreground: var(--text);
+  --muted-foreground: var(--text-muted);
+  color-scheme: light;
+}
