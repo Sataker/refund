@@ -11,7 +11,7 @@ import {
 import type { CivilDate } from '@refund/engine';
 import type { AnalysisEvent, ConfirmationQuestion, QuestionAnswer } from '@refund/pipeline';
 import { validateCnpj } from '@refund/sources';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { currentStep } from '@/features/track/steps.ts';
 import { consumeQuotaWith, entitlementsWith } from '../entitlements.ts';
@@ -79,7 +79,41 @@ export async function startAnalysisWith(
 
 export const analysisIdInput = z.object({ analysisId: z.uuid() });
 
-/** After card answers: a new run of the same company (the answers are stored per user + company). */
+/** Bumped on every answer saved or cleared: a re-run is allowed only when it moved after the base run ended. */
+export const ANSWERS_CHANGED_KEY = 'track.answers_changed_at';
+
+const TERMINAL = new Set(['completed', 'awaiting_confirmation', 'error']);
+
+async function answersChangedAt(db: Db, userId: string, companyId: string): Promise<Date | null> {
+  const [row] = await db
+    .select({ at: userAssumptions.updatedAt })
+    .from(userAssumptions)
+    .where(
+      and(
+        eq(userAssumptions.userId, userId),
+        eq(userAssumptions.companyId, companyId),
+        eq(userAssumptions.key, ANSWERS_CHANGED_KEY),
+      ),
+    )
+    .limit(1);
+  return row?.at ?? null;
+}
+
+async function latestFor(db: Db, userId: string, companyId: string) {
+  const [row] = await db
+    .select({ id: analyses.id })
+    .from(analyses)
+    .where(and(eq(analyses.userId, userId), eq(analyses.companyId, companyId)))
+    .orderBy(desc(analyses.createdAt))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * After card answers: a new run of the same company, outside the monthly quota (the answers are stored per user +
+ * company). Allowed only when the base run is over, is the user's latest for that company and an answer changed after
+ * it ended; otherwise the existing analysis id comes back and nothing runs (code review M1).
+ */
 export async function reanalyzeWith(
   input: unknown,
   deps: AnalysisDeps,
@@ -95,6 +129,12 @@ export async function reanalyzeWith(
   if (!parsed.success) return fail('INVALID_INPUT', NOT_FOUND);
   const base = await findOwnedAnalysis(db, userId, parsed.data.analysisId);
   if (!base) return fail('NOT_FOUND', NOT_FOUND);
+  const latest = await latestFor(db, userId, base.companyId);
+  if (latest && latest.id !== base.id) return ok({ analysisId: latest.id });
+  if (!TERMINAL.has(base.status) || base.completedAt === null) return ok({ analysisId: base.id });
+  const changed = await answersChangedAt(db, userId, base.companyId);
+  if (changed === null || changed.getTime() <= base.completedAt.getTime())
+    return ok({ analysisId: base.id });
   const row = await createAnalysis(db, {
     userId,
     companyId: base.companyId,
@@ -146,6 +186,14 @@ async function saveAnswer(
   value: QuestionAnswer['value'] | null,
 ): Promise<void> {
   const key = answerKey(questionId);
+  const now = new Date();
+  await deps.db
+    .insert(userAssumptions)
+    .values({ userId: deps.userId, companyId, key: ANSWERS_CHANGED_KEY, value: now.toISOString() })
+    .onConflictDoUpdate({
+      target: [userAssumptions.userId, userAssumptions.companyId, userAssumptions.key],
+      set: { value: now.toISOString(), updatedAt: now },
+    });
   if (value === null) {
     await deps.db
       .delete(userAssumptions)

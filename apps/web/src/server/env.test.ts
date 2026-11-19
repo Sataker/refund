@@ -71,6 +71,11 @@ describe('capabilities (ARCHITECTURE §4.10)', () => {
     expect(caps.memoryDatabase).toBe(false);
   });
 
+  it('e-mail stays off without NEXT_PUBLIC_SITE_URL (the link origin)', () => {
+    const caps = capabilitiesFrom(parseEnv({ RESEND_API_KEY: 'r', RESEND_FROM: 'Refund <a@b.c>' }));
+    expect(caps.email).toBe(false);
+  });
+
   it('derives the other capabilities from their variables', () => {
     const caps = capabilitiesFrom(
       parseEnv({
@@ -80,6 +85,7 @@ describe('capabilities (ARCHITECTURE §4.10)', () => {
         VERCEL_OIDC_TOKEN: 't',
         RESEND_API_KEY: 'r',
         RESEND_FROM: 'Refund <a@b.c>',
+        NEXT_PUBLIC_SITE_URL: 'https://userefund.com.br',
         ABACATEPAY_API_KEY: 'k',
         ABACATEPAY_WEBHOOK_SECRET: 'w',
         FIRECRAWL_WEBHOOK_SECRET: 'f',

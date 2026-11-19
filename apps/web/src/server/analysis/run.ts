@@ -112,7 +112,8 @@ export async function executeAnalysis(analysisId: string, deps: RunDeps): Promis
       }),
     );
     const outcome = await outcomeOf(analysisId, analysis.userId, events, result, ids, deps.db);
-    await saveRun(deps.db, analysisId, outcome);
+    // false: another instance finished it first (its log stands; nothing to report here).
+    if (!(await saveRun(deps.db, analysisId, outcome))) return true;
     logger.info('analysis.completed', {
       status: outcome.status,
       findings: outcome.findings.length,
@@ -185,7 +186,11 @@ async function outcomeOf(
     if (e.type === 'finding' || e.type === 'alert') {
       const full = byRule.get(e.finding.ruleId);
       if (full) payload = { ...e, finding: dto(full) };
-      else payload = { ...e, finding: { ...e.finding, trace: null, traceLocked: true } };
+      else {
+        // Not in the engine result (never expected): send no trace and no recovery list (code review E14, L6).
+        const { recoveryItems: _items, ...rest } = e.finding;
+        payload = { ...e, finding: { ...rest, trace: null, traceLocked: true } };
+      }
     }
     wire.push({ seq: wire.length + 1, type: e.type, payload });
   }

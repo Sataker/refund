@@ -3,12 +3,12 @@ import { readEnv } from '../env.ts';
 import { logger } from '../log.ts';
 
 // Resend over its REST API (INFRA-CI §1.1: RESEND_API_KEY + RESEND_FROM turn sending on). One plain message with the
-// approval link; the report itself opens at /r/[token], so no attachment and no personal number goes by e-mail.
+// approval link; the report itself opens at /r/[token], so no attachment, no personal number and not the user's own
+// message (it shows on /r/[token]; code review E14, L4) goes by e-mail.
 
 export interface ReportEmail {
   to: string;
   link: string;
-  message: string | null;
   findings: number;
 }
 
@@ -22,11 +22,8 @@ const escapeHtml = (s: string) =>
 export function reportEmailBody(e: ReportEmail): { subject: string; html: string; text: string } {
   const subject = 'Relatório do Refund para sua aprovação';
   const intro = `Seu cliente pediu para você revisar ${e.findings === 1 ? '1 achado' : `${e.findings} achados`} de economia de imposto, com a conta e a lei de cada um.`;
-  const note = e.message ? `Mensagem do cliente: "${e.message}"` : null;
-  const text = [intro, note, `Abra e aprove aqui: ${e.link}`, 'O link vale 30 dias.']
-    .filter(Boolean)
-    .join('\n\n');
-  const html = `<p>${escapeHtml(intro)}</p>${note ? `<p>${escapeHtml(note)}</p>` : ''}<p><a href="${escapeHtml(e.link)}">Abrir o relatório</a></p><p>O link vale 30 dias.</p>`;
+  const text = [intro, `Abra e aprove aqui: ${e.link}`, 'O link vale 30 dias.'].join('\n\n');
+  const html = `<p>${escapeHtml(intro)}</p><p><a href="${escapeHtml(e.link)}">Abrir o relatório</a></p><p>O link vale 30 dias.</p>`;
   return { subject, html, text };
 }
 

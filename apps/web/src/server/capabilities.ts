@@ -16,7 +16,7 @@ export interface Capabilities {
   ai: boolean;
   /** PLUGGY_CLIENT_ID && PLUGGY_CLIENT_SECRET && liveData (+ probe: `pluggyAvailable`). */
   pluggy: boolean;
-  /** RESEND_API_KEY && RESEND_FROM. */
+  /** RESEND_API_KEY && RESEND_FROM && NEXT_PUBLIC_SITE_URL (the e-mailed link needs a fixed origin). */
   email: boolean;
   /** ABACATEPAY_API_KEY && ABACATEPAY_WEBHOOK_SECRET. */
   payments: boolean;
@@ -38,7 +38,8 @@ export function capabilitiesFrom({ values: e, present }: ParsedEnv): Capabilitie
     liveData,
     ai: Boolean(e.AI_GATEWAY_API_KEY || e.VERCEL_OIDC_TOKEN),
     pluggy: Boolean(e.PLUGGY_CLIENT_ID && e.PLUGGY_CLIENT_SECRET && liveData),
-    email: Boolean(e.RESEND_API_KEY && e.RESEND_FROM),
+    // Code review E14, L2: never build an e-mailed link from the request's Host header.
+    email: Boolean(e.RESEND_API_KEY && e.RESEND_FROM && e.NEXT_PUBLIC_SITE_URL),
     payments: Boolean(e.ABACATEPAY_API_KEY && e.ABACATEPAY_WEBHOOK_SECRET),
     lawMonitor: Boolean(e.FIRECRAWL_WEBHOOK_SECRET),
     login: Boolean(

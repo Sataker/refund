@@ -24,7 +24,10 @@ import { type ReportEmail, sendReportEmail } from './email.ts';
 // capability (D6: no verified Resend domain yet) the link is still created: "Copiar link" always works.
 
 const DAY_MS = 24 * 60 * 60_000;
+/** §9.4: 3 e-mails/day per user (only when one is actually sent; code review E14, L3). */
 export const REPORT_USER_RATE = { limit: 3, windowMs: DAY_MS } as const;
+/** Link-only reports (no e-mail): a looser cap, they cost nothing outside our database. */
+export const REPORT_LINK_RATE = { limit: 20, windowMs: DAY_MS } as const;
 /** Resend Free: 100/day; we keep 60 for reports. */
 export const REPORT_GLOBAL_RATE = { limit: 60, windowMs: DAY_MS } as const;
 export const REPORT_TTL_DAYS = 30;
@@ -69,8 +72,6 @@ export async function sendReportWith(
   deps: ReportDeps,
 ): Promise<ActionResult<SentReport>> {
   const { db, userId } = deps;
-  const mine = await rateLimit({ key: `report:u:${userId}`, ...REPORT_USER_RATE }, db, deps.nowMs);
-  if (!mine.ok) return mine;
   const parsed = sendInput.safeParse(input);
   if (!parsed.success) return fail('INVALID_INPUT', 'Confira o e-mail do contador.');
   const analysis = await findOwnedAnalysis(db, userId, parsed.data.analysisId);
@@ -79,6 +80,10 @@ export async function sendReportWith(
     return fail('FORBIDDEN', 'O relatório fica pronto quando a análise termina.');
   const email = parsed.data.accountantEmail?.trim().toLowerCase() ?? '';
   const wantsEmail = email !== '' && deps.caps.email;
+  const mine = wantsEmail
+    ? await rateLimit({ key: `report:u:${userId}`, ...REPORT_USER_RATE }, db, deps.nowMs)
+    : await rateLimit({ key: `report-link:u:${userId}`, ...REPORT_LINK_RATE }, db, deps.nowMs);
+  if (!mine.ok) return mine;
   if (wantsEmail) {
     const global = await rateLimit({ key: 'report:global', ...REPORT_GLOBAL_RATE }, db, deps.nowMs);
     if (!global.ok) return global;
@@ -102,7 +107,6 @@ export async function sendReportWith(
     const r = await send({
       to: email,
       link: approvalLink,
-      message: row.message,
       findings: findings.length,
     });
     if (r.ok) {
