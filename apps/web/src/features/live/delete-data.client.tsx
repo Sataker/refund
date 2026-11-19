@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 // "Apagar meus dados" (ARCHITECTURE §4.7 deleteMyData; §9.6). The word APAGAR is the confirmation; after it the
-// session is gone and the page says so (no redirect into an empty /app).
+// session is gone and the action redirects to /dados-apagados (outside /app: no new session).
 
 type Result<T> = { ok: true; value: T } | { ok: false; error: { code: string; message: string } };
 
@@ -16,18 +16,8 @@ export function DeleteData({
   remove: (input: { confirmation: string }) => Promise<Result<{ pendingAtPluggy: number }>>;
 }) {
   const [word, setWord] = useState('');
-  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, begin] = useTransition();
-  if (done)
-    return (
-      <p role="status" data-testid="data-deleted" className="text-base font-medium text-foreground">
-        Pronto. Apagamos seus dados e encerramos sua sessão.{' '}
-        <a href="/" className="text-cobalt underline underline-offset-4">
-          Voltar ao início
-        </a>
-      </p>
-    );
   return (
     <form
       className="flex flex-col gap-3"
@@ -36,8 +26,8 @@ export function DeleteData({
         begin(async () => {
           setError(null);
           const r = await remove({ confirmation: word.trim() });
-          if (r.ok) setDone(true);
-          else setError(r.error.message);
+          // On success the action redirects to /dados-apagados (the session is gone).
+          if (!r.ok) setError(r.error.message);
         });
       }}
     >

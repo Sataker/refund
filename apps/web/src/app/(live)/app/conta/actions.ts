@@ -1,13 +1,14 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { deleteMyDataWith } from '@/server/account/delete.ts';
 import { runLive } from '@/server/action.ts';
 import type { ActionResult } from '@/server/result.ts';
 import { SESSION_COOKIE } from '@/server/session-cookie.ts';
 
 // ARCHITECTURE §4.7 "account and LGPD (live)": deleteMyData({ confirmation: 'APAGAR' }). After it the session cookie is
-// gone too: the next visit to /app starts a new, empty anonymous session.
+// gone too, and the user lands on /dados-apagados; the next visit to /app starts a new, empty anonymous session.
 
 export async function deleteMyData(input: {
   confirmation: string;
@@ -20,6 +21,8 @@ export async function deleteMyData(input: {
       caps: ctx.caps,
     }),
   );
-  if (result.ok) (await cookies()).delete(SESSION_COOKIE);
-  return result;
+  if (!result.ok) return result;
+  (await cookies()).delete(SESSION_COOKIE);
+  // Outside /app, so the proxy does not mint a new session on the way out.
+  redirect('/dados-apagados');
 }
