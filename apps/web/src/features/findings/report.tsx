@@ -132,7 +132,14 @@ export function Report({ company, holderName, analysisDate, result, model, label
                 </span>
               </p>
               <p className="text-[12px] text-neutral-700">{keepCurrency(f.title)}</p>
-              <TraceTable f={f} />
+              <section
+                className="overflow-x-auto"
+                // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be reachable by keyboard (axe scrollable-region-focusable)
+                tabIndex={0}
+                aria-label="Cálculo"
+              >
+                <TraceTable f={f} />
+              </section>
             </li>
           ))}
         </ol>
@@ -152,7 +159,14 @@ export function Report({ company, holderName, analysisDate, result, model, label
                 </p>
               ) : null}
               <p className="text-[12px] text-neutral-700">{keepCurrency(f.title)}</p>
-              <TraceTable f={f} />
+              <section
+                className="overflow-x-auto"
+                // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be reachable by keyboard (axe scrollable-region-focusable)
+                tabIndex={0}
+                aria-label="Cálculo"
+              >
+                <TraceTable f={f} />
+              </section>
             </div>
           ))}
         </Section>

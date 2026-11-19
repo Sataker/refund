@@ -12,13 +12,8 @@ import { keepCurrency } from '@/features/demo/display';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ConfirmCard } from './confirm';
-import {
-  type DashboardFinding,
-  type DashboardModel,
-  formatCivilDate,
-  type Holder,
-  urgencyText,
-} from './model';
+import type { DashboardFinding, DashboardModel, Holder } from './model';
+import { formatCivilDate, urgencyText } from './text';
 import { useVisitorAnswers } from './visitor.client';
 
 // Screen 5, the dashboard (IDENTITY-AND-UI §5; ENGINE-SPEC C.9). The big number is ONLY the confirmed savings of the
@@ -93,6 +88,7 @@ export function Dashboard({
         )}
       >
         <MoneyHero
+          className="pl-3"
           key={m.total}
           cents={m.total}
           testId="dashboard/money-hero"
@@ -122,34 +118,41 @@ export function Dashboard({
       </section>
 
       <section aria-label="Resumo por pessoa" className="-mx-4 px-4 lg:mx-0 lg:px-0">
-        <ul className="flex snap-x gap-3 overflow-x-auto pb-1 lg:grid lg:grid-cols-3 lg:overflow-visible">
-          <MiniCard label="PJ · na empresa" testId="dashboard/pj">
-            <span className="type-money-md num text-foreground" data-cents={m.byHolder.PJ}>
-              {formatBRL(m.byHolder.PJ)}
-            </span>
-            <span className="type-small text-muted-foreground"> em 12 meses</span>
-          </MiniCard>
-          <MiniCard label="PF · na sua pessoa" testId="dashboard/pf">
-            <span className="type-money-md num text-foreground" data-cents={m.byHolder.PF}>
-              {formatBRL(m.byHolder.PF)}
-            </span>
-            <span className="type-small text-muted-foreground"> em 12 meses</span>
-          </MiniCard>
-          {m.recoveryRange ? (
-            <MiniCard label="Recuperar (5 anos) · estimativa" testId="dashboard/recovery" chart>
-              <span className="type-small num text-foreground">
-                <span data-testid="dashboard/recovery-min" data-cents={m.recoveryRange[0]}>
-                  {formatBRL(m.recoveryRange[0])}
-                </span>{' '}
-                a{' '}
-                <span data-testid="dashboard/recovery-max" data-cents={m.recoveryRange[1]}>
-                  {formatBRL(m.recoveryRange[1])}
-                </span>
+        <section
+          className="snap-x overflow-x-auto pb-1 lg:overflow-visible"
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be reachable by keyboard (axe scrollable-region-focusable)
+          tabIndex={0}
+          aria-label="Resumo: empresa, pessoa física e recuperação"
+        >
+          <ul className="flex gap-3 lg:grid lg:grid-cols-3">
+            <MiniCard label="PJ · na empresa" testId="dashboard/pj">
+              <span className="type-money-md num text-foreground" data-cents={m.byHolder.PJ}>
+                {formatBRL(m.byHolder.PJ)}
               </span>
-              <span className="type-caption block text-muted-foreground">não entra no total</span>
+              <span className="type-small text-muted-foreground"> em 12 meses</span>
             </MiniCard>
-          ) : null}
-        </ul>
+            <MiniCard label="PF · na sua pessoa" testId="dashboard/pf">
+              <span className="type-money-md num text-foreground" data-cents={m.byHolder.PF}>
+                {formatBRL(m.byHolder.PF)}
+              </span>
+              <span className="type-small text-muted-foreground"> em 12 meses</span>
+            </MiniCard>
+            {m.recoveryRange ? (
+              <MiniCard label="Recuperar (5 anos) · estimativa" testId="dashboard/recovery" chart>
+                <span className="type-small num text-foreground">
+                  <span data-testid="dashboard/recovery-min" data-cents={m.recoveryRange[0]}>
+                    {formatBRL(m.recoveryRange[0])}
+                  </span>{' '}
+                  a{' '}
+                  <span data-testid="dashboard/recovery-max" data-cents={m.recoveryRange[1]}>
+                    {formatBRL(m.recoveryRange[1])}
+                  </span>
+                </span>
+                <span className="type-caption block text-muted-foreground">não entra no total</span>
+              </MiniCard>
+            ) : null}
+          </ul>
+        </section>
       </section>
 
       <section aria-labelledby="achados-titulo" className="flex flex-col gap-4" id="achados">

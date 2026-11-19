@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { formatBRL } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ConfirmCard } from './confirm';
-import { type DashboardModel, formatCivilDate } from './model';
+import type { DashboardModel } from './model';
+import { formatCivilDate } from './text';
 import { useVisitorAnswers } from './visitor.client';
 
 // Screen 7 on /demo (IDENTITY-AND-UI §5; EXECUTION §9 16/11): the pipeline's cards come already answered by the

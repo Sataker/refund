@@ -37,9 +37,9 @@ function Refs({ ids, excerpts }: { ids: readonly string[]; excerpts: Record<stri
   const found = ids.map((id) => excerpts[id]).filter((e): e is Excerpt => e !== undefined);
   if (found.length === 0) return null;
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-wrap gap-1.5">
       {found.map((e) => (
-        <RefSheet key={e.id} excerpt={e} />
+        <RefSheet key={e.id} excerpt={e} className="open:basis-full" />
       ))}
     </div>
   );
@@ -208,7 +208,12 @@ export function RecoveryTable({
         Dias restantes contados {anchor}. Meses estimados usam a data de vencimento; confira a data
         do pagamento no extrato do DAS.
       </p>
-      <div className="mt-2 max-h-[28rem] overflow-auto rounded-md border border-border">
+      <section
+        className="mt-2 max-h-[28rem] overflow-auto rounded-md border border-border"
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be reachable by keyboard (axe scrollable-region-focusable)
+        tabIndex={0}
+        aria-label="Tabela DAS por DAS"
+      >
         <table className="type-small w-full min-w-[640px] text-left" data-testid="recovery-table">
           <caption className="sr-only">Recuperação DAS por DAS</caption>
           <thead className="sticky top-0 bg-surface-2 text-muted-foreground">
@@ -262,7 +267,7 @@ export function RecoveryTable({
             })}
           </tbody>
         </table>
-      </div>
+      </section>
     </details>
   );
 }

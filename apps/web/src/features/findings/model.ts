@@ -10,6 +10,9 @@ import {
   sumCents,
 } from '@refund/engine';
 import { shortTitle } from '@/features/demo/display';
+import { URGENT_DAYS, type Urgency } from './text';
+
+export { ACTOR_LABEL, formatCivilDate, URGENT_DAYS, type Urgency, urgencyText } from './text';
 
 // Screens 5–8 view models (IDENTITY-AND-UI §5; ENGINE-SPEC C.9 and C.12). Pure and browser-safe: they SELECT and
 // GROUP what the engine returned and never compute a new amount (CLAUDE.md rule 1). The only sums are by holder,
@@ -62,13 +65,6 @@ export interface DashboardFinding {
   countsInTotal: boolean;
 }
 
-export interface Urgency {
-  /** Items with `daysLeft ≤ 30` (C.12.2: the "prazo acabando" seal). */
-  count: number;
-  /** The smallest `daysLeft`, as the engine computed it. */
-  days: number;
-}
-
 export interface DashboardModel {
   /** ENGINE-SPEC C.9: Σ marginalValue12m of the confirmed savings (`total.byConfidence.confirmed`). */
   total: number;
@@ -87,25 +83,11 @@ export interface DashboardModel {
   analysisDate: string;
 }
 
-export const URGENT_DAYS = 30;
-
 /** C.12.2 / Screen 6b urgency line: `n` = items with daysLeft ≤ 30, `d` = the smallest daysLeft (engine numbers). */
 export function urgencyOf(items: readonly RecoveryItem[] | undefined): Urgency | null {
   const urgent = (items ?? []).filter((i) => i.daysLeft <= URGENT_DAYS);
   if (urgent.length === 0) return null;
   return { count: urgent.length, days: Math.min(...urgent.map((i) => i.daysLeft)) };
-}
-
-/** "1 mês prescreve em 11 dias" / "3 meses prescrevem em 4 dias" (IDENTITY-AND-UI Screen 6b, 16/11). */
-export function urgencyText(u: Urgency): string {
-  const days = `${u.days} ${u.days === 1 ? 'dia' : 'dias'}`;
-  return u.count === 1 ? `1 mês prescreve em ${days}` : `${u.count} meses prescrevem em ${days}`;
-}
-
-/** CivilDate "2026-11-12" → "12/11/2026". */
-export function formatCivilDate(date: string): string {
-  const [y, m, d] = date.split('-');
-  return `${d}/${m}/${y}`;
 }
 
 function view(f: Omit<Finding, 'trace'>): DashboardFinding {
@@ -162,13 +144,6 @@ export function dashboardModel(result: EngineResult, analysisDate: string): Dash
 }
 
 // ---------- Screen 6b: action plan ----------
-
-export const ACTOR_LABEL: Readonly<Record<Actor, string>> = {
-  you: 'Você',
-  accountant: 'Contador',
-  you_or_accountant: 'Você ou contador',
-  lawyer: 'Advogado',
-};
 
 const ACTOR_ORDER: readonly Actor[] = ['you', 'accountant', 'you_or_accountant', 'lawyer'];
 

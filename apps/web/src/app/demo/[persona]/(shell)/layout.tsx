@@ -37,18 +37,16 @@ export default async function DemoShell({
           <Logo />
         </Link>
         <SidebarNav persona={id} />
-        <div className="mt-auto flex flex-col gap-3 px-3">
+        <div className="mt-auto flex flex-col items-start gap-3 px-3">
           <div className="flex flex-col">
             <span className="type-small font-medium text-foreground">
               {persona.data.holderDisplayName}
             </span>
             <span className="type-caption text-muted-foreground">{company} · persona</span>
           </div>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <ShellRestart persona={id} />
-          </div>
-          <SandboxSeal className="self-start" />
+          <ThemeToggle />
+          <ShellRestart persona={id} />
+          <SandboxSeal className="self-start whitespace-normal" />
         </div>
       </aside>
 

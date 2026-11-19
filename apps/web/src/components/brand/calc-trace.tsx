@@ -147,7 +147,12 @@ function SourceList({
           <span className="hidden group-open/src:inline">esconder transações</span>
         </span>
       </summary>
-      <div className="mt-2 max-h-72 overflow-auto rounded-md border border-border">
+      <section
+        className="mt-2 max-h-72 overflow-auto rounded-md border border-border"
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be reachable by keyboard (axe scrollable-region-focusable)
+        tabIndex={0}
+        aria-label="Transações de origem"
+      >
         <table className="type-mono w-full text-left" data-testid="source-transactions">
           <caption className="sr-only">Transações de origem deste número</caption>
           <thead className="sticky top-0 bg-surface-2 text-muted-foreground">
@@ -180,7 +185,7 @@ function SourceList({
             ))}
           </tbody>
         </table>
-      </div>
+      </section>
     </details>
   );
 }

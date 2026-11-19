@@ -1,6 +1,6 @@
 import { ExternalLink, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatCivilDate } from './model';
+import { formatCivilDate } from './text';
 
 /** A cited provision with its verbatim text from @refund/law (CLAUDE.md rule 3: never typed by hand). */
 export interface Excerpt {

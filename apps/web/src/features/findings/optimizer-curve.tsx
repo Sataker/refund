@@ -19,7 +19,7 @@ interface OptimizerCurveProps {
 
 const W = 640;
 const H = 240;
-const PAD = { left: 52, right: 16, top: 16, bottom: 32 };
+const PAD = { left: 56, right: 40, top: 16, bottom: 32 };
 
 export function OptimizerCurve({ points, current, target }: OptimizerCurveProps) {
   const sorted = [...points].sort((a, b) => a.monthlyProLabore - b.monthlyProLabore);

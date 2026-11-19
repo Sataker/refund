@@ -36,19 +36,15 @@ export default async function DemoReportPage({ params }: { params: Promise<{ per
           Relatório para o contador
         </h1>
       </header>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px] print:block">
-        <div className="min-w-0 overflow-x-auto">
-          <Report
-            company={snap.view.companyName}
-            holderName={snap.view.holderName}
-            analysisDate={snap.facts.analysisDate}
-            result={snap.result}
-            model={snap.dashboard}
-            labelOf={(id) => labels.get(id)}
-          />
-        </div>
-        <ReportPanel persona={persona} />
-      </div>
+      <ReportPanel persona={persona} />
+      <Report
+        company={snap.view.companyName}
+        holderName={snap.view.holderName}
+        analysisDate={snap.facts.analysisDate}
+        result={snap.result}
+        model={snap.dashboard}
+        labelOf={(id) => labels.get(id)}
+      />
     </div>
   );
 }

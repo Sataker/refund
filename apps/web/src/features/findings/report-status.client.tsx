@@ -62,7 +62,7 @@ export function ReportPanel({ persona }: { persona: string }) {
       : { id: 'approved', label: 'Aprovado', at: report?.approvedAt, on: status === 'approved' },
   ];
   return (
-    <aside className="flex flex-col gap-6 print:hidden" aria-label="Mandar para seu contador">
+    <aside className="grid gap-4 md:grid-cols-2 print:hidden" aria-label="Mandar para seu contador">
       <section className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5">
         <h2 className="type-h4 text-foreground">Mandar para seu contador</h2>
         <p className="type-small text-muted-foreground">
