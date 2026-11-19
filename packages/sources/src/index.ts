@@ -41,6 +41,17 @@ export {
   verifyEnvelope,
 } from './fixtures/envelope.ts';
 export { sanitizationOf } from './fixtures/sanitization.ts';
+export {
+  FIRECRAWL_WHITELIST,
+  isMeaningfulChange,
+  MAX_DIFF_CHARS,
+  type MonitorEvent,
+  type MonitorJudgment,
+  type MonitorPage,
+  type MonitorPageStatus,
+  sanitizeFirecrawlEvent,
+} from './law/firecrawl.ts';
+export { type LawChangeFixture, lawChangeFixture } from './law/replay.ts';
 export { NCM_ROWS, NCM_TABLE_SOURCE, type NcmRow, ncmRegime } from './ncm/index.ts';
 export {
   ALLOWED_EMAIL_DOMAINS,
