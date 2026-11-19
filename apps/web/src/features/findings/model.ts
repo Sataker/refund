@@ -115,7 +115,10 @@ function view(f: Omit<Finding, 'trace'>): DashboardFinding {
   };
 }
 
-export function dashboardModel(result: EngineResult, analysisDate: string): DashboardModel {
+export function dashboardModel(
+  result: Pick<EngineResult, 'total'> & { findings: readonly Omit<Finding, 'trace'>[] },
+  analysisDate: string,
+): DashboardModel {
   const savings = result.findings
     .filter((f) => f.type === 'savings')
     .map((f, i) => ({ f: view(f), i }))

@@ -49,6 +49,8 @@ export interface FinanceScreenData {
   variants: Record<string, FinancialView>;
   /** sessionStorage key of the /demo exclusions (per persona). */
   storageKey: string;
+  /** /app: the exclusions stored for this analysis (the server is the source; sessionStorage is not read). */
+  initialExcluded?: string[];
   findings: Record<string, SealFinding>;
   transactions: Record<string, TxRow>;
   links: {

@@ -26,16 +26,22 @@ const Ctx = createContext<ExclusionApi | null>(null);
 export function ExclusionSwitch({
   variants,
   storage,
+  initial,
+  persist,
 }: {
   /** Keyed by `variantKey(excluded ids)`; '' is the view with nothing excluded. */
   variants: Record<string, ReactNode>;
   storage: string;
+  /** /app: the stored exclusions (server state wins over sessionStorage). */
+  initial?: readonly string[];
+  /** /app: stores the new set on the server (server action). */
+  persist?: (excluded: string[]) => Promise<unknown>;
 }) {
   const allowed = useMemo(
     () => new Set(Object.keys(variants).flatMap((k) => (k === '' ? [] : k.split(',')))),
     [variants],
   );
-  const [excluded, setExcluded] = useState<ReadonlySet<string>>(new Set());
+  const [excluded, setExcluded] = useState<ReadonlySet<string>>(() => new Set(initial ?? []));
   const [announcement, setAnnouncement] = useState('');
   /** Where focus goes once the new view is on screen (the old buttons are gone by then). */
   const focusNext = useRef<
@@ -57,9 +63,10 @@ export function ExclusionSwitch({
     target?.focus();
   }, [excluded]);
   useEffect(() => {
+    if (initial !== undefined) return;
     const stored = load(storage, allowed);
     if (variants[variantKey(stored)] !== undefined) setExcluded(stored);
-  }, [storage, allowed, variants]);
+  }, [storage, allowed, variants, initial]);
   const api = useMemo<ExclusionApi>(
     () => ({
       canExclude: (ids) => variants[variantKey(exclude(excluded, ids))] !== undefined,
@@ -69,17 +76,17 @@ export function ExclusionSwitch({
         focusNext.current = { kind: 'removed' };
         setAnnouncement('Lançamento removido. Os totais desta tela foram recalculados.');
         setExcluded(next);
-        save(storage, next);
+        keep(next, storage, persist);
       },
       restore: (ids) => {
         const next = restore(excluded, ids);
         focusNext.current = { kind: 'restored', ids };
         setAnnouncement('Lançamento de volta nos totais desta tela.');
         setExcluded(next);
-        save(storage, next);
+        keep(next, storage, persist);
       },
     }),
-    [excluded, variants, storage],
+    [excluded, variants, storage, persist],
   );
   return (
     <Ctx.Provider value={api}>
@@ -89,6 +96,16 @@ export function ExclusionSwitch({
       </p>
     </Ctx.Provider>
   );
+}
+
+/** /app stores the set on the server (server action); /demo in sessionStorage. */
+function keep(
+  next: ReadonlySet<string>,
+  storage: string,
+  persist: ((excluded: string[]) => Promise<unknown>) | undefined,
+): void {
+  if (persist) void persist([...next].sort()).catch(() => undefined);
+  else save(storage, next);
 }
 
 /** "Remover repetido" on a duplicate suspect: removes every occurrence but the first. */

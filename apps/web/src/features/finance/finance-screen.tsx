@@ -5,7 +5,14 @@ import { HolderTabs } from './holder-tabs.client.tsx';
 import type { FinanceScreenData } from './types.ts';
 
 /** Screen 5b, "Para onde foi o dinheiro". Shared by /demo (build time) and /app (server component, E14 task 7). */
-export function FinanceScreen({ data }: { data: FinanceScreenData }) {
+export function FinanceScreen({
+  data,
+  persist,
+}: {
+  data: FinanceScreenData;
+  /** /app: a server action that stores the owner's exclusions (D31); /demo keeps them in the browser. */
+  persist?: (excluded: string[]) => Promise<unknown>;
+}) {
   const { view } = data;
   const first = view.months[0];
   const last = view.months.at(-1);
@@ -27,6 +34,8 @@ export function FinanceScreen({ data }: { data: FinanceScreenData }) {
       ) : (
         <ExclusionSwitch
           storage={data.storageKey}
+          {...(data.initialExcluded === undefined ? {} : { initial: data.initialExcluded })}
+          {...(persist === undefined ? {} : { persist })}
           variants={Object.fromEntries(
             Object.entries(data.variants).map(([key, v]) => [
               key,

@@ -139,17 +139,28 @@ export const REVOKE_PENDING = 'REVOKE_PENDING';
  * delete the item now, the encrypted item id is KEPT and the row is flagged REVOKE_PENDING, so the
  * deletion can be retried instead of being lost (code review E11, M2).
  */
-async function retireConnection(deps: ConnectionDeps, row: ConnectionRow): Promise<void> {
-  let pending = false;
-  if (row.provider === 'pluggy' && row.itemIdEncrypted) {
-    const itemId = decrypt(row.itemIdEncrypted, deps.secrets.encryption);
-    const provider = configuredPluggy(deps);
-    const r =
-      itemId && provider?.revokeItem ? await provider.revokeItem(itemId, { mode: 'live' }) : null;
-    pending = !r?.ok;
-    if (pending)
-      logger.warn('pluggy.revoke_failed', { code: r?.ok === false ? r.error.code : 'NO_CLIENT' });
-  }
+export type RetireDeps = Pick<ConnectionDeps, 'db' | 'secrets' | 'caps' | 'pluggy'>;
+
+/**
+ * Deletes the item at Pluggy when the row still holds one. True when nothing is left there (done, or nothing to do);
+ * false when Pluggy (or its client) failed and the id must be kept for a retry.
+ */
+export async function deleteItemAtPluggy(
+  deps: RetireDeps,
+  row: Pick<ConnectionRow, 'provider' | 'itemIdEncrypted'>,
+): Promise<boolean> {
+  if (row.provider !== 'pluggy' || !row.itemIdEncrypted) return true;
+  const itemId = decrypt(row.itemIdEncrypted, deps.secrets.encryption);
+  if (!itemId) return true; // undecryptable (rotated key): nothing we can ever send to Pluggy
+  const provider = configuredPluggy(deps);
+  const r = provider?.revokeItem ? await provider.revokeItem(itemId, { mode: 'live' }) : null;
+  if (!r?.ok)
+    logger.warn('pluggy.revoke_failed', { code: r?.ok === false ? r.error.code : 'NO_CLIENT' });
+  return r?.ok === true;
+}
+
+export async function retireConnection(deps: RetireDeps, row: ConnectionRow): Promise<void> {
+  const pending = !(await deleteItemAtPluggy(deps, row));
   await deps.db.transaction(async (tx) => {
     await tx.delete(accounts).where(eq(accounts.connectionId, row.id));
     await tx
@@ -273,7 +284,7 @@ async function availablePluggy(deps: ConnectionDeps): Promise<PluggyPort | null>
     : null;
 }
 
-function configuredPluggy(deps: ConnectionDeps): PluggyPort | null {
+function configuredPluggy(deps: RetireDeps): PluggyPort | null {
   return deps.pluggy !== undefined ? deps.pluggy : pluggyProvider(deps.caps, deps.secrets);
 }
 
