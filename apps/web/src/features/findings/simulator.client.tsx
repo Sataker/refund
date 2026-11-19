@@ -3,6 +3,7 @@
 import { type EngineResult, type Facts, recalculate } from '@refund/engine';
 import { useId, useState } from 'react';
 import { formatBRL, formatRatePercent } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import { MARGIN_STEPS, type ProLaborePoint, proLaborePoint } from './model';
 import { type CurvePoint, OptimizerCurve } from './optimizer-curve';
 
@@ -36,7 +37,8 @@ function run(facts: Facts, margin: string): Point | null {
 
 export default function Simulator({ facts, defaultMargin, base, baseCurve }: SimulatorProps) {
   const labelId = useId();
-  const defaultIndex = Math.max(0, MARGIN_STEPS.indexOf(defaultMargin));
+  // L6: fails closed. A default margin outside the steps could never be given back exactly (D8).
+  const defaultIndex = MARGIN_STEPS.indexOf(defaultMargin);
   const [index, setIndex] = useState(defaultIndex);
   const [ms, setMs] = useState<number | null>(null);
   const [state, setState] = useState<Point | null>({ point: base, curve: baseCurve });
@@ -52,6 +54,7 @@ export default function Simulator({ facts, defaultMargin, base, baseCurve }: Sim
     setMs(Math.round(performance.now() - t));
   };
   const point = state?.point ?? null;
+  if (defaultIndex < 0) return null;
 
   return (
     <section
@@ -99,6 +102,9 @@ export default function Simulator({ facts, defaultMargin, base, baseCurve }: Sim
               data-testid="sim/slider"
               className="h-7 w-full cursor-pointer accent-[var(--accent-c)]"
             />
+            <p className="type-small text-muted-foreground" data-testid="sim/help">
+              Arraste para mudar a folga acima de 28% (0 a 5 p.p.); o pró-labore acompanha.
+            </p>
             <div className="type-caption flex flex-wrap justify-between gap-2 text-muted-foreground">
               <span>
                 hoje <span className="num text-foreground">{formatBRL(point.current)}</span>
@@ -118,19 +124,24 @@ export default function Simulator({ facts, defaultMargin, base, baseCurve }: Sim
           <dl className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-0.5">
               <dt className="type-small text-muted-foreground">
-                Economia nesse ponto, nos próximos 12 meses
+                {point.value < 0 ? 'Nesse ponto' : 'Economia nesse ponto, nos próximos 12 meses'}
               </dt>
               <dd
-                className="type-money-md num text-found-ink"
+                className={cn(
+                  'type-money-md num',
+                  point.value < 0 ? 'text-risk' : 'text-found-ink',
+                )}
                 data-testid="sim/value"
                 data-cents={point.value}
               >
-                {formatBRL(point.value)}
+                {point.value < 0
+                  ? `Custa ${formatBRL(-point.value)} a mais nos próximos 12 meses`
+                  : formatBRL(point.value)}
               </dd>
             </div>
             <div className="flex flex-col gap-0.5">
               <dt className="type-small text-muted-foreground">
-                Total do painel com esse pró-labore
+                Total com essa folga (simulação; o painel não muda)
               </dt>
               <dd
                 className="type-money-md num text-foreground"

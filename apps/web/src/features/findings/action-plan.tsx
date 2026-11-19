@@ -1,4 +1,4 @@
-import type { Finding, HowToReceive, RecoveryItem } from '@refund/engine';
+import type { ActionStep, Finding, HowToReceive, RecoveryItem } from '@refund/engine';
 import { MapPin, Timer } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { formatBRL, formatYearMonth } from '@/lib/format';
@@ -52,10 +52,25 @@ interface ActionPlanProps {
   analysisDate: string;
   /** Client actions (send to the accountant, copy). */
   actions?: ReactNode;
+  /** Show only the first N steps; the rest open with "Ver os {n} passos" (UX review H1). */
+  collapseAfter?: number;
 }
 
-export function ActionPlan({ finding, excerpts, analysisDate, actions }: ActionPlanProps) {
+/** UX review M4: savings say when the effect starts; only recovery and refunds say when the money arrives. */
+function whenTitle(type: Finding['type']): string {
+  return type === 'savings' ? 'Quando o efeito começa' : 'Quando o dinheiro chega';
+}
+
+export function ActionPlan({
+  finding,
+  excerpts,
+  analysisDate,
+  actions,
+  collapseAfter,
+}: ActionPlanProps) {
   const steps = [...finding.actionPlan].sort((a, b) => a.order - b.order);
+  const cut =
+    collapseAfter !== undefined && steps.length > collapseAfter ? collapseAfter : steps.length;
   const urgency = urgencyOf(finding.recoveryItems);
   const anchor = `na data da análise (${formatCivilDate(analysisDate)})`;
   return (
@@ -69,12 +84,17 @@ export function ActionPlan({ finding, excerpts, analysisDate, actions }: ActionP
       </h2>
 
       <div className="flex flex-col gap-2">
-        <h3 className="type-small font-medium text-muted-foreground">Quando o dinheiro chega</h3>
         {finding.howToReceive.length === 0 ? (
+          // L3: the fixed C.12 sentence replaces the heading (there is no money to arrive).
           <p className="text-base text-foreground" data-testid="no-money">
             {NO_MONEY_TEXT}
           </p>
         ) : (
+          <h3 className="type-small font-medium text-muted-foreground">
+            {whenTitle(finding.type)}
+          </h3>
+        )}
+        {finding.howToReceive.length === 0 ? null : (
           <ul className="flex flex-col gap-3" data-testid="how-to-receive">
             {finding.howToReceive.map((h) => (
               <li key={h.method} className="grid grid-cols-[12px_1fr] gap-x-3">
@@ -109,75 +129,23 @@ export function ActionPlan({ finding, excerpts, analysisDate, actions }: ActionP
       ) : null}
 
       <ol className="flex flex-col gap-4" data-testid="action-steps">
-        {steps.map((s, i) => (
-          <li
-            key={s.id}
-            data-testid="action-step"
-            data-step-id={s.id}
-            data-no-source={s.noSource === true ? 'true' : undefined}
-            className="grid grid-cols-[28px_1fr] gap-x-3"
-          >
-            <span
-              className="type-caption num flex size-7 items-center justify-center rounded-full border border-strong-border text-muted-foreground"
-              aria-hidden="true"
-            >
-              {i + 1}
-            </span>
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <span className="type-caption self-start rounded-sm bg-surface-2 px-1.5 py-0.5 font-medium text-foreground">
-                {ACTOR_LABEL[s.who]}
-              </span>
-              <p
-                className={cn(
-                  'text-base',
-                  s.noSource ? 'text-muted-foreground italic' : 'text-foreground',
-                )}
-              >
-                {s.what}
-              </p>
-              {s.where ? (
-                <p className="type-small flex flex-wrap items-baseline gap-x-2 text-muted-foreground">
-                  <MapPin
-                    className="size-3.5 shrink-0 self-center"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
-                  {s.where.url ? (
-                    <a
-                      href={s.where.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-cobalt underline-offset-4 hover:underline"
-                    >
-                      {s.where.name}
-                    </a>
-                  ) : (
-                    <span className="font-medium text-foreground">{s.where.name}</span>
-                  )}
-                  {s.where.path ? (
-                    <span className="type-mono break-words">{s.where.path}</span>
-                  ) : null}
-                </p>
-              ) : null}
-              {s.from || s.until ? (
-                <p className="type-small num text-muted-foreground">
-                  {s.from ? `A partir de ${formatWhen(s.from)}` : ''}
-                  {s.from && s.until ? ' · ' : ''}
-                  {s.until ? `prazo ${formatWhen(s.until)}` : ''}
-                </p>
-              ) : null}
-              {s.documents?.length ? (
-                <ul className="type-small list-disc pl-5 text-muted-foreground">
-                  {s.documents.map((d) => (
-                    <li key={d}>{d}</li>
-                  ))}
-                </ul>
-              ) : null}
-              <Refs ids={s.refIds} excerpts={excerpts} />
-            </div>
-          </li>
+        {steps.slice(0, cut).map((s, i) => (
+          <StepItem key={s.id} s={s} n={i + 1} excerpts={excerpts} />
         ))}
       </ol>
+      {cut < steps.length ? (
+        <details className="group/steps" data-testid="more-steps">
+          <summary className="type-small inline-flex min-h-11 cursor-pointer list-none items-center font-medium text-cobalt [&::-webkit-details-marker]:hidden">
+            <span className="group-open/steps:hidden">Ver os {steps.length} passos</span>
+            <span className="hidden group-open/steps:inline">Mostrar menos</span>
+          </summary>
+          <ol className="mt-3 flex flex-col gap-4" start={cut + 1}>
+            {steps.slice(cut).map((s, i) => (
+              <StepItem key={s.id} s={s} n={cut + i + 1} excerpts={excerpts} />
+            ))}
+          </ol>
+        </details>
+      ) : null}
 
       {finding.recoveryItems?.length ? (
         <RecoveryTable items={finding.recoveryItems} anchor={anchor} />
@@ -185,6 +153,82 @@ export function ActionPlan({ finding, excerpts, analysisDate, actions }: ActionP
 
       {actions}
     </section>
+  );
+}
+
+function StepItem({
+  s,
+  n,
+  excerpts,
+}: {
+  s: ActionStep;
+  n: number;
+  excerpts: Record<string, Excerpt>;
+}) {
+  return (
+    <li
+      data-testid="action-step"
+      data-step-id={s.id}
+      data-no-source={s.noSource === true ? 'true' : undefined}
+      className="grid grid-cols-[28px_1fr] gap-x-3"
+    >
+      <span
+        className="type-caption num flex size-7 items-center justify-center rounded-full border border-strong-border text-muted-foreground"
+        aria-hidden="true"
+      >
+        {n}
+      </span>
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <span className="type-caption self-start rounded-sm bg-surface-2 px-1.5 py-0.5 font-medium text-foreground">
+          {ACTOR_LABEL[s.who]}
+        </span>
+        <p
+          className={cn(
+            'text-base',
+            s.noSource ? 'text-muted-foreground italic' : 'text-foreground',
+          )}
+        >
+          {s.what}
+        </p>
+        {s.where ? (
+          <p className="type-small flex flex-wrap items-baseline gap-x-2 text-muted-foreground">
+            <MapPin
+              className="size-3.5 shrink-0 self-center"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
+            {s.where.url ? (
+              <a
+                href={s.where.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-cobalt underline-offset-4 hover:underline"
+              >
+                {s.where.name}
+              </a>
+            ) : (
+              <span className="font-medium text-foreground">{s.where.name}</span>
+            )}
+            {s.where.path ? <span className="type-mono break-words">{s.where.path}</span> : null}
+          </p>
+        ) : null}
+        {s.from || s.until ? (
+          <p className="type-small num text-muted-foreground">
+            {s.from ? `A partir de ${formatWhen(s.from)}` : ''}
+            {s.from && s.until ? ' · ' : ''}
+            {s.until ? `prazo ${formatWhen(s.until)}` : ''}
+          </p>
+        ) : null}
+        {s.documents?.length ? (
+          <ul className="type-small list-disc pl-5 text-muted-foreground">
+            {s.documents.map((d) => (
+              <li key={d}>{d}</li>
+            ))}
+          </ul>
+        ) : null}
+        <Refs ids={s.refIds} excerpts={excerpts} />
+      </div>
+    </li>
   );
 }
 
