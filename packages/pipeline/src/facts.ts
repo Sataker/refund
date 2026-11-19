@@ -21,6 +21,7 @@ import { cnaeTaxProfile, resellsMonofasico } from './classify/cnae.ts';
 import { type AnswerValue, type Classified, feedsFacts, isNo, isYes } from './classify/index.ts';
 import { accrualMonth } from './classify/regex.ts';
 import { CARD } from './classify/rules.ts';
+import { personalExpensesFact } from './personal-expenses.ts';
 import type { Category } from './types.ts';
 
 /** The engine's parameters start in 2026-01 (ENGINE-SPEC A); earlier months use them, as the engine fixtures do. */
@@ -383,6 +384,10 @@ export function buildFacts(input: FactsInput): Result<Facts, FactsError> {
   for (const m of observed) payroll[m] = ((grossPay[m] ?? 0) + (fgts[m] ?? 0)) as Cents;
   const cpp = series(observed); // only Anexo IV / outside Simples; 0 in III and V (C.3.5)
 
+  const regime = regimeOf(company);
+  // D.7 (A01): personal outflows of the PJ, alert only (no R$, outside the total).
+  const personalExpensesInPj = personalExpensesFact(input.classified, regime, window);
+
   const facts: Facts = {
     referenceMonth,
     analysisDate: input.analysisDate,
@@ -391,7 +396,7 @@ export function buildFacts(input: FactsInput): Result<Facts, FactsError> {
         cnpj: company.cnpj,
         primaryCnae: company.primaryCnae.code,
         secondaryCnaes: company.secondaryCnaes.map((c) => c.code),
-        regime: regimeOf(company),
+        regime,
         openedOn: company.activityStartDate,
         uf: company.uf,
         // C.12 (E8b): decides the municipal ISS refund steps; absent when the public data has no valid IBGE code.
@@ -471,6 +476,7 @@ export function buildFacts(input: FactsInput): Result<Facts, FactsError> {
       },
       provenance: pfProvenance,
     },
+    ...(personalExpensesInPj === undefined ? {} : { personalExpensesInPj }),
   };
   return { ok: true, value: facts };
 }

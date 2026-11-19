@@ -33,8 +33,8 @@ describe('hero through the pipeline (ENGINE-SPEC F.4; G1)', () => {
   it('each finding matches the answer key', () => {
     for (const want of key.expectedFindings) {
       const got = sent.find((f) => f.ruleId === want.ruleId);
-      // A01/A02/R03/R06 are engine rules of E8 (A01 needs a personal-expense fact, EXECUTION §9 E9 row).
-      if (!want.fires || ['A01', 'A02', 'R03', 'R06'].includes(want.ruleId)) {
+      // A02/R03/R06 are engine rules of E8 that do not fire for the hero; A01 is checked like the others.
+      if (!want.fires || ['A02', 'R03', 'R06'].includes(want.ruleId)) {
         if (!want.fires) expect(got, want.ruleId).toBeUndefined();
         continue;
       }

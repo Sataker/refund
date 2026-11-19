@@ -377,7 +377,8 @@ describe('code review #1: a port that throws synchronously never aborts the anal
       deps({ llm: templatePort({ classify: syncThrow as never, explain: syncThrow as never }) }),
     );
     expect(events.some((e) => e.type === 'error')).toBe(false);
-    expect(events.filter((e) => e.type === 'explanation')).toHaveLength(4);
+    // One per finding sent: R01, R05, R05-REC, R02, A01.
+    expect(events.filter((e) => e.type === 'explanation')).toHaveLength(5);
     expect(result.engineResult?.total).toMatchObject(HERO);
   });
 });

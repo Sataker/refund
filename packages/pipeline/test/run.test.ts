@@ -94,6 +94,8 @@ describe('event order (ARCHITECTURE §4.4, locked)', () => {
       'finding:R05',
       'finding:R05-REC',
       'alert:R02',
+      // A01 (D.7): the personal-expense fact now reaches the engine; alerts follow `order` (R02 6, A01 8).
+      'alert:A01',
       'total',
       'stage:rules:completed',
       'stage:explanation:started',
@@ -101,6 +103,7 @@ describe('event order (ARCHITECTURE §4.4, locked)', () => {
       'explanation:R05',
       'explanation:R05-REC',
       'explanation:R02',
+      'explanation:A01',
       'stage:explanation:completed',
       'end',
     ]);
@@ -311,7 +314,8 @@ describe('A5 policy and the LlmPort (TESTS §3.4)', () => {
       expect(result.engineResult?.total.savings12m).toBe(6231892);
       expect(result.metrics.byOrigin.unclassified).toBe(4);
       const explanations = events.flatMap((e) => (e.type === 'explanation' ? [e.origin] : []));
-      expect(explanations).toHaveLength(4);
+      // One per finding sent: R01, R05, R05-REC, R02, A01.
+      expect(explanations).toHaveLength(5);
     },
   );
 });
@@ -407,6 +411,31 @@ describe('input as pages and pacing', () => {
     expect(fast.total).toBeLessThan(scripted.total);
     expect(instant.count).toBe(0);
     expect(new Set([scripted.savings, fast.savings, instant.savings])).toEqual(new Set([6231892]));
+  });
+
+  it('scripted pace follows script 1 (IDENTITY-AND-UI §4.9) with the A01 risk card', async () => {
+    let clock = 0;
+    const at: Record<string, number> = {};
+    const gen = runAnalysis(
+      heroInput({ answers: F2_ANSWERS }),
+      deps({
+        pace: 'scripted',
+        wait: async (ms) => {
+          clock += ms;
+        },
+      }),
+    );
+    // Each event is yielded right after its wait: the clock then is its time on screen.
+    for await (const e of gen) at[tag(e)] ??= clock;
+    expect(at['stage:normalization:completed']).toBe(1800);
+    expect(at['stage:classification:completed']).toBe(3400);
+    expect(at['finding:R01']).toBe(3900); // first R$ ≈ 4 s
+    expect(at['finding:R05']).toBe(5300);
+    expect(at['finding:R05-REC']).toBe(6300);
+    expect(at['alert:R02']).toBe(6600);
+    expect(at['alert:A01']).toBe(6900); // the risk card enters at the end of the list
+    expect(at.total).toBe(7900); // the number settles
+    expect(at.end).toBe(8600); // CTA
   });
 
   it('the default wait is a real timer (used by the route handler)', async () => {

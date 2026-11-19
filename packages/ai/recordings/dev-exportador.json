@@ -78,6 +78,21 @@
         "numeric": "ok",
         "citation": "ok"
       }
+    },
+    "sha256:e145564e62b5f7397d90a7d26a21f92fb78f9ed6df2acc8270f396c7126f336b": {
+      "task": "explain",
+      "ruleId": "A01",
+      "origin": "template",
+      "promptVersion": "template@3",
+      "recordedAt": "2026-11-19T18:04:31.416Z",
+      "output": {
+        "text": "Isso parece economia, mas é risco e não entra no total. Não recomendamos. Não lance despesa pessoal como despesa da empresa. Veja por quê em “Ver cálculo”.",
+        "source": "Isso parece economia, mas é risco e não entra no total. Não recomendamos. Não lance despesa pessoal como despesa da empresa. Veja por quê em “Ver cálculo”."
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
     }
   }
 }

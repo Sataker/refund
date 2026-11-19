@@ -181,13 +181,11 @@ describe('E.9.3 hero: Marina’s financial view (174 transactions, nov/2025–ou
     expect(kinds(group(pj, 'distributions'))).toEqual(['attention']);
   });
 
-  // The seal of E.9.3 that still waits for an upstream stage (EXECUTION §9, 16/11): it turns on by itself.
-  it.skipIf(!a01Fires)(
-    'E.9.3: "Gastos pessoais pagos pela empresa" shows "é risco" (needs the A01 fact)',
-    () => {
-      expect(group(pj, 'personal_in_pj').seals).toMatchObject([{ kind: 'risk', ruleIds: ['A01'] }]);
-    },
-  );
+  // E.9.3: the A01 fact reaches the engine (EXECUTION §9, 16/11 A01 row, closed), so the seal is required.
+  it('E.9.3: "Gastos pessoais pagos pela empresa" shows "é risco" (A01)', () => {
+    expect(a01Fires).toBe(true);
+    expect(group(pj, 'personal_in_pj').seals).toMatchObject([{ kind: 'risk', ruleIds: ['A01'] }]);
+  });
   it('without an A01 finding the personal group carries no seal (never one without its finding)', () => {
     expect(kinds(group(pj, 'personal_in_pj'))).toEqual(a01Fires ? ['risk'] : []);
   });
