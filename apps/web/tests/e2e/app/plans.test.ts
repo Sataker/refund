@@ -46,7 +46,7 @@ test.describe('plans and Pix @app', () => {
     await page.goto(`/app/analises/${id}/achados/${locked.id}`);
     await expect(page.getByTestId('trace-locked')).toBeVisible();
     await page.getByTestId('trace-locked-upgrade').click();
-    await expect(page).toHaveURL(/\/app\/plano$/);
+    await expect(page).toHaveURL(/\/app\/plano\?voltar=/);
 
     await expect(page.getByTestId('current-plan')).toHaveAttribute('data-plan', 'free');
     await expect(page.getByTestId('period-yearly')).toBeChecked();
@@ -64,14 +64,19 @@ test.describe('plans and Pix @app', () => {
     await expect(dialog.getByTestId('pix-status')).toHaveAttribute('data-status', 'paid', {
       timeout: 30_000,
     });
-    await expect(dialog).toContainText('Bem-vindo ao Empresa');
+    await expect(dialog).toContainText('Boas-vindas ao Empresa');
     expect(fake?.deliveries.at(-1)?.status).toBe(200);
+    await expect(dialog.getByTestId('pix-done')).toHaveText(/Ver o cálculo completo/);
+    // Back to the finding that hit the paywall: it now carries its trace on screen.
     await dialog.getByTestId('pix-done').click();
-    await expect(page.getByTestId('current-plan')).toHaveAttribute('data-plan', 'business');
-
-    // The same finding now carries its trace on the wire and on screen.
-    await page.goto(`/app/analises/${id}/achados/${locked.id}`);
+    await expect(page).toHaveURL(new RegExp(`/app/analises/${id}/achados/${locked.id}$`));
     await expect(page.getByTestId('calc-trace')).toBeVisible();
+    await page.goto('/app/plano');
+    await expect(page.getByTestId('current-plan')).toHaveAttribute('data-plan', 'business');
+    await expect(page.getByTestId('change-plan-note')).toBeVisible();
+    // The analysis uses an ME/EPP CNPJ: Pessoal is not sold to it.
+    await expect(page.getByTestId('personal-unavailable')).toBeVisible();
+    await page.goto(`/app/analises/${id}/achados/${locked.id}`);
     await expect(page.getByTestId('trace-locked')).toHaveCount(0);
     await expect(page.getByTestId('plan-label')).toContainText('Empresa');
   });

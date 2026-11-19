@@ -174,7 +174,9 @@ export default async function LiveFindingPage({
               do relatório.
             </p>
             <Link
-              href={'/app/plano' as Route}
+              href={
+                `/app/plano?voltar=${encodeURIComponent(`/app/analises/${id}/achados/${achadoId}`)}` as Route
+              }
               data-testid="trace-locked-upgrade"
               className="type-small w-fit font-medium text-cobalt underline-offset-4 hover:underline"
             >

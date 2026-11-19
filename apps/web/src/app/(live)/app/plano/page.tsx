@@ -22,6 +22,9 @@ import { getCharge, simulateDevPayment, startPixCheckout } from './actions';
 
 export const metadata: Metadata = { title: 'Planos · Refund', robots: { index: false } };
 
+const RETURN_PATH =
+  /^\/app\/analises\/[0-9a-f-]{36}(\/(painel|financas|confirmar|relatorio|achados(\/[0-9a-f-]{36})?))?$/;
+
 const DATE = new Intl.DateTimeFormat('pt-BR', {
   timeZone: 'America/Sao_Paulo',
   dateStyle: 'short',
@@ -36,11 +39,13 @@ export default async function PlanPage({
   if (!ctx.ok) return <LiveUnavailable message={ctx.error.message} />;
   const { db, userId } = ctx.value;
   // ARCHITECTURE §13 shell lock: the plan route waits for the first-access track like the other shell routes.
-  const { progress } = await loadTrack(db, userId);
+  const { progress, company } = await loadTrack(db, userId);
   const step = currentStep(progress);
   if (step !== 'done') redirect(stepPath(step) as never);
 
-  const { oferta } = await searchParams;
+  const { oferta, voltar } = await searchParams;
+  // Back to where the paywall was hit: only a path of this user's own analyses (no open redirect).
+  const returnTo = typeof voltar === 'string' && RETURN_PATH.test(voltar) ? voltar : null;
   const active = await activePlanWith(db, userId);
   const payments = paymentsConfig();
   const off = requireCapability('payments');
@@ -68,7 +73,10 @@ export default async function PlanPage({
       >
         <div className="flex flex-col gap-2">
           <p className="type-small">
-            <Link href={'/app' as Route} className="text-cobalt underline underline-offset-4">
+            <Link
+              href={(returnTo ?? '/app') as Route}
+              className="text-cobalt underline underline-offset-4"
+            >
               ← Voltar
             </Link>
           </p>
@@ -86,6 +94,8 @@ export default async function PlanPage({
           currentUntil={active.until ? DATE.format(active.until) : null}
           actions={actions}
           validationOffer={oferta === 'validacao'}
+          linkedCompany={company ? (company.company.mei.optedIn ? 'mei' : 'other') : null}
+          returnTo={returnTo}
           contactEmail={CONTACT_EMAIL === CONTACT_PLACEHOLDER ? null : CONTACT_EMAIL}
           {...(off.ok ? {} : { offMessage: off.error.message })}
         />

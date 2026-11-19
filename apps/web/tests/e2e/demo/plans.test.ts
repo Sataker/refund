@@ -49,7 +49,7 @@ test.describe('plans @demo', () => {
     await expect(dialog.getByTestId('pix-status')).toHaveAttribute('data-status', 'paid', {
       timeout: 10_000,
     });
-    await expect(dialog).toContainText('Bem-vindo ao Empresa (simulado)');
+    await expect(dialog).toContainText('Boas-vindas ao Empresa (simulado)');
     await dialog.getByTestId('pix-done').click();
     await expect(page.getByTestId('current-plan')).toHaveAttribute('data-plan', 'business');
     await expect(page.getByTestId('current-plan')).toContainText('Empresa (simulado)');

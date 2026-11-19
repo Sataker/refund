@@ -17,7 +17,7 @@ import {
 
 // Screen 10 (IDENTITY-AND-UI): 4 cards (D3: Grátis · Pessoal with MEI inside · Empresa · Contador), annual
 // preselected, 30-day guarantee, the success fee as an honest line (D4: roadmap), and the Pix modal (QR, copia e cola,
-// "Esperando o pagamento…" → "Pago. Bem-vindo ao Empresa."). The same screen serves /app (real Pix through the server
+// "Esperando o pagamento…" → "Pago. Boas-vindas ao Empresa."). The same screen serves /app (real Pix through the server
 // actions) and /demo (simulated, labelled, no network): the caller hands in the checkout port.
 
 type Result<T> = { ok: true; value: T } | { ok: false; error: { code: string; message: string } };
@@ -57,6 +57,13 @@ export interface PlansScreenProps {
   contactEmail: string | null;
   /** Why Pix is off (capability), shown instead of the checkout. */
   offMessage?: string;
+  /**
+   * The company of the live track: 'mei' (an MEI CNPJ), 'other' (any other CNPJ) or null (none, and always on /demo).
+   * Pessoal has no CNPJ in 07 §3.5, so it is not sold to a session whose analysis uses one (product review E17, H1).
+   */
+  linkedCompany?: 'mei' | 'other' | null;
+  /** Where the paid state leads (a same-origin /app path checked on the server). */
+  returnTo?: string | null;
 }
 
 const POLL_MS = 2_000;
@@ -76,6 +83,13 @@ export function PlansScreen(props: PlansScreenProps) {
   const personalPrice = mei ? model.mei : model.personal;
 
   const buy = (plan: SellablePlan, p: Period | 'validation') => setCheckout({ plan, period: p });
+  // Pessoal has no CNPJ and Pessoal + MEI only an MEI one (07 §3.5): never sell them to an analysis they cannot run.
+  const personalBlock =
+    props.linkedCompany === 'other'
+      ? 'Sua análise usa o CNPJ de uma empresa do Simples: o plano certo é o Empresa.'
+      : props.linkedCompany === 'mei' && !mei
+        ? 'O Pessoal é para quem não tem CNPJ. Sua análise usa um CNPJ MEI: marque “Tenho MEI”.'
+        : null;
 
   return (
     <div className="flex flex-col gap-8" data-testid="plans-screen" data-simulated={simulated}>
@@ -84,8 +98,9 @@ export function PlansScreen(props: PlansScreenProps) {
           className="type-small rounded-md border border-cobalt/40 bg-cobalt/5 px-3 py-2 text-foreground"
           data-testid="simulation-label"
         >
-          Simulação: nesta demo nenhum Pix é cobrado. O QR, o pagamento e o plano são de mentira, só
-          para mostrar o caminho.
+          Simulação: nesta demo nenhum Pix é cobrado. O QR Code, o pagamento e o plano são
+          fictícios, só para mostrar o caminho. No resto da demo você já vê tudo, como no plano
+          Empresa.
         </p>
       ) : null}
 
@@ -94,6 +109,14 @@ export function PlansScreen(props: PlansScreenProps) {
         until={paidPlan ? null : props.currentUntil}
         simulated={simulated}
       />
+
+      {effective !== 'free' && !simulated ? (
+        <p className="type-small text-muted-foreground" data-testid="change-plan-note">
+          Ao trocar de plano, o novo período começa no dia do pagamento. O que sobrou do plano atual
+          não é descontado; se preferir, peça a devolução dentro da garantia de{' '}
+          {model.guaranteeDays} dias.
+        </p>
+      ) : null}
 
       {props.validationOffer ? (
         <section
@@ -126,7 +149,7 @@ export function PlansScreen(props: PlansScreenProps) {
             <label
               key={p}
               className={cn(
-                'type-small flex min-h-10 cursor-pointer items-center rounded px-4 font-medium transition-colors duration-(--dur-fast)',
+                'type-small flex min-h-11 cursor-pointer items-center rounded px-4 font-medium transition-colors duration-(--dur-fast) has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--ring)',
                 period === p ? 'bg-primary text-primary-foreground' : 'text-muted-foreground',
               )}
             >
@@ -139,7 +162,7 @@ export function PlansScreen(props: PlansScreenProps) {
                 className="sr-only"
                 data-testid={`period-${p}`}
               />
-              {p === 'yearly' ? 'Anual (até 33% menos)' : 'Mensal'}
+              {p === 'yearly' ? 'Anual (até 33% de desconto)' : 'Mensal'}
             </label>
           ))}
         </div>
@@ -184,7 +207,7 @@ export function PlansScreen(props: PlansScreenProps) {
                 ]
           }
           extra={
-            <label className="type-small flex min-h-10 items-center gap-2 text-foreground">
+            <label className="type-small flex min-h-11 items-center gap-2 text-foreground">
               <input
                 type="checkbox"
                 checked={mei}
@@ -199,6 +222,10 @@ export function PlansScreen(props: PlansScreenProps) {
           action={
             effective === personalPlan ? (
               <CurrentBadge />
+            ) : personalBlock ? (
+              <p className="type-caption text-muted-foreground" data-testid="personal-unavailable">
+                {personalBlock}
+              </p>
             ) : (
               <SubscribeButton
                 port={props.port}
@@ -269,7 +296,7 @@ export function PlansScreen(props: PlansScreenProps) {
               </a>
             ) : (
               <p className="type-caption text-muted-foreground" data-testid="contact-accountant">
-                Em breve. A carteira do contador abre depois do Hack Brasil.
+                Em breve. Quer testar com seus clientes? Fale com a gente.
               </p>
             )
           }
@@ -278,17 +305,32 @@ export function PlansScreen(props: PlansScreenProps) {
 
       <div className="flex flex-col gap-2 border-t border-border pt-5">
         <p className="type-small text-foreground" data-testid="contact-firms">
-          Escritório e API (banco PJ, ERP, fintech): fale com a gente.
+          Escritório e API (banco PJ, ERP, fintech): fale com a gente
+          <ContactTail email={props.contactEmail} />
         </p>
         <p className="type-small text-foreground" data-testid="success-fee">
-          Sucesso: {model.successFeePct.monthly}% só sobre o que for recuperado (
-          {model.successFeePct.yearly}% no anual), cobrado quando o dinheiro entra. Em breve: hoje o
-          Refund mostra o valor e o caminho; o pedido à Receita fica com você e o seu contador.
+          Taxa de sucesso: {model.successFeePct.monthly}% só sobre o que for recuperado (
+          {model.successFeePct.yearly}% no anual do Empresa e do Pessoal + MEI), cobrada quando o
+          dinheiro entra e devolvida se a Receita glosar. Em breve: hoje o Refund mostra o valor e o
+          caminho; o pedido à Receita fica com você e o seu contador.
         </p>
-        <p className="type-small inline-flex items-center gap-1.5 text-muted-foreground">
-          <ShieldCheck className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
-          Garantia de {model.guaranteeDays} dias: devolvemos o primeiro pagamento, sem perguntas. Um
-          Pix libera o período (anual: 12 meses; mensal: 31 dias). Sem renovação automática.
+        <p className="type-small inline-flex items-start gap-1.5 text-muted-foreground">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+          <span>
+            Garantia de {model.guaranteeDays} dias: devolvemos o primeiro pagamento, sem perguntas
+            {props.contactEmail ? (
+              <>
+                . É só pedir em{' '}
+                <a
+                  href={`mailto:${props.contactEmail}`}
+                  className="text-cobalt underline underline-offset-4"
+                >
+                  {props.contactEmail}
+                </a>
+              </>
+            ) : null}
+            . Um Pix libera o período (anual: 12 meses; mensal: 31 dias). Sem renovação automática.
+          </span>
         </p>
       </div>
 
@@ -299,6 +341,7 @@ export function PlansScreen(props: PlansScreenProps) {
           period={checkout.period}
           port={props.port}
           simulated={simulated}
+          returnTo={props.returnTo ?? null}
           onClose={() => setCheckout(null)}
           onPaid={(plan) => {
             setPaidPlan(plan);
@@ -307,6 +350,20 @@ export function PlansScreen(props: PlansScreenProps) {
         />
       ) : null}
     </div>
+  );
+}
+
+function ContactTail({ email }: { email: string | null }) {
+  if (!email) return <>.</>;
+  return (
+    <>
+      {' '}
+      em{' '}
+      <a href={`mailto:${email}`} className="text-cobalt underline underline-offset-4">
+        {email}
+      </a>
+      .
+    </>
   );
 }
 
@@ -466,13 +523,28 @@ type DialogState =
   | { kind: 'waiting'; charge: CheckoutCharge }
   | { kind: 'paid'; charge: CheckoutCharge }
   | { kind: 'expired' }
+  | { kind: 'refunded' }
   | { kind: 'error'; message: string };
+
+const PAID_TEXT: Record<SellablePlan, string> = {
+  business:
+    'Os cálculos, a recuperação DAS a DAS e o otimizador de pró-labore abrem agora nas suas análises.',
+  personal: 'Todos os cálculos e o plano de ação passo a passo abrem agora nas suas análises.',
+  mei: 'Todos os cálculos e o plano de ação passo a passo abrem agora nas suas análises.',
+};
+
+const TIME = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
 function PixDialog({
   plan,
   period,
   port,
   simulated,
+  returnTo,
   onClose,
   onPaid,
 }: {
@@ -480,6 +552,7 @@ function PixDialog({
   period: Period | 'validation';
   port: CheckoutPort;
   simulated: boolean;
+  returnTo: string | null;
   onClose: () => void;
   onPaid: (plan: SellablePlan) => void;
 }) {
@@ -488,8 +561,7 @@ function PixDialog({
   const [simulating, setSimulating] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const titleId = useId();
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   // The port may be re-created when the page data refreshes; one dialog creates one charge (per attempt).
   const portRef = useRef(port);
@@ -538,6 +610,7 @@ function PixDialog({
       if (r.ok && r.value.status === 'paid') return handlePaid(waitingCharge);
       if (r.ok && (r.value.status === 'expired' || r.value.status === 'cancelled'))
         return setState({ kind: 'expired' });
+      if (r.ok && r.value.status === 'refunded') return setState({ kind: 'refunded' });
       if (Date.now() - started > POLL_MAX_MS) return setState({ kind: 'expired' });
       timer = setTimeout(tick, POLL_MS);
     };
@@ -548,38 +621,44 @@ function PixDialog({
     };
   }, [waitingCharge, handlePaid]);
 
+  // Native modal dialog: focus trapped, page behind inert, Esc closes; focus goes back to the button that opened it.
   useEffect(() => {
-    closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    const dialog = dialogRef.current;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    if (dialog && !dialog.open) dialog.showModal();
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = overflow;
+      if (dialog?.open) dialog.close();
+      opener?.focus();
     };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, []);
 
   const name = PLAN_NAME[plan];
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4">
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        data-testid="pix-dialog"
-        data-state={state.kind}
-        className="flex max-h-dvh w-full max-w-[420px] flex-col gap-4 overflow-y-auto rounded-t-xl bg-background p-6 shadow-lg sm:rounded-xl"
-      >
+    <dialog
+      ref={dialogRef}
+      aria-labelledby={titleId}
+      data-testid="pix-dialog"
+      data-state={state.kind}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      className="m-0 mt-auto max-h-dvh w-full max-w-none overflow-y-auto rounded-t-xl bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40 sm:m-auto sm:max-w-[420px] sm:rounded-xl"
+    >
+      <div className="flex flex-col gap-4 p-6">
         <div className="flex items-start justify-between gap-3">
           <h2 id={titleId} className="type-h4 text-foreground">
             {state.kind === 'paid' ? 'Pagamento confirmado' : `Pix · ${name}`}
             {simulated ? ' (simulação)' : ''}
           </h2>
           <button
-            ref={closeRef}
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="inline-flex size-10 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+            className="inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
             data-testid="pix-close"
           >
             <X className="size-5" aria-hidden="true" />
@@ -596,7 +675,12 @@ function PixDialog({
         {state.kind === 'error' ? (
           <div className="flex flex-col gap-3" role="alert" data-testid="pix-error">
             <p className="type-small text-foreground">{state.message}</p>
-            <Button type="button" variant="outline" onClick={() => setAttempt((a) => a + 1)}>
+            <Button
+              type="button"
+              size="lg"
+              variant="outline"
+              onClick={() => setAttempt((a) => a + 1)}
+            >
               Tentar de novo
             </Button>
           </div>
@@ -607,10 +691,16 @@ function PixDialog({
             <p className="type-small text-foreground">
               Este QR Code expirou sem pagamento. Nada foi cobrado.
             </p>
-            <Button type="button" onClick={() => setAttempt((a) => a + 1)}>
+            <Button type="button" size="lg" onClick={() => setAttempt((a) => a + 1)}>
               Gerar outro Pix
             </Button>
           </div>
+        ) : null}
+
+        {state.kind === 'refunded' ? (
+          <p className="type-small text-foreground" data-testid="pix-refunded">
+            Este pagamento foi devolvido. Nada mais será cobrado.
+          </p>
         ) : null}
 
         {state.kind === 'waiting' ? (
@@ -621,7 +711,11 @@ function PixDialog({
               data-cents={state.charge.amountCents}
             >
               {priceLabel(state.charge.amountCents)}
-              {period === 'yearly' ? ' por 12 meses' : period === 'monthly' ? ' por 31 dias' : ''}
+              {period === 'yearly'
+                ? ' por 12 meses'
+                : period === 'monthly'
+                  ? ' por 31 dias'
+                  : ' por 7 dias'}
             </p>
             {state.charge.brCodeBase64 ? (
               <Image
@@ -634,10 +728,15 @@ function PixDialog({
                 data-testid="pix-qr"
               />
             ) : (
-              <FakeQr
-                seed={state.charge.chargeId}
-                className="size-60 rounded-md border border-border"
-              />
+              <div className="flex flex-col items-center gap-1">
+                <FakeQr
+                  seed={state.charge.chargeId}
+                  className="size-60 rounded-md border border-border"
+                />
+                <span className="type-caption text-muted-foreground">
+                  QR simulado: não pode ser pago.
+                </span>
+              </div>
             )}
             <div className="flex w-full flex-col gap-1.5">
               <label htmlFor="pix-copia-cola" className="type-caption text-muted-foreground">
@@ -653,6 +752,7 @@ function PixDialog({
                 />
                 <Button
                   type="button"
+                  size="lg"
                   variant="outline"
                   onClick={async () => {
                     try {
@@ -678,15 +778,34 @@ function PixDialog({
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
               Esperando o pagamento…
             </p>
+            <p className="type-caption text-center text-muted-foreground">
+              Válido até {TIME.format(new Date(state.charge.expiresAt))}. Se você já pagou, o plano
+              abre sozinho em alguns segundos.
+              {simulated ? null : (
+                <>
+                  {' '}
+                  <a
+                    href={`/app/plano/pix/${state.charge.chargeId}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="text-cobalt underline underline-offset-4"
+                    data-testid="pix-follow"
+                  >
+                    Acompanhar este Pix em outra aba
+                  </a>
+                </>
+              )}
+            </p>
             {state.charge.devMode && port.simulate ? (
               <div className="flex w-full flex-col gap-2 rounded-md border border-dashed border-border p-3">
                 <p className="type-caption text-muted-foreground" data-testid="test-mode-label">
                   {simulated
-                    ? 'Simulação: aperte para fingir que o Pix foi pago.'
+                    ? 'Simulação: toque para simular o pagamento do Pix.'
                     : 'Modo de teste da AbacatePay: nenhum dinheiro de verdade.'}
                 </p>
                 <Button
                   type="button"
+                  size="lg"
                   variant="outline"
                   disabled={simulating}
                   data-testid="simulate-payment"
@@ -719,20 +838,30 @@ function PixDialog({
               data-testid="pix-status"
               data-status="paid"
             >
-              Pago. Bem-vindo ao <strong className="font-semibold">{name}</strong>
+              Pago. Boas-vindas ao <strong className="font-semibold">{name}</strong>
               {simulated ? ' (simulado)' : ''}.
             </p>
             <p className="type-small text-muted-foreground">
               {simulated
                 ? 'Na demo tudo já fica aberto. No app de verdade, os cálculos e o plano de ação completos abrem agora.'
-                : 'Os cálculos, a lista DAS a DAS e o otimizador abrem agora nas suas análises.'}
+                : PAID_TEXT[plan]}
             </p>
-            <Button type="button" onClick={onClose} data-testid="pix-done">
-              Continuar
-            </Button>
+            {returnTo && !simulated ? (
+              <a
+                href={returnTo}
+                className="type-small inline-flex min-h-11 items-center rounded-md bg-primary px-5 font-medium text-primary-foreground"
+                data-testid="pix-done"
+              >
+                Ver o cálculo completo →
+              </a>
+            ) : (
+              <Button type="button" size="lg" onClick={onClose} data-testid="pix-done">
+                Continuar
+              </Button>
+            )}
           </div>
         ) : null}
       </div>
-    </div>
+    </dialog>
   );
 }
