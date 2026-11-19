@@ -45,8 +45,8 @@ export function a01Finding(ctx: Ctx): Finding | null {
   const trace: Step[] = [...byMerchant.entries()].map(([merchant, list], i) =>
     step({
       id: `A01.MERCHANT.${i + 1}`,
-      label: `${merchant}: ${list.length} pagamento(s) pela conta ou cartão da empresa`,
-      formula: 'saídas da PJ classificadas como gasto pessoal (ENGINE-SPEC E.7)',
+      label: `${merchant}: ${list.length} ${list.length === 1 ? 'pagamento' : 'pagamentos'} pela conta ou cartão da empresa`,
+      formula: 'saídas da PJ classificadas como gasto pessoal',
       inputs: {
         count: { value: list.length, unit: 'count' },
         months: { value: list.map((e) => formatMonth(e.month)).join(', '), unit: 'text' },

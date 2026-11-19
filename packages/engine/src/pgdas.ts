@@ -3,6 +3,7 @@
 import { D, reais, roundToCents } from './money.ts';
 import type { Ctx } from './projection.ts';
 import { currentProLabore } from './projection.ts';
+import { formatMonth } from './rules/common.ts';
 import { dasUnder, paInputs } from './scenario.ts';
 import { step } from './trace.ts';
 import type { Anexo, Cents, DasPayment, Step, YearMonth } from './types.ts';
@@ -73,7 +74,7 @@ export function inferPgdas(ctx: Ctx): PgdasInference {
   const steps = byPa.map((p) =>
     step({
       id: `PGDAS.INFERENCE.${p.pa}`,
-      label: `Como o PGDAS-D de ${p.pa} foi declarado (deduzido do DAS pago)`,
+      label: `Como o PGDAS-D de ${formatMonth(p.pa)} foi declarado (deduzido do DAS pago)`,
       formula:
         'DAS pago comparado ao DAS esperado em cada hipótese (anexo × segregou exportação); casa se a diferença ≤ max(R$ 1,00; 0,1%)',
       inputs: Object.fromEntries([

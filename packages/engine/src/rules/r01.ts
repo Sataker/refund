@@ -155,7 +155,7 @@ export function optimizerR01(
   const steps: Step[] = [
     step({
       id: 'R01.RBT12_REGIME',
-      label: 'Receita bruta de 12 meses em regime (projeção)',
+      label: 'Receita bruta de 12 meses depois da mudança (projeção)',
       formula: 'média dos 12 meses observados × 12, por mercado',
       inputs: {},
       result: { value: rbt, unit: 'cents' },
@@ -200,7 +200,7 @@ export function optimizerR01(
     }),
     step({
       id: 'R01.ARGMIN',
-      label: 'Pró-labore de menor custo anual em regime (curva)',
+      label: 'Pró-labore de menor custo por ano, depois da mudança (curva)',
       formula: 'mínimo de DAS + INSS do sócio + IR do ajuste anual entre os candidatos',
       inputs: {
         candidates: { value: candidates.length, unit: 'count' },
@@ -214,7 +214,7 @@ export function optimizerR01(
       label: 'Pró-labore recomendado',
       formula: raised
         ? 'o de menor custo fica abaixo do Fator R alvo: elevado ao pró-labore com folga'
-        : 'pró-labore de menor custo anual em regime',
+        : 'pró-labore de menor custo por ano, depois da mudança',
       inputs: {
         argmin: { value: argmin, unit: 'cents' },
         pTarget: { value: pTarget, unit: 'cents' },
@@ -422,8 +422,8 @@ export function r01Finding(i: R01FindingInput): Finding {
     }),
     step({
       id: 'R01.REGIME_GAIN',
-      label: `Economia por ano em regime (a partir de ${formatMonth(next.regimeFrom)})`,
-      formula: 'custo anual em regime atual − custo anual em regime com o novo pró-labore',
+      label: `Economia por ano, a partir de ${formatMonth(next.regimeFrom)}`,
+      formula: 'custo por ano atual − custo por ano com o novo pró-labore',
       inputs: {
         before: { value: prev.regimeCost.total, unit: 'cents' },
         after: { value: next.regimeCost.total, unit: 'cents' },
@@ -437,7 +437,7 @@ export function r01Finding(i: R01FindingInput): Finding {
       label: recommended ? 'Economia nos próximos 12 meses' : 'Não compensa: valor considerado',
       formula: recommended
         ? 'custo de 12 meses atual − custo de 12 meses com o novo pró-labore'
-        : 'ganho em regime abaixo do mínimo de max(R$ 3.000; 1% do RBT12): valor 0',
+        : `ganho por ano, a partir de ${formatMonth(next.regimeFrom)}, abaixo do mínimo de max(R$ 3.000; 1% do RBT12): valor 0`,
       inputs: {
         before: { value: prev.cost12m.total, unit: 'cents' },
         after: { value: next.cost12m.total, unit: 'cents' },

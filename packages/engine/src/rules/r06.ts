@@ -117,7 +117,8 @@ export function r06Finding(
     step({
       id: 'R06.GAIN_12M',
       label: 'Redução do DAS nos próximos 12 meses',
-      formula: 'custo de 12 meses sem segregar − custo de 12 meses segregando (após R01 e R05)',
+      formula:
+        'custo de 12 meses sem segregar − custo de 12 meses segregando (depois do ajuste do pró-labore e da segregação da exportação)',
       inputs: {
         before: { value: prev.cost12m.total, unit: 'cents' },
         after: { value: next.cost12m.total, unit: 'cents' },
@@ -127,8 +128,8 @@ export function r06Finding(
     }),
     step({
       id: 'R06.REGIME_GAIN',
-      label: 'Economia por ano em regime',
-      formula: 'custo anual em regime sem segregar − custo anual em regime segregando',
+      label: 'Economia por ano, depois da mudança',
+      formula: 'custo por ano sem segregar − custo por ano segregando',
       inputs: {
         before: { value: prev.regimeCost.total, unit: 'cents' },
         after: { value: next.regimeCost.total, unit: 'cents' },
@@ -140,10 +141,10 @@ export function r06Finding(
       id: 'R06.MARGINAL_12M',
       label: recommended
         ? 'Economia nos próximos 12 meses'
-        : 'Sem economia por ano em regime: fora do total',
+        : 'Sem economia por ano depois da mudança: fora do total',
       formula: recommended
         ? 'custo de 12 meses sem segregar − custo de 12 meses segregando'
-        : 'a alavanca só entra no total com ganho em regime ≥ R$ 1,00 (ENGINE-SPEC C.6, INV-2)',
+        : 'a alavanca só entra no total com ganho por ano, depois da mudança, ≥ R$ 1,00',
       inputs: { gain12m: { value: gain.gain12m, unit: 'cents' } },
       result: { value: value12m, unit: 'cents' },
       rounding: 'NONE',

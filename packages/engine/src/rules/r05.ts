@@ -124,7 +124,7 @@ function pendingStep(pas: readonly YearMonth[]): Step[] {
     step({
       id: 'R05.PAS_BEFORE_START',
       label: 'PAs ainda sem DAS pago, antes do início da projeção',
-      formula: 'não entram na economia dos próximos 12 meses nem na recuperação (ENGINE-SPEC C.4)',
+      formula: 'não entram na economia dos próximos 12 meses nem na recuperação',
       inputs: { pas: { value: pas.join(', '), unit: 'text' } },
       result: {
         value: `Peça ao contador para já segregar o PGDAS-D de ${monthNames(pas)}: esses PAs não entram na economia nem na recuperação.`,
@@ -169,8 +169,8 @@ export function r05Finding(
     ...pendingStep(pendingPas),
     step({
       id: 'R05.REGIME_GAIN',
-      label: 'Economia por ano em regime',
-      formula: 'custo anual em regime sem segregar − custo anual em regime segregando',
+      label: 'Economia por ano, depois da mudança',
+      formula: 'custo por ano sem segregar − custo por ano segregando',
       inputs: {
         before: { value: prev.regimeCost.total, unit: 'cents' },
         after: { value: next.regimeCost.total, unit: 'cents' },
@@ -181,7 +181,8 @@ export function r05Finding(
     step({
       id: 'R05.MARGINAL_12M',
       label: 'Economia nos próximos 12 meses',
-      formula: 'custo de 12 meses sem segregar − custo de 12 meses segregando (após o R01)',
+      formula:
+        'custo de 12 meses sem segregar − custo de 12 meses segregando (depois do ajuste do pró-labore)',
       inputs: {
         before: { value: prev.cost12m.total, unit: 'cents' },
         after: { value: next.cost12m.total, unit: 'cents' },

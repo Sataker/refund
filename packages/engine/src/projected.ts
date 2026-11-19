@@ -56,15 +56,17 @@ export function projectedParametersStep(
   return step({
     id: `${prefix}.PROJECTED_PARAMETERS`,
     label: 'Parâmetros ainda não publicados para os meses calculados',
-    formula:
-      'usado o último valor publicado; a economia compara cenários com os mesmos parâmetros (ENGINE-SPEC C.1, item 4)',
+    formula: 'usado o último valor publicado; a economia compara cenários com os mesmos parâmetros',
     inputs: Object.fromEntries(
       found.map((f) => [
         f.key,
         { value: `${f.from} a ${f.to}: usado o de ${f.used}`, unit: 'text' as const },
       ]),
     ),
-    result: { value: `${found.length} parâmetro(s) projetado(s)`, unit: 'text' },
+    result: {
+      value: `${found.length} ${found.length === 1 ? 'parâmetro projetado' : 'parâmetros projetados'}`,
+      unit: 'text',
+    },
     rounding: 'NONE',
     month: first.month,
     parameter: first.lookup,
