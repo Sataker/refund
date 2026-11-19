@@ -1,6 +1,7 @@
 import 'server-only';
 import { activeSubscriptions, consumeUsage, countLiveResource, type Db } from '@refund/db';
 import { getDb } from './db.ts';
+import { readEnv } from './env.ts';
 import { logger } from './log.ts';
 import {
   type Entitlements,
@@ -24,8 +25,11 @@ export interface ActivePlan {
 /** 'active' subscription with ends_at > now(); more than one → the highest tier; none → 'free'. */
 export async function activePlanWith(db: Db, userId: string): Promise<ActivePlan> {
   let best: ActivePlan = { plan: 'free', until: null, origin: 'default' };
+  // Payments review M2: on the production deployment a period paid with a Test Mode charge grants nothing.
+  const production = readEnv().values.VERCEL_ENV === 'production';
   for (const s of await activeSubscriptions(db, userId)) {
     if (!isPlanId(s.planId)) continue;
+    if (production && s.chargeDevMode === true) continue;
     if (PLAN_TIER.indexOf(s.planId) > PLAN_TIER.indexOf(best.plan))
       best = {
         plan: s.planId,

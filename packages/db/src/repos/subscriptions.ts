@@ -9,6 +9,8 @@ export interface ActiveSubscription {
   endsAt: Date;
   /** The period of the charge that granted it ('monthly' | 'yearly' | 'validation'); null without a charge. */
   chargePeriod: string | null;
+  /** The granting charge was a Test Mode one; null without a charge. */
+  chargeDevMode: boolean | null;
 }
 
 export async function activeSubscriptions(db: Db, userId: string): Promise<ActiveSubscription[]> {
@@ -17,6 +19,7 @@ export async function activeSubscriptions(db: Db, userId: string): Promise<Activ
       planId: subscriptions.planId,
       endsAt: subscriptions.endsAt,
       chargePeriod: charges.period,
+      chargeDevMode: charges.devMode,
     })
     .from(subscriptions)
     .leftJoin(charges, eq(charges.id, subscriptions.chargeId))

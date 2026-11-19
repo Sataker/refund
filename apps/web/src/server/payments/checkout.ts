@@ -12,6 +12,7 @@ import {
   settleCharge,
 } from '@refund/db';
 import { z } from 'zod';
+import { safeEqual } from '../crypto.ts';
 import { logger } from '../log.ts';
 import {
   type ChargePeriod,
@@ -37,10 +38,20 @@ export interface PaymentDeps {
   /** null when the `payments` capability is off. */
   gateway: PixGateway | null;
   nowMs?: number;
+  /** HMAC of the client IP (never the IP itself), for the per-IP limits; null when unknown. */
+  ipHash?: string | null;
+  /** VALIDATION_OFFER_CODE; null or absent = the validation offer is off. */
+  validationCode?: string | null;
 }
 
 /** ARCHITECTURE §9.4: startPixCheckout 10/h per session. */
 export const PIX_RATE = { limit: 10, windowMs: 60 * 60_000 } as const;
+/** Payments review M3: charges per IP (many throwaway sessions behind one address). */
+export const PIX_IP_RATE = { limit: 20, windowMs: 60 * 60_000 } as const;
+/** Payments review M1: validation charges per IP per day. */
+export const VALIDATION_IP_RATE = { limit: 2, windowMs: 24 * 60 * 60_000 } as const;
+/** Payments review L9: "Simular pagamento" has its own budget. */
+export const SIMULATE_RATE = { limit: 20, windowMs: 60 * 60_000 } as const;
 /** §2.5: the QR lives 15 minutes. */
 export const PIX_EXPIRES_IN_SECONDS = 900;
 /** §4.7 / §2.5: getCharge asks AbacatePay itself only after 20 s without a webhook. */
@@ -53,7 +64,11 @@ const NOT_FOUND = 'Cobrança não encontrada.';
 export const checkoutInput = z.object({
   planId: z.enum(PIX_PLANS),
   period: z.enum(['monthly', 'yearly', 'validation']),
+  /** Only for the validation offer: the code from the private link. */
+  code: z.string().max(200).optional(),
 });
+
+const OFFER_OFF = 'Esta oferta não está disponível.';
 
 const PLAN_NAME: Record<(typeof PIX_PLANS)[number], string> = {
   personal: 'Pessoal',
@@ -83,11 +98,30 @@ export async function startPixCheckoutWith(
   if (!gateway) return fail('NOT_CONFIGURED', PAYMENTS_OFF);
   const limited = await rateLimit({ key: `pix:u:${userId}`, ...PIX_RATE }, db, deps.nowMs);
   if (!limited.ok) return limited;
+  if (deps.ipHash) {
+    const byIp = await rateLimit({ key: `pix:ip:${deps.ipHash}`, ...PIX_IP_RATE }, db, deps.nowMs);
+    if (!byIp.ok) return byIp;
+  }
   const parsed = checkoutInput.safeParse(input);
   if (!parsed.success) return fail('INVALID_INPUT', 'Plano inválido.');
   const { planId, period } = parsed.data;
   const amountCents = pixAmountCents(planId, period);
   if (amountCents === null) return fail('INVALID_INPUT', 'Plano inválido.');
+  if (period === 'validation') {
+    // Payments review M1: the offer exists only with VALIDATION_OFFER_CODE, and only for whoever has the link.
+    const expected = deps.validationCode ?? null;
+    if (!expected || !safeEqual(parsed.data.code ?? '', expected)) {
+      return fail('FORBIDDEN', OFFER_OFF);
+    }
+    if (deps.ipHash) {
+      const byIp = await rateLimit(
+        { key: `pixval:ip:${deps.ipHash}`, ...VALIDATION_IP_RATE },
+        db,
+        deps.nowMs,
+      );
+      if (!byIp.ok) return byIp;
+    }
+  }
   const draft = {
     userId,
     planId,
@@ -120,7 +154,8 @@ export async function startPixCheckoutWith(
       .replace(/[^\x20-\x7E]/g, ''),
     expiresInSeconds: PIX_EXPIRES_IN_SECONDS,
     externalId: charge.id,
-    metadata: { chargeId: charge.id, userId, planId, period },
+    // Opaque ids only (payments review L8: no user id at the provider).
+    metadata: { chargeId: charge.id, planId, period },
   });
   if (!created.ok) {
     await cancelCharge(db, charge.id);
@@ -243,7 +278,7 @@ export async function simulateDevPaymentWith(
   if (gateway.keyMode !== 'test') {
     return fail('FORBIDDEN', 'A simulação de pagamento só existe no modo de teste.');
   }
-  const limited = await rateLimit({ key: `pix:u:${userId}`, ...PIX_RATE }, db, deps.nowMs);
+  const limited = await rateLimit({ key: `pixsim:u:${userId}`, ...SIMULATE_RATE }, db, deps.nowMs);
   if (!limited.ok) return limited;
   const parsed = chargeIdInput.safeParse(input);
   if (!parsed.success) return fail('INVALID_INPUT', NOT_FOUND);

@@ -35,6 +35,8 @@ const fields = {
   ABACATEPAY_WEBHOOK_SECRET: text,
   /** Only honoured with a Test Mode key (`abc_dev_…`): the local fake AbacatePay of the e2e tests. */
   ABACATEPAY_API_BASE_URL: url,
+  /** The hidden R$ 1,00 offer's code (`/app/plano?oferta=validacao&codigo=…`). Absent: the offer is off. */
+  VALIDATION_OFFER_CODE: z.string().min(12, 'precisa de pelo menos 12 caracteres'),
   FIRECRAWL_WEBHOOK_SECRET: text,
   WORKOS_CLIENT_ID: text,
   WORKOS_API_KEY: text,

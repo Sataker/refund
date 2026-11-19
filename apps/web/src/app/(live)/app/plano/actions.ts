@@ -1,6 +1,7 @@
 'use server';
 
 import { runLive } from '@/server/action.ts';
+import { hmac } from '@/server/crypto.ts';
 import {
   type ChargeView,
   type CheckoutView,
@@ -9,6 +10,7 @@ import {
   startPixCheckoutWith,
 } from '@/server/payments/checkout.ts';
 import { paymentsConfig } from '@/server/payments/gateway.ts';
+import { clientIp } from '@/server/rate-limit.ts';
 import type { ActionResult } from '@/server/result.ts';
 
 // ARCHITECTURE §4.7 "plans and Pix (live, P1)": getSession → requireCapability (database in runLive, payments = the
@@ -17,14 +19,19 @@ import type { ActionResult } from '@/server/result.ts';
 export async function startPixCheckout(input: {
   planId: 'personal' | 'mei' | 'business';
   period: 'monthly' | 'yearly' | 'validation';
+  code?: string;
 }): Promise<ActionResult<CheckoutView>> {
-  return runLive('startPixCheckout', (ctx) =>
-    startPixCheckoutWith(input, {
+  return runLive('startPixCheckout', (ctx) => {
+    const config = paymentsConfig();
+    return startPixCheckoutWith(input, {
       db: ctx.db,
       userId: ctx.userId,
-      gateway: paymentsConfig()?.gateway ?? null,
-    }),
-  );
+      gateway: config?.gateway ?? null,
+      validationCode: config?.validationCode ?? null,
+      // The IP only as an HMAC (ARCHITECTURE §9.4).
+      ipHash: hmac(clientIp(ctx.headers), ctx.secrets.pepper),
+    });
+  });
 }
 
 export async function getCharge(input: { chargeId: string }): Promise<ActionResult<ChargeView>> {

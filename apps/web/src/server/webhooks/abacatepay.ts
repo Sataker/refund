@@ -36,10 +36,11 @@ export function abacatePayVerifier(config: AbacatePayWebhookConfig): WebhookVeri
       if (typeof charge.status === 'string') out.status = charge.status;
       return out;
     },
-    async verify({ body, headers, url }) {
+    async verify({ body, headers }) {
       if (!config.secret || !config.keyMode)
         return { ok: false, error: { code: 'NOT_CONFIGURED' } };
-      const given = headers.get(SECRET_HEADER) ?? url.searchParams.get('webhookSecret') ?? '';
+      // Header only (payments review L6): a secret in the query string ends up in access logs.
+      const given = headers.get(SECRET_HEADER) ?? '';
       if (!safeEqual(given, config.secret)) {
         return { ok: false, error: { code: 'INVALID_SIGNATURE' } };
       }
@@ -58,7 +59,7 @@ export function abacatePayVerifier(config: AbacatePayWebhookConfig): WebhookVeri
       }
       // A Test Mode event is never trusted by a production integration (§4.9): 401, no retry.
       if (p.devMode === true && config.keyMode !== 'test') {
-        logger.warn('payments.dev_event_rejected', { event: p.event });
+        logger.warn('payments.dev_event_rejected', { type: p.event });
         return { ok: false, error: { code: 'INVALID_SIGNATURE' } };
       }
       return {
@@ -131,13 +132,13 @@ export async function processAbacatePayEvent(
       charge = byMeta;
   }
   if (!charge) {
-    logger.warn('payments.unknown_charge', { event: ev.type });
+    logger.warn('payments.unknown_charge', { type: ev.type });
     return 'ignored';
   }
   // Same environment and exactly the amount we asked for; anything else is never a paid plan.
   if (t.devMode !== charge.devMode || t.amount !== charge.amountCents) {
     logger.error('payments.charge_mismatch', {
-      event: ev.type,
+      type: ev.type,
       devModeOk: t.devMode === charge.devMode,
       amountOk: t.amount === charge.amountCents,
     });
@@ -145,13 +146,20 @@ export async function processAbacatePayEvent(
   }
   if (ev.type === 'transparent.completed') {
     if (t.status !== 'PAID') return 'ignored';
-    return (await grantPaidCharge(tx, charge, new Date(nowMs))) === 'granted'
-      ? 'processed'
-      : 'ignored';
+    if ((await grantPaidCharge(tx, charge, new Date(nowMs))) === 'granted') return 'processed';
+    // Money received for a charge we had closed (expired, cancelled, refunded): nothing is granted automatically.
+    // logger.error also lands in system_events; the runbook (EXECUTION §9, E17) says how to settle it by hand.
+    if (charge.status !== 'pending' && charge.status !== 'paid') {
+      logger.error('payments.paid_not_granted', {
+        chargeStatus: charge.status,
+        period: charge.period,
+      });
+    }
+    return 'ignored';
   }
   if (!isClawback(ev.type, t.status)) return 'ignored';
   if (!(await refundCharge(tx, charge.id))) return 'ignored';
-  logger.info('payments.charge_refunded', { period: charge.period, event: ev.type });
+  logger.info('payments.charge_refunded', { period: charge.period, type: ev.type });
   return 'processed';
 }
 

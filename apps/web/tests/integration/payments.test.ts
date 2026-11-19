@@ -1,6 +1,7 @@
 import { createMemoryDb, type DbHandle, schema } from '@refund/db';
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { POST } from '@/app/api/webhooks/abacatepay/route.ts';
 import { REPLAY_COMPANIES } from '@/server/company/replay-companies.ts';
 import { migrationsFolder } from '@/server/db.ts';
 import {
@@ -21,6 +22,7 @@ import {
   simulateDevPaymentWith,
   startPixCheckoutWith,
 } from '@/server/payments/checkout.ts';
+import { paymentsConfig } from '@/server/payments/gateway.ts';
 import { liveAnalysesPerMonth } from '@/server/plans/catalog.ts';
 import { insertConsent, linkCompany } from '@/server/track/state.ts';
 import { receiveAbacatePayWebhook } from '@/server/webhooks/abacatepay.ts';
@@ -32,6 +34,7 @@ const SECRET = 'whsec-integration-test-secret-0123456789';
 const URL_BASE = 'http://localhost/api/webhooks/abacatepay';
 
 let fakeSeq = 0;
+const CODE = 'validacao-integration-code';
 
 /** In-memory AbacatePay: what simulate-payment would do, plus the delivery it would send to our webhook. */
 class FakeAbacatePay implements PixGateway {
@@ -228,7 +231,10 @@ describe('Pix checkout → simulate-payment → webhook → plan (Test Mode, fak
       401,
     );
     expect(await subscriptionsOf(userId)).toHaveLength(0);
-    expect((await webhook(deliver(body, { viaQuery: true }))).status).toBe(200);
+    // Header only (payments review L6): the right secret in the query string is refused.
+    expect((await webhook(deliver(body, { viaQuery: true }))).status).toBe(401);
+    expect(await subscriptionsOf(userId)).toHaveLength(0);
+    expect((await webhook(deliver(body))).status).toBe(200);
     expect((await activePlanWith(h.db, userId)).plan).toBe('personal');
   });
 
@@ -355,8 +361,11 @@ describe('validation offer (R$ 1,00 = Empresa for 7 days, at most 5)', () => {
     await h.db.delete(schema.charges).where(eq(schema.charges.period, 'validation'));
     const gateway = new FakeAbacatePay('test');
     const first = await newUserId();
-    const deps = { db: h.db, userId: first, gateway };
-    const s = await startPixCheckoutWith({ planId: 'business', period: 'validation' }, deps);
+    const deps = { db: h.db, userId: first, gateway, validationCode: CODE };
+    const s = await startPixCheckoutWith(
+      { planId: 'business', period: 'validation', code: CODE },
+      deps,
+    );
     if (!s.ok) throw new Error(s.error.code);
     expect(s.value.amountCents).toBe(100);
     await simulateDevPaymentWith({ chargeId: s.value.chargeId }, deps);
@@ -368,19 +377,19 @@ describe('validation offer (R$ 1,00 = Empresa for 7 days, at most 5)', () => {
     expect(days).toBeLessThanOrEqual(7);
 
     expect(
-      await startPixCheckoutWith({ planId: 'personal', period: 'validation' }, deps),
+      await startPixCheckoutWith({ planId: 'personal', period: 'validation', code: CODE }, deps),
     ).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
     for (let i = 0; i < 4; i++) {
       const u = await newUserId();
       const r = await startPixCheckoutWith(
-        { planId: 'business', period: 'validation' },
-        { db: h.db, userId: u, gateway },
+        { planId: 'business', period: 'validation', code: CODE },
+        { db: h.db, userId: u, gateway, validationCode: CODE },
       );
       expect(r.ok).toBe(true);
     }
     const sixth = await startPixCheckoutWith(
-      { planId: 'business', period: 'validation' },
-      { db: h.db, userId: await newUserId(), gateway },
+      { planId: 'business', period: 'validation', code: CODE },
+      { db: h.db, userId: await newUserId(), gateway, validationCode: CODE },
     );
     expect(sixth).toMatchObject({ ok: false, error: { code: 'SOLD_OUT' } });
   });
@@ -551,8 +560,8 @@ describe('review fixes (code review E17)', () => {
     await h.db.delete(schema.charges).where(eq(schema.charges.period, 'validation'));
     const gateway = new FakeAbacatePay('test');
     const userId = await newUserId();
-    const deps = { db: h.db, userId, gateway };
-    const input = { planId: 'business', period: 'validation' } as const;
+    const deps = { db: h.db, userId, gateway, validationCode: CODE };
+    const input = { planId: 'business', period: 'validation', code: CODE } as const;
     expect((await startPixCheckoutWith(input, deps)).ok).toBe(true);
     expect(await startPixCheckoutWith(input, deps)).toMatchObject({
       ok: false,
@@ -565,7 +574,9 @@ describe('review fixes (code review E17)', () => {
     expect((await startPixCheckoutWith(input, deps)).ok).toBe(true);
     const buyers = await Promise.all(Array.from({ length: 5 }, () => newUserId()));
     const results = await Promise.all(
-      buyers.map((u) => startPixCheckoutWith(input, { db: h.db, userId: u, gateway })),
+      buyers.map((u) =>
+        startPixCheckoutWith(input, { db: h.db, userId: u, gateway, validationCode: CODE }),
+      ),
     );
     expect(results.filter((r) => r.ok)).toHaveLength(4);
   });
@@ -592,5 +603,152 @@ describe('review fixes (code review E17)', () => {
     expect((await requireLiveRoomWith(h.db, userId, 'connections_pj')).ok).toBe(false);
     await linkCompany(h.db, userId, other);
     expect((await requireLiveRoomWith(h.db, userId, 'connections_pj')).ok).toBe(true);
+  });
+});
+
+describe('payments review (M1–M4, L5, L8, L9)', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('M1: the validation offer is off without VALIDATION_OFFER_CODE and refuses a wrong code', async () => {
+    const gateway = new FakeAbacatePay('test');
+    const userId = await newUserId();
+    const input = { planId: 'business', period: 'validation' } as const;
+    expect(await startPixCheckoutWith(input, { db: h.db, userId, gateway })).toMatchObject({
+      ok: false,
+      error: { code: 'FORBIDDEN' },
+    });
+    expect(
+      await startPixCheckoutWith(
+        { ...input, code: 'wrong-code-0000000' },
+        { db: h.db, userId, gateway, validationCode: CODE },
+      ),
+    ).toMatchObject({ ok: false, error: { code: 'FORBIDDEN' } });
+    expect(
+      await startPixCheckoutWith({ ...input, code: CODE }, { db: h.db, userId, gateway }),
+    ).toMatchObject({ ok: false, error: { code: 'FORBIDDEN' } });
+  });
+
+  it('M1: at most 2 validation charges per IP per day, whatever the session', async () => {
+    await h.db.delete(schema.charges).where(eq(schema.charges.period, 'validation'));
+    const gateway = new FakeAbacatePay('test');
+    const ipHash = `ip-validation-${Date.now()}`;
+    const input = { planId: 'business', period: 'validation', code: CODE } as const;
+    const results = [];
+    for (let i = 0; i < 3; i++) {
+      results.push(
+        await startPixCheckoutWith(input, {
+          db: h.db,
+          userId: await newUserId(),
+          gateway,
+          validationCode: CODE,
+          ipHash,
+        }),
+      );
+    }
+    expect(results.map((r) => r.ok)).toEqual([true, true, false]);
+    expect(results[2]).toMatchObject({ ok: false, error: { code: 'RATE_LIMITED' } });
+  });
+
+  it('M3: the 21st charge from one IP in the hour is refused, across sessions', async () => {
+    const gateway = new FakeAbacatePay('test');
+    const ipHash = `ip-charges-${Date.now()}`;
+    let last: Awaited<ReturnType<typeof startPixCheckoutWith>> | null = null;
+    for (let i = 0; i < 21; i++) {
+      last = await startPixCheckoutWith(
+        { planId: 'business', period: 'monthly' },
+        { db: h.db, userId: await newUserId(), gateway, ipHash },
+      );
+      if (i < 20) expect(last.ok).toBe(true);
+    }
+    expect(last).toMatchObject({ ok: false, error: { code: 'RATE_LIMITED' } });
+  });
+
+  it('L9: "Simular pagamento" does not eat the checkout budget', async () => {
+    const gateway = new FakeAbacatePay('test');
+    const userId = await newUserId();
+    const deps = { db: h.db, userId, gateway };
+    const ids: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      const s = await startPixCheckoutWith({ planId: 'business', period: 'monthly' }, deps);
+      if (!s.ok) throw new Error(s.error.code);
+      ids.push(s.value.chargeId);
+    }
+    for (const chargeId of ids)
+      expect((await simulateDevPaymentWith({ chargeId }, deps)).ok).toBe(true);
+  });
+
+  it('L8: no user id goes to AbacatePay in the metadata', async () => {
+    const userId = await newUserId();
+    let sent: Record<string, string> = {};
+    const gateway = new FakeAbacatePay('test');
+    const create = gateway.createPix.bind(gateway);
+    gateway.createPix = async (input) => {
+      sent = input.metadata;
+      return create(input);
+    };
+    await startPixCheckoutWith(
+      { planId: 'business', period: 'monthly' },
+      { db: h.db, userId, gateway },
+    );
+    expect(Object.keys(sent).sort()).toEqual(['chargeId', 'period', 'planId']);
+    expect(JSON.stringify(sent)).not.toContain(userId);
+  });
+
+  it('M2: a Test Mode key on the production deployment turns payments off', () => {
+    vi.stubEnv('ABACATEPAY_API_KEY', 'abc_dev_unit');
+    vi.stubEnv('ABACATEPAY_WEBHOOK_SECRET', 'whsec-unit-0123456789');
+    vi.stubEnv('VERCEL_ENV', 'preview');
+    expect(paymentsConfig()?.keyMode).toBe('test');
+    vi.stubEnv('VERCEL_ENV', 'production');
+    expect(paymentsConfig()).toBeNull();
+    vi.stubEnv('ABACATEPAY_API_KEY', 'abc_prod_unit');
+    expect(paymentsConfig()?.keyMode).toBe('production');
+  });
+
+  it('M2: on the production deployment a period from a Test Mode charge grants nothing', async () => {
+    const userId = await newUserId();
+    const gateway = new FakeAbacatePay('test');
+    const deps = { db: h.db, userId, gateway };
+    const s = await startPixCheckoutWith({ planId: 'business', period: 'yearly' }, deps);
+    if (!s.ok) throw new Error(s.error.code);
+    await simulateDevPaymentWith({ chargeId: s.value.chargeId }, deps);
+    await webhook(deliver(gateway.deliveries.at(-1) as string));
+    expect((await activePlanWith(h.db, userId)).plan).toBe('business');
+    vi.stubEnv('VERCEL_ENV', 'production');
+    expect((await activePlanWith(h.db, userId)).plan).toBe('free');
+  });
+
+  it('M4: money for a closed charge is not granted and is logged as an error', async () => {
+    const userId = await newUserId();
+    const gateway = new FakeAbacatePay('test');
+    const s = await startPixCheckoutWith(
+      { planId: 'business', period: 'monthly' },
+      { db: h.db, userId, gateway },
+    );
+    if (!s.ok) throw new Error(s.error.code);
+    await h.db
+      .update(schema.charges)
+      .set({ status: 'expired' })
+      .where(eq(schema.charges.id, s.value.chargeId));
+    const providerId = [...gateway.charges.keys()].at(-1) as string;
+    const lines: string[] = [];
+    vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => {
+      lines.push(String(chunk));
+      return true;
+    });
+    const res = await webhook(deliver(completedEvent('log_closed', providerId, 6990, true)));
+    expect(res.status).toBe(200);
+    expect((await activePlanWith(h.db, userId)).plan).toBe('free');
+    const logged = lines
+      .map((l) => JSON.parse(l))
+      .find((l) => l.event === 'payments.paid_not_granted');
+    expect(logged).toMatchObject({ level: 'error', chargeStatus: 'expired' });
+  });
+
+  it('L5: without the payments configuration the webhook answers 503 (AbacatePay retries)', async () => {
+    vi.stubEnv('ABACATEPAY_API_KEY', '');
+    vi.stubEnv('ABACATEPAY_WEBHOOK_SECRET', '');
+    const res = await POST(deliver(completedEvent('log_off', 'pix_char_x', 100, true)));
+    expect(res.status).toBe(503);
   });
 });

@@ -21,6 +21,7 @@ export interface LiveActions {
   start: (input: {
     planId: SellablePlan;
     period: Period | 'validation';
+    code?: string;
   }) => Promise<Result<CheckoutCharge>>;
   get: (input: { chargeId: string }) => Promise<Result<{ status: ChargeStatus }>>;
   simulate: ((input: { chargeId: string }) => Promise<Result<void>>) | null;
@@ -28,18 +29,35 @@ export interface LiveActions {
 
 export function LivePlans({
   actions,
+  validationCode,
   ...props
-}: Omit<PlansScreenProps, 'port' | 'simulated'> & { actions: LiveActions | null }) {
+}: Omit<PlansScreenProps, 'port' | 'simulated' | 'validationOffer'> & {
+  actions: LiveActions | null;
+  /** The code from the private link; present = the validation offer is shown. */
+  validationCode: string | null;
+}) {
   const router = useRouter();
   const port = useMemo<CheckoutPort | null>(() => {
     if (!actions) return null;
     const { simulate } = actions;
     return {
-      start: (planId, period) => actions.start({ planId, period }),
+      start: (planId, period) =>
+        actions.start({
+          planId,
+          period,
+          ...(period === 'validation' && validationCode ? { code: validationCode } : {}),
+        }),
       poll: (chargeId) => actions.get({ chargeId }),
       ...(simulate ? { simulate: (chargeId: string) => simulate({ chargeId }) } : {}),
       onPaid: () => router.refresh(),
     };
-  }, [actions, router]);
-  return <PlansScreen {...props} port={port} simulated={false} />;
+  }, [actions, router, validationCode]);
+  return (
+    <PlansScreen
+      {...props}
+      port={port}
+      simulated={false}
+      validationOffer={validationCode !== null}
+    />
+  );
 }
