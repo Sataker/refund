@@ -13,6 +13,26 @@ export interface DemoPersonaState {
   trackDone?: boolean;
   /** Milliseconds from opening the analysis to the first R$ on screen (IDENTITY-AND-UI §6.1 item 1). */
   firstMoneyMs?: number;
+  /** Screen 7: the visitor's choice per card id (absent = the persona's own answer). */
+  choices?: Record<string, string>;
+  /** Screen 7: cards the visitor already went through (the pending counter). */
+  reviewed?: string[];
+  /** Screen 6: findings marked "para o contador". */
+  marked?: string[];
+  /** Screen 8: the accountant's approval in another tab (no e-mail on /demo). */
+  report?: DemoReportState;
+}
+
+export interface DemoReportState {
+  /** "Mandar para meu contador" pressed (ms epoch, display only). */
+  sentAt?: number;
+  /** The accountant tab opened the report. */
+  openedAt?: number;
+  approvedAt?: number;
+  /** Per finding: approved or adjustment requested. */
+  findings?: Record<string, 'approved' | 'adjust'>;
+  /** The accountant's comment on an adjustment. */
+  comment?: string;
 }
 
 export interface DemoSessionState {
