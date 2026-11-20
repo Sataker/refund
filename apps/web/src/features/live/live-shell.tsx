@@ -72,7 +72,7 @@ export function LiveShell({
       </aside>
       <div className="flex min-w-0 flex-col">
         <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur print:hidden">
-          <div className="mx-auto flex max-w-[1080px] items-center justify-between gap-3 px-4 py-2.5 lg:px-8">
+          <div className="mx-auto flex max-w-[1080px] flex-wrap items-center justify-between gap-3 px-4 py-2.5 lg:px-8">
             <Link
               href="/"
               aria-label="Refund, página inicial"
@@ -83,7 +83,7 @@ export function LiveShell({
             <p className="type-small hidden truncate text-muted-foreground lg:block">
               {companyName}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
               <SandboxSeal live compact label={liveShortLabel(origin)} className="lg:hidden" />
               <Link
                 href={'/app/plano' as Route}

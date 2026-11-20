@@ -257,8 +257,9 @@
 @utility type-money-lg {
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 40px;
-  line-height: 40px;
+  /* 40px from 364px up; below that (a phone at 200% zoom) it shrinks with the viewport instead of scrolling sideways. */
+  font-size: min(40px, 11vw);
+  line-height: 1;
   letter-spacing: -0.035em;
   font-variant-numeric: tabular-nums;
   @media (width >= 64rem) {

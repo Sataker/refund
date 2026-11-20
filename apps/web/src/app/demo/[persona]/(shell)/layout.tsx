@@ -72,7 +72,7 @@ export default async function DemoShell({
 
       <div className="flex min-w-0 flex-col">
         <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur print:hidden">
-          <div className="mx-auto flex max-w-[1080px] items-center justify-between gap-3 px-4 py-2.5 lg:px-8">
+          <div className="mx-auto flex max-w-[1080px] flex-wrap items-center justify-between gap-3 px-4 py-2.5 lg:px-8">
             <Link
               href="/"
               aria-label="Refund, página inicial"
@@ -83,7 +83,7 @@ export default async function DemoShell({
             <p className="type-small hidden truncate text-muted-foreground lg:block">
               {company} + {persona.data.holderDisplayName}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
               <SandboxSeal compact className="lg:hidden" />
               {/* Screen 9 (P1, E16): outside the 5-item nav (D30), one icon in the header. */}
               <Link
