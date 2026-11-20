@@ -28,7 +28,11 @@ export function statusOf(r: DemoReportState | undefined): ReportStatus {
 
 function time(ms: number | undefined): string {
   if (ms === undefined) return '';
-  return new Date(ms).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return new Date(ms).toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Sao_Paulo',
+  });
 }
 
 export function useReport(persona: string): DemoReportState | undefined {

@@ -1,6 +1,7 @@
 import type { PublicCompany } from '@refund/sources';
 import { formatCnpj } from '@refund/sources';
 import { Building2 } from 'lucide-react';
+import { formatBrtDate } from '@/lib/date';
 
 // Screen 1 card ("É você?"): public company data only (ARCHITECTURE §6.2 whitelist). Never the QSA
 // (rule 6.9); an EI/MEI legal name arrives already masked from the whitelist.
@@ -22,11 +23,6 @@ function regimeLabel(c: PublicCompany): string {
 
 function yearOf(date: string | null): string | null {
   return date ? date.slice(0, 4) : null;
-}
-
-function brDate(iso: string): string {
-  const [y, m, d] = iso.slice(0, 10).split('-');
-  return `${d}/${m}/${y}`;
 }
 
 export function CompanyCard({ company }: { company: PublicCompany }) {
@@ -82,7 +78,7 @@ export function CompanyCard({ company }: { company: PublicCompany }) {
       <p className="type-caption border-t border-border px-5 py-3 text-muted-foreground">
         {synthetic
           ? 'Empresa fictícia de exemplo. Nenhum dado real.'
-          : `Dados públicos da Receita, consultados em ${brDate(company.fetchedAt)}. Sem dados de sócios.`}
+          : `Dados públicos da Receita, consultados em ${formatBrtDate(company.fetchedAt)}. Sem dados de sócios.`}
       </p>
     </section>
   );
