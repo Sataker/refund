@@ -62,7 +62,7 @@ const secrets: Secrets = {
 const NOW = Date.parse('2026-11-12T15:00:00Z');
 const HERO = 'RFDEV001000158';
 const PRESUMIDO = 'RFPRES01000137';
-const CONSTRUCTION = 'RFCOSM01000136';
+const AMBIGUOUS_ACTIVITY = 'RFCOSM01000136';
 const HERO_ANSWERS: ProfileAnswers = {
   monthlyRevenueBracket: 'from_30k_to_60k',
   hasEmployees: 'yes',
@@ -424,7 +424,7 @@ describe('first-access track state (D19; ARCHITECTURE §13)', () => {
     const userId = await newUser();
     const looked = await lookupCnpjWith(
       userId,
-      { cnpj: CONSTRUCTION, context: 'live' },
+      { cnpj: AMBIGUOUS_ACTIVITY, context: 'live' },
       companyDeps(),
     );
     expect(looked.ok).toBe(true);
@@ -436,7 +436,11 @@ describe('first-access track state (D19; ARCHITECTURE §13)', () => {
     expect(answered).toEqual({ ok: true, value: { next: '/app/comecar/estimativa' } });
     const estimate = await estimateByRevenueWith(
       userId,
-      { cnpj: CONSTRUCTION, answers: { ...HERO_ANSWERS, hasEmployees: 'no' }, context: 'live' },
+      {
+        cnpj: AMBIGUOUS_ACTIVITY,
+        answers: { ...HERO_ANSWERS, hasEmployees: 'no' },
+        context: 'live',
+      },
       { db: h.db, nowMs: NOW },
     );
     expect(estimate).toMatchObject({ ok: true, value: { reason: 'CNAE_OUT_OF_SCOPE' } });
@@ -445,7 +449,7 @@ describe('first-access track state (D19; ARCHITECTURE §13)', () => {
     if (seen.ok) return;
     expect(seen.error.code).toBe('FORBIDDEN');
     expect(seen.error.message).toBe(
-      'Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples. A sua (4120-4/00 Construção de edifícios) é do Anexo IV.',
+      'O anexo da sua atividade (4635-4/02) depende do que exatamente a empresa faz; por enquanto não calculamos esse caso.',
     );
     const { progress } = await loadTrack(h.db, userId);
     expect(progress.company).toMatchObject({ outOfScope: false, activityOutOfScope: true });

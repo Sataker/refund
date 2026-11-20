@@ -17,7 +17,9 @@ import { param } from '../../src/parameters/index.ts';
 import type { SimplesAnexoTable } from '../../src/parameters/types.ts';
 import { cppOutsideDas } from '../../src/primitives/inss.ts';
 import { dasByMarket, dasForPa, effectiveRate } from '../../src/primitives/simples.ts';
+import { estimateByProfile } from '../../src/profile.ts';
 import { createCtx } from '../../src/projection.ts';
+import { r05CoversAnexo } from '../../src/rules/r05.ts';
 import { appliesR06 } from '../../src/rules/r06.ts';
 import { regimeStart, simulatePa } from '../../src/scenario.ts';
 import { addMonths } from '../../src/time.ts';
@@ -557,6 +559,33 @@ describe('D52 — R01 on Anexo II and IV companies (no Fator R)', () => {
     expect(r01.trace.find((s) => s.id === 'R01.P_STAR')?.result.value).toBe(brl('1.621,00'));
     expect(r01.annualRegimeValue).toBe(brl('12.569,88'));
     expect(r01.marginalValue12m).toBe(brl('12.569,88'));
+    // The "receive" line names and cites the company's 20% CPP (Lei 8.212, art. 22, III; LC 123, art. 18, § 5º-C).
+    expect(r01.howToReceive).toHaveLength(1);
+    // T12-11: no digit in the catalog text; the 20% is in the cited article (and in C.3.3).
+    expect(r01.howToReceive[0]?.summary).toContain(
+      'contribuição da empresa ao INSS sobre o pró-labore (CPP), que no Anexo IV é paga fora do DAS',
+    );
+    expect(r01.howToReceive[0]?.refIds).toEqual(
+      expect.arrayContaining(['lei8212-1991/art22/iii', 'lc123-2006/art18/p5-c']),
+    );
+    // The optimizer curve is an absolute cost: it says it leaves out the CPP on the CLT payroll.
+    expect(
+      r01.assumptionsUsed.some((a) => a.includes('sem a CPP sobre a folha CLT (20% + RAT×FAP)')),
+    ).toBe(true);
+  });
+
+  it('outside Anexo IV the R01 receive line stays the INSS + IR one (no CPP)', () => {
+    const r = run(
+      company('II', '1091-1/01', {
+        domestic: constant(brl('30.000,00')),
+        proLabore: constant(brl('5.000,00')),
+      }),
+    );
+    const r01 = finding(r, 'R01') as Finding;
+    expect(r01.howToReceive.map((h) => h.summary)).toEqual([
+      'Menos INSS e imposto de renda sobre o pró-labore, a partir do mês indicado.',
+    ]);
+    expect(r01.assumptionsUsed.some((a) => a.includes('folha CLT (20%'))).toBe(false);
   });
 });
 
@@ -598,16 +627,43 @@ describe('D52 — R05 with Anexo II goods and Anexo IV services', () => {
     expect(all.subtotal).toBe(brl('3.845,02'));
   });
 
-  it('Anexo II company exporting 50.000/month, not segregated → R05 24.684,96 per year (IPI included)', () => {
-    // Per PA: 3.845,02 − 1.787,94 = 2.057,08 (Cofins 442,56 + PIS 95,74 + IPI 288,38 + ICMS 1.230,40; in 2027 CBS
-    // 532,53 + IBS 5,77 + IPI + ICMS, the same 2.057,08). × 12 = 24.684,96 in the horizon and at steady state.
+  it('Anexo II company exporting goods → no R05 and no R05-REC (goods export unspecified, EXECUTION §9, D52)', () => {
+    // The removable shares would be 3.845,02 − 1.787,94 = 2.057,08 per PA (Cofins 442,56 + PIS 95,74 + IPI 288,38 +
+    // ICMS 1.230,40; in 2027 CBS 532,53 + IBS 5,77 + IPI + ICMS, the same), 24.684,96 per year: the reference above.
+    // But D.5's qualification, action plan and citations are for services (Res. CGSN 140, art. 25, §§ 4º/4º-A; LC 116,
+    // art. 2º; LC 214, art. 80); goods (LC 214, art. 81; the PGDAS-D goods-export activity) are not specified, so R05
+    // stays off for Anexo II (CLAUDE.md, rule 12).
+    expect(r05CoversAnexo('II')).toBe(false);
+    for (const anexo of ['I', 'III', 'IV', 'V'] as const) expect(r05CoversAnexo(anexo)).toBe(true);
     const r = run(
       company('II', '1091-1/01', { export: constant(brl('50.000,00')), exportResultAbroad: true }),
     );
-    const r05 = finding(r, 'R05') as Finding;
-    expect(r05).toBeDefined();
-    expect(r05.marginalValue12m).toBe(brl('24.684,96'));
-    expect(r05.annualRegimeValue).toBe(brl('24.684,96'));
+    expect(finding(r, 'R05')).toBeUndefined();
+    expect(finding(r, 'R05-REC')).toBeUndefined();
+  });
+
+  it('profile estimate of an Anexo II CNAE abroad → NO_RULE_WITH_VALUE, R05 not listed', () => {
+    const r = estimateByProfile(
+      {
+        cnpj: 'RFTEST00000100',
+        primaryCnae: '1091-1/01',
+        isActive: true,
+        optedIntoSimples: true,
+        optedIntoMei: false,
+        size: 'ME',
+        activityStartDate: '2019-03-01',
+        uf: 'SP',
+      },
+      {
+        monthlyRevenueBracket: 'from_30k_to_60k',
+        hasEmployees: 'dont_know',
+        receivesFromAbroad: 'half_or_more',
+      },
+      { analysisDate: '2026-11-12' },
+    );
+    if (!r.ok || r.value.type !== 'no_range') throw new Error('expected no_range');
+    expect(r.value.reason).toBe('NO_RULE_WITH_VALUE');
+    expect(r.value.rules.map((x) => x.ruleId)).toEqual(['R02']);
   });
 
   it('Anexo IV export of services (2026 and 2027): Cofins/PIS (CBS/IBS) and ISS removed; 708,75 kept', () => {
@@ -640,5 +696,23 @@ describe('D52 — R06 never applies to a manufacturer (Anexo II)', () => {
     const f = company('II', '1091-1/01', { domestic: constant(brl('50.000,00')) });
     f.companyDetails.value.resellsMonofasico = true;
     expect(appliesR06(createCtx(f, resolveAssumptions(f)))).toBe(false);
+  });
+});
+
+describe('D52 — R03 for an Anexo IV MEI', () => {
+  it('the excess cost uses the Anexo IV 1st bracket and says the CPP on the pró-labore is outside it', () => {
+    // RBA_proj = 10 × 8.100 + average(aug–oct) 8.100 × 2 = 97.200 → excess 16.200 × 4,50% = 729,00.
+    const f = syntheticFacts({
+      regime: 'MEI',
+      domestic: constant(brl('8.100,00')),
+      subjectToFatorR: false,
+    });
+    f.companyDetails.value.baseAnexo = 'IV';
+    const r03 = finding(run(f), 'R03') as Finding;
+    expect(r03.marginalValue12m).toBe(brl('729,00'));
+    expect(r03.assumptionsUsed).toContain(
+      'No Anexo IV, a CPP sobre o pró-labore fica fora deste custo.',
+    );
+    expect(r03.assumptionsUsed.some((a) => a.startsWith('Custo não calculado'))).toBe(false);
   });
 });

@@ -237,15 +237,14 @@ describe('D50: cnae-anexo.json covers every CNAE 2.3 subclass', () => {
     expect(byCnae.get('4729-6/01')?.resellsMonofasico).toBe(false);
   });
 
-  it('scope (C.11.5 item 4): verified, Anexo I, III or V, plain table; everything else is out', () => {
+  it('scope (C.11.5 item 4): verified, any anexo (II and IV since D52), plain table; everything else is out', () => {
     for (const r of rows) {
       const inScope =
-        r.status === 'verified' &&
-        (r.baseAnexo === 'I' || r.baseAnexo === 'III' || r.baseAnexo === 'V') &&
-        r.anexoAdjustment === undefined;
+        r.status === 'verified' && r.baseAnexo !== null && r.anexoAdjustment === undefined;
       expect(cnaeInScope(r.cnae), r.cnae).toBe(inScope);
     }
-    expect(CNAE_IN_SCOPE.length).toBe(316);
+    // 316 until D52 (I 183 + III 89 + V 44) + II 284 + IV 34.
+    expect(CNAE_IN_SCOPE.length).toBe(634);
     expect(cnaeInScope('8630-5/04')).toBe(true); // D51
     expect(cnaeInScope('7711-0/00')).toBe(false); // § 4º, V: Anexo III without the ISS share
     expect(cnaeInScope('6110-8/01')).toBe(false); // § 5º-E: Anexo III without ISS, with ICMS

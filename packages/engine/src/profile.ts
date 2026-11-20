@@ -11,7 +11,7 @@ import { formatBrl } from './rules/common.ts';
 import { R01_REFS } from './rules/r01.ts';
 import { R02_REFS } from './rules/r02.ts';
 import { R03_REFS } from './rules/r03.ts';
-import { R05_REFS } from './rules/r05.ts';
+import { R05_REFS, r05CoversAnexo } from './rules/r05.ts';
 import { R06_REFS } from './rules/r06.ts';
 import { REFS } from './rules/refs.ts';
 import {
@@ -72,8 +72,8 @@ export interface CnaeAnexoRow {
   refs?: readonly string[];
 }
 
-/** A row the estimate can compute: verified, Anexo I, III or V, plain table. */
-export type CnaeAnexoRowInScope = CnaeAnexoRow & { baseAnexo: 'I' | 'III' | 'V' };
+/** A row the estimate can compute: verified, any anexo (II and IV since D52), plain table. */
+export type CnaeAnexoRowInScope = CnaeAnexoRow & { baseAnexo: Anexo };
 
 export const CNAE_ANEXO: readonly CnaeAnexoRow[] = cnaeTable as CnaeAnexoRow[];
 
@@ -82,13 +82,14 @@ const CNAE_INDEX = new Map(CNAE_ANEXO.map((r) => [r.cnae, r]));
 export const cnaeAnexoRow = (cnae: string): CnaeAnexoRow | undefined => CNAE_INDEX.get(cnae);
 
 /**
- * C.11.5, item 4: only a verified row outside Anexos II and IV gets a number (the same test the estimate runs). A
- * verified anexo with an adjusted DAS (ISS removed, or ISS swapped for ICMS) is an unsupported anexo as well.
+ * C.11.5, item 4: only a verified row gets a number (the same test the estimate runs). Anexos II and IV are in scope
+ * since D52 (their tables are in A.3). A verified anexo with an adjusted DAS (ISS removed, or ISS swapped for ICMS) is
+ * still out: the engine computes neither.
  */
 const rowInScope = (row: CnaeAnexoRow | undefined): row is CnaeAnexoRowInScope =>
   row !== undefined &&
   row.status === 'verified' &&
-  (row.baseAnexo === 'I' || row.baseAnexo === 'III' || row.baseAnexo === 'V') &&
+  row.baseAnexo !== null &&
   row.anexoAdjustment === undefined;
 
 /** The rows Refund calculates today, in the table's order (the web lists them; it never hardcodes them). */
@@ -304,6 +305,9 @@ const R02_RULE = () =>
     'Desde 2026, dividendo acima de R$ 50 mil por mês de uma mesma empresa tem 10% retidos na fonte.',
   );
 
+const exportRuleApplies = (row: CnaeAnexoRow): boolean =>
+  row.baseAnexo !== null && r05CoversAnexo(row.baseAnexo);
+
 /** C.11.6, in the table's order: R01, R05, R06, R03, R02. Each `ref` is the rule's first LegalRef. */
 function applicableRules(
   row: CnaeAnexoRow,
@@ -319,7 +323,8 @@ function applicableRules(
       ),
     );
   }
-  if (answers.receivesFromAbroad !== 'no') {
+  // D52: R05 stays off for Anexo II goods until their export is specified (EXECUTION §9).
+  if (answers.receivesFromAbroad !== 'no' && exportRuleApplies(row)) {
     out.push(
       applicable(
         'R05',
@@ -476,7 +481,7 @@ function estimate(
   if (bracket === 'dont_know') return ok(noRange('REVENUE_NOT_PROVIDED', rules));
   if (bracket === 'from_300k_to_400k') return ok(noRange('ABOVE_SUBLIMIT', rules));
   if (bracket === 'above_400k') return ok(noRange('ABOVE_CEILING', rules));
-  if (!row.subjectToFatorR && answers.receivesFromAbroad === 'no') {
+  if (!row.subjectToFatorR && (answers.receivesFromAbroad === 'no' || !exportRuleApplies(row))) {
     return ok(noRange('NO_RULE_WITH_VALUE', rules));
   }
   if (bracket === 'up_to_15k') return ok(noRange('MINIMUM_BELOW_FLOOR', rules));

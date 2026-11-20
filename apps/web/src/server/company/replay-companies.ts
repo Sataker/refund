@@ -36,19 +36,22 @@ const PRESUMIDO: PublicCompany = {
 };
 
 /**
- * Synthetic Simples company whose CNAE the engine does not calculate (construction, 4120-4/00, Anexo IV: LC 123,
- * art. 18, § 5º-C, I), so `/app` can show the activity stop at the estimate without a network call. Until D50 it was a
- * cosmetics retailer (4772-5/00), which the full CNAE table now puts in Anexo I, in scope. Same rules as PRESUMIDO:
- * whitelist fields only.
+ * Synthetic Simples company whose CNAE the engine does not calculate (beer and soft-drink wholesale, 4635-4/02:
+ * ambiguous, Res. CGSN 140, Anexo VII), so `/app` can show the activity stop at the estimate without a network call.
+ * Until D50 it was a cosmetics retailer (4772-5/00, now Anexo I, in scope); until D52 a construction company
+ * (4120-4/00, Anexo IV, now in scope). Same rules as PRESUMIDO: whitelist fields only.
  */
 const UNSUPPORTED_ACTIVITY: PublicCompany = {
   cnpj: 'RFCOSM01000136' as PublicCompany['cnpj'],
-  displayLegalName: 'CONSTRUTORA EXEMPLO LTDA',
-  displayTradeName: 'Construtora Exemplo',
+  displayLegalName: 'DISTRIBUIDORA EXEMPLO LTDA',
+  displayTradeName: 'Distribuidora Exemplo',
   masked: false,
   legalNature: { code: '2062', description: 'Sociedade Empresária Limitada' },
   size: 'ME',
-  primaryCnae: { code: '4120-4/00', description: 'Construção de edifícios' },
+  primaryCnae: {
+    code: '4635-4/02',
+    description: 'Comércio atacadista de cerveja, chope e refrigerante',
+  },
   secondaryCnaes: [],
   registrationStatus: 'ATIVA',
   activityStartDate: '2019-03-01' as PublicCompany['activityStartDate'],

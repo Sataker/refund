@@ -67,15 +67,9 @@ describe('activity scope', () => {
     expect(stop('8630-5/04', 'Atividade odontológica')).toBeNull(); // D51
   });
 
-  it('Anexo II or IV: the anexo, never a list of activities', () => {
-    const s = stop('4120-4/00', 'Construção de edifícios');
-    expect(s?.cnae).toBe('4120-4/00');
-    expect(s?.message).toBe(
-      'Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples. A sua (4120-4/00 Construção de edifícios) é do Anexo IV.',
-    );
-    expect(stop('1091-1/01', 'Fabricação de produtos de panificação industrial')?.message).toBe(
-      'Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples. A sua (1091-1/01 Fabricação de produtos de panificação industrial) é do Anexo II.',
-    );
+  it('Anexos II and IV go on since D52 (industry; construction)', () => {
+    expect(stop('4120-4/00', 'Construção de edifícios')).toBeNull();
+    expect(stop('1091-1/01', 'Fabricação de produtos de panificação industrial')).toBeNull();
   });
 
   it('impeditive (Res. CGSN 140, Anexo VI)', () => {
@@ -94,7 +88,7 @@ describe('activity scope', () => {
 
   it('Anexo III with an adjusted DAS (rental of movable goods; communication)', () => {
     expect(stop('7711-0/00', 'Locação de automóveis sem condutor')?.message).toBe(
-      'Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples na tabela comum. A sua (7711-0/00 Locação de automóveis sem condutor) é do Anexo III sem a parcela do ISS.',
+      'Por enquanto o Refund calcula os anexos do Simples só na tabela comum. A sua (7711-0/00 Locação de automóveis sem condutor) é do Anexo III sem a parcela do ISS.',
     );
   });
 

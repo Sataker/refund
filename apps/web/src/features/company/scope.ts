@@ -82,15 +82,12 @@ export function activityOutOfScopeMessage(cnae: { code: string; description: str
   if (row.status === 'impeditive') {
     return `A atividade ${activityLabel(cnae)} não pode estar no Simples Nacional.`;
   }
-  if (row.status === 'verified' && (row.baseAnexo === 'II' || row.baseAnexo === 'IV')) {
-    return `Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples. A sua (${activityLabel(cnae)}) é do Anexo ${row.baseAnexo}.`;
-  }
   if (row.status === 'verified' && row.anexoAdjustment !== undefined) {
     const how =
       row.anexoAdjustment === 'without_iss'
         ? 'sem a parcela do ISS'
         : 'sem a parcela do ISS e com a do ICMS';
-    return `Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples na tabela comum. A sua (${activityLabel(cnae)}) é do Anexo III ${how}.`;
+    return `Por enquanto o Refund calcula os anexos do Simples só na tabela comum. A sua (${activityLabel(cnae)}) é do Anexo III ${how}.`;
   }
   // Ambiguous (or a row still to be confirmed): the anexo is not fixed for us yet.
   return `O anexo da sua atividade (${cnae.code}) depende do que exatamente a empresa faz; por enquanto não calculamos esse caso.`;

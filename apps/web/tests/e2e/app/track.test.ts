@@ -15,7 +15,7 @@ function todayBrt(): string {
 const PRESUMIDO_CNPJ = 'RF.PRE.S01/0001-37';
 const UNKNOWN_CNPJ = 'RF.NON.E01/0001-22';
 /** Synthetic Simples company with a CNAE outside the verified table (cosmetics retail, 4772-5/00). */
-const CONSTRUCTION_CNPJ = 'RF.COS.M01/0001-36';
+const AMBIGUOUS_ACTIVITY_CNPJ = 'RF.COS.M01/0001-36';
 
 async function lookUp(page: Page, cnpj: string): Promise<void> {
   await page.goto('/app');
@@ -168,16 +168,16 @@ test.describe('first-access track @app', () => {
   test('a CNAE outside the verified table stops at the estimate with the activity and the ways out', async ({
     page,
   }) => {
-    await lookUp(page, CONSTRUCTION_CNPJ);
+    await lookUp(page, AMBIGUOUS_ACTIVITY_CNPJ);
     await expect(page).toHaveURL(/\/confirmar-empresa$/);
     await tap(page, 'Sou eu', /\/faturamento$/);
     await page.getByRole('button', { name: 'R$ 30 mil a 60 mil', exact: true }).click();
     await expect(page).toHaveURL(/\/estimativa$/);
     const stop = page.getByTestId('out-of-scope');
     await expect(stop).toHaveAttribute('data-reason', 'activity');
-    await expect(stop).toHaveAttribute('data-cnae', '4120-4/00');
+    await expect(stop).toHaveAttribute('data-cnae', '4635-4/02');
     await expect(stop).toContainText(
-      'Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples. A sua (4120-4/00 Construção de edifícios) é do Anexo IV.',
+      'O anexo da sua atividade (4635-4/02) depende do que exatamente a empresa faz; por enquanto não calculamos esse caso.',
     );
     await expect(stop).not.toContainText('web design');
     await expect(page.getByTestId('see-exact-number')).toHaveCount(0);
