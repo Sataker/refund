@@ -14,7 +14,22 @@ export const SHORT_TITLE: Readonly<Record<string, string>> = {
 export const ALERT_TITLE: Readonly<Record<string, string>> = {
   R02: 'Lucro acima de R$ 50 mil no mês teve 10% de IR retido',
   A01: 'Despesa pessoal no cartão da empresa',
+  R06: 'Produtos com PIS e Cofins monofásicos',
 };
+
+/**
+ * Bug bash 20/11 (H3): the engine's R06 alert (D.6, no `monofasicoPct`) promises "responda 1 pergunta", but no screen
+ * asks it yet (ENGINE-SPEC E.4: "until the question exists"; Screen 7 has no such card). The web shows what actually
+ * happens next instead; the engine text stays as T06-02 pins it.
+ */
+export const R06_QUESTION_TEXT =
+  'Você revende produtos com PIS e Cofins monofásicos. Para calcular, seu contador identifica, pelo NCM, quais produtos têm PIS e Cofins monofásicos.';
+
+/** The engine's finding text as shown on every screen (the engine's own, except the R06 alert above). */
+export function findingText(f: { ruleId: string; type: string; title: string }): string {
+  if (f.ruleId === 'R06' && f.type === 'alert') return R06_QUESTION_TEXT;
+  return f.title;
+}
 
 /**
  * Recovery headline on Screens 5–8 (UX review G2 M7): short and plain; the engine title stays as the body under it.

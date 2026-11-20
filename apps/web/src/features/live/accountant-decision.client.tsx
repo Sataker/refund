@@ -1,7 +1,8 @@
 'use client';
 
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, MessageSquareWarning } from 'lucide-react';
 import { useState, useTransition } from 'react';
+import { LawSeal } from '@/components/brand/law-seal';
 import { Button } from '@/components/ui/button';
 
 // /r/[token]: the accountant approves the report or asks for adjustments (ARCHITECTURE §4.7 decideReport). One final
@@ -10,12 +11,24 @@ import { Button } from '@/components/ui/button';
 type Result<T> = { ok: true; value: T } | { ok: false; error: { code: string; message: string } };
 type Decision = 'approved' | 'adjustment';
 
+/** One finding as the accountant reviews it: the same row as the /demo accountant view (amount and § chip). */
+export interface ReviewItem {
+  id: string;
+  title: string;
+  /** Already formatted on the server from the engine's value ("R$ 28.316,52 nos próximos 12 meses"). */
+  value: string;
+  /** The finding's first LegalRef (rule metadata). */
+  lawRef?: { label: string; url: string };
+  /** Alerts and risks: for reading, outside the total; nothing to approve. */
+  readOnly?: boolean;
+}
+
 export function AccountantDecision({
   findings,
   decide,
   decided,
 }: {
-  findings: { id: string; title: string }[];
+  findings: ReviewItem[];
   decide: (input: {
     decisions: { findingId: string; decision: Decision; comment?: string }[];
     final: 'approved' | 'adjustments';
@@ -46,11 +59,13 @@ export function AccountantDecision({
   const submit = (final: 'approved' | 'adjustments') =>
     begin(async () => {
       setError(null);
-      const decisions = findings.map((f) => ({
-        findingId: f.id,
-        decision: byFinding[f.id] ?? (final === 'approved' ? 'approved' : 'adjustment'),
-        ...(comment.trim() ? { comment: comment.trim().slice(0, 500) } : {}),
-      }));
+      const decisions = findings
+        .filter((f) => !f.readOnly)
+        .map((f) => ({
+          findingId: f.id,
+          decision: byFinding[f.id] ?? (final === 'approved' ? 'approved' : 'adjustment'),
+          ...(comment.trim() ? { comment: comment.trim().slice(0, 500) } : {}),
+        }));
       const r = await decide({ decisions, final });
       if (r.ok) setDone(final);
       else setError(r.error.message);
@@ -65,26 +80,69 @@ export function AccountantDecision({
       <h2 id="decisao-titulo" className="type-h4 text-foreground">
         Sua revisão
       </h2>
-      <ul className="flex flex-col gap-2">
-        {findings.map((f) => (
-          <li key={f.id} className="flex flex-wrap items-center justify-between gap-2">
-            <span className="type-small text-foreground">{f.title}</span>
-            <span className="flex gap-1">
-              {(['approved', 'adjustment'] as const).map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  aria-pressed={byFinding[f.id] === d}
-                  onClick={() => setByFinding((x) => ({ ...x, [f.id]: d }))}
-                  className="type-caption min-h-9 rounded-md border border-border px-2.5 font-medium aria-pressed:bg-foreground aria-pressed:text-background"
-                >
-                  {d === 'approved' ? 'Aprovo' : 'Ajustar'}
-                </button>
-              ))}
-            </span>
-          </li>
-        ))}
+      <ul className="flex flex-col gap-3">
+        {findings
+          .filter((f) => !f.readOnly)
+          .map((f) => {
+            const d = byFinding[f.id];
+            return (
+              <li
+                key={f.id}
+                data-testid={`review-${f.id}`}
+                data-decision={d ?? 'pending'}
+                className="flex flex-col gap-3 rounded-lg border border-border bg-background p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <span className="flex min-w-0 flex-col gap-1.5">
+                  <span className="text-base font-medium text-foreground">{f.title}</span>
+                  <span className="type-small num text-muted-foreground">{f.value}</span>
+                  {f.lawRef ? <LawSeal lawRef={f.lawRef} /> : null}
+                </span>
+                <span className="flex shrink-0 gap-2">
+                  <Button
+                    type="button"
+                    variant={d === 'approved' ? 'default' : 'outline'}
+                    aria-pressed={d === 'approved'}
+                    onClick={() => setByFinding((x) => ({ ...x, [f.id]: 'approved' }))}
+                  >
+                    <Check className="size-4" strokeWidth={1.5} aria-hidden="true" />
+                    {d === 'approved' ? 'Aprovado' : 'Aprovar'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={d === 'adjustment' ? 'secondary' : 'ghost'}
+                    aria-pressed={d === 'adjustment'}
+                    onClick={() => setByFinding((x) => ({ ...x, [f.id]: 'adjustment' }))}
+                  >
+                    <MessageSquareWarning className="size-4" strokeWidth={1.5} aria-hidden="true" />
+                    Pedir ajuste
+                  </Button>
+                </span>
+              </li>
+            );
+          })}
       </ul>
+      {findings.some((f) => f.readOnly) ? (
+        <div className="flex flex-col gap-2">
+          <h3 className="type-small font-medium text-muted-foreground">
+            Riscos e alertas · fora do total (só leitura)
+          </h3>
+          <ul className="flex flex-col gap-2">
+            {findings
+              .filter((f) => f.readOnly)
+              .map((f) => (
+                <li
+                  key={f.id}
+                  data-testid={`review-${f.id}`}
+                  className="flex flex-col gap-0.5 rounded-lg border border-border bg-surface-2 p-4"
+                >
+                  <span className="text-base text-foreground">{f.title}</span>
+                  <span className="type-small num text-muted-foreground">{f.value}</span>
+                  {f.lawRef ? <LawSeal lawRef={f.lawRef} className="mt-1" /> : null}
+                </li>
+              ))}
+          </ul>
+        </div>
+      ) : null}
       <label className="flex flex-col gap-1">
         <span className="type-small font-medium text-foreground">Comentário (opcional)</span>
         <textarea
@@ -102,7 +160,7 @@ export function AccountantDecision({
           onClick={() => submit('approved')}
         >
           {pending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-          Aprovar o relatório
+          Aprovar relatório
         </Button>
         <Button
           type="button"

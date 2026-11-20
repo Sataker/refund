@@ -16,7 +16,7 @@ const STATUS_TEXT: Record<Status, string> = {
   created: 'Link criado. Mande para o seu contador.',
   sent: 'Enviado por e-mail. Esperando o contador abrir.',
   opened: 'O contador abriu o relatório.',
-  approved: 'O contador aprovou.',
+  approved: 'O contador aprovou o relatório.',
   adjustments: 'O contador pediu ajustes.',
 };
 
@@ -32,13 +32,14 @@ export function ReportSender({
   }) => Promise<Result<{ reportId: string; approvalLink: string; emailed: boolean }>>;
   emailOn: boolean;
   /** The newest report of this analysis (its link cannot be shown again: only its hash is stored). */
-  last: { reportId: string; status: Status } | null;
+  last: { reportId: string; status: Status; comment?: string | null } | null;
 }) {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [link, setLink] = useState<string | null>(null);
   const [reportId, setReportId] = useState<string | null>(last?.reportId ?? null);
   const [status, setStatus] = useState<Status | null>(last?.status ?? null);
+  const [comment, setComment] = useState<string | null>(last?.comment ?? null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [pending, begin] = useTransition();
@@ -48,8 +49,12 @@ export function ReportSender({
     const es = new EventSource(`/api/relatorios/${reportId}/status`);
     es.addEventListener('status', (e) => {
       try {
-        const data = JSON.parse((e as MessageEvent<string>).data) as { status: Status };
+        const data = JSON.parse((e as MessageEvent<string>).data) as {
+          status: Status;
+          comment?: string;
+        };
         setStatus(data.status);
+        if (data.comment) setComment(data.comment);
         if (data.status === 'approved' || data.status === 'adjustments') es.close();
       } catch {
         // A malformed frame is ignored; the next one carries the status again.
@@ -177,6 +182,14 @@ export function ReportSender({
           data-status={status}
         >
           {STATUS_TEXT[status]}
+        </p>
+      ) : null}
+      {comment && (status === 'approved' || status === 'adjustments') ? (
+        <p
+          className="type-small rounded-md bg-surface-2 px-3 py-2 text-foreground"
+          data-testid="accountant-comment"
+        >
+          Comentário do contador: “{comment}”
         </p>
       ) : null}
     </section>

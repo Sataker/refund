@@ -8,7 +8,7 @@ import {
   listFindings,
   schema,
 } from '@refund/db';
-import type { EngineResult, Finding, Total } from '@refund/engine';
+import { cnaeAnexoRow, type EngineResult, type Finding, type Total } from '@refund/engine';
 import { parsePublicCompany } from '@refund/sources';
 import { and, eq, lte, or } from 'drizzle-orm';
 import { titleCase } from '@/demo/view.ts';
@@ -49,6 +49,15 @@ export interface LiveAnalysis {
   analysisDate: string;
   /** Where the company card and the statements came from (C2: the banner and the seal). */
   origin: DataOrigin;
+  /** The company's Simples annex from its CNAE ("III ou V (pelo Fator R)" when the Fator R decides), or null. */
+  anexo: string | null;
+}
+
+/** The annex the report names for the projected DAS (bug bash 20/11): the CNAE table's row, never a guess. */
+export function anexoLabel(cnae: string | undefined): string | null {
+  const row = cnae ? cnaeAnexoRow(cnae) : undefined;
+  if (!row || row.baseAnexo === null) return null;
+  return row.subjectToFatorR ? 'III ou V (pelo Fator R)' : row.baseAnexo;
 }
 
 /**
@@ -121,6 +130,7 @@ export async function loadLiveAnalysis(
       companyIsSample: parsed?.cnpj === HERO_CNPJ,
       bank: await analysisBankSource(db, analysis),
     },
+    anexo: parsed?.mei.optedIn ? null : anexoLabel(parsed?.primaryCnae.code),
   };
 }
 

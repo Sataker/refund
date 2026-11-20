@@ -6,7 +6,8 @@ import { DISCLAIMER_TEXT } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
 import { sealLabel } from '@/components/brand/sandbox-seal';
 import { traceInputLabel, traceTextValue } from '@/components/brand/trace-labels';
-import { displayTitle, keepCurrency } from '@/features/demo/display';
+import { displayTitle, findingText, keepCurrency } from '@/features/demo/display';
+import { exampleText } from '@/features/live/data-origin';
 import { formatBRL, formatRatePercent, formatYearMonth } from '@/lib/format';
 import { formatWhen, NO_MONEY_TEXT, RecoveryTable } from './action-plan';
 import { ACTOR_LABEL, type DashboardModel, formatCivilDate, stepsByActor } from './model';
@@ -34,6 +35,13 @@ interface ReportProps {
   seal?: string;
   /** The data-origin banner text (C2), printed on the paper too: the statements are not the company's. */
   notice?: string | null;
+  /** Example statements (bug bash 20/11, C1): no "confirmado" label, alert texts prefixed. */
+  example?: boolean;
+  /**
+   * The company's own Simples annex (from its CNAE), for the one-line note on why the projected DAS differs from the
+   * DAS in the statement (bug bash 20/11). Omitted on /demo.
+   */
+  anexo?: string | null;
 }
 
 function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
@@ -220,7 +228,18 @@ function Scroll({ children }: { children: ReactNode }) {
   );
 }
 
-function FindingBlock({ f, n, value }: { f: Finding; n: number; value: ReactNode }) {
+function FindingBlock({
+  f,
+  n,
+  value,
+  example,
+}: {
+  f: Finding;
+  n: number;
+  value: ReactNode;
+  example: boolean;
+}) {
+  const alertish = f.type === 'alert' || f.type === 'risk';
   return (
     <li className="flex flex-col gap-2" data-testid={`report-finding-${f.ruleId}`}>
       <p className="report-head flex flex-wrap items-baseline justify-between gap-2 text-[14px] font-semibold">
@@ -231,9 +250,9 @@ function FindingBlock({ f, n, value }: { f: Finding; n: number; value: ReactNode
       </p>
       <p className="text-[12px] text-neutral-700">
         <span className="font-medium" data-testid={`report-confidence-${f.ruleId}`}>
-          Confiança: {confidenceLabel(f.confidence)}
+          Confiança: {confidenceLabel(f.confidence, example)}
         </span>{' '}
-        · {keepCurrency(f.title)}
+        · {keepCurrency(exampleText(findingText(f), example && alertish))}
       </p>
       <Scroll>
         <TraceTable f={f} />
@@ -256,6 +275,8 @@ export function Report({
   live = false,
   seal,
   notice,
+  example = false,
+  anexo = null,
 }: ReportProps) {
   // One order everywhere (UX review): biggest effect first, ties in the engine order.
   const savings = result.findings.filter((f) => f.type === 'savings').sort(byValue);
@@ -296,7 +317,8 @@ export function Report({
         ) : null}
         <p className="flex flex-wrap items-baseline gap-x-3 text-neutral-900">
           <span className="text-[13px] text-neutral-600">
-            Total, próximos 12 meses (confirmado):
+            Total, próximos 12 meses ({example ? 'confirmado no extrato de exemplo' : 'confirmado'}
+            ):
           </span>
           <mark
             className="num rounded-[2px] bg-found px-1 text-[28px] leading-9 font-semibold text-neutral-900"
@@ -328,25 +350,34 @@ export function Report({
             {formatBRL(model.recoveryRange[1])} (estimativa)
           </p>
         ) : null}
+        {anexo ? (
+          <p className="text-[12px] text-neutral-700" data-testid="report-anexo-note">
+            O DAS projetado é calculado pelo Anexo {anexo} da sua atividade
+            {example ? '; o DAS pago que aparece no extrato é o do exemplo' : ''}.
+          </p>
+        ) : null}
         {approval}
       </header>
 
-      <Section title="Achados que entram no total (confirmados)" id="r-achados">
-        <ol className="flex flex-col gap-5">
-          {counted.map((f, i) => (
-            <FindingBlock
-              key={f.ruleId}
-              f={f}
-              n={i + 1}
-              value={
-                <span className="num" data-cents={f.marginalValue12m}>
-                  {formatBRL(f.marginalValue12m)}
-                </span>
-              }
-            />
-          ))}
-        </ol>
-      </Section>
+      {counted.length > 0 ? (
+        <Section title="Achados que entram no total (confirmados)" id="r-achados">
+          <ol className="flex flex-col gap-5">
+            {counted.map((f, i) => (
+              <FindingBlock
+                key={f.ruleId}
+                example={example}
+                f={f}
+                n={i + 1}
+                value={
+                  <span className="num" data-cents={f.marginalValue12m}>
+                    {formatBRL(f.marginalValue12m)}
+                  </span>
+                }
+              />
+            ))}
+          </ol>
+        </Section>
+      ) : null}
 
       {estimated.length > 0 ? (
         <Section title="Estimados (fora do número)" id="r-estimados">
@@ -354,6 +385,7 @@ export function Report({
             {estimated.map((f, i) => (
               <FindingBlock
                 key={f.ruleId}
+                example={example}
                 f={f}
                 n={i + 1}
                 value={
@@ -372,7 +404,7 @@ export function Report({
           {recovery.map((f) => (
             <div key={f.ruleId} className="flex flex-col gap-2">
               <p className="text-[12px] font-medium text-neutral-700">
-                Confiança: {confidenceLabel(f.confidence)}
+                Confiança: {confidenceLabel(f.confidence, example)}
               </p>
               {f.range ? (
                 <p
@@ -403,6 +435,7 @@ export function Report({
             {alerts.map((f, i) => (
               <FindingBlock
                 key={f.ruleId}
+                example={example}
                 f={f}
                 n={i + 1}
                 value={
@@ -423,67 +456,73 @@ export function Report({
         </Section>
       ) : null}
 
-      <Section title="Plano de ação" id="r-plano">
-        <div className="flex flex-col gap-4" data-testid="report-plan">
-          {groups.map((g) => (
-            <div key={g.who} className="flex flex-col gap-2" data-testid={`report-plan-${g.who}`}>
-              <h3 className="text-[13px] font-semibold">{ACTOR_LABEL[g.who]}</h3>
-              <ol className="flex list-decimal flex-col gap-1.5 pl-5 text-[12px]">
-                {g.steps.map(({ title, step }) => (
-                  <li
-                    key={step.id}
-                    className={step.noSource ? 'text-neutral-500 italic' : undefined}
-                  >
-                    <span className="text-neutral-500">{title}: </span>
-                    {step.what}
-                    {step.where ? (
-                      <span className="text-neutral-600">
-                        {' '}
-                        Onde: {step.where.name}
-                        {step.where.path ? ` › ${step.where.path}` : ''}.
-                      </span>
-                    ) : null}
-                    {step.until ? (
-                      <span className="text-neutral-600"> Prazo: {formatWhen(step.until)}.</span>
-                    ) : null}
-                    {step.refIds.length > 0 ? (
-                      <span className="text-neutral-500">
-                        {' '}
-                        ({step.refIds.map(labelOf).filter(Boolean).join('; ')})
-                      </span>
-                    ) : null}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          ))}
-          {items.length > 0 ? (
-            <div className="report-table text-neutral-900">
-              <h3 className="text-[13px] font-semibold">DAS por DAS</h3>
-              <RecoveryTable items={items} anchor={anchor} open />
-            </div>
-          ) : null}
-        </div>
-      </Section>
+      {groups.length > 0 || items.length > 0 ? (
+        <Section title="Plano de ação" id="r-plano">
+          <div className="flex flex-col gap-4" data-testid="report-plan">
+            {groups.map((g) => (
+              <div key={g.who} className="flex flex-col gap-2" data-testid={`report-plan-${g.who}`}>
+                <h3 className="text-[13px] font-semibold">{ACTOR_LABEL[g.who]}</h3>
+                <ol className="flex list-decimal flex-col gap-1.5 pl-5 text-[12px]">
+                  {g.steps.map(({ title, step }) => (
+                    <li
+                      key={step.id}
+                      className={step.noSource ? 'text-neutral-500 italic' : undefined}
+                    >
+                      <span className="text-neutral-500">{title}: </span>
+                      {step.what}
+                      {step.where ? (
+                        <span className="text-neutral-600">
+                          {' '}
+                          Onde: {step.where.name}
+                          {step.where.path ? ` › ${step.where.path}` : ''}.
+                        </span>
+                      ) : null}
+                      {step.until ? (
+                        <span className="text-neutral-600"> Prazo: {formatWhen(step.until)}.</span>
+                      ) : null}
+                      {step.refIds.length > 0 ? (
+                        <span className="text-neutral-500">
+                          {' '}
+                          ({step.refIds.map(labelOf).filter(Boolean).join('; ')})
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
+            {items.length > 0 ? (
+              <div className="report-table text-neutral-900">
+                <h3 className="text-[13px] font-semibold">DAS por DAS</h3>
+                <RecoveryTable items={items} anchor={anchor} open />
+              </div>
+            ) : null}
+          </div>
+        </Section>
+      ) : null}
 
-      <Section title="Premissas" id="r-premissas">
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-[12px]">
-          {assumptions.map((a) => (
-            <li key={a}>{a}</li>
-          ))}
-        </ul>
-      </Section>
+      {assumptions.length > 0 ? (
+        <Section title="Premissas" id="r-premissas">
+          <ul className="flex list-disc flex-col gap-1 pl-5 text-[12px]">
+            {assumptions.map((a) => (
+              <li key={a}>{a}</li>
+            ))}
+          </ul>
+        </Section>
+      ) : null}
 
-      <Section title="Citações" id="r-citacoes">
-        <ul className="flex flex-col gap-1 text-[12px]" data-testid="report-citations">
-          {[...citations.values()].map((r) => (
-            <li key={r.id} className="break-words">
-              {r.label} · <span className="text-neutral-600">{r.url}</span> · conferido em{' '}
-              {formatCivilDate(r.verifiedAt)}
-            </li>
-          ))}
-        </ul>
-      </Section>
+      {citations.size > 0 ? (
+        <Section title="Citações" id="r-citacoes">
+          <ul className="flex flex-col gap-1 text-[12px]" data-testid="report-citations">
+            {[...citations.values()].map((r) => (
+              <li key={r.id} className="break-words">
+                {r.label} · <span className="text-neutral-600">{r.url}</span> · conferido em{' '}
+                {formatCivilDate(r.verifiedAt)}
+              </li>
+            ))}
+          </ul>
+        </Section>
+      ) : null}
 
       <div className="report-print-footer hidden text-[9px] text-neutral-500 print:block">
         Refund · memória de cálculo · normas {result.parametersVersion} · hash{' '}

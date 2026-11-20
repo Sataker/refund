@@ -9,7 +9,7 @@ import {
   type RecoveryItem,
   sumCents,
 } from '@refund/engine';
-import { displayTitle } from '@/features/demo/display';
+import { displayTitle, findingText } from '@/features/demo/display';
 import { URGENT_DAYS, type Urgency } from './text';
 
 export { ACTOR_LABEL, formatCivilDate, URGENT_DAYS, type Urgency, urgencyText } from './text';
@@ -117,7 +117,7 @@ function view(f: Omit<Finding, 'trace'> & { trace?: Finding['trace'] }): Dashboa
     ruleId: f.ruleId,
     type: f.type,
     title: displayTitle(f.ruleId, f.title),
-    engineTitle: f.title,
+    engineTitle: findingText(f),
     cents: f.marginalValue12m,
     annualRegimeValue: f.annualRegimeValue ?? null,
     regimeFrom: f.regimeFrom ?? null,

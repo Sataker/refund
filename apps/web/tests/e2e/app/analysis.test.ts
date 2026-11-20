@@ -137,7 +137,7 @@ test.describe('live analysis @app', () => {
     await expect(other.getByTestId('accountant-title')).toContainText(
       /Marina Dev pediu sua revisão · \d{2}\/\d{2}\/\d{4}/,
     );
-    await expect(other.getByTestId('accountant-howto')).toContainText('Aprovo');
+    await expect(other.getByTestId('accountant-howto')).toContainText('não muda o cálculo');
     await expect(other.getByTestId('report-seal')).toContainText('Dados sintéticos');
     await other.getByTestId('approve-report').click();
     await expect(other.getByTestId('accountant-done')).toHaveAttribute('data-decision', 'approved');

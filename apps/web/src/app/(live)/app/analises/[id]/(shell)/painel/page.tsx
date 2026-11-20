@@ -4,6 +4,7 @@ import { FinanceEntryCard } from '@/features/finance/entry';
 import { DashboardView } from '@/features/findings/dashboard.client';
 import { confirmProgress } from '@/features/findings/progress';
 import { StartAnalysisButton } from '@/features/live/buttons.client';
+import { exampleTitle } from '@/features/live/data-origin';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { questionsOf } from '@/server/analysis/actions.ts';
 import { loadAnswers } from '@/server/analysis/input.ts';
@@ -33,6 +34,7 @@ export default async function LiveDashboardPage({ params }: { params: Promise<{ 
     answers.map((a) => a.questionId),
   );
   const base = `/app/analises/${id}`;
+  const heading = exampleTitle(live.origin, live.companyName);
   return (
     <DashboardView
       title={live.companyName}
@@ -40,6 +42,8 @@ export default async function LiveDashboardPage({ params }: { params: Promise<{ 
       hrefs={ruleHrefs(live)}
       links={{ confirm: `${base}/confirmar`, report: `${base}/relatorio` }}
       open={open}
+      example={heading === null ? null : { heading }}
+      zeroState
       actions={
         <StartAnalysisButton
           start={reanalyze.bind(null, { analysisId: id })}

@@ -23,17 +23,39 @@ const LEVELS: Record<Confidence, { label: string; hint: string; text: string; sw
   },
 };
 
+/**
+ * Bug bash 20/11 (C1): on example statements nothing is "Confirmado" (the data is not the company's); the badge
+ * says what the number rests on instead. Same shape as "estimado" (it still needs the company's own statement).
+ */
+const EXAMPLE = {
+  label: 'Exemplo · extrato de exemplo',
+  hint: 'Calculado sobre um extrato de exemplo, não sobre os dados da empresa.',
+  text: 'text-conf-estimated',
+  swatch: 'hatch border border-current',
+};
+
 /** The level's label in running text ("estimado"), for lines that name the confidence without the badge. */
-export function confidenceLabel(level: Confidence): string {
+export function confidenceLabel(level: Confidence, example = false): string {
+  if (example && level === 'confirmed') return 'exemplo (extrato de exemplo)';
   return LEVELS[level].label.toLowerCase();
 }
 
-export function ConfidenceBadge({ level, className }: { level: Confidence; className?: string }) {
-  const l = LEVELS[level];
+export function ConfidenceBadge({
+  level,
+  className,
+  example = false,
+}: {
+  level: Confidence;
+  className?: string;
+  /** The analysis runs on example statements (features/live/data-origin.ts `isExampleBank`). */
+  example?: boolean;
+}) {
+  const l = example && level === 'confirmed' ? EXAMPLE : LEVELS[level];
   return (
     <span
       data-testid="confidence-badge"
       data-level={level}
+      data-example={example ? 'true' : undefined}
       title={l.hint}
       className={cn('type-caption inline-flex items-center gap-1.5', l.text, className)}
     >

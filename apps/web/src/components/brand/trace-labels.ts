@@ -78,6 +78,8 @@ export function traceRateValue(key: string, value: string): string {
 const YEAR_MONTHS = /^\d{4}-(0[1-9]|1[0-2])(, \d{4}-(0[1-9]|1[0-2]))*$/;
 
 export function traceTextValue(key: string, value: string): string {
+  // Bug bash 20/11: the PGDAS-D inference that matched no hypothesis reads "não informado", not the jargon "indefinido".
+  if (value === 'indefinido') return 'não informado';
   if (RATE_TEXT_KEYS.has(key) && /^\d+(\.\d+)?$/.test(value)) return formatRatePercent(value);
   if (YEAR_MONTHS.test(value)) return value.split(', ').map(formatYearMonth).join(', ');
   return value;

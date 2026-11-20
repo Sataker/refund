@@ -22,7 +22,7 @@ import {
   type StageStatus,
 } from './analysis-state';
 import { RestartDemo } from './demo-track.client';
-import { keepCurrency, sampleDescription, shortTitle } from './display';
+import { findingText, keepCurrency, sampleDescription, shortTitle } from './display';
 import { demoBase, demoProgress } from './progress';
 import type { DemoPersonaView } from './types';
 
@@ -366,7 +366,9 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
                       />
                       {f.type === 'risk' ? 'Risco' : 'Alerta'} · não entra no total
                     </p>
-                    <p className="type-body-lg mt-2 text-foreground">{keepCurrency(f.title)}</p>
+                    <p className="type-body-lg mt-2 text-foreground">
+                      {keepCurrency(findingText(f))}
+                    </p>
                     {f.refs[0] ? <LawSeal lawRef={f.refs[0]} className="mt-3" /> : null}
                   </article>
                 ))}

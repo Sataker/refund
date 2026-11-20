@@ -50,9 +50,38 @@ export function bankBannerText(origin: DataOrigin, companyName: string): string 
   return null;
 }
 
+/**
+ * The analysis's numbers come from example statements (the sample persona's on another company, or the Pluggy sandbox):
+ * nothing on its screens may read as the company's own confirmed data (bug bash 20/11, C1). Same test as the banner.
+ */
+export function isExampleBank(origin: DataOrigin): boolean {
+  if (origin.bank === 'sandbox') return true;
+  return origin.bank === 'sample' && !origin.companyIsSample;
+}
+
+/** Prefix of every risk and alert text of an example analysis (C1). */
+export const EXAMPLE_PREFIX = 'No extrato de exemplo: ';
+
+/** "No extrato de exemplo: " + the text, with its first letter lower-cased (proper nouns aside, e.g. "PIS"). */
+export function exampleText(text: string, example: boolean): string {
+  if (!example) return text;
+  const first = text.slice(0, 2);
+  const lowered = /^\p{Lu}\p{Ll}/u.test(first)
+    ? `${text[0]?.toLowerCase() ?? ''}${text.slice(1)}`
+    : text;
+  return `${EXAMPLE_PREFIX}${lowered}`;
+}
+
+/** The headline of an example analysis (C1; D49 keeps the real company name next to it). */
+export function exampleTitle(origin: DataOrigin, companyName: string): string | null {
+  if (!isExampleBank(origin)) return null;
+  return origin.bank === 'sandbox'
+    ? `Exemplo com o extrato de testes do Open Finance, aplicado às regras da ${companyName}`
+    : `Exemplo com o extrato da Marina, aplicado às regras da ${companyName}`;
+}
+
 export const SYNTHETIC_LIVE_LABEL = 'Dados sintéticos · Open Finance em sandbox';
-export const SAMPLE_BANK_LABEL =
-  'Extrato de exemplo (empresa fictícia) · dados públicos da Receita';
+export const SAMPLE_BANK_LABEL = 'Dados públicos da Receita · extrato de exemplo';
 /** Same text as SandboxSeal's LIVE_LABEL (a real company's public data, sandbox accounts). */
 export const PUBLIC_LIVE_LABEL = 'Open Finance sandbox · dados públicos da Receita';
 

@@ -165,6 +165,11 @@ export async function decideReportWith(
 
 export type ReportStatus = 'created' | 'sent' | 'opened' | 'approved' | 'adjustments';
 
+/** The accountant's comment on a decided report (bug bash 20/11: the owner sees it), or null. */
+export function accountantComment(r: ReportRow): string | null {
+  return r.decisionsByFinding?.find((d) => d.comment)?.comment ?? null;
+}
+
 export function reportStatusOf(r: ReportRow): ReportStatus {
   if (r.decision === 'approved') return 'approved';
   if (r.decision === 'adjustments') return 'adjustments';
@@ -193,7 +198,8 @@ export async function* reportStatusFrames(o: {
     if (status !== last) {
       last = status;
       seq += 1;
-      yield `id: ${seq}\nevent: status\ndata: ${JSON.stringify({ type: 'status', status })}\n\n`;
+      const comment = accountantComment(r);
+      yield `id: ${seq}\nevent: status\ndata: ${JSON.stringify({ type: 'status', status, ...(comment ? { comment } : {}) })}\n\n`;
     }
     if (status === 'approved' || status === 'adjustments') return;
     await o.wait(3000);

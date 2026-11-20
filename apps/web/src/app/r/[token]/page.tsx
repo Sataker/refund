@@ -1,17 +1,24 @@
-import { markReportOpened } from '@refund/db';
+import { findingOf, markReportOpened } from '@refund/db';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Disclaimer } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { lawExcerpt } from '@/demo/snapshot.ts';
-import { displayTitle } from '@/features/demo/display';
+import { displayTitle, findingText } from '@/features/demo/display';
 import { Report } from '@/features/findings/report';
-import { AccountantDecision } from '@/features/live/accountant-decision.client';
-import { bankBannerText, liveSealLabel } from '@/features/live/data-origin';
+import { alertCostLabel } from '@/features/findings/text';
+import { AccountantDecision, type ReviewItem } from '@/features/live/accountant-decision.client';
+import {
+  bankBannerText,
+  exampleText,
+  isExampleBank,
+  liveSealLabel,
+} from '@/features/live/data-origin';
 import { OriginBanner } from '@/features/live/origin-banner';
 import { formatBrtDate } from '@/lib/date';
-import { loadLiveAnalysis, reportResult } from '@/server/analysis/read.ts';
+import { formatBRL } from '@/lib/format';
+import { type LiveAnalysis, loadLiveAnalysis, reportResult } from '@/server/analysis/read.ts';
 import { getDb } from '@/server/db.ts';
 import { reportByToken } from '@/server/report/report.ts';
 import { decideReportFor } from './actions';
@@ -24,6 +31,63 @@ export const metadata: Metadata = {
   title: 'Relatório para aprovação · Refund',
   robots: { index: false, follow: false },
 };
+
+/**
+ * The rows the accountant reviews (bug bash 20/11): the same as the /demo accountant view, each with the engine's
+ * amount and the § of its first LegalRef; savings and recovery first, alerts and risks read-only.
+ */
+function reviewItems(live: LiveAnalysis): ReviewItem[] {
+  const example = isExampleBank(live.origin);
+  const rank = (t: string) => (t === 'savings' ? 0 : t === 'recovery' ? 1 : 2);
+  return live.rows
+    .map((r) => ({ id: r.id, f: findingOf(r) }))
+    .sort(
+      (a, b) =>
+        rank(a.f.type) - rank(b.f.type) ||
+        b.f.marginalValue12m - a.f.marginalValue12m ||
+        a.f.order - b.f.order,
+    )
+    .flatMap(({ id, f }): ReviewItem[] => {
+      const ref = f.refs[0];
+      const lawRef = ref ? { lawRef: { label: ref.label, url: ref.url } } : {};
+      const title = displayTitle(f.ruleId, f.title);
+      if (f.type === 'savings')
+        return [
+          {
+            id,
+            title,
+            value: `${formatBRL(f.marginalValue12m)} nos próximos 12 meses`,
+            ...lawRef,
+          },
+        ];
+      if (f.type === 'recovery')
+        return [
+          {
+            id,
+            title,
+            value: f.range
+              ? `${formatBRL(f.range[0])} a ${formatBRL(f.range[1])} (estimativa, fora do total)`
+              : 'fora do total',
+            ...lawRef,
+          },
+        ];
+      const text = exampleText(findingText(f), example);
+      return [
+        {
+          id,
+          title: title === f.title ? text : title,
+          value:
+            f.marginalValue12m > 0
+              ? `${alertCostLabel(f.title)}: ${formatBRL(f.marginalValue12m)} · fora do total`
+              : title === f.title
+                ? 'fora do total'
+                : `${text} · fora do total`,
+          readOnly: true,
+          ...lawRef,
+        },
+      ];
+    });
+}
 
 function Gone() {
   return (
@@ -83,8 +147,10 @@ export default async function AccountantReportPage({
             className="self-start whitespace-normal"
           />
           <p className="type-small text-muted-foreground" data-testid="accountant-howto">
-            Em cada achado, “Aprovo” confirma a conta e “Ajustar” pede uma correção ao cliente; no
-            fim, aprove o relatório ou peça ajustes. O cliente vê a sua resposta na hora.
+            Em cada achado, “Aprovar” registra a sua revisão e “Pedir ajuste” pede uma correção ao
+            cliente; no fim, aprove o relatório ou peça ajustes. A aprovação fica registrada no
+            relatório do cliente, que vê a sua resposta na hora. Ela não muda o cálculo nem o nível
+            de confiança dos achados.
           </p>
           <OriginBanner origin={live.origin} companyName={live.companyName} />
         </header>
@@ -94,7 +160,7 @@ export default async function AccountantReportPage({
           </p>
         ) : null}
         <AccountantDecision
-          findings={live.rows.map((r) => ({ id: r.id, title: displayTitle(r.ruleId, r.title) }))}
+          findings={reviewItems(live)}
           decide={decideReportFor.bind(null, token)}
           decided={decided}
         />
@@ -107,6 +173,8 @@ export default async function AccountantReportPage({
           live
           seal={liveSealLabel(live.origin)}
           notice={bankBannerText(live.origin, live.companyName)}
+          example={isExampleBank(live.origin)}
+          anexo={live.anexo}
         />
         <Disclaimer />
       </main>

@@ -4,6 +4,7 @@ import { ArrowRight, Check, CircleAlert, RotateCcw, TriangleAlert } from 'lucide
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { ConfidenceBadge } from '@/components/brand/confidence-badge';
 import { FindingCard } from '@/components/brand/finding-card';
 import { MoneyCounter } from '@/components/brand/money-counter.client';
 import { Button } from '@/components/ui/button';
@@ -13,11 +14,11 @@ import {
   progressPercent,
   reduceAnalysis,
 } from '@/features/demo/analysis-state';
-import { keepCurrency, sampleDescription, shortTitle } from '@/features/demo/display';
+import { findingText, keepCurrency, sampleDescription, shortTitle } from '@/features/demo/display';
 import { confirmCta, confirmProgress, estimatedLine } from '@/features/findings/progress';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import type { DataOrigin } from './data-origin';
+import { type DataOrigin, exampleText, exampleTitle, isExampleBank } from './data-origin';
 import { OriginBanner } from './origin-banner';
 
 // Screen 4 in /app (IDENTITY-AND-UI §5 Screen 4; ARCHITECTURE §4.6): the same reducer as /demo over the persisted log.
@@ -147,6 +148,16 @@ export function LiveAnalysis({
   const progress = confirmProgress(view.total, questions, answered);
   const confirmFirst = view.endStatus === 'awaiting_confirmation' && progress.open > 0;
   const second = finished ? estimatedLine(progress) : null;
+  // Bug bash 20/11 C1: example statements never read as the company's own confirmed numbers.
+  const example = isExampleBank(origin);
+  const exampleHeading = exampleTitle(origin, companyName);
+  // C2: a run that ends with nothing confirmed says so; the estimate (or the demo) leads.
+  const zero =
+    finished && view.target === 0
+      ? progress.estimated > 0 || recovery.length > 0
+        ? 'estimated'
+        : 'nothing'
+      : null;
 
   return (
     <div
@@ -155,10 +166,10 @@ export function LiveAnalysis({
       data-status={failed ? 'error' : view.status}
     >
       <OriginBanner origin={origin} companyName={companyName} />
-      <h1 className="type-h3 break-words text-foreground">
+      <h1 className="type-h3 break-words text-foreground" data-testid="analysis-heading">
         {failed
           ? `Não conseguimos analisar ${companyName}`
-          : `${finished ? 'Análise de' : 'Analisando'} ${companyName}`}
+          : (exampleHeading ?? `${finished ? 'Análise de' : 'Analisando'} ${companyName}`)}
       </h1>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-10">
         <section aria-label="Etapas" className="order-2 flex min-w-0 flex-col gap-4 lg:order-1">
@@ -209,6 +220,14 @@ export function LiveAnalysis({
               style={{ width: `${pct}%` }}
             />
           </div>
+          {view.sample.length > 0 && example ? (
+            <p
+              className="type-caption inline-flex w-fit items-center rounded-sm bg-warning-soft px-1.5 py-0.5 font-medium text-foreground"
+              data-testid="ticker-example-label"
+            >
+              Extrato de exemplo
+            </p>
+          ) : null}
           {view.sample.length > 0 ? (
             <ul
               className="type-caption flex min-w-0 flex-col gap-1 text-muted-foreground"
@@ -236,18 +255,68 @@ export function LiveAnalysis({
         >
           <div className="rounded-xl border border-border bg-surface p-6">
             <p className="type-overline text-muted-foreground" data-testid="found-label">
-              {finished ? 'Confirmado' : failed ? 'Confirmado até aqui' : 'Confirmado até agora'}
+              {example
+                ? 'Exemplo · extrato de exemplo'
+                : finished
+                  ? 'Confirmado'
+                  : failed
+                    ? 'Confirmado até aqui'
+                    : 'Confirmado até agora'}
             </p>
-            {/* ENGINE-SPEC C.9: the big number is the confirmed savings only. */}
-            <MoneyCounter
-              cents={view.target}
-              testId="analysis/money-hero"
-              settled={finished || failed}
-              srLabel="Confirmado nos próximos 12 meses"
-              className="mt-2"
-              subline="confirmado nos próximos 12 meses · seu contador valida"
-            />
-            {second ? (
+            {zero !== null ? (
+              <div className="mt-2 flex flex-col gap-2" data-testid="zero-lead" data-kind={zero}>
+                <p className="type-h3 text-foreground" data-testid="zero-headline">
+                  {zero === 'nothing'
+                    ? 'Com estes dados, não encontramos economia.'
+                    : 'Ainda não há economia confirmada'}
+                </p>
+                {zero === 'estimated' && progress.estimated > 0 ? (
+                  <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span
+                      className="type-money-lg num text-foreground"
+                      data-testid="analysis/estimated"
+                      data-cents={progress.estimated}
+                      data-open={progress.open}
+                    >
+                      {formatBRL(progress.estimated)}
+                    </span>
+                    <ConfidenceBadge level="estimated" />
+                  </p>
+                ) : null}
+                {zero === 'nothing' ? (
+                  <Link
+                    href="/demo"
+                    data-testid="nothing-found-demo"
+                    className="type-small w-fit font-medium text-cobalt underline underline-offset-4"
+                  >
+                    Veja a demonstração com a Marina
+                  </Link>
+                ) : null}
+                <p className="type-small num text-muted-foreground">
+                  Confirmado até agora:{' '}
+                  <span data-testid="analysis/money-hero" data-cents={0}>
+                    {formatBRL(0)}
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* ENGINE-SPEC C.9: the big number is the confirmed savings only. */}
+                <MoneyCounter
+                  cents={view.target}
+                  testId="analysis/money-hero"
+                  settled={finished || failed}
+                  srLabel="Confirmado nos próximos 12 meses"
+                  className="mt-2"
+                  subline={
+                    example
+                      ? 'nos próximos 12 meses, sobre o extrato de exemplo · seu contador valida'
+                      : 'confirmado nos próximos 12 meses · seu contador valida'
+                  }
+                />
+              </>
+            )}
+            {second && zero === null ? (
               <p
                 className="type-small num mt-2 text-muted-foreground"
                 data-testid="analysis/estimated"
@@ -400,8 +469,9 @@ export function LiveAnalysis({
                   )}
                   aria-hidden="true"
                 />
-                <span className="type-small text-foreground">
-                  {f.type === 'risk' ? 'Risco' : 'Alerta'} · fora do total · {keepCurrency(f.title)}
+                <span className="type-small text-foreground" data-testid="analysis-alert-text">
+                  {f.type === 'risk' ? 'Risco' : 'Alerta'} · fora do total ·{' '}
+                  {keepCurrency(exampleText(findingText(f), example))}
                 </span>
               </li>
             ))}

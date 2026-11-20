@@ -3,12 +3,12 @@ import type { Metadata } from 'next';
 import { sendReportFor } from '@/app/(live)/app/analises/actions';
 import { lawExcerpt } from '@/demo/snapshot.ts';
 import { Report } from '@/features/findings/report';
-import { bankBannerText, liveSealLabel } from '@/features/live/data-origin';
+import { bankBannerText, isExampleBank, liveSealLabel } from '@/features/live/data-origin';
 import { ReportSender } from '@/features/live/report-sender.client';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { shellPage } from '@/server/analysis/page.ts';
 import { reportResult } from '@/server/analysis/read.ts';
-import { reportStatusOf } from '@/server/report/report.ts';
+import { accountantComment, reportStatusOf } from '@/server/report/report.ts';
 
 // Screen 8 in /app (ARCHITECTURE §13 `/app/analises/[id]/relatorio`). The owner's printable report follows the plan
 // (`reportPdf: 'summary'` on free: values, plan and citations, with the calculation only of the largest finding; the
@@ -47,7 +47,15 @@ export default async function LiveReportPage({ params }: { params: Promise<{ id:
       <ReportSender
         send={sendReportFor.bind(null, id)}
         emailOn={ctx.caps.email}
-        last={last ? { reportId: last.id, status: reportStatusOf(last) } : null}
+        last={
+          last
+            ? {
+                reportId: last.id,
+                status: reportStatusOf(last),
+                comment: accountantComment(last),
+              }
+            : null
+        }
       />
       <Report
         company={live.companyName}
@@ -58,6 +66,8 @@ export default async function LiveReportPage({ params }: { params: Promise<{ id:
         live
         seal={liveSealLabel(live.origin)}
         notice={bankBannerText(live.origin, live.companyName)}
+        example={isExampleBank(live.origin)}
+        anexo={live.anexo}
       />
     </div>
   );

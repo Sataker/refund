@@ -10,6 +10,7 @@ import { LawSeal } from '@/components/brand/law-seal';
 import { MoneyHero } from '@/components/brand/money-hero';
 import { Button } from '@/components/ui/button';
 import { keepCurrency, RISK_LINE } from '@/features/demo/display';
+import { exampleText } from '@/features/live/data-origin';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ConfirmCard } from './confirm';
@@ -104,7 +105,28 @@ interface DashboardViewProps {
   finance: ReactNode;
   /** Shown under the title (e.g. "Nova análise" in /app). */
   actions?: ReactNode;
+  /**
+   * /app on example statements (bug bash 20/11, C1): the headline says so, no badge reads "Confirmado" and every risk
+   * and alert text starts with "No extrato de exemplo: ". /demo and Marina's own analysis leave it null.
+   */
+  example?: { heading: string } | null;
+  /**
+   * /app (bug bash 20/11, C2): with nothing confirmed the headline says so and the estimate leads, with its badge;
+   * with no saving at all, the way to the demo. /demo keeps its own screen.
+   */
+  zeroState?: boolean;
 }
+
+/** C2: the dashboard's headline and lead when nothing is confirmed (null: the normal big number). */
+export function zeroLead(
+  m: Pick<DashboardModel, 'total' | 'estimated' | 'recoveryRange'>,
+): 'estimated' | 'nothing' | null {
+  if (m.total > 0) return null;
+  return m.estimated > 0 || m.recoveryRange !== null ? 'estimated' : 'nothing';
+}
+
+export const ZERO_HEADLINE = 'Ainda não há economia confirmada';
+export const NOTHING_FOUND = 'Com estes dados, não encontramos economia.';
 
 /** Screen 5 itself, shared by /demo and /app: every amount comes in `model` (the engine's). */
 export function DashboardView({
@@ -118,6 +140,8 @@ export function DashboardView({
   banner,
   finance,
   actions,
+  example = null,
+  zeroState = false,
 }: DashboardViewProps) {
   const [filter, setFilter] = useState<Filter>('all');
   const show = (f: DashboardFinding) => filter === 'all' || f.holder === filter;
@@ -125,13 +149,26 @@ export function DashboardView({
   const savings = m.savings.filter(show);
   const recovery = m.recovery.filter(show);
   const alerts = m.alerts.filter(show);
+  const isExample = example !== null;
+  const zero = zeroState ? zeroLead(m) : null;
+  const zeroText = zero === 'nothing' ? NOTHING_FOUND : ZERO_HEADLINE;
+  const heading =
+    example?.heading ?? (zero !== null ? zeroText : 'Você pode pagar a menos, dentro da lei');
 
   return (
-    <div className="flex flex-col gap-8" data-testid="dashboard" data-custom={custom}>
+    <div
+      className="flex flex-col gap-8"
+      data-testid="dashboard"
+      data-custom={custom}
+      data-example={isExample}
+    >
       <header className="flex flex-col gap-1.5">
         <p className="type-small text-muted-foreground">Painel · {title}</p>
-        <h1 className="font-serif text-[36px] leading-[40px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]">
-          Você pode pagar a menos, dentro da lei
+        <h1
+          className="font-serif text-[36px] leading-[40px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]"
+          data-testid="dashboard-heading"
+        >
+          {heading}
         </h1>
         {actions}
       </header>
@@ -157,37 +194,48 @@ export function DashboardView({
           loading && 'opacity-60',
         )}
       >
-        <MoneyHero
-          className="pl-3"
-          key={m.total}
-          cents={m.total}
-          testId="dashboard/money-hero"
-          srLabel="Você pode pagar a menos nos próximos 12 meses"
-          live
-          subline={
-            <span className="flex flex-col gap-1">
-              <span>
-                nos próximos 12 meses · só o que está{' '}
-                <span className="font-medium text-foreground">confirmado</span>
+        {zero !== null ? (
+          <ZeroLead
+            kind={zero}
+            headline={heading === zeroText ? null : zeroText}
+            estimated={m.estimated}
+            open={open}
+            confirm={links.confirm}
+          />
+        ) : (
+          <MoneyHero
+            className="pl-3"
+            key={m.total}
+            cents={m.total}
+            testId="dashboard/money-hero"
+            srLabel="Você pode pagar a menos nos próximos 12 meses"
+            live
+            subline={
+              <span className="flex flex-col gap-1">
+                <span>
+                  nos próximos 12 meses · só o que está{' '}
+                  <span className="font-medium text-foreground">confirmado</span>
+                  {isExample ? ' no extrato de exemplo' : ''}
+                </span>
+                {m.annual !== null && m.annual > 0 ? (
+                  <span data-testid="dashboard/regime-total" data-cents={m.annual} className="num">
+                    e {formatBRL(m.annual)} por ano
+                    {m.regimeFrom ? ` a partir de ${formatYearMonth(m.regimeFrom)}` : ''}
+                  </span>
+                ) : m.annualPending ? (
+                  <span data-testid="dashboard/regime-pending">
+                    Valor por ano aparece quando tudo estiver confirmado.
+                  </span>
+                ) : null}
+                {m.estimated > 0 ? (
+                  <span data-testid="dashboard/estimated" data-cents={m.estimated} className="num">
+                    {estimatedLine({ estimated: m.estimated, open })}
+                  </span>
+                ) : null}
               </span>
-              {m.annual !== null && m.annual > 0 ? (
-                <span data-testid="dashboard/regime-total" data-cents={m.annual} className="num">
-                  e {formatBRL(m.annual)} por ano
-                  {m.regimeFrom ? ` a partir de ${formatYearMonth(m.regimeFrom)}` : ''}
-                </span>
-              ) : m.annualPending ? (
-                <span data-testid="dashboard/regime-pending">
-                  Valor por ano aparece quando tudo estiver confirmado.
-                </span>
-              ) : null}
-              {m.estimated > 0 ? (
-                <span data-testid="dashboard/estimated" data-cents={m.estimated} className="num">
-                  {estimatedLine({ estimated: m.estimated, open })}
-                </span>
-              ) : null}
-            </span>
-          }
-        />
+            }
+          />
+        )}
         <Composition savings={m.savings} />
       </section>
 
@@ -231,7 +279,7 @@ export function DashboardView({
             </MiniCard>
             {m.recoveryRange ? (
               <MiniCard
-                label={`Recuperar (5 anos)${m.recovery[0] ? ` · ${confidenceLabel(m.recovery[0].confidence)}` : ''}`}
+                label={`Recuperar (5 anos)${m.recovery[0] ? ` · ${confidenceLabel(m.recovery[0].confidence, isExample)}` : ''}`}
                 testId="dashboard/recovery"
                 chart
               >
@@ -303,6 +351,7 @@ export function DashboardView({
                   title={f.title}
                   cents={f.cents}
                   confidence={f.confidence}
+                  example={isExample}
                   lawRef={f.ref ?? { label: 'Ver cálculo', url: href(f.ruleId) }}
                   footnote={
                     <span className="flex flex-col gap-0.5">
@@ -346,7 +395,7 @@ export function DashboardView({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="type-small inline-flex flex-wrap items-center gap-x-2 font-medium text-muted-foreground">
                   ↺ Para recuperar · não entra no total
-                  <ConfidenceBadge level={f.confidence} />
+                  <ConfidenceBadge level={f.confidence} example={isExample} />
                 </p>
                 {m.urgency ? (
                   <span
@@ -365,8 +414,10 @@ export function DashboardView({
               ) : null}
               <p className="type-small text-muted-foreground" data-testid="recovery-sentence">
                 Pagos a mais nos últimos 5 anos (
-                {f.confidence === 'estimated' ? 'estimativa' : confidenceLabel(f.confidence)}; o
-                contador confirma).
+                {f.confidence === 'estimated'
+                  ? 'estimativa'
+                  : confidenceLabel(f.confidence, isExample)}
+                ; o contador confirma).
                 {m.urgency
                   ? ` Prazo contado na data da análise (${formatCivilDate(m.analysisDate)}).`
                   : ''}
@@ -412,7 +463,7 @@ export function DashboardView({
                   aria-hidden="true"
                 />
                 {f.type === 'risk' ? 'Risco' : 'Alerta'}
-                <ConfidenceBadge level={f.confidence} />
+                <ConfidenceBadge level={f.confidence} example={isExample} />
                 {f.cents > 0 ? (
                   <>
                     {` · ${alertCostLabel(f.engineTitle)}: `}
@@ -426,13 +477,19 @@ export function DashboardView({
                   </>
                 ) : null}
               </p>
-              <p className="text-base font-medium text-foreground">{keepCurrency(f.title)}</p>
+              <p className="text-base font-medium text-foreground">
+                {keepCurrency(
+                  f.title === f.engineTitle ? exampleText(f.title, isExample) : f.title,
+                )}
+              </p>
               {f.title !== f.engineTitle ? (
-                <p className="type-small text-muted-foreground">{keepCurrency(f.engineTitle)}</p>
+                <p className="type-small text-muted-foreground" data-testid="alert-text">
+                  {keepCurrency(exampleText(f.engineTitle, isExample))}
+                </p>
               ) : null}
               {f.personalSpend ? (
                 <p className="type-small num text-foreground" data-testid="personal-spend">
-                  {personalPaymentsText(f.personalSpend.count)} ·{' '}
+                  {exampleText(personalPaymentsText(f.personalSpend.count), isExample)} ·{' '}
                   <span data-cents={f.personalSpend.total}>{formatBRL(f.personalSpend.total)}</span>{' '}
                   em 12 meses
                 </p>
@@ -470,6 +527,79 @@ export function DashboardView({
           Mandar para meu contador
         </Link>
       </div>
+    </div>
+  );
+}
+
+/**
+ * C2 (bug bash 20/11): nothing confirmed. The headline says so (unless the page title already does), the estimate
+ * leads with its "estimado" badge (it is the engine's `byConfidence.estimated`, never added to anything), and with no
+ * saving at all the way out is the demo. The confirmed figure stays on the page (R$ 0,00, `data-cents`), small.
+ */
+function ZeroLead({
+  kind,
+  headline,
+  estimated,
+  open,
+  confirm,
+}: {
+  kind: 'estimated' | 'nothing';
+  headline: string | null;
+  estimated: number;
+  open: number;
+  confirm: string;
+}) {
+  return (
+    <div className="flex flex-col gap-3" data-testid="zero-lead" data-kind={kind}>
+      {headline ? (
+        <p className="type-h3 text-foreground" data-testid="zero-headline">
+          {headline}
+        </p>
+      ) : null}
+      {kind === 'estimated' && estimated > 0 ? (
+        <div className="flex flex-col gap-1.5">
+          <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span
+              className="type-money-lg num text-foreground"
+              data-testid="dashboard/estimated-lead"
+              data-cents={estimated}
+            >
+              {formatBRL(estimated)}
+            </span>
+            <ConfidenceBadge level="estimated" />
+          </p>
+          <p className="type-small text-muted-foreground">
+            estimado nos próximos 12 meses ·{' '}
+            {open > 0 ? (
+              <Link href={confirm as Route} className="text-cobalt underline underline-offset-4">
+                {open === 1
+                  ? 'responda 1 pergunta para confirmar'
+                  : `responda ${open} perguntas para confirmar`}
+              </Link>
+            ) : (
+              'seu contador confirma'
+            )}
+          </p>
+        </div>
+      ) : null}
+      {kind === 'nothing' ? (
+        <p className="type-body-lg text-foreground" data-testid="nothing-found">
+          {headline === null ? null : `${NOTHING_FOUND} `}
+          <Link
+            href={'/demo' as Route}
+            data-testid="nothing-found-demo"
+            className="font-medium text-cobalt underline underline-offset-4"
+          >
+            Veja a demonstração com a Marina
+          </Link>
+        </p>
+      ) : null}
+      <p className="type-small num text-muted-foreground">
+        Confirmado até agora:{' '}
+        <span data-testid="dashboard/money-hero" data-cents={0}>
+          {formatBRL(0)}
+        </span>
+      </p>
     </div>
   );
 }

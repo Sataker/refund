@@ -9,11 +9,12 @@ import { CalcTrace } from '@/components/brand/calc-trace';
 import { ConfidenceBadge } from '@/components/brand/confidence-badge';
 import { MoneyHero } from '@/components/brand/money-hero';
 import { lawExcerpt, refIdsOf } from '@/demo/snapshot.ts';
-import { displayTitle, keepCurrency, RISK_LINE } from '@/features/demo/display';
+import { displayTitle, findingText, keepCurrency, RISK_LINE } from '@/features/demo/display';
 import { ActionPlan, formatWhen } from '@/features/findings/action-plan';
 import { type Excerpt, RefSheet } from '@/features/findings/ref-sheet';
 import { steadyStateSuffix } from '@/features/findings/text';
 import { MarkFindingButton } from '@/features/live/buttons.client';
+import { exampleText, isExampleBank } from '@/features/live/data-origin';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -51,6 +52,8 @@ export default async function LiveFindingPage({
   const dto = serializedFinding(live, row);
   const excerpts = excerptsOf(f);
   const title = displayTitle(f.ruleId, f.title);
+  const example = isExampleBank(live.origin);
+  const alertish = f.type === 'alert' || f.type === 'risk';
   const mainRefs = f.refs.map((r) => excerpts[r.id]).filter((e): e is Excerpt => e !== undefined);
   const planFinding = {
     ruleId: f.ruleId,
@@ -72,7 +75,7 @@ export default async function LiveFindingPage({
             Achados
           </Link>
           {f.type === 'savings' || f.type === 'recovery' ? (
-            <ConfidenceBadge level={f.confidence} />
+            <ConfidenceBadge level={f.confidence} example={example} />
           ) : (
             <span className="type-caption inline-flex items-center gap-1.5 text-muted-foreground">
               <TriangleAlert
@@ -85,7 +88,7 @@ export default async function LiveFindingPage({
           )}
         </div>
         <h1 className="font-serif text-[32px] leading-[36px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]">
-          {title}
+          {title === f.title && alertish ? exampleText(title, example) : title}
         </h1>
         {f.type === 'savings' ? (
           <MoneyHero
@@ -128,7 +131,9 @@ export default async function LiveFindingPage({
           </p>
         ) : null}
         {title !== f.title ? (
-          <p className="type-body-lg max-w-[68ch] text-foreground">{keepCurrency(f.title)}</p>
+          <p className="type-body-lg max-w-[68ch] text-foreground">
+            {keepCurrency(exampleText(findingText(f), example && alertish))}
+          </p>
         ) : null}
         {f.type === 'risk' && dto.explanation === f.title ? (
           <p className="type-small font-medium text-risk" data-testid="risk-line">

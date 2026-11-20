@@ -27,6 +27,8 @@ interface FindingCardProps {
   /** "Ver cálculo" link content; without it the chevron is not shown. */
   action?: ReactNode;
   className?: string;
+  /** Example statements: the confidence badge never says "Confirmado" (bug bash 20/11, C1). */
+  example?: boolean;
 }
 
 /** Finding card (IDENTITY-AND-UI §4.8). Hover: --border-strong + shadow-md in 140 ms. */
@@ -42,6 +44,7 @@ export function FindingCard({
   footnote,
   action,
   className,
+  example = false,
 }: FindingCardProps) {
   return (
     <Card
@@ -61,7 +64,7 @@ export function FindingCard({
       {footnote ? <div className="type-small text-muted-foreground">{footnote}</div> : null}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <LawSeal lawRef={lawRef} />
-        {confidence ? <ConfidenceBadge level={confidence} /> : null}
+        {confidence ? <ConfidenceBadge level={confidence} example={example} /> : null}
         {effort ? <span className="type-caption text-muted-foreground">{effort}</span> : null}
         {deadline ? (
           <span

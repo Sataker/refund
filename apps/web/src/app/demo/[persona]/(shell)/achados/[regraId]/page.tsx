@@ -14,7 +14,7 @@ import {
   refIdsOf,
   requireSnapshot,
 } from '@/demo/snapshot.ts';
-import { displayTitle, keepCurrency, RISK_LINE } from '@/features/demo/display';
+import { displayTitle, findingText, keepCurrency, RISK_LINE } from '@/features/demo/display';
 import { ActionPlan, formatWhen } from '@/features/findings/action-plan';
 import { MarkForAccountant, PlanActions } from '@/features/findings/finding-actions.client';
 import { MARGIN_STEPS, marginOf, proLaborePoint, traceSources } from '@/features/findings/model';
@@ -199,7 +199,9 @@ export default async function DemoFindingPage({
             analysisDate={snap.facts.analysisDate}
           />
           {title !== f.title ? (
-            <p className="type-body-lg max-w-[68ch] text-foreground">{keepCurrency(f.title)}</p>
+            <p className="type-body-lg max-w-[68ch] text-foreground">
+              {keepCurrency(findingText(f))}
+            </p>
           ) : null}
           {f.type === 'risk' && !explanation ? (
             <p className="type-small font-medium text-risk" data-testid="risk-line">

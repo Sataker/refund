@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   bankBannerText,
   bankSourceOf,
+  exampleText,
+  exampleTitle,
+  isExampleBank,
   liveSealLabel,
   PUBLIC_LIVE_LABEL,
   SAMPLE_BANK_LABEL,
@@ -62,5 +65,37 @@ describe('data origin of a live analysis (C2)', () => {
     expect(
       trackOrigin({ companySource: undefined, companyIsSample: false, connections: [] }).bank,
     ).toBe('none');
+  });
+});
+
+describe('example data (bug bash 20/11, C1)', () => {
+  const real = { companySynthetic: false, companyIsSample: false } as const;
+  it('the sample on another company and any sandbox are example data; Marina on hers is not', () => {
+    expect(isExampleBank({ ...real, bank: 'sample' })).toBe(true);
+    expect(isExampleBank({ ...real, bank: 'sandbox' })).toBe(true);
+    expect(isExampleBank({ ...real, bank: 'none' })).toBe(false);
+    expect(isExampleBank({ companySynthetic: true, companyIsSample: true, bank: 'sample' })).toBe(
+      false,
+    );
+  });
+
+  it('the title names the statement and keeps the company (D49)', () => {
+    expect(exampleTitle({ ...real, bank: 'sample' }, 'Vaccaro')).toBe(
+      'Exemplo com o extrato da Marina, aplicado às regras da Vaccaro',
+    );
+    expect(exampleTitle({ ...real, bank: 'sandbox' }, 'Vaccaro')).toContain(
+      'extrato de testes do Open Finance',
+    );
+    expect(
+      exampleTitle({ companySynthetic: true, companyIsSample: true, bank: 'sample' }, 'Marina'),
+    ).toBeNull();
+  });
+
+  it('risk and alert texts get the prefix only on example data', () => {
+    expect(exampleText('Um mês com mais de R$ 50 mil', true)).toBe(
+      'No extrato de exemplo: um mês com mais de R$ 50 mil',
+    );
+    expect(exampleText('PIS e Cofins', true)).toBe('No extrato de exemplo: PIS e Cofins');
+    expect(exampleText('Um mês', false)).toBe('Um mês');
   });
 });
