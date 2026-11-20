@@ -50,13 +50,20 @@ export function choiceOf(value: QuestionAnswer['value'] | undefined): string {
  * The options a visitor can pick without typing: the card's own yes/no/beneficiary options; cards that need typed
  * values (pró-labore, payroll) offer the persona's value as "Sim"; every card ends with "Não sei".
  */
-function optionsOf(q: ConfirmationQuestion): ConfirmOption[] {
+/** The payroll card (D22): answered only with a per-month gross payroll series, never a plain "yes". */
+export const PAYROLL_CARD = 'clt-payroll-gross';
+
+function optionsOf(q: ConfirmationQuestion, payrollReport: boolean): ConfirmOption[] {
   const own = q.options.filter((o) => ['yes', 'no', 'holder', 'dependent'].includes(o.value));
+  // H1 (UX review 19/11): "Usar o relatório do contador" exists only where a payroll report exists (the persona's;
+  // in /app, the sample statements'). Elsewhere the card offers only "Não sei" and stays FGTS ÷ 8%, estimated (D22).
   const base =
     own.length > 0
       ? own
-      : q.id === 'clt-payroll-gross'
-        ? [{ value: 'yes', label: 'Usar o relatório do contador' }]
+      : q.id === PAYROLL_CARD
+        ? payrollReport
+          ? [{ value: 'yes', label: 'Usar o relatório do contador' }]
+          : []
         : [YES];
   // ENGINE-SPEC E.2 / IDENTITY-AND-UI §2.3: the pró-labore card also takes "Outro valor" (typed, in cents).
   // "Enviar contracheque" needs an upload and stays out of /demo.
@@ -97,6 +104,8 @@ export function confirmCards(
   questions: readonly ConfirmationQuestion[],
   answers: readonly QuestionAnswer[],
   sampleOf: (transactionIds: readonly string[]) => ConfirmTx | null,
+  /** Whether a payroll report backs the payroll card (/demo: the persona's; /app: only the sample statements). */
+  { payrollReport = true }: { payrollReport?: boolean } = {},
 ): ConfirmCard[] {
   return questions.map((q) => ({
     id: q.id,
@@ -104,7 +113,7 @@ export function confirmCards(
     impact: q.estimatedImpact ?? 0,
     transactions: q.transactionIds.length,
     sample: sampleOf(q.transactionIds),
-    options: optionsOf(q),
+    options: optionsOf(q, payrollReport),
     personaChoice: choiceOf(answers.find((a) => a.questionId === q.id)?.value),
   }));
 }

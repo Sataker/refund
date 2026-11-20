@@ -26,19 +26,24 @@ export default async function LiveConfirmPage({ params }: { params: Promise<{ id
   ]);
   const ids = idMap(ledger.map((r) => r.transaction));
   const byRowId = new Map(ledger.map((r) => [r.transaction.id, r.transaction]));
-  const cards = confirmCards(questions, answers, (txIds) => {
-    const first = txIds.map((t) => byRowId.get(ids.get(t) ?? '')).find((t) => t !== undefined);
-    return first
-      ? {
-          date: first.date,
-          label:
-            first.counterpartyDocType === 'CPF'
-              ? `Pessoa física · ${first.counterpartyMask ?? ''}`
-              : first.description,
-          amountCents: Math.abs(first.amountCents),
-        }
-      : null;
-  });
+  const cards = confirmCards(
+    questions,
+    answers,
+    (txIds) => {
+      const first = txIds.map((t) => byRowId.get(ids.get(t) ?? '')).find((t) => t !== undefined);
+      return first
+        ? {
+            date: first.date,
+            label:
+              first.counterpartyDocType === 'CPF'
+                ? `Pessoa física · ${first.counterpartyMask ?? ''}`
+                : first.description,
+            amountCents: Math.abs(first.amountCents),
+          }
+        : null;
+    },
+    { payrollReport: live.origin.bank === 'sample' },
+  );
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-3">

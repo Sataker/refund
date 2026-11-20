@@ -26,14 +26,18 @@ export function LiveConfirm({
   answer: (questionId: string, value: Answer) => Promise<Result<{ reanalyze: boolean }>>;
   redo: ReactNode;
 }) {
+  // M1: nothing pre-selected. Only a saved answer starts pressed; "Não sei" is neutral and pressed only once tapped.
   const [choices, setChoices] = useState<Record<string, string>>(
-    Object.fromEntries(cards.map((c) => [c.id, c.personaChoice])),
+    Object.fromEntries(
+      cards.filter((c) => c.personaChoice !== DONT_KNOW).map((c) => [c.id, c.personaChoice]),
+    ),
   );
   const [typing, setTyping] = useState<Record<string, string>>({});
   const [error, setError] = useState<Record<string, string>>({});
   const [changed, setChanged] = useState(false);
   const [pending, begin] = useTransition();
   const open = cards.filter((c) => (choices[c.id] ?? DONT_KNOW) === DONT_KNOW).length;
+  const answeredCount = cards.length - open;
 
   const send = (card: ConfirmCard, choice: string, value: Answer) =>
     begin(async () => {
@@ -59,18 +63,18 @@ export function LiveConfirm({
     <div className="flex flex-col gap-6" data-testid="confirm">
       <p className="type-small text-foreground">
         <span data-testid="confirm-pending" data-count={open} className="num font-medium">
-          {cards.length - open} de {cards.length} respondidas
+          {answeredCount} de {cards.length} respondidas
         </span>
         {open === 0 ? ' · revise se quiser' : ` · ${open} em aberto`}
       </p>
       <ol className="flex flex-col gap-4">
         {cards.map((card) => {
-          const current = choices[card.id] ?? DONT_KNOW;
+          const current = choices[card.id] ?? null;
           return (
             <li
               key={card.id}
               data-testid={`card-${card.id}`}
-              data-choice={current}
+              data-choice={current ?? 'none'}
               className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5"
             >
               <p className="text-base font-medium text-foreground">{card.text}</p>

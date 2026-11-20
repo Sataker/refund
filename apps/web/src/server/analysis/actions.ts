@@ -21,6 +21,8 @@ import { type ActionResult, fail, ok } from '../result.ts';
 import { trackLimit } from '../track/limits.ts';
 import { loadTrack } from '../track/state.ts';
 import { ANSWER_PREFIX, previousMonth } from './input.ts';
+import { analysisBankSource } from './read.ts';
+import { PAYROLL_CARD_ID, samplePayrollSeries } from './sample-payroll.ts';
 
 // Live analysis actions (ARCHITECTURE §4.7): after getSession → requireCapability (liveContext, in actions.ts), each
 // core runs rateLimit → requireEntitlement/quota → zod, and returns a Result. Ownership is always by session.
@@ -174,6 +176,8 @@ export function answerKey(questionId: string): string {
 /** The answer must be one the card offers (or a typed amount on the pró-labore card, or the health pair). */
 export function allowedAnswer(q: ConfirmationQuestion, value: QuestionAnswer['value']): boolean {
   if (typeof value === 'number') return q.type === 'monthly_pro_labore';
+  // The payroll series is never typed by the browser: only the server maps "yes" to the sample report (H1).
+  if (q.id === PAYROLL_CARD_ID) return typeof value === 'object' && !('beneficiary' in value);
   if (typeof value === 'object') return q.options.some((o) => o.value === value.beneficiary);
   if (typeof value === 'boolean') return false;
   return q.options.some((o) => o.value === value);
@@ -229,7 +233,19 @@ export async function answerQuestionWith(
   if (!analysis) return fail('NOT_FOUND', NOT_FOUND);
   const q = (await questionsOf(deps.db, analysis.id)).find((x) => x.id === parsed.data.questionId);
   if (!q) return fail('NOT_FOUND', 'Essa pergunta não é desta análise.');
-  const { answer } = parsed.data;
+  let { answer } = parsed.data;
+  // H1: "Usar o relatório do contador" on the payroll card means the payroll report's per-month series. Only the
+  // sample statements ship with one; anywhere else there is no report and the card stays open (D22: FGTS ÷ 8%).
+  if (q.id === PAYROLL_CARD_ID && answer === 'yes') {
+    const series =
+      (await analysisBankSource(deps.db, analysis)) === 'sample' ? samplePayrollSeries() : null;
+    if (series === null)
+      return fail(
+        'INVALID_INPUT',
+        'Não temos o relatório da folha desta empresa. Sem ele, a folha fica estimada pelo FGTS.',
+      );
+    answer = series as typeof answer;
+  }
   if (answer !== null && !allowedAnswer(q, answer))
     return fail('INVALID_INPUT', 'Escolha uma das opções.');
   // Keyed by the card id, which is stable across runs, so the next run reads it back (loadAnswers).

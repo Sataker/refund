@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { createMemoryDb, type DbHandle, schema } from '@refund/db';
+import { createAnalysis, createMemoryDb, type DbHandle, schema } from '@refund/db';
 import { sumCents } from '@refund/engine';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { confirmCards } from '@/features/findings/confirm.ts';
 import { deleteMyDataWith } from '@/server/account/delete.ts';
 import {
   answerQuestionWith,
@@ -317,6 +318,107 @@ describe('card answers and re-analysis (A5)', () => {
     await executeAnalysis(next.value.analysisId, { db: h.db, ...runDeps });
     const after = await loadLiveAnalysis(h.db, userId, next.value.analysisId);
     expect(after?.total.savings12m).not.toBe(before.total.savings12m);
+  });
+});
+
+describe('live jury path (UX review 19/11: H1, C2, H3)', () => {
+  // The answer key of the hero (ENGINE-SPEC F.2), as a visitor taps it on the live Confirmar screen.
+  const TAP: Record<string, string> = {
+    'pro-labore-gross': 'yes',
+    'clt-payroll-gross': 'yes',
+  };
+  const tapOf = (id: string) => (id.startsWith('health:') ? 'holder' : (TAP[id] ?? 'yes'));
+
+  it('H1: answering every card of the live hero gives the /demo total, R$ 62.318,92 confirmed', async () => {
+    const userId = await heroUser();
+    const id = await startAndRun(userId);
+    const first = await loadLiveAnalysis(h.db, userId, id);
+    expect(first?.origin).toEqual({
+      companySynthetic: true,
+      companyIsSample: true,
+      bank: 'sample',
+    });
+    const questions = await questionsOf(h.db, id);
+    expect(questions.map((q) => q.id)).toContain('clt-payroll-gross');
+    // The options the live screen offers for the sample statements (the payroll report exists there).
+    const cards = confirmCards(questions, [], () => null, { payrollReport: true });
+    for (const card of cards) {
+      const value = tapOf(card.id);
+      expect(card.options.map((o) => o.value)).toContain(value);
+      const r = await answerQuestionWith(
+        { analysisId: id, questionId: card.id, answer: value },
+        deps(userId),
+      );
+      expect(r, card.id).toEqual({ ok: true, value: { reanalyze: true } });
+    }
+    const next = await reanalyzeWith({ analysisId: id }, deps(userId));
+    if (!next.ok) throw new Error(next.error.code);
+    await executeAnalysis(next.value.analysisId, { db: h.db, ...runDeps });
+    const after = await loadLiveAnalysis(h.db, userId, next.value.analysisId);
+    expect(after?.total.byConfidence.confirmed).toBe(6231892);
+    expect(after?.dashboard.total).toBe(6231892);
+    expect(await questionsOf(h.db, next.value.analysisId)).toEqual([]);
+  });
+
+  it('H1: without a payroll report the option is not offered and a plain "yes" is refused', async () => {
+    const userId = await heroUser();
+    const id = await startAndRun(userId);
+    const questions = await questionsOf(h.db, id);
+    const payroll = confirmCards(questions, [], () => null, { payrollReport: false }).find(
+      (c) => c.id === 'clt-payroll-gross',
+    );
+    expect(payroll?.options.map((o) => o.value)).toEqual(['dont_know']);
+    // A sample-backed run maps "yes" to the report; drop the sample connections and the same tap is refused.
+    await h.db.delete(schema.classifications).where(eq(schema.classifications.analysisId, id));
+    await h.db
+      .update(schema.connections)
+      .set({ provider: 'pluggy' })
+      .where(eq(schema.connections.userId, userId));
+    expect(
+      await answerQuestionWith(
+        { analysisId: id, questionId: 'clt-payroll-gross', answer: 'yes' },
+        deps(userId),
+      ),
+    ).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
+    expect((await loadLiveAnalysis(h.db, userId, id))?.origin.bank).toBe('sandbox');
+  });
+
+  it('H3: a run for a Lucro Presumido company ends with the regime as the reason, not the activity', async () => {
+    const [u] = await h.db.insert(schema.users).values({}).returning();
+    const userId = u?.id as string;
+    const looked = await lookupCnpjWith(
+      userId,
+      { cnpj: 'RFPRES01000137', context: 'live' },
+      { db: h.db, secrets, headers: headers(), dataMode: 'replay', nowMs: NOW },
+    );
+    expect(looked.ok).toBe(true);
+    const [company] = await h.db
+      .select({ id: schema.companies.id })
+      .from(schema.companies)
+      .where(eq(schema.companies.cnpj, 'RFPRES01000137'));
+    await recordConsentWith(
+      { scopes: [...CONSENT_SCOPES], termsVersion: TERMS_VERSION },
+      connDeps(userId),
+    );
+    expect((await connectSampleWith({ holder: 'PJ' }, connDeps(userId))).ok).toBe(true);
+    const row = await createAnalysis(h.db, {
+      userId,
+      companyId: company?.id as string,
+      referenceMonth: '2026-10',
+    });
+    await executeAnalysis(row.id, { db: h.db, ...runDeps });
+    const log = await frames(row.id, 0);
+    expect(log.map((f) => f.type)).toEqual(['error']);
+    expect(log[0]?.data).toMatchObject({
+      code: 'REGIME_OUT_OF_SCOPE',
+      message:
+        'Por enquanto o Refund calcula só empresas do Simples Nacional. A Consultoria Exemplo está no Lucro Presumido.',
+      recoverable: false,
+    });
+    const live = await loadLiveAnalysis(h.db, userId, row.id);
+    expect(live?.analysis.status).toBe('error');
+    // C2: a real-looking company next to Marina's statements carries the banner.
+    expect(live?.origin).toMatchObject({ companyIsSample: false, bank: 'sample' });
   });
 });
 
