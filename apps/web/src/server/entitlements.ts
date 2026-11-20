@@ -22,8 +22,20 @@ export interface ActivePlan {
   origin: 'subscription' | 'validation_offer' | 'default';
 }
 
+/**
+ * Local-only override so Enzo can read every calculation while testing with `next dev`: LOCAL_DEV_PLAN=business.
+ * Ignored unless NODE_ENV is 'development' and the code is not running on Vercel, so it can never unlock a deploy.
+ */
+export function localDevPlan(env: NodeJS.ProcessEnv = process.env): PlanId | null {
+  if (env.NODE_ENV !== 'development' || env.VERCEL === '1') return null;
+  const p = env.LOCAL_DEV_PLAN;
+  return p !== undefined && isPlanId(p) ? p : null;
+}
+
 /** 'active' subscription with ends_at > now(); more than one → the highest tier; none → 'free'. */
 export async function activePlanWith(db: Db, userId: string): Promise<ActivePlan> {
+  const local = localDevPlan();
+  if (local !== null) return { plan: local, until: null, origin: 'default' };
   let best: ActivePlan = { plan: 'free', until: null, origin: 'default' };
   // Payments review M2: on the production deployment a period paid with a Test Mode charge grants nothing.
   const production = readEnv().values.VERCEL_ENV === 'production';
