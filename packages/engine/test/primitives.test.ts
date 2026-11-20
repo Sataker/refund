@@ -198,11 +198,15 @@ describe('DAS (C.3.4)', () => {
     expect(foreign?.byTax.CPP).toBeGreaterThan(0);
   });
 
-  it('rejects RBT12 above the last bracket, negative RBT12 and anexos without a table', () => {
-    expect(() => effectiveRate(brl('4.800.000,01'), 'III', '2026-06')).toThrow(RangeError);
-    expect(() => effectiveRate(-1 as never, 'III', '2026-06')).toThrow(RangeError);
-    expect(() => effectiveRate(brl('1,00'), 'II', '2026-06')).toThrow(RangeError);
-    expect(() => effectiveRate(brl('1,00'), 'IV', '2026-06')).toThrow(RangeError);
+  it('rejects RBT12 above the last bracket and negative RBT12, in every anexo (II and IV since D52)', () => {
+    for (const anexo of ['I', 'II', 'III', 'IV', 'V'] as const) {
+      expect(() => effectiveRate(brl('4.800.000,01'), anexo, '2026-06')).toThrow(RangeError);
+      expect(() => effectiveRate(brl('4.800.000,01'), anexo, '2027-06')).toThrow(RangeError);
+      expect(() => effectiveRate(-1 as never, anexo, '2026-06')).toThrow(RangeError);
+    }
+    // RBT12 = 0 → 1 (item 8.1): 1st-bracket nominal rate, 4,50% in both II and IV.
+    expect(effectiveRate(0 as never, 'II', '2026-06').effectiveRate.toFixed()).toBe('0.045');
+    expect(effectiveRate(0 as never, 'IV', '2026-06').effectiveRate.toFixed()).toBe('0.045');
   });
 });
 

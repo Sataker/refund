@@ -36,10 +36,12 @@ describe('analyze() errors cross the boundary as Result', () => {
     }
   });
 
-  it('Anexo without a table (II/IV) → ANEXO_WITHOUT_TABLE', () => {
-    const f = syntheticFacts({ domestic: constant(brl('10.000,00')), subjectToFatorR: false });
-    f.companyDetails.value.baseAnexo = 'IV';
-    expect(codeOf(f)).toBe('ANEXO_WITHOUT_TABLE');
+  it('Anexos II and IV have tables since D52 (ENGINE-SPEC A.3): analyze() runs', () => {
+    for (const anexo of ['II', 'IV'] as const) {
+      const f = syntheticFacts({ domestic: constant(brl('10.000,00')), subjectToFatorR: false });
+      f.companyDetails.value.baseAnexo = anexo;
+      expect(codeOf(f), anexo).toBe('OK');
+    }
   });
 
   it('a month without parameters in force → PARAMETER_NOT_IN_FORCE', () => {

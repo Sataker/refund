@@ -27,17 +27,14 @@ import {
 
 const TABLE_KEYS = {
   I: 'simples.anexo.I',
+  II: 'simples.anexo.II',
   III: 'simples.anexo.III',
+  IV: 'simples.anexo.IV',
   V: 'simples.anexo.V',
-} as const satisfies Partial<Record<Anexo, ParameterKey>>;
+} as const satisfies Record<Anexo, ParameterKey>;
 
-/** Anexo table in force in `month`. Anexos II and IV have no table in ENGINE-SPEC A.3 (no P0 persona uses them). */
+/** Anexo table in force in `month` (ENGINE-SPEC A.3; Anexos II and IV since D52). */
 export function anexoTable(anexo: Anexo, month: YearMonth): ParameterLookup<'simples.anexo.I'> {
-  if (anexo !== 'I' && anexo !== 'III' && anexo !== 'V') {
-    throw new EngineError('ANEXO_WITHOUT_TABLE', `Anexo ${anexo} has no table in ENGINE-SPEC A.3`, {
-      anexo,
-    });
-  }
   return param(TABLE_KEYS[anexo], month) as ParameterLookup<'simples.anexo.I'>;
 }
 
@@ -75,14 +72,14 @@ export function effectiveRate(
   return { bracket: row.bracket, row, rbt12Used: rb, effectiveRate: e };
 }
 
-/** Effective-rate threshold of the 5% ISS cap note (Anexo III, 5th bracket), or null when the anexo has none. */
+/** Effective-rate threshold of the 5% ISS cap note (Anexos III and IV, 5th bracket), or null when the anexo has none. */
 export function issThreshold(anexo: Anexo, month: YearMonth): Rate | null {
   return anexoTable(anexo, month).value.issCap?.threshold ?? null;
 }
 
 /**
  * Per-tax rate when the 5% ISS cap applies: ISS fixed at 5% of revenue; the federal taxes split (e − 5%)
- * (LC 123, Anexo III, note; the operator is subtraction).
+ * (LC 123, Anexos III and IV, note (*); the operator is subtraction).
  */
 export function apportionmentWithFixedIss5(
   table: SimplesAnexoTable,
