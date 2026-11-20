@@ -11,7 +11,15 @@ import { MoneyHero } from '@/components/brand/money-hero';
 import { lawExcerpt, refIdsOf } from '@/demo/snapshot.ts';
 import { displayTitle, findingText, keepCurrency, RISK_LINE } from '@/features/demo/display';
 import { ActionPlan, formatWhen } from '@/features/findings/action-plan';
-import { type Excerpt, RefSheet } from '@/features/findings/ref-sheet';
+import {
+  DETAIL_TEXT,
+  DetailCard,
+  DetailSection,
+  DoNotSection,
+  LawSection,
+  NotesSections,
+} from '@/features/findings/detail-sections';
+import type { Excerpt } from '@/features/findings/ref-sheet';
 import { steadyStateSuffix } from '@/features/findings/text';
 import { MarkFindingButton } from '@/features/live/buttons.client';
 import { exampleFor, exampleText, isExampleBank } from '@/features/live/data-origin';
@@ -64,22 +72,22 @@ export default async function LiveFindingPage({
   };
 
   return (
-    <article className="flex flex-col gap-8" data-testid={`detail-${f.ruleId}`}>
+    <article className="flex flex-col gap-6 lg:gap-8" data-testid={`detail-${f.ruleId}`}>
       <header className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             href={`/app/analises/${id}/painel#achados` as Route}
-            className="type-small inline-flex min-h-10 items-center gap-1.5 font-medium text-muted-foreground hover:text-foreground"
+            className="inline-flex min-h-11 items-center gap-1.5 text-base font-medium text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="size-4" strokeWidth={1.5} aria-hidden="true" />
+            <ArrowLeft className="size-5" strokeWidth={1.5} aria-hidden="true" />
             Achados
           </Link>
           {f.type === 'savings' || f.type === 'recovery' ? (
-            <ConfidenceBadge level={f.confidence} example={example} />
+            <ConfidenceBadge level={f.confidence} example={example} size="md" />
           ) : (
-            <span className="type-caption inline-flex items-center gap-1.5 text-muted-foreground">
+            <span className="type-small inline-flex items-center gap-1.5 font-medium text-muted-foreground">
               <TriangleAlert
-                className={cn('size-3.5', f.type === 'risk' ? 'text-risk' : 'text-warning')}
+                className={cn('size-4', f.type === 'risk' ? 'text-risk' : 'text-warning')}
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
@@ -87,69 +95,68 @@ export default async function LiveFindingPage({
             </span>
           )}
         </div>
-        <h1 className="font-serif text-[32px] leading-[36px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]">
-          {title === f.title && alertish
-            ? exampleText(title, exampleFor(f.ruleId, example))
-            : title}
-        </h1>
-        {f.type === 'savings' ? (
-          <MoneyHero
-            cents={f.marginalValue12m}
-            size="lg"
-            testId="detail/money"
-            srLabel="Economia nos próximos 12 meses"
-            subline={
-              <span className="flex flex-col gap-0.5">
-                <span>nos próximos 12 meses</span>
-                {f.annualRegimeValue !== undefined ? (
-                  <span
-                    className="num"
-                    data-testid="detail/regime"
-                    data-cents={f.annualRegimeValue}
-                  >
-                    e {formatBRL(f.annualRegimeValue)} por ano
-                    {steadyStateSuffix(f.regimeFrom, null, formatYearMonth)}
-                  </span>
-                ) : null}
-              </span>
-            }
-          />
-        ) : f.type === 'recovery' && f.range ? (
-          <p
-            className="type-money-lg num text-foreground"
-            data-testid="detail/range"
-            data-cents-min={f.range[0]}
-            data-cents-max={f.range[1]}
-          >
-            {formatBRL(f.range[0])} a {formatBRL(f.range[1])}
-          </p>
-        ) : f.marginalValue12m > 0 ? (
-          <p
-            className="type-money-lg num text-foreground"
-            data-testid="detail/cost"
-            data-cents={f.marginalValue12m}
-          >
-            {formatBRL(f.marginalValue12m)}
-          </p>
-        ) : null}
-        {title !== f.title ? (
-          <p className="type-body-lg max-w-[68ch] text-foreground">
-            {keepCurrency(exampleText(findingText(f), exampleFor(f.ruleId, example) && alertish))}
-          </p>
-        ) : null}
-        {f.type === 'risk' && dto.explanation === f.title ? (
-          <p className="type-small font-medium text-risk" data-testid="risk-line">
-            {RISK_LINE}
-          </p>
-        ) : null}
-        {dto.explanation !== f.title ? (
-          <p
-            className="max-w-[68ch] text-base text-muted-foreground"
-            data-testid="detail/explanation"
-          >
-            {keepCurrency(dto.explanation)}
-          </p>
-        ) : null}
+        <DetailCard testId="detail-summary" className="gap-5">
+          <h1 className="font-serif text-[32px] leading-[36px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]">
+            {title === f.title && alertish
+              ? exampleText(title, exampleFor(f.ruleId, example))
+              : title}
+          </h1>
+          {f.type === 'savings' ? (
+            <MoneyHero
+              cents={f.marginalValue12m}
+              size="lg"
+              testId="detail/money"
+              srLabel="Economia nos próximos 12 meses"
+              subline={
+                <span className="flex flex-col gap-0.5">
+                  <span>nos próximos 12 meses</span>
+                  {f.annualRegimeValue !== undefined ? (
+                    <span
+                      className="num"
+                      data-testid="detail/regime"
+                      data-cents={f.annualRegimeValue}
+                    >
+                      e {formatBRL(f.annualRegimeValue)} por ano
+                      {steadyStateSuffix(f.regimeFrom, null, formatYearMonth)}
+                    </span>
+                  ) : null}
+                </span>
+              }
+            />
+          ) : f.type === 'recovery' && f.range ? (
+            <p
+              className="type-money-lg num text-foreground"
+              data-testid="detail/range"
+              data-cents-min={f.range[0]}
+              data-cents-max={f.range[1]}
+            >
+              {formatBRL(f.range[0])} a {formatBRL(f.range[1])}
+            </p>
+          ) : f.marginalValue12m > 0 ? (
+            <p
+              className="type-money-lg num text-foreground"
+              data-testid="detail/cost"
+              data-cents={f.marginalValue12m}
+            >
+              {formatBRL(f.marginalValue12m)}
+            </p>
+          ) : null}
+          {title !== f.title ? (
+            <p className={cn(DETAIL_TEXT, 'font-medium')}>
+              {keepCurrency(exampleText(findingText(f), exampleFor(f.ruleId, example) && alertish))}
+            </p>
+          ) : null}
+          {f.type === 'risk' && dto.explanation === f.title ? (
+            <p className="text-base font-medium text-risk" data-testid="risk-line">
+              {RISK_LINE}
+            </p>
+          ) : null}
+          {dto.explanation !== f.title ? (
+            <p className={DETAIL_TEXT} data-testid="detail/explanation">
+              {keepCurrency(dto.explanation)}
+            </p>
+          ) : null}
+        </DetailCard>
       </header>
 
       <ActionPlan
@@ -159,23 +166,20 @@ export default async function LiveFindingPage({
         {...(f.type === 'savings' ? { collapseAfter: 3 } : {})}
       />
       {dto.recoveryItemsTotal !== undefined && dto.recoveryItemsTotal > 1 ? (
-        <p className="type-small text-muted-foreground" data-testid="recovery-summary">
+        <p className="text-base text-muted-foreground" data-testid="recovery-summary">
           Mostramos o período com o prazo mais curto. Os outros {dto.recoveryItemsTotal - 1}, DAS a
           DAS com os lembretes de prazo, ficam no plano Empresa.
         </p>
       ) : null}
 
-      <section aria-label="Cálculo" className="flex flex-col gap-2">
+      <DetailSection id="calculo-titulo" title="O cálculo">
         {dto.trace === null ? (
-          <div
-            className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-5"
-            data-testid="trace-locked"
-          >
-            <p className="type-small inline-flex items-center gap-1.5 font-medium text-foreground">
+          <div className="flex flex-col gap-3" data-testid="trace-locked">
+            <p className="inline-flex items-center gap-1.5 text-base font-medium text-foreground">
               <Lock className="size-4" strokeWidth={1.5} aria-hidden="true" />
               Cálculo completo no plano Empresa
             </p>
-            <p className="type-small text-muted-foreground">
+            <p className={cn(DETAIL_TEXT, 'text-muted-foreground')}>
               O valor acima é o mesmo em qualquer plano. No Grátis, o passo a passo da conta
               (entradas, fórmula e artigo) abre só no maior achado. Seu contador vê tudo pelo link
               do relatório.
@@ -185,7 +189,7 @@ export default async function LiveFindingPage({
                 `/app/plano?voltar=${encodeURIComponent(`/app/analises/${id}/achados/${achadoId}`)}` as Route
               }
               data-testid="trace-locked-upgrade"
-              className="type-small w-fit font-medium text-cobalt underline-offset-4 hover:underline"
+              className="inline-flex min-h-11 w-fit items-center text-base font-medium text-cobalt underline-offset-4 hover:underline"
             >
               Ver os planos →
             </Link>
@@ -193,63 +197,23 @@ export default async function LiveFindingPage({
         ) : (
           <CalcTrace
             trace={dto.trace}
+            comfortable
             {...(f.type === 'risk' ? { noMoneyText: 'sem valor de economia' } : {})}
           />
         )}
-      </section>
+      </DetailSection>
 
-      {mainRefs.length > 0 ? (
-        <section aria-labelledby="lei-titulo" className="flex flex-col gap-3" data-testid="law">
-          <h2 id="lei-titulo" className="type-h4 text-foreground">
-            A lei
-          </h2>
-          <div className="flex flex-col gap-2">
-            {mainRefs.map((e, i) => (
-              <RefSheet key={e.id} excerpt={e} open={i === 0} />
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <LawSection refs={mainRefs} />
+      <DoNotSection items={f.doNot} />
+      <NotesSections tradeoffs={f.tradeoffs} />
 
-      {f.doNot.length > 0 ? (
-        <section
-          aria-labelledby="naofaca-titulo"
-          className="flex flex-col gap-2 rounded-lg border border-border border-l-4 border-l-risk bg-risk-soft/40 p-5"
-          data-testid="do-not"
-        >
-          <h2
-            id="naofaca-titulo"
-            className="type-small inline-flex items-center gap-1.5 font-medium text-foreground"
-          >
-            <TriangleAlert className="size-4 text-risk" strokeWidth={1.5} aria-hidden="true" />
-            Não faça
-          </h2>
-          <ul className="flex list-disc flex-col gap-1.5 pl-5 text-base text-foreground">
-            {f.doNot.map((d) => (
-              <li key={d}>{d}</li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {f.tradeoffs.length > 0 ? (
-        <section className="flex flex-col gap-2">
-          <h2 className="type-small font-medium text-muted-foreground">Contrapartidas</h2>
-          <ul className="flex list-disc flex-col gap-1.5 pl-5 text-base text-foreground">
-            {f.tradeoffs.map((t) => (
-              <li key={t}>{t}</li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <div className="flex flex-col gap-2 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
         <MarkFindingButton
           mark={setFindingMark.bind(null, row.id)}
           initial={row.status === 'marked'}
         />
         {f.deadline ? (
-          <p className="type-small text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             Prazo mais próximo: {formatWhen(f.deadline)}
           </p>
         ) : null}

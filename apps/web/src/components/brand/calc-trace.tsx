@@ -61,6 +61,8 @@ interface CalcTraceProps {
    * (UX review G2 L2). The data-cents stays on the element for the tests.
    */
   noMoneyText?: string;
+  /** Finding detail (E21 readability): 14px floor, bigger toggle and law seals. */
+  comfortable?: boolean;
 }
 
 /**
@@ -74,10 +76,19 @@ export function CalcTrace({
   sources,
   className,
   noMoneyText,
+  comfortable = false,
 }: CalcTraceProps) {
+  const small = comfortable ? 'text-base' : 'type-small';
+  const mono = comfortable ? 'font-mono text-[14px] leading-6' : 'type-mono';
   return (
     <details open={open} className={cn('group', className)} data-testid="calc-trace">
-      <summary className="type-small inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-md font-medium text-cobalt [&::-webkit-details-marker]:hidden">
+      <summary
+        className={cn(
+          small,
+          'inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-md font-medium text-cobalt [&::-webkit-details-marker]:hidden',
+          comfortable && 'border border-strong-border px-4 hover:bg-surface-2',
+        )}
+      >
         <span className="group-open:hidden">Ver cálculo</span>
         <span className="hidden group-open:inline">Esconder cálculo</span>
         <ChevronDown
@@ -86,20 +97,52 @@ export function CalcTrace({
           aria-hidden="true"
         />
       </summary>
-      <ol className="relative mt-5 space-y-5 before:absolute before:top-2 before:bottom-2 before:left-[11px] before:w-px before:bg-border">
+      <ol
+        className={cn(
+          'relative mt-5 space-y-5 before:absolute before:top-2 before:bottom-2 before:w-px before:bg-border',
+          comfortable ? 'before:left-[15px]' : 'before:left-[11px]',
+        )}
+      >
         {trace.map((step, i) => (
-          <li key={step.id} className="relative grid grid-cols-[24px_1fr] gap-x-4">
+          <li
+            key={step.id}
+            className={cn(
+              'relative grid gap-x-4',
+              comfortable ? 'grid-cols-[32px_1fr]' : 'grid-cols-[24px_1fr]',
+            )}
+          >
             <span
-              className="type-caption num relative z-10 flex size-6 items-center justify-center rounded-full border border-strong-border bg-surface text-muted-foreground"
+              className={cn(
+                'num relative z-10 flex items-center justify-center rounded-full border border-strong-border bg-surface',
+                comfortable
+                  ? 'type-small size-8 font-semibold text-foreground'
+                  : 'type-caption size-6 text-muted-foreground',
+              )}
               aria-hidden="true"
             >
               {i + 1}
             </span>
             <div className="min-w-0 space-y-1.5">
-              <p className="type-small font-medium text-foreground">{step.label}</p>
-              <p className="type-mono break-words text-muted-foreground">{step.formula}</p>
+              <p
+                className={cn(
+                  'font-medium text-foreground',
+                  comfortable ? 'type-body-lg' : 'type-small',
+                )}
+              >
+                {step.label}
+              </p>
+              <p className={cn(mono, 'break-words text-muted-foreground')}>{step.formula}</p>
               {Object.keys(step.inputs).some((k) => traceInputLabel(k) !== null) ? (
-                <dl className="type-small grid grid-cols-[auto_1fr] gap-x-3 text-muted-foreground">
+                <dl
+                  className={cn(
+                    small,
+                    'grid gap-x-3 text-muted-foreground',
+                    // Detail: label above value on narrow screens (200% zoom), side by side from 420px.
+                    comfortable
+                      ? 'grid-cols-1 min-[420px]:grid-cols-[auto_1fr] [&_dd]:mb-1.5 min-[420px]:[&_dd]:mb-0'
+                      : 'grid-cols-[auto_1fr]',
+                  )}
+                >
                   {Object.entries(step.inputs).flatMap(([name, input]) => {
                     const label = traceInputLabel(name);
                     return label === null
@@ -120,21 +163,22 @@ export function CalcTrace({
                   rows={sources[step.id] ?? []}
                   value={<StepValue value={step.result} testId={`${testIdPrefix}/${step.id}`} />}
                   testId={`${testIdPrefix}-sources/${step.id}`}
+                  comfortable={comfortable}
                 />
               ) : noMoneyText && step.result.unit === 'cents' && step.result.value === 0 ? (
                 <p
-                  className="type-small font-medium text-muted-foreground"
+                  className={cn(small, 'font-medium text-muted-foreground')}
                   data-testid={`${testIdPrefix}/${step.id}`}
                   data-cents={0}
                 >
                   {noMoneyText}
                 </p>
               ) : (
-                <p className="type-mono font-medium text-foreground">
+                <p className={cn(mono, 'font-medium text-foreground')}>
                   = <StepValue value={step.result} testId={`${testIdPrefix}/${step.id}`} />
                 </p>
               )}
-              {step.ref ? <LawSeal lawRef={step.ref} /> : null}
+              {step.ref ? <LawSeal lawRef={step.ref} size={comfortable ? 'md' : 'sm'} /> : null}
             </div>
           </li>
         ))}
@@ -153,18 +197,26 @@ function SourceList({
   rows,
   value,
   testId,
+  comfortable = false,
 }: {
   rows: readonly TraceSourceRow[];
   value: ReactNode;
   testId: string;
+  comfortable?: boolean;
 }) {
+  const mono = comfortable ? 'font-mono text-[14px] leading-6' : 'type-mono';
   return (
     <details className="group/src" data-testid={testId}>
-      <summary className="type-mono inline-flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-2 rounded-md font-medium text-foreground [&::-webkit-details-marker]:hidden">
+      <summary
+        className={cn(
+          mono,
+          'inline-flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-2 rounded-md font-medium text-foreground [&::-webkit-details-marker]:hidden',
+        )}
+      >
         <span>
           = <span className="underline decoration-dotted underline-offset-4">{value}</span>
         </span>
-        <span className="type-caption font-sans text-cobalt">
+        <span className={cn(comfortable ? 'type-small' : 'type-caption', 'font-sans text-cobalt')}>
           <span className="group-open/src:hidden">ver {rows.length} transações</span>
           <span className="hidden group-open/src:inline">esconder transações</span>
         </span>
@@ -175,7 +227,7 @@ function SourceList({
         tabIndex={0}
         aria-label="Transações de origem"
       >
-        <table className="type-mono w-full text-left" data-testid="source-transactions">
+        <table className={cn(mono, 'w-full text-left')} data-testid="source-transactions">
           <caption className="sr-only">Transações de origem deste número</caption>
           <thead className="sticky top-0 bg-surface-2 text-muted-foreground">
             <tr>

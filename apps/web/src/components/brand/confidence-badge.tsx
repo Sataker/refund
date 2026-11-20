@@ -44,11 +44,14 @@ export function ConfidenceBadge({
   level,
   className,
   example = false,
+  size = 'sm',
 }: {
   level: Confidence;
   className?: string;
   /** The analysis runs on example statements (features/live/data-origin.ts `isExampleBank`). */
   example?: boolean;
+  /** `md`: 14px with a bigger swatch (finding detail, E21 readability). */
+  size?: 'sm' | 'md';
 }) {
   const l = example && level === 'confirmed' ? EXAMPLE : LEVELS[level];
   return (
@@ -57,9 +60,21 @@ export function ConfidenceBadge({
       data-level={level}
       data-example={example ? 'true' : undefined}
       title={l.hint}
-      className={cn('type-caption inline-flex items-center gap-1.5', l.text, className)}
+      className={cn(
+        size === 'md' ? 'type-small font-medium' : 'type-caption',
+        'inline-flex items-center gap-1.5',
+        l.text,
+        className,
+      )}
     >
-      <span className={cn('inline-block size-3 rounded-[3px]', l.swatch)} aria-hidden="true" />
+      <span
+        className={cn(
+          'inline-block rounded-[3px]',
+          size === 'md' ? 'size-3.5' : 'size-3',
+          l.swatch,
+        )}
+        aria-hidden="true"
+      />
       {l.label}
       <span className="sr-only">. {l.hint}</span>
     </span>

@@ -16,10 +16,18 @@ import {
 } from '@/demo/snapshot.ts';
 import { displayTitle, findingText, keepCurrency, RISK_LINE } from '@/features/demo/display';
 import { ActionPlan, formatWhen } from '@/features/findings/action-plan';
+import {
+  DETAIL_TEXT,
+  DetailCard,
+  DetailSection,
+  DoNotSection,
+  LawSection,
+  NotesSections,
+} from '@/features/findings/detail-sections';
 import { MarkForAccountant, PlanActions } from '@/features/findings/finding-actions.client';
 import { MARGIN_STEPS, marginOf, proLaborePoint, traceSources } from '@/features/findings/model';
 import { planAsText } from '@/features/findings/plan-text';
-import { type Excerpt, RefSheet } from '@/features/findings/ref-sheet';
+import type { Excerpt } from '@/features/findings/ref-sheet';
 import { SimulatorLoader } from '@/features/findings/simulator-loader.client';
 import { marginStepValues } from '@/features/findings/simulator-steps';
 import { alertCostLabel, formatCivilDate, steadyStateSuffix } from '@/features/findings/text';
@@ -159,7 +167,7 @@ export default async function DemoFindingPage({
   const mainRefs = f.refs.map((r) => excerpts[r.id]).filter((e): e is Excerpt => e !== undefined);
 
   return (
-    <article className="flex flex-col gap-8" data-testid={`detail-${f.ruleId}`}>
+    <article className="flex flex-col gap-6 lg:gap-8" data-testid={`detail-${f.ruleId}`}>
       <VisitorNotice
         persona={persona}
         holderName={snap.view.holderName}
@@ -171,51 +179,48 @@ export default async function DemoFindingPage({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Link
               href={`/demo/${persona}/painel#achados` as Route}
-              className="type-small inline-flex min-h-10 items-center gap-1.5 font-medium text-muted-foreground hover:text-foreground"
+              className="inline-flex min-h-11 items-center gap-1.5 text-base font-medium text-muted-foreground hover:text-foreground"
             >
-              <ArrowLeft className="size-4" strokeWidth={1.5} aria-hidden="true" />
+              <ArrowLeft className="size-5" strokeWidth={1.5} aria-hidden="true" />
               Achados
             </Link>
             {f.type === 'savings' || f.type === 'recovery' ? (
-              <ConfidenceBadge level={f.confidence} />
+              <ConfidenceBadge level={f.confidence} size="md" />
             ) : (
-              <span className="type-caption inline-flex items-center gap-1.5 text-muted-foreground">
+              <span className="type-small inline-flex items-center gap-1.5 font-medium text-muted-foreground">
                 <TriangleAlert
-                  className={cn('size-3.5', f.type === 'risk' ? 'text-risk' : 'text-warning')}
+                  className={cn('size-4', f.type === 'risk' ? 'text-risk' : 'text-warning')}
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
                 {f.type === 'risk' ? 'Risco' : 'Alerta'} · fora do total
-                <ConfidenceBadge level={f.confidence} />
+                <ConfidenceBadge level={f.confidence} size="md" />
               </span>
             )}
           </div>
-          <h1 className="font-serif text-[32px] leading-[36px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]">
-            {title}
-          </h1>
-          <Amount
-            f={f}
-            regimeAnchor={snap.dashboard.regimeFrom}
-            analysisDate={snap.facts.analysisDate}
-          />
-          {title !== f.title ? (
-            <p className="type-body-lg max-w-[68ch] text-foreground">
-              {keepCurrency(findingText(f))}
-            </p>
-          ) : null}
-          {f.type === 'risk' && !explanation ? (
-            <p className="type-small font-medium text-risk" data-testid="risk-line">
-              {RISK_LINE}
-            </p>
-          ) : null}
-          {explanation ? (
-            <p
-              className="max-w-[68ch] text-base text-muted-foreground"
-              data-testid="detail/explanation"
-            >
-              {keepCurrency(explanation)}
-            </p>
-          ) : null}
+          <DetailCard testId="detail-summary" className="gap-5">
+            <h1 className="font-serif text-[32px] leading-[36px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]">
+              {title}
+            </h1>
+            <Amount
+              f={f}
+              regimeAnchor={snap.dashboard.regimeFrom}
+              analysisDate={snap.facts.analysisDate}
+            />
+            {title !== f.title ? (
+              <p className={cn(DETAIL_TEXT, 'font-medium')}>{keepCurrency(findingText(f))}</p>
+            ) : null}
+            {f.type === 'risk' && !explanation ? (
+              <p className="text-base font-medium text-risk" data-testid="risk-line">
+                {RISK_LINE}
+              </p>
+            ) : null}
+            {explanation ? (
+              <p className={DETAIL_TEXT} data-testid="detail/explanation">
+                {keepCurrency(explanation)}
+              </p>
+            ) : null}
+          </DetailCard>
         </header>
 
         {/* UX review H1: on R01 the simulator comes right under the summary, then the plan, then the calculation. */}
@@ -248,92 +253,23 @@ export default async function DemoFindingPage({
           }
         />
 
-        <section aria-label="Cálculo" className="flex flex-col gap-2">
+        <DetailSection id="calculo-titulo" title="O cálculo">
           <CalcTrace
             trace={f.trace}
             sources={sources}
+            comfortable
             {...(f.type === 'risk' ? { noMoneyText: 'sem valor de economia' } : {})}
           />
-        </section>
+        </DetailSection>
 
-        {mainRefs.length > 0 ? (
-          <section aria-labelledby="lei-titulo" className="flex flex-col gap-3" data-testid="law">
-            <h2 id="lei-titulo" className="type-h4 text-foreground">
-              A lei
-            </h2>
-            <div className="flex flex-col gap-2">
-              {mainRefs.slice(0, 1).map((e) => (
-                <RefSheet key={e.id} excerpt={e} open />
-              ))}
-              {mainRefs.length > 1 ? (
-                // UX review G2 L3: the main norm stays open; the others wait under one line.
-                <details className="group" data-testid="more-refs">
-                  <summary className="type-small inline-flex min-h-11 cursor-pointer items-center font-medium text-cobalt">
-                    {mainRefs.length === 2
-                      ? 'Outra norma usada'
-                      : `Outras ${mainRefs.length - 1} normas usadas`}
-                  </summary>
-                  <div className="mt-2 flex flex-col gap-2">
-                    {mainRefs.slice(1).map((e) => (
-                      <RefSheet key={e.id} excerpt={e} open={false} />
-                    ))}
-                  </div>
-                </details>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
+        <LawSection refs={mainRefs} />
+        <DoNotSection items={f.doNot} />
+        <NotesSections tradeoffs={f.tradeoffs} assumptions={f.assumptionsUsed} />
 
-        {f.doNot.length > 0 ? (
-          <section
-            aria-labelledby="naofaca-titulo"
-            className="flex flex-col gap-2 rounded-lg border border-border border-l-4 border-l-risk bg-risk-soft/40 p-5"
-            data-testid="do-not"
-          >
-            <h2
-              id="naofaca-titulo"
-              className="type-small inline-flex items-center gap-1.5 font-medium text-foreground"
-            >
-              <TriangleAlert className="size-4 text-risk" strokeWidth={1.5} aria-hidden="true" />
-              Não faça
-            </h2>
-            <ul className="flex list-disc flex-col gap-1.5 pl-5 text-base text-foreground">
-              {f.doNot.map((d) => (
-                <li key={d}>{d}</li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {f.tradeoffs.length > 0 || f.assumptionsUsed.length > 0 ? (
-          <section className="grid gap-6 lg:grid-cols-2">
-            {f.tradeoffs.length > 0 ? (
-              <div className="flex flex-col gap-2">
-                <h2 className="type-small font-medium text-muted-foreground">Contrapartidas</h2>
-                <ul className="flex list-disc flex-col gap-1.5 pl-5 text-base text-foreground">
-                  {f.tradeoffs.map((t) => (
-                    <li key={t}>{t}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {f.assumptionsUsed.length > 0 ? (
-              <div className="flex flex-col gap-2">
-                <h2 className="type-small font-medium text-muted-foreground">Premissas</h2>
-                <ul className="flex list-disc flex-col gap-1.5 pl-5 text-base text-foreground">
-                  {f.assumptionsUsed.map((a) => (
-                    <li key={a}>{a}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </section>
-        ) : null}
-
-        <div className="flex flex-col gap-2 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
           <MarkForAccountant persona={persona} ruleId={f.ruleId} />
           {f.deadline ? (
-            <p className="type-small text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               Prazo mais próximo: {formatWhen(f.deadline)}
             </p>
           ) : null}

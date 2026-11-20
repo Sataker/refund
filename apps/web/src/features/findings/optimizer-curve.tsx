@@ -208,7 +208,7 @@ export function OptimizerCurve({
           ))}
         </div>
       </div>
-      <figcaption className="type-caption flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
+      <figcaption className="type-small flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
           <span
             aria-hidden="true"

@@ -12,7 +12,37 @@ export interface LawSealRef {
  * Law seal (IDENTITY-AND-UI §4.8): 12px mono chip with the cited provision. For now it opens the primary source
  * in a new tab; the sheet with the highlighted excerpt arrives with the finding detail (Screen 6).
  */
-export function LawSeal({ lawRef, className }: { lawRef: LawSealRef; className?: string }) {
+export function LawSeal({
+  lawRef,
+  className,
+  size = 'sm',
+}: {
+  lawRef: LawSealRef;
+  className?: string;
+  /** `md` (finding detail, E21 readability): 14px sans, wraps instead of truncating, 44px tall. */
+  size?: 'sm' | 'md';
+}) {
+  if (size === 'md')
+    return (
+      <a
+        href={lawRef.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-testid="law-seal"
+        aria-label={`${lawRef.label}: abrir o texto oficial em nova aba`}
+        className={cn(
+          'type-small inline-flex min-h-11 max-w-full items-center gap-2 rounded-md border border-strong-border bg-surface px-3 py-1.5 text-foreground no-underline transition-colors duration-(--dur-fast) hover:bg-surface-2',
+          className,
+        )}
+      >
+        <Scale
+          className="size-4 shrink-0 text-muted-foreground"
+          strokeWidth={1.5}
+          aria-hidden="true"
+        />
+        <span className="min-w-0 break-words">§ {lawRef.label}</span>
+      </a>
+    );
   return (
     <a
       href={lawRef.url}

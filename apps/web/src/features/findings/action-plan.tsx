@@ -3,6 +3,7 @@ import { MapPin, Timer } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { DETAIL_TEXT, DetailSection } from './detail-sections';
 import { ACTOR_LABEL, formatCivilDate, URGENT_DAYS, urgencyOf, urgencyText } from './model';
 import { type Excerpt, RefSheet } from './ref-sheet';
 
@@ -33,14 +34,33 @@ export function planTitle(type: Finding['type']): string {
   return 'O que fazer';
 }
 
+/**
+ * The step's sources: the first § chip, then "+N fontes" opens the rest (E21: a step can cite 8 norms, and the
+ * action must not drown in references). Presentation only: every chip is still the step's own `refIds`.
+ */
 function Refs({ ids, excerpts }: { ids: readonly string[]; excerpts: Record<string, Excerpt> }) {
-  const found = ids.map((id) => excerpts[id]).filter((e): e is Excerpt => e !== undefined);
-  if (found.length === 0) return null;
+  const [first, ...rest] = ids
+    .map((id) => excerpts[id])
+    .filter((e): e is Excerpt => e !== undefined);
+  if (!first) return null;
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {found.map((e) => (
-        <RefSheet key={e.id} excerpt={e} className="open:basis-full" />
-      ))}
+    <div className="flex flex-wrap items-start gap-2" data-testid="step-refs">
+      <RefSheet excerpt={first} className="open:basis-full" />
+      {rest.length > 0 ? (
+        <details className="group/more max-w-full open:basis-full" data-testid="more-sources">
+          <summary className="type-small inline-flex min-h-11 cursor-pointer list-none items-center rounded-md px-2 font-medium text-cobalt underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden">
+            <span className="group-open/more:hidden">
+              {rest.length === 1 ? '+1 fonte' : `+${rest.length} fontes`}
+            </span>
+            <span className="hidden group-open/more:inline">Menos fontes</span>
+          </summary>
+          <div className="mt-2 flex flex-wrap items-start gap-2">
+            {rest.map((e) => (
+              <RefSheet key={e.id} excerpt={e} className="open:basis-full" />
+            ))}
+          </div>
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -74,33 +94,28 @@ export function ActionPlan({
   const urgency = urgencyOf(finding.recoveryItems);
   const anchor = `na data da análise (${formatCivilDate(analysisDate)})`;
   return (
-    <section
-      aria-labelledby="plano-titulo"
-      data-testid="action-plan"
-      className="flex flex-col gap-5 rounded-xl border border-border bg-surface p-5 shadow-sm lg:p-6"
+    <DetailSection
+      id="plano-titulo"
+      title={planTitle(finding.type)}
+      testId="action-plan"
+      className="gap-6"
     >
-      <h2 id="plano-titulo" className="type-h4 text-foreground">
-        {planTitle(finding.type)}
-      </h2>
-
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {finding.howToReceive.length === 0 ? (
           // L3: the fixed C.12 sentence replaces the heading (there is no money to arrive).
-          <p className="text-base text-foreground" data-testid="no-money">
+          <p className={DETAIL_TEXT} data-testid="no-money">
             {NO_MONEY_TEXT}
           </p>
         ) : (
-          <h3 className="type-small font-medium text-muted-foreground">
-            {whenTitle(finding.type)}
-          </h3>
+          <h3 className="type-h4 text-foreground">{whenTitle(finding.type)}</h3>
         )}
         {finding.howToReceive.length === 0 ? null : (
           <ul className="flex flex-col gap-3" data-testid="how-to-receive">
             {finding.howToReceive.map((h) => (
               <li key={h.method} className="grid grid-cols-[12px_1fr] gap-x-3">
-                <span className="mt-2 size-2 rounded-full bg-found-chart" aria-hidden="true" />
-                <div className="flex min-w-0 flex-col gap-1.5">
-                  <p className="text-base text-foreground">
+                <span className="mt-2.5 size-2.5 rounded-full bg-found-chart" aria-hidden="true" />
+                <div className="flex min-w-0 flex-col gap-2">
+                  <p className={DETAIL_TEXT}>
                     <span className="font-medium">{METHOD_LABEL[h.method]}:</span> {h.summary}
                     {h.firstEffect ? (
                       <span className="text-muted-foreground">
@@ -120,7 +135,7 @@ export function ActionPlan({
       {urgency ? (
         <p
           data-testid="urgency-line"
-          className="type-small flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-warning-soft px-3 py-2 text-foreground"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-warning-soft px-3 py-2 text-base text-foreground"
         >
           <Timer className="size-4 shrink-0 text-warning" strokeWidth={1.5} aria-hidden="true" />
           <span className="font-medium">{urgencyText(urgency)}</span>
@@ -128,7 +143,7 @@ export function ActionPlan({
         </p>
       ) : null}
 
-      <ol className="flex flex-col gap-4" data-testid="action-steps">
+      <ol className="flex flex-col gap-6" data-testid="action-steps">
         {steps.slice(0, cut).map((s, i) => (
           <StepItem key={s.id} s={s} n={i + 1} excerpts={excerpts} />
         ))}
@@ -143,7 +158,7 @@ export function ActionPlan({
             </span>
             <span className="hidden group-open/steps:inline">Mostrar menos</span>
           </summary>
-          <ol className="mt-3 flex flex-col gap-4" start={cut + 1}>
+          <ol className="mt-4 flex flex-col gap-6" start={cut + 1}>
             {steps.slice(cut).map((s, i) => (
               <StepItem key={s.id} s={s} n={cut + i + 1} excerpts={excerpts} />
             ))}
@@ -156,7 +171,7 @@ export function ActionPlan({
       ) : null}
 
       {actions}
-    </section>
+    </DetailSection>
   );
 }
 
@@ -174,57 +189,58 @@ function StepItem({
       data-testid="action-step"
       data-step-id={s.id}
       data-no-source={s.noSource === true ? 'true' : undefined}
-      className="grid grid-cols-[28px_1fr] gap-x-3"
+      className="grid grid-cols-[32px_1fr] gap-x-3 lg:gap-x-4"
     >
       <span
-        className="type-caption num flex size-7 items-center justify-center rounded-full border border-strong-border text-muted-foreground"
+        className="type-small num flex size-8 items-center justify-center rounded-full border-2 border-foreground font-semibold text-foreground"
         aria-hidden="true"
       >
         {n}
       </span>
-      <div className="flex min-w-0 flex-col gap-1.5">
-        <span className="type-caption self-start rounded-sm bg-surface-2 px-1.5 py-0.5 font-medium text-foreground">
-          {ACTOR_LABEL[s.who]}
+      <div className="flex min-w-0 flex-col gap-2 border-l-2 border-border pl-4">
+        <span className="type-small self-start rounded-full bg-surface-2 px-3 py-1 text-foreground">
+          <span className="text-muted-foreground">Quem faz: </span>
+          <span className="font-semibold">{ACTOR_LABEL[s.who]}</span>
         </span>
         <p
           className={cn(
-            'text-base',
+            'type-body-lg max-w-[65ch]',
             s.noSource ? 'text-muted-foreground italic' : 'text-foreground',
           )}
         >
           {s.what}
         </p>
         {s.where ? (
-          <p className="type-small flex flex-wrap items-baseline gap-x-2 text-muted-foreground">
-            <MapPin
-              className="size-3.5 shrink-0 self-center"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-            {s.where.url ? (
-              <a
-                href={s.where.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-cobalt underline-offset-4 hover:underline"
-              >
-                {s.where.name}
-              </a>
-            ) : (
-              <span className="font-medium text-foreground">{s.where.name}</span>
-            )}
-            {s.where.path ? <span className="type-mono break-words">{s.where.path}</span> : null}
+          <p className="flex flex-col gap-1 text-base text-muted-foreground">
+            <span className="flex items-start gap-1.5">
+              <MapPin className="mt-1 size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+              {s.where.url ? (
+                <a
+                  href={s.where.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-cobalt underline-offset-4 hover:underline"
+                >
+                  {s.where.name}
+                </a>
+              ) : (
+                <span className="font-medium text-foreground">{s.where.name}</span>
+              )}
+            </span>
+            {s.where.path ? (
+              <span className="font-mono text-[14px] leading-5 break-words">{s.where.path}</span>
+            ) : null}
           </p>
         ) : null}
         {s.from || s.until ? (
-          <p className="type-small num text-muted-foreground">
+          <p className="num text-base text-muted-foreground">
             {s.from ? `A partir de ${formatWhen(s.from)}` : ''}
             {s.from && s.until ? ' · ' : ''}
             {s.until ? `prazo ${formatWhen(s.until)}` : ''}
           </p>
         ) : null}
         {s.documents?.length ? (
-          <ul className="type-small list-disc pl-5 text-muted-foreground">
+          <ul className="list-disc pl-5 text-base text-muted-foreground">
             {s.documents.map((d) => (
               <li key={d}>{d}</li>
             ))}

@@ -90,10 +90,10 @@ export default function Simulator({
       className="flex flex-col gap-5 rounded-xl border border-border bg-surface p-5 shadow-sm lg:p-6"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id={labelId} className="type-h4 text-foreground">
+        <h2 id={labelId} className="type-h3 text-foreground">
           Simule o pró-labore
         </h2>
-        <span className="type-caption text-muted-foreground">
+        <span className="type-small text-muted-foreground">
           calculado no seu navegador pelo mesmo motor
         </span>
       </div>
@@ -153,7 +153,7 @@ export default function Simulator({
                 {late}
               </p>
             ) : null}
-            <p className="type-caption text-muted-foreground">
+            <p className="type-small text-muted-foreground">
               hoje <span className="num text-foreground">{formatBRL(point.current)}</span>
             </p>
           </div>
