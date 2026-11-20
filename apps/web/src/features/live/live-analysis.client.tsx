@@ -13,7 +13,7 @@ import {
   progressPercent,
   reduceAnalysis,
 } from '@/features/demo/analysis-state';
-import { keepCurrency, shortTitle } from '@/features/demo/display';
+import { keepCurrency, sampleDescription, shortTitle } from '@/features/demo/display';
 import { confirmCta, confirmProgress, estimatedLine } from '@/features/findings/progress';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -221,7 +221,7 @@ export function LiveAnalysis({
                   className="flex min-w-0 justify-between gap-3"
                 >
                   <span className="min-w-0 truncate">
-                    {t.holder} · {t.description}
+                    {t.holder} · {sampleDescription(t.description, t.amountCents)}
                   </span>
                   <span className="num shrink-0">{formatBRL(t.amountCents)}</span>
                 </li>
