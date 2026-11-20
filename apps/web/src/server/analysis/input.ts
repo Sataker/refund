@@ -117,11 +117,28 @@ export function percentToRate(percent: string): string | null {
   return dec === '' ? whole : `${whole}.${dec}`;
 }
 
+/**
+ * Last Selic point on or before `today`. A recorded series usually ends a few days before the analysis date, so
+ * when no fixture covers the window ending today, step back one day at a time (at most 60) to the newest one
+ * that does: the last published value, as ENGINE-SPEC C.1 item 4 does for parameters.
+ */
+export async function lastSelicUpTo(
+  today: CivilDate,
+  replay: Pick<ReplaySeries, 'series'> = new ReplaySeries(),
+): Promise<{ date: string; value: string } | undefined> {
+  const end = new Date(`${today}T12:00:00Z`);
+  for (let back = 0; back <= 60; back++) {
+    const d = new Date(end.getTime() - back * 86_400_000).toISOString().slice(0, 10) as CivilDate;
+    const from = `${Number(d.slice(0, 4)) - 1}${d.slice(4)}` as CivilDate;
+    const r = await replay.series(432, { from, to: d }, { mode: 'replay' });
+    if (r.ok && r.value.length > 0) return r.value.at(-1);
+  }
+  return undefined;
+}
+
 /** Selic from the SGS series fixture (the same source /demo uses); without it the engine simply has no Selic. */
 async function selicAssumption(today: CivilDate): Promise<AnalysisInput['userAssumptions']> {
-  const from = `${Number(today.slice(0, 4)) - 1}${today.slice(4)}` as CivilDate;
-  const r = await new ReplaySeries().series(432, { from, to: today }, { mode: 'replay' });
-  const last = r.ok ? r.value.at(-1) : undefined;
+  const last = await lastSelicUpTo(today);
   const value = last ? percentToRate(last.value) : null;
   if (value === null) return {};
   return {
