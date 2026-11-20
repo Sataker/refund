@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { formatBRL, formatRatePercent } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { LawSeal } from './law-seal';
-import { traceInputLabel, traceTextValue } from './trace-labels';
+import { traceInputLabel, traceRateValue, traceTextValue } from './trace-labels';
 
 type Value = Step['result'];
 
@@ -26,7 +26,7 @@ export function inputText(key: string, input: Step['inputs'][string]): string {
     case 'cents':
       return typeof input.value === 'number' ? formatBRL(input.value) : String(input.value);
     case 'rate':
-      return formatRatePercent(String(input.value));
+      return traceRateValue(key, String(input.value));
     case 'months':
       return `${input.value} meses`;
     default:

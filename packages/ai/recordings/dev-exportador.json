@@ -4,72 +4,12 @@
   "engineVersion": "0.2.0",
   "parametersVersion": "2026.11.14",
   "items": {
-    "sha256:0b1a9f61a6a9aab4dfe8ea25870b1fa67a496a1958a14d4a9550966b6d550640": {
-      "task": "explain",
-      "ruleId": "R02",
-      "origin": "template",
-      "promptVersion": "template@3",
-      "recordedAt": "2026-11-16T15:05:41.913Z",
-      "output": {
-        "text": "Os R$ 9.000,00 de IR retidos na distribuição de R$ 90.000,00 de julho de 2026 só voltam na declaração de 2027: são 10 meses de dinheiro parado, que custam R$ 1.111,70 com a Selic de 15% ao ano. É um alerta e não entra no total de economia. Estimativa: depende de premissas que podem ser revistas. Não distribua lucro que a empresa não apurou só para “usar” o limite. A conta e a lei estão em “Ver cálculo”.",
-        "source": "Os {{withheld}} de IR retidos na distribuição de {{distributed}} de {{withholdingMonth}} só voltam na declaração de {{returnYear}}: são {{monthsWaiting}} de dinheiro parado, que custam {{financialCost}} com a Selic de {{selicRate}} ao ano. É um alerta e não entra no total de economia. Estimativa: depende de premissas que podem ser revistas. Não distribua lucro que a empresa não apurou só para “usar” o limite. A conta e a lei estão em “Ver cálculo”."
-      },
-      "guards": {
-        "numeric": "ok",
-        "citation": "ok"
-      }
-    },
-    "sha256:1495b56913e167688fe49e63f70d54a4f37ed555a03f09f818ecacbdbf692c1f": {
-      "task": "explain",
-      "ruleId": "R05",
-      "origin": "template",
-      "promptVersion": "template@3",
-      "recordedAt": "2026-11-19T23:37:02.932Z",
-      "output": {
-        "text": "Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D. Com a empresa já no Anexo III, esta mudança vale R$ 31.109,76 por ano. Junto com as outras mudanças recomendadas, esta leva o custo dos próximos 12 meses de R$ 80.923,20 para R$ 46.920,80. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento). Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”.",
-        "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D. Com a empresa já no {{regimeAnexo}}, esta mudança vale {{annualRegimeValue}} por ano. Junto com as outras mudanças recomendadas, esta leva o custo dos próximos {{horizon}} de {{costBefore}} para {{costAfter}}. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento). Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”."
-      },
-      "guards": {
-        "numeric": "ok",
-        "citation": "ok"
-      }
-    },
-    "sha256:9b7728f8e2508fb352c91ae234d1952ea6039ad1a6e8e0fb8d9eece52cb36921": {
-      "task": "explain",
-      "ruleId": "R01",
-      "origin": "template",
-      "promptVersion": "template@3",
-      "recordedAt": "2026-11-19T23:37:02.932Z",
-      "output": {
-        "text": "Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei, subindo seu pró-labore para R$ 2.260,00 por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples (Anexo III) a partir de abril de 2027; depois, são R$ 42.896,52 a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”.",
-        "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, subindo seu pró-labore para {{proLaboreTarget}} por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples ({{regimeAnexo}}) a partir de {{regimeFrom}}; depois, são {{annualRegimeValue}} a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”."
-      },
-      "guards": {
-        "numeric": "ok",
-        "citation": "ok"
-      }
-    },
-    "sha256:c159091d1bc1636218c0ffd1b078e13eea941bb72fae916a8959e06fc2252862": {
-      "task": "explain",
-      "ruleId": "R01",
-      "origin": "template",
-      "promptVersion": "template@3",
-      "recordedAt": "2026-11-19T23:37:02.932Z",
-      "output": {
-        "text": "Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei, subindo seu pró-labore para R$ 2.260,00 por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples (Anexo III) a partir de abril de 2027; depois, são R$ 42.896,52 a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20. Estimativa: depende de premissas que podem ser revistas. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”.",
-        "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, subindo seu pró-labore para {{proLaboreTarget}} por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples ({{regimeAnexo}}) a partir de {{regimeFrom}}; depois, são {{annualRegimeValue}} a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}. Estimativa: depende de premissas que podem ser revistas. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”."
-      },
-      "guards": {
-        "numeric": "ok",
-        "citation": "ok"
-      }
-    },
-    "sha256:e2bc31099cfd7fc7b6e7cadcc3c5416b84b450452baaa6178bdb0da117b81d15": {
+    "sha256:24706e76fa8cb81513f19fb2dbe018515b89e5fcec7da92852ca472347313bb7": {
       "task": "explain",
       "ruleId": "A01",
       "origin": "template",
       "promptVersion": "template@3",
-      "recordedAt": "2026-11-19T23:37:02.932Z",
+      "recordedAt": "2026-11-20T00:47:31.781Z",
       "output": {
         "text": "Isso parece economia, mas é risco e não entra no total. Não recomendamos. Não lance despesa pessoal como despesa da empresa. Veja por quê em “Ver cálculo”.",
         "source": "Isso parece economia, mas é risco e não entra no total. Não recomendamos. Não lance despesa pessoal como despesa da empresa. Veja por quê em “Ver cálculo”."
@@ -79,15 +19,75 @@
         "citation": "ok"
       }
     },
-    "sha256:e3592ab362be5e699eaa5ad5400019d78fcdd7c3b0640e433771affd1cc30bf9": {
+    "sha256:454f89edcd31862b37008db492ea8a021c42abf6889929544204e42f5413cdc5": {
+      "task": "explain",
+      "ruleId": "R01",
+      "origin": "template",
+      "promptVersion": "template@3",
+      "recordedAt": "2026-11-20T00:47:31.781Z",
+      "output": {
+        "text": "Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei, subindo seu pró-labore para R$ 2.260,00 por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples (Anexo III) a partir de abril de 2027; depois, são R$ 42.896,52 a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20. Estimativa: depende de premissas que podem ser revistas. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”.",
+        "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, subindo seu pró-labore para {{proLaboreTarget}} por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples ({{regimeAnexo}}) a partir de {{regimeFrom}}; depois, são {{annualRegimeValue}} a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}. Estimativa: depende de premissas que podem ser revistas. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”."
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
+    },
+    "sha256:4e48a0d2e1d33e074209b762d350e82744034a3292c5345aaf4a8a8a3e96c1e1": {
       "task": "explain",
       "ruleId": "R05-REC",
       "origin": "template",
       "promptVersion": "template@3",
-      "recordedAt": "2026-11-19T23:37:02.932Z",
+      "recordedAt": "2026-11-20T00:47:31.781Z",
       "output": {
         "text": "Nos 12 meses do extrato, a empresa pagou R$ 39.787,68 a mais. Se o mesmo padrão valeu nos 48 meses anteriores, chega a R$ 198.938,40 (estimativa, sem a correção pela Selic). A parte federal volta da Receita; o ISS, da Prefeitura. Esse dinheiro é do passado e não entra no total de economia dos próximos 12 meses. Há prazo: o mês mais antigo só pode ser pedido até 23/11/2026; depois dessa data, esse mês não pode mais ser pedido. Contrapartida: ao retificar, a prefeitura pode questionar o ISS. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento). Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”.",
         "source": "Nos {{measuredMonths}} do extrato, a empresa pagou {{measured}} a mais. Se o mesmo padrão valeu nos {{projectedMonths}} anteriores, chega a {{rangeMax}} (estimativa, sem a correção pela Selic). A parte federal volta da Receita; o ISS, da Prefeitura. Esse dinheiro é do passado e não entra no total de economia dos próximos {{horizon}}. Há prazo: o mês mais antigo só pode ser pedido até {{deadline}}; depois dessa data, esse mês não pode mais ser pedido. Contrapartida: ao retificar, a prefeitura pode questionar o ISS. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento). Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”."
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
+    },
+    "sha256:66a9a2f141466d03daa7f825721e7d451e1ae9fbb74923360930f2f25bc6ebea": {
+      "task": "explain",
+      "ruleId": "R05",
+      "origin": "template",
+      "promptVersion": "template@3",
+      "recordedAt": "2026-11-20T00:47:31.781Z",
+      "output": {
+        "text": "Você pode pagar R$ 34.002,40 a menos nos próximos 12 meses, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D. Com a empresa já no Anexo III, esta mudança vale R$ 31.109,76 por ano. Junto com as outras mudanças recomendadas, esta leva o custo dos próximos 12 meses de R$ 80.923,20 para R$ 46.920,80. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento). Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”.",
+        "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, declarando a receita do exterior como exportação no PGDAS-D. Com a empresa já no {{regimeAnexo}}, esta mudança vale {{annualRegimeValue}} por ano. Junto com as outras mudanças recomendadas, esta leva o custo dos próximos {{horizon}} de {{costBefore}} para {{costAfter}}. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Contrapartida: a prefeitura pode questionar o ISS dessa receita. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento). Não peça a restituição sem antes retificar o PGDAS-D. A conta e a lei estão em “Ver cálculo”."
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
+    },
+    "sha256:d6c7e7599e2d7e4412468efc25ba1789ec3399fe3df684c757ad38664e85d944": {
+      "task": "explain",
+      "ruleId": "R02",
+      "origin": "template",
+      "promptVersion": "template@3",
+      "recordedAt": "2026-11-20T00:47:31.781Z",
+      "output": {
+        "text": "Os R$ 9.000,00 de IR retidos na distribuição de R$ 90.000,00 de julho de 2026 só voltam na declaração de 2027: são 10 meses de dinheiro parado, que custam R$ 1.111,70 com a Selic de 15% ao ano. É um alerta e não entra no total de economia. Estimativa: depende de premissas que podem ser revistas. Não distribua lucro que a empresa não apurou só para “usar” o limite. A conta e a lei estão em “Ver cálculo”.",
+        "source": "Os {{withheld}} de IR retidos na distribuição de {{distributed}} de {{withholdingMonth}} só voltam na declaração de {{returnYear}}: são {{monthsWaiting}} de dinheiro parado, que custam {{financialCost}} com a Selic de {{selicRate}} ao ano. É um alerta e não entra no total de economia. Estimativa: depende de premissas que podem ser revistas. Não distribua lucro que a empresa não apurou só para “usar” o limite. A conta e a lei estão em “Ver cálculo”."
+      },
+      "guards": {
+        "numeric": "ok",
+        "citation": "ok"
+      }
+    },
+    "sha256:eb03497976f37ee58e810a5a0a5aa58abbee58374eb1c4d7d9cc21fc38a413fe": {
+      "task": "explain",
+      "ruleId": "R01",
+      "origin": "template",
+      "promptVersion": "template@3",
+      "recordedAt": "2026-11-20T00:47:31.781Z",
+      "output": {
+        "text": "Você pode pagar R$ 28.316,52 a menos nos próximos 12 meses, dentro da lei, subindo seu pró-labore para R$ 2.260,00 por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples (Anexo III) a partir de abril de 2027; depois, são R$ 42.896,52 a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos 12 meses cai de R$ 109.239,72 para R$ 80.923,20. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”.",
+        "source": "Você pode pagar {{marginalValue12m}} a menos nos próximos {{horizon}}, dentro da lei, subindo seu pró-labore para {{proLaboreTarget}} por mês. Com a folha maior, a empresa passa para uma tabela mais barata do Simples ({{regimeAnexo}}) a partir de {{regimeFrom}}; depois, são {{annualRegimeValue}} a menos por ano. Somando os impostos da empresa e os do sócio, o custo dos próximos {{horizon}} cai de {{costBefore}} para {{costAfter}}. Valor confirmado: usa só dados do banco, da Receita e o que você confirmou. Não registre pró-labore só no papel: ele precisa ser pago e informado no eSocial/DCTFWeb, com o INSS recolhido. A conta e a lei estão em “Ver cálculo”."
       },
       "guards": {
         "numeric": "ok",

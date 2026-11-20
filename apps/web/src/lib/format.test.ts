@@ -4,6 +4,7 @@ import {
   formatBRLThousands,
   formatBRLWhole,
   formatRateDecimal,
+  formatRateFull,
   formatRatePercent,
   formatYearMonth,
   moneyParts,
@@ -53,5 +54,17 @@ describe('formatters', () => {
     expect(formatRatePercent('0.105')).toBe('10,5%');
     expect(formatRatePercent('1')).toBe('100%');
     expect(() => formatRatePercent('abc')).toThrow(RangeError);
+  });
+
+  it('formatRateFull: every digit, never rounded; at least 2 decimals (D39)', () => {
+    expect(formatRateFull('0.27722')).toBe('27,722%');
+    expect(formatRateFull('0.28')).toBe('28,00%');
+    expect(formatRateFull('0.01')).toBe('1,00%');
+    expect(formatRateFull('1')).toBe('100,00%');
+    expect(formatRateFull('0.2799999')).toBe('27,99999%');
+    expect(formatRateFull('0.2772277227722772277227722772277228')).toBe(
+      '27,72277227722772277227722772277228%',
+    );
+    expect(() => formatRateFull('1e-3')).toThrow(RangeError);
   });
 });

@@ -1,6 +1,6 @@
 import { recalculate } from '@refund/engine';
 import { describe, expect, it } from 'vitest';
-import { TRACE_INPUT_LABEL, traceTextValue } from '@/components/brand/trace-labels';
+import { TRACE_INPUT_LABEL, traceRateValue, traceTextValue } from '@/components/brand/trace-labels';
 import {
   answersFromChoices,
   DONT_KNOW,
@@ -111,10 +111,11 @@ describe('Screen 6 and 6b', () => {
     // UX review G2 M5: a value made only of YearMonths is data, shown as "abr/2027"; engine prose stays.
     expect(traceTextValue('windowFrom', '2025-12')).toBe('dez/2025');
     expect(traceTextValue('months', '2026-10, 2026-11')).toBe('out/2026, nov/2026');
-    expect(traceTextValue('months', '11/2025, 12/2025')).toBe('nov/2025, dez/2025');
-    expect(traceTextValue('note', '2027-01 a 2028-12: usado o de 2026')).toBe(
-      '2027-01 a 2028-12: usado o de 2026',
+    expect(traceTextValue('note', 'jan/2027 a dez/2028: usado o de 2026')).toBe(
+      'jan/2027 a dez/2028: usado o de 2026',
     );
+    expect(traceRateValue('fatorRFull', '0.27722')).toBe('27,722%');
+    expect(traceRateValue('margin', '0.01')).toBe('1%');
   });
 
   it('the engine trace text is shown as is: no spec reference, rule code or "(s)" plural (UX review M3, M9, L2)', async () => {

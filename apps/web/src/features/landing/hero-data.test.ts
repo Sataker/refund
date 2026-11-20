@@ -38,7 +38,7 @@ describe('landing hero numbers', () => {
     const s1 = byId.get('R01.COST.S1');
     expect(typeof s0 === 'number' && typeof s1 === 'number' ? s0 - s1 : null).toBe(2831652);
     expect(byId.get('R01.SAVINGS.12m')).toBe(2831652);
-    expect(byId.get('R01.FATOR_R.current')).toBe('0.27722');
+    expect(byId.get('R01.FATOR_R.current')).toBe('27,722%'); // D39: the answer key's 0.27722, every digit
   });
 
   it('the payroll without the pró-labore comes from the engine and matches D.1 (FSo = 146.880,00)', () => {

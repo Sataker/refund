@@ -79,6 +79,21 @@ export function formatRatePercent(rate: string, decimals = 2): string {
   return `${sign}${whole}${rest === '' ? '' : `,${rest}`}%`;
 }
 
+/**
+ * D39 (PLAN §18, 20/11): a rate shown with every digit it carries, never rounded or truncated: the decimal as the
+ * engine computed it, × 100, trailing zeros trimmed, at least 2 decimals. "0.27722" → "27,722%", "0.28" → "28,00%",
+ * "0.2772277227722772277227722772277228" → "27,72277227722772277227722772277228%". String arithmetic only.
+ */
+export function formatRateFull(rate: string): string {
+  const m = /^(-?)(\d+)(?:\.(\d+))?$/.exec(rate);
+  if (!m) throw new RangeError(`invalid rate: ${rate}`);
+  const [, sign = '', int = '0', frac = ''] = m;
+  const digits = frac.padEnd(2, '0');
+  const whole = `${int}${digits.slice(0, 2)}`.replace(/^0+(?=\d)/, '');
+  const rest = digits.slice(2).replace(/0+$/, '').padEnd(2, '0');
+  return `${sign}${whole},${rest}%`;
+}
+
 /** Rate as a decimal string ("0.28") → "0,28" (no float conversion). */
 export function formatRateDecimal(rate: string): string {
   return rate.replace('.', ',');

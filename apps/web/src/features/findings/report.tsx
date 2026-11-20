@@ -64,7 +64,7 @@ const PERIOD_GROUPS: readonly {
   cols: readonly string[];
   result: string;
 }[] = [
-  { match: /^R01\.PA\./, title: 'Período a período', cols: ['fatorR', 'anexo'], result: 'DAS' },
+  { match: /^R01\.PA\./, title: 'Período a período', cols: ['fatorRFull', 'anexo'], result: 'DAS' },
   {
     match: /^PGDAS\.INFERENCE\./,
     title: 'Como cada PGDAS-D foi declarado (deduzido do DAS pago)',

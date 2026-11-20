@@ -11,7 +11,7 @@ import answerKeyJson from '@refund/personas/data/dev-exportador.answer-key.json'
 };
 import personaJson from '@refund/personas/data/dev-exportador.json' with { type: 'json' };
 import type { LawSealRef } from '../../components/brand/law-seal.tsx';
-import { formatYearMonth } from '../../lib/format.ts';
+import { formatRateFull, formatYearMonth } from '../../lib/format.ts';
 
 const answerKey = answerKeyJson as unknown as AnswerKey;
 const persona = personaJson as unknown as PersonaData;
@@ -133,7 +133,8 @@ export const heroR01Trace: Trace = [
       folha: { value: facts.fs12, unit: 'cents' },
       faturamento: { value: facts.rbt12, unit: 'cents' },
     },
-    result: { value: facts.fatorR, unit: 'rate' },
+    // D39 (PLAN §18): the Fator R with every digit it carries, never rounded.
+    result: { value: formatRateFull(facts.fatorR), unit: 'text' },
     rounding: 'NONE',
     ref: FATOR_R_REF,
   },

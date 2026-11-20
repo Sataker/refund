@@ -227,7 +227,11 @@ export function optimizerR01(
   return { rbt, fso, target, pTarget, p28, pStar, curve, steps };
 }
 
-/** C.7.3: PA-by-PA table of the trace (window, FS12, RBT12, displayed Fator R, anexo, DAS before and after). */
+/**
+ * C.7.3: PA-by-PA table of the trace (window, FS12, RBT12, Fator R, anexo, DAS before and after). D39 (PLAN §18,
+ * 20/11): `fatorRFull` is the Fator R exactly as computed and compared against 0,28 (C.8: full precision);
+ * `fatorR` keeps the PGDAS-D display, truncated to 2 decimals (OR-SN-11).
+ */
 export function paTable(prev: Simulation, next: Simulation, prefix: string): Step[] {
   const out: Step[] = [];
   next.horizon.forEach((r, i) => {
@@ -236,12 +240,14 @@ export function paTable(prev: Simulation, next: Simulation, prefix: string): Ste
       step({
         id: `${prefix}.PA.${r.pa}`,
         label: `PA ${formatMonth(r.pa)}: janela ${formatMonth(r.windowFrom)}–${formatMonth(r.windowTo)}`,
-        formula: 'Fator R = FS12 ÷ RBT12 (exibido truncado); ≥ 0,28 → Anexo III, < 0,28 → Anexo V',
+        formula:
+          'Fator R = FS12 ÷ RBT12, com todas as casas; ≥ 0,28 → Anexo III, < 0,28 → Anexo V (o PGDAS-D exibe truncado em 2 casas)',
         inputs: {
           windowFrom: { value: r.windowFrom, unit: 'text' },
           windowTo: { value: r.windowTo, unit: 'text' },
           fs12: { value: r.fs12, unit: 'cents' },
           rbt12: { value: r.rbt12.total, unit: 'cents' },
+          ...(r.fatorR === null ? {} : { fatorRFull: { value: r.fatorR, unit: 'rate' as const } }),
           fatorR: { value: r.fatorR === null ? '—' : displayFatorR(r.fatorR, r.pa), unit: 'text' },
           anexo: { value: r.anexo, unit: 'text' },
           dasBefore: { value: before?.das ?? 0, unit: 'cents' },
