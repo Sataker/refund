@@ -3,7 +3,7 @@
 import { Check } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
-import { type KeyboardEvent, useRef, useState, useTransition } from 'react';
+import { type KeyboardEvent, useEffect, useRef, useState, useTransition } from 'react';
 import { cn } from '@/lib/utils';
 import type { ClientResult } from './client-types';
 
@@ -47,15 +47,27 @@ export function ChoiceStep({ name, options, selected, save, footnote }: ChoiceSt
     });
   }
 
+  // Track rule 2 (M5): keys 1–9 pick a chip anywhere on the step, not only with focus inside the group.
+  const pickRef = useRef(pick);
+  pickRef.current = pick;
+  useEffect(() => {
+    function onKey(e: globalThis.KeyboardEvent) {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.defaultPrevented) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      const n = Number(e.key);
+      if (!/^[1-9]$/.test(e.key) || n > options.length) return;
+      const option = options[n - 1];
+      if (!option) return;
+      e.preventDefault();
+      pickRef.current(option.value);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [options]);
+
   function onKeyDown(e: KeyboardEvent<HTMLFieldSetElement>) {
     const index = refs.current.indexOf(document.activeElement as HTMLButtonElement);
-    const n = Number(e.key);
-    if (Number.isInteger(n) && n >= 1 && n <= options.length) {
-      e.preventDefault();
-      const option = options[n - 1];
-      if (option) pick(option.value);
-      return;
-    }
     const delta = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
     if (delta !== undefined) {
       e.preventDefault();

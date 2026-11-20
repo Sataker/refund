@@ -6,6 +6,7 @@ import { Disclaimer } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { cn } from '@/lib/utils';
+import { StepFocus } from './step-focus.client';
 import {
   applies,
   currentStep,
@@ -36,6 +37,8 @@ export interface TrackFrameProps {
   footerAction?: ReactNode;
   /** Live `/app`: the seal says the company data is public and real (SandboxSeal `live`). */
   live?: boolean;
+  /** The full seal's text when the track knows its company (a synthetic one: "Dados sintéticos · …"). */
+  sealLabel?: string;
   children: ReactNode;
 }
 
@@ -195,7 +198,8 @@ export function TrackHeader({
   topAction,
   live = false,
   finished = false,
-}: Pick<TrackFrameProps, 'step' | 'progress' | 'exit' | 'topAction' | 'live'> & {
+  sealLabel,
+}: Pick<TrackFrameProps, 'step' | 'progress' | 'exit' | 'topAction' | 'live' | 'sealLabel'> & {
   finished?: boolean;
 }) {
   return (
@@ -205,7 +209,11 @@ export function TrackHeader({
           <Logo />
         </Link>
         <div className="flex items-center gap-4">
-          <SandboxSeal live={live} className="hidden md:inline-flex" />
+          <SandboxSeal
+            live={live}
+            {...(sealLabel ? { label: sealLabel } : {})}
+            className="hidden md:inline-flex"
+          />
           {topAction}
           <Link
             href={exit.href as Route}
@@ -229,13 +237,18 @@ export function TrackHeader({
 export function TrackFooter({
   footerAction,
   live = false,
-}: Pick<TrackFrameProps, 'footerAction' | 'live'>) {
+  sealLabel,
+}: Pick<TrackFrameProps, 'footerAction' | 'live' | 'sealLabel'>) {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto flex max-w-[1120px] flex-col gap-3 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <Disclaimer size="caption" />
         <div className="flex flex-wrap items-center gap-4">
-          <SandboxSeal live={live} className="md:hidden" />
+          <SandboxSeal
+            live={live}
+            {...(sealLabel ? { label: sealLabel } : {})}
+            className="md:hidden"
+          />
           {footerAction}
         </div>
       </div>
@@ -251,6 +264,7 @@ export function TrackFrame({
   topAction,
   footerAction,
   live = false,
+  sealLabel,
   children,
 }: TrackFrameProps) {
   const back = step === 'analysis' ? null : previousStep(step, progress);
@@ -260,7 +274,20 @@ export function TrackFrame({
       data-testid="track"
       data-step={step}
     >
-      <TrackHeader step={step} progress={progress} exit={exit} topAction={topAction} live={live} />
+      <a
+        href="#conteudo"
+        className="sr-only z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+      >
+        Pular para o conteúdo
+      </a>
+      <TrackHeader
+        step={step}
+        progress={progress}
+        exit={exit}
+        topAction={topAction}
+        live={live}
+        {...(sealLabel ? { sealLabel } : {})}
+      />
       <div className="mx-auto grid w-full max-w-[1120px] flex-1 gap-10 px-4 py-6 sm:px-6 lg:grid-cols-[240px_minmax(0,560px)] lg:justify-center lg:gap-16 lg:py-12">
         <Timeline step={step} progress={progress} hrefOf={hrefOf} />
         <main id="conteudo" className="flex min-w-0 flex-col">
@@ -278,10 +305,11 @@ export function TrackFrame({
           </div>
           <div key={step} className="step-enter flex flex-col">
             {children}
+            <StepFocus />
           </div>
         </main>
       </div>
-      <TrackFooter footerAction={footerAction} live={live} />
+      <TrackFooter footerAction={footerAction} live={live} {...(sealLabel ? { sealLabel } : {})} />
     </div>
   );
 }
@@ -290,7 +318,13 @@ export function TrackFrame({
 export function StepTitle({ title, help }: { title: string; help?: string }) {
   return (
     <div className="mb-8">
-      <h1 className="type-h1 text-balance text-foreground">{title}</h1>
+      <h1
+        id="step-title"
+        tabIndex={-1}
+        className="type-h1 text-balance text-foreground outline-none"
+      >
+        {title}
+      </h1>
       {help ? <p className="type-body-lg mt-3 text-muted-foreground">{help}</p> : null}
     </div>
   );

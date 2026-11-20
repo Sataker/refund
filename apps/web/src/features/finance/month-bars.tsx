@@ -1,3 +1,4 @@
+import { cx } from '@/lib/cx';
 import { formatBRL, formatBRLThousands, formatYearMonth } from '@/lib/format';
 import { shortMonth } from './text.ts';
 
@@ -75,15 +76,21 @@ export function MonthBars({ months, totals, series, summary }: MonthBarsProps) {
           </svg>
           <div className="num type-caption flex text-muted-foreground" aria-hidden="true">
             {months.map((m, i) => (
+              // The edge labels hug the chart's edges (a centered "out/26" overflowed the narrow last slot and was
+              // clipped on phones): a flex end-justified label overflows inward, never past the edge.
               <span
                 key={m}
-                className={
-                  i === 0 || i === months.length - 1 || i % 3 === 0
-                    ? 'min-w-0 flex-1 text-center whitespace-nowrap'
-                    : 'min-w-0 flex-1 text-center whitespace-nowrap max-lg:invisible'
-                }
+                className={cx(
+                  'flex min-w-0 flex-1 whitespace-nowrap',
+                  i === 0
+                    ? 'justify-start'
+                    : i === months.length - 1
+                      ? 'justify-end'
+                      : 'justify-center',
+                  !(i === 0 || i === months.length - 1 || i % 3 === 0) && 'max-lg:invisible',
+                )}
               >
-                {shortMonth(m)}
+                <span>{shortMonth(m)}</span>
               </span>
             ))}
           </div>

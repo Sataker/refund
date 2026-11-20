@@ -76,7 +76,11 @@ export default async function TrackStepPage({ params, searchParams }: PageProps)
     passo === 'conta-pj' || passo === 'conta-pf' ? await pluggyAvailable(caps, secrets) : false;
 
   return (
-    <TrackShell step={passo} progress={progress}>
+    <TrackShell
+      step={passo}
+      progress={progress}
+      synthetic={company?.company.source === 'persona' || company?.company.source === 'replay'}
+    >
       <StepBody
         step={passo}
         progress={progress}

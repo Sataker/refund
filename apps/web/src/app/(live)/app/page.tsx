@@ -9,6 +9,7 @@ import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { DisconnectButton } from '@/features/connection/disconnect-button.client';
 import { ROUTES } from '@/features/landing/routes';
 import { StartAnalysisButton } from '@/features/live/buttons.client';
+import { SYNTHETIC_LIVE_LABEL } from '@/features/live/data-origin';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { CONNECTION_STATUS_LABEL, currentStep, stepPath } from '@/features/track/steps';
 import { liveContext } from '@/server/live.ts';
@@ -35,15 +36,27 @@ export default async function AppHome() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background" data-testid="track-done">
+      <a
+        href="#conteudo"
+        className="sr-only z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+      >
+        Pular para o conteúdo
+      </a>
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex h-14 max-w-[1120px] items-center justify-between px-4 sm:px-6">
           <Link href="/" aria-label="Refund, página inicial" className="text-xl">
             <Logo />
           </Link>
-          <SandboxSeal live className="hidden sm:inline-flex" />
+          <SandboxSeal
+            live
+            {...(company?.company.source === 'persona' || company?.company.source === 'replay'
+              ? { label: SYNTHETIC_LIVE_LABEL }
+              : {})}
+            className="hidden sm:inline-flex"
+          />
         </div>
       </header>
-      <main className="mx-auto flex w-full max-w-[560px] flex-1 flex-col px-4 py-12">
+      <main id="conteudo" className="mx-auto flex w-full max-w-[560px] flex-1 flex-col px-4 py-12">
         <h1 className="type-h1 text-foreground">Tudo pronto para a análise.</h1>
         <p className="type-body-lg mt-4 text-muted-foreground">
           {progress.company?.displayName}: perfil respondido e contas conectadas.
