@@ -1,0 +1,64 @@
+{
+  "source": "receitaws",
+  "cnpj": "00000000000191",
+  "recordedAt": "2026-11-20T12:22:23.903Z",
+  "recordedBy": "scripts/record-fixtures.ts@5fd1e7c",
+  "sanitization": {
+    "whitelist": "cnpj@1",
+    "discardedFields": [
+      "bairro",
+      "billing",
+      "capital_social",
+      "cep",
+      "complemento",
+      "data_situacao",
+      "data_situacao_especial",
+      "efr",
+      "email",
+      "extra",
+      "logradouro",
+      "motivo_situacao",
+      "municipio",
+      "numero",
+      "qsa",
+      "situacao_especial",
+      "telefone",
+      "tipo",
+      "ultima_atualizacao"
+    ],
+    "replacedDocuments": 0
+  },
+  "raw": {
+    "status": "OK",
+    "cnpj": "00.000.000/0001-91",
+    "nome": "BANCO DO BRASIL SA",
+    "fantasia": "DIRECAO GERAL",
+    "abertura": "01/08/1966",
+    "situacao": "ATIVA",
+    "porte": "DEMAIS",
+    "natureza_juridica": "203-8 - Sociedade de Economia Mista",
+    "atividade_principal": [
+      {
+        "code": "64.22-1-00",
+        "text": "Bancos múltiplos, com carteira comercial"
+      }
+    ],
+    "atividades_secundarias": [
+      {
+        "code": "64.99-9-99",
+        "text": "Outras atividades de serviços financeiros não especificadas anteriormente"
+      }
+    ],
+    "uf": "DF",
+    "simples": {
+      "optante": false,
+      "data_opcao": "01/07/2007",
+      "data_exclusao": "01/07/2007"
+    },
+    "simei": {
+      "optante": false,
+      "data_opcao": "01/07/2009",
+      "data_exclusao": "01/07/2009"
+    }
+  }
+}

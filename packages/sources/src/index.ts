@@ -1,7 +1,27 @@
 export const PACKAGE_NAME = '@refund/sources';
 
-export { ChainedCnpj, type ChainedCnpjOptions } from './cnpj/chain.ts';
-export { BrasilApiCnpj, CnpjWsCnpj, type LiveCnpjOptions } from './cnpj/live.ts';
+export { ChainedCnpj, type ChainedCnpjOptions, preferDatedSimples } from './cnpj/chain.ts';
+export {
+  CnpjProviderGuard,
+  type ProviderGuardOptions,
+  type ProviderHealth,
+  type SkipReason,
+} from './cnpj/guard.ts';
+export {
+  BrasilApiCnpj,
+  CNPJ_SOURCES,
+  CnpjaCnpj,
+  type CnpjSourceSpec,
+  CnpjWsCnpj,
+  cnpjSourceSpec,
+  LiveCnpj,
+  type LiveCnpjOptions,
+  type LiveCnpjProvider,
+  liveCnpjProviders,
+  MinhaReceitaCnpj,
+  OpenCnpjCnpj,
+  ReceitaWsCnpj,
+} from './cnpj/live.ts';
 export { ReplayCnpj, type ReplayCnpjOptions } from './cnpj/replay.ts';
 export { parsePublicCompany, publicCompanySchema } from './cnpj/schema.ts';
 // `cnpjCheckDigits` stays internal: it throws on a malformed base, and nothing may throw across
@@ -15,6 +35,12 @@ export {
   sanitizeBrasilApiCompany,
   sanitizeCnpjWsCompany,
 } from './cnpj/whitelist.ts';
+export {
+  sanitizeCnpjaCompany,
+  sanitizeMinhaReceitaCompany,
+  sanitizeOpenCnpjCompany,
+  sanitizeReceitaWsCompany,
+} from './cnpj/whitelist-mirrors.ts';
 export { DEFAULT_PAGE_SIZE, type PersonaDataset, PersonaFinancial } from './financial/persona.ts';
 export { ReplayFinancial } from './financial/replay.ts';
 export {
@@ -86,6 +112,7 @@ export type {
   CivilDate,
   Cnpj,
   CnpjProvider,
+  CnpjSource,
   DataMode,
   ExternalCachePort,
   FinancialProvider,

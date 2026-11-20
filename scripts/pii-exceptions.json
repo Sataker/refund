@@ -16,5 +16,17 @@
     "file": "*",
     "reason": "The product's own domain.",
     "source": "PLAN D6"
+  },
+  {
+    "value": "00000000000191",
+    "file": "packages/sources/test/fixtures/cnpj/**",
+    "reason": "Banco do Brasil S.A., a listed mixed-capital company whose registry data is public; the control CNPJ of the adapter tests (raw answers reduced to whitelisted keys, no QSA).",
+    "source": "E21, 20/11/2026"
+  },
+  {
+    "value": "00.000.000/0001-91",
+    "file": "packages/sources/test/fixtures/cnpj/**",
+    "reason": "The same Banco do Brasil S.A. CNPJ, in the masked form ReceitaWS answers with.",
+    "source": "E21, 20/11/2026"
   }
 ]

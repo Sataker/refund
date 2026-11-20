@@ -46,7 +46,12 @@ const PERSONA_CNPJS_FILE = 'packages/personas/src/cnpjs.ts';
  * Rule 6 scope: persona data, and CNPJ fixtures (compliance C1). Only persona CNPJs, or organizations
  * listed in pii-exceptions.json with a reason, may appear there.
  */
-const CNPJ_SCOPES = ['packages/personas/data/', 'packages/sources/fixtures/cnpj/'];
+const CNPJ_SCOPES = [
+  'packages/personas/data/',
+  'packages/sources/fixtures/cnpj/',
+  // E21: reduced raw answers of the public CNPJ sources, for the adapter tests.
+  'packages/sources/test/fixtures/cnpj/',
+];
 /** Rule 1 also over TypeScript data that ships with /demo (code review 14/11). */
 const TS_DATA_DIRS = ['packages/personas/data/', 'apps/web/src/demo/'];
 const FORBIDDEN_KEY_IN_TS = new RegExp(

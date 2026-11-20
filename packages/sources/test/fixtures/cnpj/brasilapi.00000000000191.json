@@ -1,0 +1,104 @@
+{
+  "source": "brasilapi",
+  "cnpj": "00000000000191",
+  "recordedAt": "2026-11-20T12:22:22.818Z",
+  "recordedBy": "scripts/record-fixtures.ts@5fd1e7c",
+  "sanitization": {
+    "whitelist": "cnpj@1",
+    "discardedFields": [
+      "bairro",
+      "capital_social",
+      "cep",
+      "codigo_municipio",
+      "codigo_pais",
+      "complemento",
+      "data_situacao_cadastral",
+      "data_situacao_especial",
+      "ddd_fax",
+      "ddd_telefone_1",
+      "ddd_telefone_2",
+      "descricao_identificador_matriz_filial",
+      "descricao_motivo_situacao_cadastral",
+      "descricao_tipo_de_logradouro",
+      "email",
+      "ente_federativo_responsavel",
+      "identificador_matriz_filial",
+      "logradouro",
+      "motivo_situacao_cadastral",
+      "municipio",
+      "nome_cidade_no_exterior",
+      "numero",
+      "pais",
+      "qsa",
+      "qualificacao_do_responsavel",
+      "situacao_cadastral",
+      "situacao_especial"
+    ],
+    "replacedDocuments": 0
+  },
+  "raw": {
+    "cnpj": "00000000000191",
+    "razao_social": "BANCO DO BRASIL SA",
+    "nome_fantasia": "DIRECAO GERAL",
+    "codigo_natureza_juridica": 2038,
+    "natureza_juridica": "Sociedade de Economia Mista",
+    "porte": "DEMAIS",
+    "codigo_porte": 5,
+    "cnae_fiscal": 6422100,
+    "cnae_fiscal_descricao": "Bancos múltiplos, com carteira comercial",
+    "cnaes_secundarios": [
+      {
+        "codigo": 6499999,
+        "descricao": "Outras atividades de serviços financeiros não especificadas anteriormente"
+      }
+    ],
+    "descricao_situacao_cadastral": "ATIVA",
+    "data_inicio_atividade": "1966-08-01",
+    "uf": "DF",
+    "codigo_municipio_ibge": 5300108,
+    "opcao_pelo_simples": false,
+    "data_opcao_pelo_simples": "2007-07-01",
+    "data_exclusao_do_simples": "2007-07-01",
+    "opcao_pelo_mei": false,
+    "data_opcao_pelo_mei": "2009-07-01",
+    "data_exclusao_do_mei": "2009-07-01",
+    "regime_tributario": [
+      {
+        "ano": 2016,
+        "forma_de_tributacao": "LUCRO REAL"
+      },
+      {
+        "ano": 2017,
+        "forma_de_tributacao": "LUCRO REAL"
+      },
+      {
+        "ano": 2018,
+        "forma_de_tributacao": "LUCRO REAL"
+      },
+      {
+        "ano": 2019,
+        "forma_de_tributacao": "LUCRO REAL"
+      },
+      {
+        "ano": 2020,
+        "forma_de_tributacao": "LUCRO REAL"
+      },
+      {
+        "ano": 2021,
+        "forma_de_tributacao": "LUCRO REAL"
+      },
+      {
+        "ano": 2022,
+        "forma_de_tributacao": "LUCRO REAL"
+      },
+      {
+        "ano": 2023,
+        "forma_de_tributacao": "LUCRO REAL"
+      },
+      {
+        "ano": 2024,
+        "forma_de_tributacao": "LUCRO REAL"
+      }
+    ]
+  }
+}

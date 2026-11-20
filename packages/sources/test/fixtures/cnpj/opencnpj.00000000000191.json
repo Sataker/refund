@@ -1,0 +1,67 @@
+{
+  "source": "opencnpj",
+  "cnpj": "00000000000191",
+  "recordedAt": "2026-11-20T12:22:22.910Z",
+  "recordedBy": "scripts/record-fixtures.ts@5fd1e7c",
+  "sanitization": {
+    "whitelist": "cnpj@1",
+    "discardedFields": [
+      "QSA",
+      "bairro",
+      "capital_social",
+      "cep",
+      "cnaes_secundarios",
+      "codigo_municipio",
+      "codigo_pais",
+      "complemento",
+      "data_situacao_cadastral",
+      "data_situacao_especial",
+      "email",
+      "ente_federativo",
+      "lgpd_anonimizado",
+      "logradouro",
+      "matriz_filial",
+      "motivo_situacao_cadastral",
+      "municipio",
+      "nome_cidade_exterior",
+      "numero",
+      "pais",
+      "qualificacao_responsavel",
+      "situacao_especial",
+      "telefones",
+      "tipo_logradouro",
+      "updated_at"
+    ],
+    "replacedDocuments": 0
+  },
+  "raw": {
+    "cnpj": "00000000000191",
+    "razao_social": "BANCO DO BRASIL SA",
+    "nome_fantasia": "DIRECAO GERAL",
+    "situacao_cadastral": "Ativa",
+    "data_inicio_atividade": "1966-08-01",
+    "cnae_principal": "6422100",
+    "cnaes": [
+      {
+        "codigo": "6422100",
+        "descricao": "Bancos múltiplos, com carteira comercial",
+        "is_principal": true
+      },
+      {
+        "codigo": "6499999",
+        "descricao": "Outras atividades de serviços financeiros não especificadas anteriormente",
+        "is_principal": false
+      }
+    ],
+    "codigo_natureza_juridica": "2038",
+    "natureza_juridica": "Sociedade de Economia Mista",
+    "uf": "DF",
+    "porte_empresa": "Demais",
+    "opcao_simples": "N",
+    "data_opcao_simples": "2007-07-01",
+    "data_exclusao_simples": "2007-07-01",
+    "opcao_mei": "N",
+    "data_opcao_mei": "2009-07-01",
+    "data_exclusao_mei": "2009-07-01"
+  }
+}

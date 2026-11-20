@@ -5,9 +5,11 @@ import {
   ChainedCnpj,
   type Cnpj,
   type CnpjProvider,
+  type CnpjSource,
   CnpjWsCnpj,
   createEnvelope,
   type ExternalCachePort,
+  type LiveCnpjProvider,
   type ProviderContext,
   type PublicCompany,
   ReplayCnpj,
@@ -180,10 +182,15 @@ describe('CnpjWsCnpj', () => {
   });
 });
 
-function fixedProvider(result: Awaited<ReturnType<CnpjProvider['lookup']>>): CnpjProvider & {
+function fixedProvider(
+  result: Awaited<ReturnType<CnpjProvider['lookup']>>,
+  source: CnpjSource = 'brasilapi',
+): LiveCnpjProvider & {
   calls: number;
 } {
   const p = {
+    source,
+    minIntervalMs: 0,
     calls: 0,
     async lookup() {
       p.calls++;
@@ -195,19 +202,22 @@ function fixedProvider(result: Awaited<ReturnType<CnpjProvider['lookup']>>): Cnp
 
 const failing = (
   code: 'UNAVAILABLE' | 'NOT_FOUND' | 'RATE_LIMITED',
-  source: string,
+  source: CnpjSource,
   retryInMs?: number,
 ) =>
-  fixedProvider({
-    ok: false,
-    error: {
-      code,
-      message: 'x',
-      recoverable: code !== 'NOT_FOUND',
-      source,
-      ...(retryInMs ? { retryInMs } : {}),
+  fixedProvider(
+    {
+      ok: false,
+      error: {
+        code,
+        message: 'x',
+        recoverable: code !== 'NOT_FOUND',
+        source,
+        ...(retryInMs ? { retryInMs } : {}),
+      },
     },
-  });
+    source,
+  );
 
 describe('ChainedCnpj (ARCHITECTURE §4.3 and §12)', () => {
   it('BrasilAPI 500 then 500 → CNPJ.ws answers, and the cache is written', async () => {
@@ -238,10 +248,14 @@ describe('ChainedCnpj (ARCHITECTURE §4.3 and §12)', () => {
       expect.objectContaining({ source: 'cnpjws' }),
       '2026-11-17T12:00:00.000Z',
     );
-    expect(log).toHaveBeenCalledWith('provider.failure', {
-      source: 'brasilapi',
-      code: 'UNAVAILABLE',
-    });
+    expect(log).toHaveBeenCalledWith(
+      'provider.failure',
+      expect.objectContaining({ source: 'brasilapi', code: 'UNAVAILABLE' }),
+    );
+    expect(log).toHaveBeenCalledWith(
+      'provider.answered',
+      expect.objectContaining({ source: 'cnpjws' }),
+    );
     for (const call of log.mock.calls) expect(JSON.stringify(call)).not.toContain(NUMERIC_CNPJ);
   });
 

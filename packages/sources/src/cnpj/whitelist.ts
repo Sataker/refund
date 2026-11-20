@@ -6,7 +6,7 @@ import type { CivilDate, Cnpj, ProviderError, PublicCompany, Result } from '../t
 
 // Whitelist `cnpj@1` (ARCHITECTURE §6.2): the output is BUILT field by field from the raw response, so a
 // field nobody copied never gets through. The QSA (`qsa` on BrasilAPI, `socios` on CNPJ.ws), address,
-// phones, e-mail and capital are never read.
+// phones, e-mail and capital are never read. The other public mirrors are in whitelist-mirrors.ts.
 
 export const CNPJ_WHITELIST = 'cnpj@1';
 
@@ -18,10 +18,10 @@ export const CNPJ_WHITELIST = 'cnpj@1';
 export const MASKED_LEGAL_NATURES: readonly string[] = ['2135', '2305', '4014', '2321', '4120'];
 export const MASKED_LEGAL_NAME = 'Empresário individual · nome oculto';
 
-const text = z.string().nullish();
-const numberOrText = z.union([z.number(), z.string()]).nullish();
+export const text = z.string().nullish();
+export const numberOrText = z.union([z.number(), z.string()]).nullish();
 
-const brasilApiSchema = z.object({
+export const brasilApiSchema = z.object({
   cnpj: numberOrText,
   razao_social: text,
   nome_fantasia: text,
@@ -50,7 +50,7 @@ const BRASILAPI_KEPT = new Set(Object.keys(brasilApiSchema.shape));
 const idDescription = z.object({ id: numberOrText, descricao: text }).nullish();
 const cnae = z.object({ id: numberOrText, subclasse: text, descricao: text });
 
-const cnpjWsSchema = z.object({
+export const cnpjWsSchema = z.object({
   razao_social: text,
   porte: idDescription,
   natureza_juridica: idDescription,
@@ -87,11 +87,11 @@ const CNPJWS_ESTABLISHMENT_KEPT = new Set(Object.keys(cnpjWsSchema.shape.estabel
 
 // ---------- helpers ----------
 
-function clean(value: string | null | undefined): string {
+export function clean(value: string | null | undefined): string {
   return stripDocuments((value ?? '').trim());
 }
 
-function civilDate(value: string | null | undefined): CivilDate | null {
+export function civilDate(value: string | null | undefined): CivilDate | null {
   const v = (value ?? '').trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
   const [y, m, d] = v.split('-').map(Number) as [number, number, number];
@@ -107,7 +107,7 @@ export function formatCnae(value: number | string | null | undefined): string | 
   return `${d.slice(0, 4)}-${d.slice(4, 5)}/${d.slice(5)}`;
 }
 
-function code(value: number | string | null | undefined): string {
+export function code(value: number | string | null | undefined): string {
   return String(value ?? '').trim();
 }
 
@@ -116,7 +116,7 @@ function code(value: number | string | null | undefined): string {
  * `false` boolean mean "never actually opted" (BrasilAPI fills them for non-optants), so both dates are
  * dropped in that case (ARCHITECTURE §6.2 says `since = null`; the exclusion date is equally meaningless).
  */
-function option(
+export function option(
   optedIn: boolean,
   sinceRaw: string | null | undefined,
   excludedRaw: string | null | undefined,
@@ -129,13 +129,13 @@ function option(
   return { optedIn, since, excludedAt };
 }
 
-function unexpected(source: string, what: string): { ok: false; error: ProviderError } {
+export function unexpected(source: string, what: string): { ok: false; error: ProviderError } {
   return fail('UNEXPECTED_RESPONSE', source, `Resposta inesperada da fonte (${what}).`, {
     recoverable: true,
   });
 }
 
-function sameCnpj(raw: number | string | null | undefined, requested: Cnpj): boolean {
+export function sameCnpj(raw: number | string | null | undefined, requested: Cnpj): boolean {
   const v = String(raw ?? '')
     .replace(/[.\-/\s]/g, '')
     .toUpperCase();
@@ -152,7 +152,7 @@ export function mustMaskLegalName(natureCode: string, meiOptedIn: boolean): bool
   return meiOptedIn || MASKED_LEGAL_NATURES.includes(legalNatureCode(natureCode));
 }
 
-function legalName(
+export function legalName(
   natureCode: string,
   meiOptedIn: boolean,
   razaoSocial: string | null | undefined,
@@ -165,7 +165,7 @@ function legalName(
   return { displayLegalName: clean(razaoSocial), displayTradeName: trade || null, masked: false };
 }
 
-function discarded(raw: Record<string, unknown>, kept: Set<string>, prefix = ''): string[] {
+export function discarded(raw: Record<string, unknown>, kept: Set<string>, prefix = ''): string[] {
   return Object.keys(raw)
     .filter((k) => !kept.has(k))
     .map((k) => `${prefix}${k}`);
@@ -173,7 +173,11 @@ function discarded(raw: Record<string, unknown>, kept: Set<string>, prefix = '')
 
 // ---------- BrasilAPI ----------
 
-function brasilApiSize(mei: boolean, porteCode: string, porte: string): PublicCompany['size'] {
+export function brasilApiSize(
+  mei: boolean,
+  porteCode: string,
+  porte: string,
+): PublicCompany['size'] {
   if (mei) return 'MEI';
   const byCode: Record<string, PublicCompany['size']> = { '1': 'ME', '3': 'EPP', '5': 'OTHER' };
   const fromCode = byCode[porteCode.replace(/^0+/, '')];
@@ -190,16 +194,29 @@ export function sanitizeBrasilApiCompany(
   requested: Cnpj,
   fetchedAt: string,
 ): Result<PublicCompany, ProviderError> {
+  return sanitizeReceitaDumpShape('brasilapi', raw, requested, fetchedAt);
+}
+
+/**
+ * BrasilAPI and minhareceita.org serve the same JSON (BrasilAPI's CNPJ endpoint is built on
+ * minhareceita), so one whitelist covers both; only `source` differs.
+ */
+export function sanitizeReceitaDumpShape(
+  source: 'brasilapi' | 'minhareceita',
+  raw: unknown,
+  requested: Cnpj,
+  fetchedAt: string,
+): Result<PublicCompany, ProviderError> {
   const parsed = brasilApiSchema.safeParse(raw);
   if (!parsed.success || raw === null || typeof raw !== 'object') {
-    return unexpected('brasilapi', 'formato');
+    return unexpected(source, 'formato');
   }
   const r = parsed.data;
-  if (!sameCnpj(r.cnpj, requested)) return unexpected('brasilapi', 'CNPJ diferente do consultado');
+  if (!sameCnpj(r.cnpj, requested)) return unexpected(source, 'CNPJ diferente do consultado');
   const activityStartDate = civilDate(r.data_inicio_atividade);
   const primary = formatCnae(r.cnae_fiscal);
   if (activityStartDate === null || primary === null) {
-    return unexpected('brasilapi', 'campos obrigatórios ausentes');
+    return unexpected(source, 'campos obrigatórios ausentes');
   }
   const meiOptedIn = r.opcao_pelo_mei === true;
   const natureCode = legalNatureCode(r.codigo_natureza_juridica);
@@ -230,7 +247,7 @@ export function sanitizeBrasilApiCompany(
       const form = clean(t.forma_de_tributacao);
       return Number.isInteger(year) && form ? [{ year, form }] : [];
     }),
-    source: 'brasilapi',
+    source,
     fetchedAt,
   };
   return ok(
@@ -244,7 +261,7 @@ export function sanitizeBrasilApiCompany(
 
 // ---------- CNPJ.ws ----------
 
-function yes(value: string | null | undefined): boolean {
+export function yes(value: string | null | undefined): boolean {
   return (value ?? '').trim().toLowerCase() === 'sim';
 }
 

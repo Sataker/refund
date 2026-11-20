@@ -8,22 +8,29 @@
 //
 // Usage:
 //   node scripts/record-fixtures.ts --source=cnpj --cnpj=<CNPJ> [--provider=brasilapi|cnpjws]
+//   node scripts/record-fixtures.ts --source=cnpj-raw --cnpj=<CNPJ> [--provider=<one source>]
+//     (E21: the raw answer of each of the six sources, REDUCED to the keys its whitelist reads, for the
+//     adapter tests under packages/sources/test/fixtures/cnpj/. Only a large public company's CNPJ.)
 //   node scripts/record-fixtures.ts --source=sgs --code=432 --from=YYYY-MM-DD --to=YYYY-MM-DD
 //   node scripts/record-fixtures.ts --source=hero-selic      (synthetic, ENGINE-SPEC F.2)
 //   node scripts/record-fixtures.ts --source=pluggy --item=<id>   (E11: needs PluggyFinancial)
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { getJson } from '../packages/sources/src/http.ts';
 import {
   BrasilApiCnpj,
   type CivilDate,
+  CNPJ_SOURCES,
   CnpjWsCnpj,
   createEnvelope,
+  detectPii,
   type ProviderContext,
   recording,
   SGS_WHITELIST,
   type SgsCode,
   SgsSeries,
+  sanitizationOf,
   seriesKey,
   validateCnpj,
 } from '../packages/sources/src/index.ts';
@@ -78,6 +85,52 @@ async function recordCnpj(): Promise<void> {
   if (!r.ok) die(`${r.error.source} ${r.error.code}: ${r.error.message}`);
 }
 
+/** Where the reduced raw answers live: test data only, never indexed for replay. */
+const RAW_CNPJ_DIR = 'packages/sources/test/fixtures/cnpj';
+
+/**
+ * Raw answers for the adapter tests. The whitelist runs FIRST: the answer must sanitize (a masked EI/MEI
+ * company is refused, its CNPJ names a person), then only the keys the whitelist reads are kept (the
+ * source's raw zod schema strips everything else, QSA included), and `detectPii` must find nothing.
+ */
+async function recordCnpjRaw(): Promise<void> {
+  const input = arg('cnpj') ?? die('missing --cnpj=');
+  const cnpj = validateCnpj(input);
+  if (!cnpj.ok) die(cnpj.error.message);
+  const only = arg('provider');
+  mkdirSync(RAW_CNPJ_DIR, { recursive: true });
+  for (const spec of CNPJ_SOURCES) {
+    if (only && spec.source !== only) continue;
+    const raw = await getJson(`${spec.baseUrl}/${cnpj.value}`, ctx, {
+      source: spec.source,
+      timeoutMs: 10_000,
+    });
+    if (!raw.ok) die(`${spec.source} ${raw.error.code}: ${raw.error.message}`);
+    const recordedAt = new Date().toISOString();
+    const company = spec.sanitize(raw.value, cnpj.value, recordedAt);
+    if (!company.ok) die(`${spec.source} ${company.error.code}: ${company.error.message}`);
+    if (company.value.masked) die(`${spec.source}: masked company (EI/MEI); not recorded`);
+    const reduced = spec.rawSchema.parse(raw.value);
+    const findings = detectPii(reduced);
+    if (findings.length > 0) die(`${spec.source}: personal data left (${findings[0]?.rule})`);
+    const path = join(RAW_CNPJ_DIR, `${spec.source}.${cnpj.value}.json`);
+    const fixture = {
+      source: spec.source,
+      cnpj: cnpj.value,
+      recordedAt,
+      recordedBy: recordedBy(),
+      sanitization: sanitizationOf(company.value) ?? {
+        whitelist: 'cnpj@1',
+        discardedFields: [],
+        replacedDocuments: 0,
+      },
+      raw: reduced,
+    };
+    writeFileSync(path, `${JSON.stringify(fixture, null, 2)}\n`);
+    written.push(path);
+  }
+}
+
 function civil(name: string): CivilDate {
   const v = arg(name) ?? die(`missing --${name}=`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) die(`--${name} must be YYYY-MM-DD`);
@@ -129,11 +182,16 @@ function recordHeroSelic(): void {
 async function main(): Promise<void> {
   const source = arg('source');
   if (source === 'cnpj') await recordCnpj();
-  else if (source === 'sgs') await recordSgs();
+  else if (source === 'cnpj-raw') {
+    await recordCnpjRaw();
+    biomeFormat(written);
+    for (const p of written) console.log(`recorded ${p}`);
+    return;
+  } else if (source === 'sgs') await recordSgs();
   else if (source === 'hero-selic') recordHeroSelic();
   else if (source === 'pluggy') {
     die('the live Pluggy provider (PluggyFinancial) arrives in E11; nothing recorded');
-  } else die('use --source=cnpj|sgs|hero-selic|pluggy');
+  } else die('use --source=cnpj|cnpj-raw|sgs|hero-selic|pluggy');
   biomeFormat(written);
   generateIndex();
   for (const p of written) console.log(`recorded ${p}`);

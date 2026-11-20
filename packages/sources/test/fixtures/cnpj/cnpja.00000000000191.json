@@ -1,0 +1,54 @@
+{
+  "source": "cnpja",
+  "cnpj": "00000000000191",
+  "recordedAt": "2026-11-20T12:22:23.143Z",
+  "recordedBy": "scripts/record-fixtures.ts@5fd1e7c",
+  "sanitization": {
+    "whitelist": "cnpj@1",
+    "discardedFields": ["emails", "head", "phones", "statusDate", "suframa", "updated"],
+    "replacedDocuments": 0
+  },
+  "raw": {
+    "taxId": "00000000000191",
+    "alias": "Direcao Geral",
+    "founded": "1966-08-01",
+    "company": {
+      "name": "BANCO DO BRASIL SA",
+      "nature": {
+        "id": 2038,
+        "text": "Sociedade de Economia Mista"
+      },
+      "size": {
+        "id": 5,
+        "acronym": "DEMAIS",
+        "text": "Demais"
+      },
+      "simples": {
+        "optant": false,
+        "since": null
+      },
+      "simei": {
+        "optant": false,
+        "since": null
+      }
+    },
+    "status": {
+      "id": 2,
+      "text": "Ativa"
+    },
+    "address": {
+      "municipality": 5300108,
+      "state": "DF"
+    },
+    "mainActivity": {
+      "id": 6422100,
+      "text": "Bancos múltiplos, com carteira comercial"
+    },
+    "sideActivities": [
+      {
+        "id": 6499999,
+        "text": "Outras atividades de serviços financeiros não especificadas anteriormente"
+      }
+    ]
+  }
+}

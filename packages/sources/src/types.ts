@@ -21,7 +21,7 @@ export interface ProviderError {
   message: string;
   recoverable: boolean;
   /**
-   * 'brasilapi' | 'cnpjws' | 'pluggy' | 'sgs' | 'persona' | 'replay', or 'input' when no provider is
+   * a `CnpjSource`, 'external_cache' | 'pluggy' | 'sgs' | 'persona' | 'replay', or 'input' when no provider is
    * involved (validating what the user typed, e.g. `validateCnpj`; EXECUTION §9, 14/11).
    */
   source: string;
@@ -44,6 +44,15 @@ export interface ProviderContext {
 /** 14 chars `[0-9A-Z]{12}[0-9]{2}`, uppercase, no mask. */
 export type Cnpj = string & { readonly __brand: 'Cnpj' };
 
+/** Live public CNPJ sources, in the order the chain asks them (E21, 20/11/2026). */
+export type CnpjSource =
+  | 'brasilapi'
+  | 'opencnpj'
+  | 'cnpja'
+  | 'minhareceita'
+  | 'cnpjws'
+  | 'receitaws';
+
 /** ONLY whitelisted fields (ARCHITECTURE §6.2). */
 export interface PublicCompany {
   cnpj: Cnpj;
@@ -62,7 +71,7 @@ export interface PublicCompany {
   simples: { optedIn: boolean; since: CivilDate | null; excludedAt: CivilDate | null };
   mei: { optedIn: boolean; since: CivilDate | null; excludedAt: CivilDate | null };
   taxRegimeHistory: { year: number; form: string }[];
-  source: 'brasilapi' | 'cnpjws' | 'replay' | 'persona';
+  source: CnpjSource | 'replay' | 'persona';
   /** ISO-8601. */
   fetchedAt: string;
 }

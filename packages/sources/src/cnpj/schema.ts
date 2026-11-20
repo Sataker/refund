@@ -29,7 +29,16 @@ export const publicCompanySchema = z.strictObject({
   simples: option,
   mei: option,
   taxRegimeHistory: z.array(z.strictObject({ year: z.number().int(), form: z.string() })),
-  source: z.enum(['brasilapi', 'cnpjws', 'replay', 'persona']),
+  source: z.enum([
+    'brasilapi',
+    'opencnpj',
+    'cnpja',
+    'minhareceita',
+    'cnpjws',
+    'receitaws',
+    'replay',
+    'persona',
+  ]),
   fetchedAt: z.string(),
 });
 

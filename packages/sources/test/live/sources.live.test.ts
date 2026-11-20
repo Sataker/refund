@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   BrasilApiCnpj,
+  ChainedCnpj,
   type CivilDate,
+  CNPJ_SOURCES,
   CnpjWsCnpj,
   detectPii,
+  LiveCnpj,
   publicCompanySchema,
   SgsSeries,
   sanitizationOf,
@@ -47,6 +50,32 @@ describe('live contract: CNPJ providers', () => {
     expect(publicCompanySchema.safeParse(r.value).success).toBe(true);
     expect(sanitizationOf(r.value)?.discardedFields).toContain('socios');
     expect(detectPii(r.value)).toEqual([]);
+  });
+});
+
+// E21: every one of the six public sources, then the chain itself. The 3/min sources may answer 429.
+describe('live contract: the six CNPJ sources (E21)', () => {
+  it.each(CNPJ_SOURCES.map((s) => [s.source, s] as const))(
+    '%s → whitelisted company, no QSA or contact data',
+    { timeout: 15_000 },
+    async (source, spec) => {
+      const r = await new LiveCnpj(spec, { timeoutMs: 10_000 }).lookup(bb.value, ctx);
+      if (!r.ok && r.error.code === 'RATE_LIMITED') return;
+      expect(r.ok).toBe(true);
+      if (!r.ok) return;
+      expect(r.value).toMatchObject({ cnpj: bb.value, source, size: 'OTHER', uf: 'DF' });
+      expect(r.value.primaryCnae.code).toBe('6422-1/00');
+      expect(detectPii(r.value)).toEqual([]);
+    },
+  );
+
+  it('the chain answers with BrasilAPI left out', { timeout: 30_000 }, async () => {
+    const chain = new ChainedCnpj({
+      live: CNPJ_SOURCES.map((s) => new LiveCnpj(s)),
+      skip: ['brasilapi'],
+    });
+    const r = await chain.lookup(bb.value, ctx);
+    expect(r.ok && r.value.source).not.toBe('brasilapi');
   });
 });
 
