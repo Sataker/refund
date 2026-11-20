@@ -13,5 +13,11 @@
       "env": ["DATA_MODE", "NEXT_PUBLIC_*"]
     }
   },
-  "globalPassThroughEnv": ["LIVE", "FC_NUM_RUNS", "CI"]
+  "globalPassThroughEnv": [
+    "LIVE",
+    "FC_NUM_RUNS",
+    "CI",
+    "REFUND_CAPTURES_DIR",
+    "REFUND_CNAE_CAPTURES"
+  ]
 }
