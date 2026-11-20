@@ -7,7 +7,15 @@ import { RemoveDuplicateButton, UndoExclusionButton } from './exclusions.client.
 import { MonthBars, type MonthBarsSeries } from './month-bars.tsx';
 import { SealMark } from './seal-style.tsx';
 import { FinanceSection } from './section.client.tsx';
-import { comparedTo, countLabel, formatDate, groupKeys, listDates, signedBRL } from './text.ts';
+import {
+  cardBillText,
+  comparedTo,
+  countLabel,
+  formatDate,
+  groupKeys,
+  listDates,
+  signedBRL,
+} from './text.ts';
 import type {
   AccountLine,
   ChargeRow,
@@ -206,6 +214,7 @@ export function HolderPanel({
       <Accounts
         accounts={holder.accounts}
         internal={holder.internalTransfers}
+        cardBill={holder.cardBillPayments}
         holder={holder.holder}
       />
 
@@ -486,13 +495,16 @@ export function HolderPanel({
 function Accounts({
   accounts,
   internal,
+  cardBill,
   holder,
 }: {
   accounts: readonly AccountLine[];
   internal: HolderView['internalTransfers'];
+  cardBill: HolderView['cardBillPayments'];
   holder: 'PF' | 'PJ';
 }) {
   if (accounts.length === 0) return null;
+  const billNote = cardBillText(cardBill);
   return (
     <section className="flex flex-col gap-2" data-testid="fv-accounts" data-count={accounts.length}>
       <h2 className="type-small font-medium text-muted-foreground">Por conta</h2>
@@ -545,6 +557,15 @@ function Accounts({
             : holder === 'PJ'
               ? 'foram transferidos entre contas da própria empresa: saem de uma conta e entram em outra, por isso aparecem em “Saiu” e em “Entrou”.'
               : 'foram transferidos entre as suas contas: saem de uma conta e entram em outra, por isso aparecem em “Saiu” e em “Entrou”.'}
+        </p>
+      ) : null}
+      {billNote !== null ? (
+        <p
+          className="type-small max-w-[68ch] text-muted-foreground"
+          data-testid="fv-card-bill-note"
+          data-cents={cardBill.outflow}
+        >
+          {billNote}
         </p>
       ) : null}
     </section>

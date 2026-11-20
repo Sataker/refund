@@ -40,7 +40,7 @@ export function tx(p: TxInput = {}): NormalizedTransaction {
       doc === null && p.name === undefined && p.cnae === undefined
         ? null
         : { document: doc, name: p.name ?? null, cnae: p.cnae ?? null },
-    sourceCategory: null,
+    sourceCategory: p.sourceCategory ?? null,
     mcc: p.mcc ?? null,
     installment: p.installment ?? null,
   };

@@ -104,6 +104,23 @@ export function signedBRL(cents: number): string {
   return cents > 0 ? `+${formatBRL(cents)}` : formatBRL(cents);
 }
 
+/**
+ * D43 (PLAN §18, 20/11): the line under "Por conta" when the card-bill payment was left out of the tiles. Null when
+ * there is none. Both amounts come from `HolderView.cardBillPayments` as built.
+ */
+export function cardBillText(c: { outflow: number; inflow: number }): string | null {
+  if (c.outflow > 0) {
+    const credited =
+      c.inflow > 0
+        ? ` O mesmo pagamento, recebido na conta do cartão (${formatBRL(c.inflow)}), também não conta em “Entrou”.`
+        : '';
+    return `${formatBRL(c.outflow)} pagos na fatura do cartão não contam em “Saiu”: as compras feitas no cartão já contam lá.${credited}`;
+  }
+  if (c.inflow > 0)
+    return `${formatBRL(c.inflow)} recebidos na conta do cartão são o pagamento da fatura e não contam em “Entrou”.`;
+  return null;
+}
+
 /** "1 lançamento" / "101 lançamentos". */
 export function countLabel(n: number): string {
   return n === 1 ? '1 lançamento' : `${n} lançamentos`;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  cardBillText,
   comparedTo,
   firstSentence,
   formatBps,
@@ -108,5 +109,18 @@ describe('Finanças copy (Screen 5b)', () => {
     expect(plain(comparedTo(0, '2026-09'))).toBe('igual a set/2026');
     expect(plain(comparedTo(120_000, '2026-09'))).toBe('R$ 1.200,00 a mais que set/2026');
     expect(plain(comparedTo(-500, '2026-09'))).toBe('R$ 5,00 a menos que set/2026');
+  });
+
+  it('D43: the card-bill line says what left the tiles and why', () => {
+    expect(cardBillText({ outflow: 0, inflow: 0 })).toBeNull();
+    expect(plain(cardBillText({ outflow: 30_000, inflow: 0 }) ?? '')).toBe(
+      'R$ 300,00 pagos na fatura do cartão não contam em “Saiu”: as compras feitas no cartão já contam lá.',
+    );
+    expect(plain(cardBillText({ outflow: 30_000, inflow: 30_000 }) ?? '')).toContain(
+      'recebido na conta do cartão (R$ 300,00), também não conta em “Entrou”.',
+    );
+    expect(plain(cardBillText({ outflow: 0, inflow: 30_000 }) ?? '')).toBe(
+      'R$ 300,00 recebidos na conta do cartão são o pagamento da fatura e não contam em “Entrou”.',
+    );
   });
 });

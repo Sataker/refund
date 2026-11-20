@@ -102,6 +102,8 @@ export interface FinancialViewAccount {
   id: string;
   holder: 'PF' | 'PJ';
   label: string;
+  /** [D43] The Open Finance account type; 'CREDIT' is a credit-card account. Absent = unknown (nothing inferred). */
+  type?: 'BANK' | 'CREDIT';
 }
 
 export interface MonthValue {
@@ -182,6 +184,12 @@ export interface HolderView {
   accounts: AccountLine[];
   /** [D31] Own-account transfers inside the tiles ("Entre contas da empresa": they enter one account, leave another). */
   internalTransfers: { inflow: Cents; outflow: Cents };
+  /**
+   * [D43] Card-bill payments, kept OUT of the tiles, the groups, the accounts and the detectors because the holder's
+   * card account is connected and its purchases already count in "Saiu". `outflow`: paid from a bank account;
+   * `inflow`: the same payment credited on the card account. Ids in date order.
+   */
+  cardBillPayments: { outflow: Cents; inflow: Cents; transactionIds: string[] };
 }
 
 /** [D31] One bank account of a holder. `internal*` are its transfers to/from the holder's other accounts. */
@@ -775,13 +783,44 @@ export function duplicateRemovals(suspect: DuplicateSuspect): string[] {
   return suspect.transactionIds.slice(1);
 }
 
+// ---------- D43: the card-bill payment ----------
+
+/** Pluggy's transaction category for paying a card bill (its taxonomy names categories in English). */
+const CARD_BILL_CATEGORY = /^credit card payment$/i;
+/** "PAGAMENTO FATURA", "PAG FATURA CARTAO", "PGTO FATURA", "PAGTO DA FATURA" (normalized, E.1.5). Not "FATURAMENTO". */
+const RX_CARD_BILL = /\b(?:PAGAMENTO|PAGTO|PGTO|PAG)\.? (?:DA |DE |DO )?FATURA\b/u;
+/** On the card account itself: the bill payment credited ("PAGAMENTO RECEBIDO"). */
+const RX_CARD_BILL_CREDIT = /\bPAGAMENTO RECEBIDO\b/u;
+
+/**
+ * Conservative (D43): only when the same holder has a connected credit-card account, and only a clear bill payment:
+ * an outflow from a non-card account, not a card purchase, with Pluggy's category or a bill-payment description; or,
+ * on the card account, the inflow that is that payment arriving. Anything else stays where it is.
+ */
+function isCardBillPayment(
+  t: NormalizedTransaction,
+  cardAccounts: ReadonlySet<string>,
+  cardHolders: ReadonlySet<'PF' | 'PJ'>,
+): boolean {
+  if (!cardHolders.has(t.holder) || t.method === 'CARD') return false;
+  const named = CARD_BILL_CATEGORY.test(t.sourceCategory ?? '') || RX_CARD_BILL.test(t.description);
+  if (cardAccounts.has(t.accountId))
+    return t.direction === 'inflow' && (named || RX_CARD_BILL_CREDIT.test(t.description));
+  return t.direction === 'outflow' && named;
+}
+
 function holderView(
   holder: 'PF' | 'PJ',
   rows: readonly Row[],
+  cardBills: readonly Row[],
   months: readonly YearMonth[],
   input: FinancialViewInput,
   openQuestions: ReadonlySet<string>,
 ): HolderView {
+  const billSum = (direction: 'inflow' | 'outflow') =>
+    sumCents(
+      cardBills.filter((r) => r.tx.direction === direction).map((r) => r.tx.amountCents as Cents),
+    );
   const inflows = rows.filter((r) => r.tx.direction === 'inflow');
   const outflows = rows.filter((r) => r.tx.direction === 'outflow');
   const inflow12m = sumCents(inflows.map((r) => r.tx.amountCents as Cents));
@@ -829,6 +868,11 @@ function holderView(
           .filter((r) => r.groupId === 'internal_transfer')
           .map((r) => r.tx.amountCents as Cents),
       ),
+    },
+    cardBillPayments: {
+      outflow: billSum('outflow'),
+      inflow: billSum('inflow'),
+      transactionIds: [...cardBills].sort((a, b) => byDateThenId(a.tx, b.tx)).map((r) => r.tx.id),
     },
     outflowChange: {
       month: last.month,
@@ -883,11 +927,17 @@ export function buildFinancialView(input: FinancialViewInput): Result<FinancialV
       return { tx, c, groupId: groupOf(c) };
     });
   const openQuestions = new Set(input.openQuestionIds ?? []);
+  const cards = (input.accounts ?? []).filter((a) => a.type === 'CREDIT');
+  const cardAccounts = new Set(cards.map((a) => a.id));
+  const cardHolders = new Set(cards.map((a) => a.holder));
+  const isBill = (r: Row) => isCardBillPayment(r.tx, cardAccounts, cardHolders);
   const viewOf = (holder: 'PF' | 'PJ'): HolderView | null => {
     if (!input.transactions.some((t) => t.holder === holder)) return null;
+    const own = rows.filter((r) => r.tx.holder === holder);
     return holderView(
       holder,
-      rows.filter((r) => r.tx.holder === holder),
+      own.filter((r) => !isBill(r)),
+      own.filter(isBill),
       months,
       input,
       openQuestions,
@@ -934,6 +984,7 @@ export function financialViewOfRun(
       id: a.sourceId,
       holder: a.holder,
       label: `${a.institution} · ${a.productName}`,
+      type: a.type,
     })),
     excludedTransactionIds,
     referenceMonth: input.referenceMonth,
