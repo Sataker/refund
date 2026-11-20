@@ -71,8 +71,9 @@ test.describe('live trust @app (bug bash 20/11)', () => {
     await expect(page.getByTestId('found-label')).toHaveText('Exemplo · extrato de exemplo');
     await expect(page.getByTestId('ticker-example-label')).toHaveText('Extrato de exemplo');
     await expect(page.getByTestId('data-origin-banner')).toBeVisible();
+    // R06 (monofásico) comes from the company's real activity, not the statement (exampleFor): no prefix there.
     for (const text of await page.getByTestId('analysis-alert-text').allTextContents())
-      expect(text).toContain('No extrato de exemplo: ');
+      if (!/monofásicos/.test(text)) expect(text).toContain('No extrato de exemplo: ');
 
     for (const path of ['painel', 'confirmar', 'relatorio']) {
       await page.goto(`/app/analises/${id}/${path}`);
@@ -83,7 +84,7 @@ test.describe('live trust @app (bug bash 20/11)', () => {
       'Exemplo com o extrato da Marina, aplicado às regras da Loja Exemplo',
     );
     for (const text of await page.getByTestId('alert-text').allTextContents())
-      expect(text).toContain('No extrato de exemplo: ');
+      if (!/monofásicos/.test(text)) expect(text).toContain('No extrato de exemplo: ');
     // H1: every Confirmar card says its numbers are the example statement's.
     await page.goto(`/app/analises/${id}/confirmar`);
     const cards = page.locator('[data-testid^="card-"] > p:first-child');
