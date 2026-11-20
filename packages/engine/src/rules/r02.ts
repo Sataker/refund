@@ -89,10 +89,14 @@ export function r02Finding(i: R02Input): Finding | null {
     step({
       id: `R02.FINANCIAL_COST.${e.month}`,
       label: `Retenção de ${formatMonth(e.month)} (DARF 1841 em ${formatMonth(e.darfMonth)}): custo do dinheiro parado até a restituição`,
+      // Bug bash 20/11: `financialCost` is also null when the Selic is missing; only an income above the IRPFM
+      // threshold gets the IRPFM sentence (the same test as the title), so the trace never contradicts it.
       formula:
-        e.financialCost === null
-          ? 'renda acima de R$ 600 mil: a retenção vira antecipação do imposto mínimo (IRPFM)'
-          : 'retido × ((1 + Selic)^(meses ÷ 12) − 1)',
+        e.financialCost !== null
+          ? 'retido × ((1 + Selic)^(meses ÷ 12) − 1)'
+          : irpfm
+            ? 'renda acima de R$ 600 mil: a retenção vira antecipação do imposto mínimo (IRPFM)'
+            : 'Selic não informada: custo financeiro não calculado',
       inputs: {
         total: { value: e.total, unit: 'cents' },
         withheld: { value: e.withheld, unit: 'cents' },
