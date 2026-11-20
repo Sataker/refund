@@ -28,11 +28,16 @@ export const taxRegime = refund.enum('tax_regime', [
   'OTHER',
 ]);
 export const companySize = refund.enum('company_size', ['MEI', 'ME', 'EPP', 'OTHER', 'UNKNOWN']);
+// E21 (20/11/2026): the four public mirrors added to the CNPJ chain. New values go last (ADD VALUE).
 export const companySource = refund.enum('company_source', [
   'brasilapi',
   'cnpjws',
   'replay',
   'persona',
+  'opencnpj',
+  'cnpja',
+  'minhareceita',
+  'receitaws',
 ]);
 export const connectionProvider = refund.enum('connection_provider', [
   'pluggy',
