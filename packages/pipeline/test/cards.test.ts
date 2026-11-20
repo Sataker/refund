@@ -211,6 +211,37 @@ describe('payroll, export, revenue and contribution cards', () => {
     );
   });
 
+  it('D54 (audit H1): a goods company is asked the goods question, and its answer is exportOfGoods', () => {
+    const fx = monthly(3, '2026-10', {
+      direction: 'inflow',
+      description: 'CAMBIO',
+      method: 'FX',
+      amountCents: 5_000_000,
+    });
+    const list = classify(fx);
+    const ask = (exportsGoods: boolean) =>
+      buildQuestions(list, { regime: 'SIMPLES', answers: new Map(), exportsGoods }).find(
+        (q) => q.id === CARD.export,
+      )?.text;
+    expect(ask(true)).toContain(
+      'são de venda de mercadorias para o exterior (ou para comercial exportadora com o fim específico de exportação)?',
+    );
+    expect(ask(true)).not.toContain('serviço');
+    expect(ask(false)).toContain('por serviço usufruído lá');
+    const commerce = persona().company;
+    const r = buildFacts({
+      classified: classify(fx, { [CARD.export]: 'yes' }),
+      answers: new Map([[CARD.export, 'yes']]),
+      company: { ...commerce, primaryCnae: { ...commerce.primaryCnae, code: '4772-5/00' } },
+      referenceMonth: '2026-10',
+      analysisDate: '2026-11-12',
+      userAssumptions: {},
+    });
+    if (!r.ok) throw new Error(r.error.code);
+    expect(r.value.qualifications.exportOfGoods?.value).toBe(true);
+    expect(r.value.qualifications.exportResultAbroad).toBeUndefined();
+  });
+
   it('a large domestic receipt: yes keeps it as revenue, no takes it out', () => {
     const big = [
       tx({

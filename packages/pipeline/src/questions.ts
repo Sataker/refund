@@ -47,6 +47,7 @@ const impactOf = (list: readonly Classified[]): Cents =>
 function textOf(
   cardId: string,
   list: readonly Classified[],
+  exportsGoods: boolean,
 ): Omit<ConfirmationQuestion, 'id' | 'transactionIds' | 'estimatedImpact'> {
   const [kind, rest] = cardId.split(':');
   const n = list.length;
@@ -99,6 +100,14 @@ function textOf(
         options: YES_NO,
       };
     case CARD.export:
+      // D54 (audit H1): a goods company (Anexos I and II) is asked the goods test of the PGDAS-D manual, item 1.5, and
+      // LC 123, art. 18, §§ 4º-A, IV, and 7º; goods have no inflow-of-currency test.
+      if (exportsGoods)
+        return {
+          type: 'transaction',
+          text: `Estes ${n} créditos do exterior (${sum}) são de venda de mercadorias para o exterior (ou para comercial exportadora com o fim específico de exportação)?`,
+          options: YES_NO,
+        };
       // EXECUTION §9 (D20): one question for the two legal tests (acquirer and recipient abroad; consumed abroad).
       return {
         type: 'transaction',
@@ -184,6 +193,8 @@ function textOf(
 export interface QuestionContext {
   regime: Facts['company']['value']['regime'];
   answers: ReadonlyMap<string, AnswerValue>;
+  /** D54: the company's base anexo is I or II, so the export card asks the goods question. */
+  exportsGoods?: boolean;
 }
 
 /** Open cards: a card with a transaction still pending, plus the assumption cards not yet answered. */
@@ -201,7 +212,7 @@ export function buildQuestions(
     if (!list.some((c) => c.classification.status === 'pending_confirmation')) continue;
     questions.push({
       id,
-      ...textOf(id, list),
+      ...textOf(id, list, ctx.exportsGoods === true),
       transactionIds: list.map((c) => c.tx.id),
       estimatedImpact: impactOf(list),
     });

@@ -267,7 +267,9 @@ export function buildFacts(input: FactsInput): Result<Facts, FactsError> {
   const exportAnswer = answers.get(CARD.export);
   const fxCredits = input.classified.filter((c) => c.cardId === CARD.export);
   if (isYes(exportAnswer) || isNo(exportAnswer)) {
-    qualifications.exportResultAbroad = {
+    // D54 (audit H1): the card asks the goods question in Anexos I and II (questions.ts), so its answer is that fact.
+    const goods = profile.baseAnexo === 'I' || profile.baseAnexo === 'II';
+    qualifications[goods ? 'exportOfGoods' : 'exportResultAbroad'] = {
       value: isYes(exportAnswer),
       provenance: {
         origin: 'user',

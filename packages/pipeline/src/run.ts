@@ -338,7 +338,11 @@ export async function* runAnalysis(
     const analysisDate = deps.clock.today();
     const engineOptions =
       deps.parameterSet === undefined ? undefined : { parameters: deps.parameterSet };
-    const open = buildQuestions(classified, { regime, answers });
+    const open = buildQuestions(classified, {
+      regime,
+      answers,
+      exportsGoods: anexo === 'I' || anexo === 'II',
+    });
     const questions: ConfirmationQuestion[] =
       open.length === 0
         ? open
