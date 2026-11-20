@@ -3,7 +3,6 @@ import { ENGINE_STATS } from '../../apps/web/src/features/engine-page/stats.gene
 import { ENGINE_VERSION, PARAMETERS_VERSION } from '../../packages/engine/src/index.ts';
 import {
   goldenTestFiles,
-  inputsHash,
   oracleSourceCounts,
   ruleSummary,
   suiteGroup,
@@ -12,16 +11,10 @@ import {
 } from '../generate-engine-page.ts';
 
 // EXECUTION E20, task 4: the numbers on /motor must be the repository's. The test counts come from a real golden run
-// (scripts/generate-engine-page.ts); here the inputs hash proves they were taken from the current golden files.
+// (scripts/generate-engine-page.ts). Here: the cheap structural checks. The inputs-hash check (any edit to a golden
+// file) is `pnpm freeze:check` item 13, so editing a golden test does not break `pnpm test` until the freeze.
 
 describe('/motor numbers match the repository', () => {
-  it('the golden inputs did not change since the page was generated', () => {
-    expect(
-      ENGINE_STATS.inputsHash,
-      'a golden file changed: run `node scripts/generate-engine-page.ts`',
-    ).toBe(inputsHash());
-  });
-
   it('every golden test file has its row, and no row is left over', () => {
     expect(ENGINE_STATS.suites.map((s) => s.file)).toEqual(goldenTestFiles());
     for (const s of ENGINE_STATS.suites) expect(s.group).toBe(suiteGroup(s.file));

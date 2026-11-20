@@ -1,8 +1,9 @@
-// Freeze checklist, automatable items (INFRA-CI §8.4). E0 implements the static items 1–5 and 10.
-// Items 6–9 (guard, recordings, production/backup health) are added at G3/E22.
+// Freeze checklist, automatable items (INFRA-CI §8.4). E0 implements the static items 1–5 and 10; E14 item 11; E20
+// items 12–14. Items 6–9 (guard, recordings, production/backup health) are added at G3/E22.
 // Usage: node scripts/freeze-check.ts
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import { inputsHashProblems, STATS_FILE } from './generate-engine-page.ts';
 import { checkFile } from './lint-conventions.ts';
 
 const EXPECTED_EMAIL = 'enzosvacarro@gmail.com';
@@ -68,6 +69,18 @@ export function statusPageProblems(source: string): string[] {
   return [];
 }
 
+/** README placeholders that must be gone before the freeze (the GIF, the video and demo links). */
+const README_PLACEHOLDERS: RegExp[] = [/TODO\(E2/, /em breve/i, /coming soon/i];
+
+/** Item 14: README*.md still carries a placeholder (a `TODO(E2x)` marker, "em breve" or "coming soon"). */
+export function readmeProblems(file: string, source: string): string[] {
+  return source
+    .split('\n')
+    .flatMap((line, i) =>
+      README_PLACEHOLDERS.some((re) => re.test(line)) ? [`${file}:${i + 1}: ${line.trim()}`] : [],
+    );
+}
+
 const checks: Check[] = [
   {
     id: 1,
@@ -121,6 +134,16 @@ const checks: Check[] = [
     run: () => trackedFiles().filter((f) => PRIVATE_PATHS.some((p) => p.test(f))),
   },
   {
+    id: 10,
+    name: "no file exports runtime = 'edge'",
+    run: () =>
+      trackedFiles()
+        .filter((f) => /\.(ts|tsx|js|jsx|mjs)$/.test(f))
+        .flatMap((f) => checkFile(f, readFileSync(f, 'utf8')))
+        .filter((v) => v.rule === 'edge-runtime')
+        .map((v) => v.file),
+  },
+  {
     id: 11,
     name: 'contact e-mail set (/privacidade, waitlist)',
     run: () => contactProblems(readFileSync(CONTACT_FILE, 'utf8')),
@@ -131,14 +154,17 @@ const checks: Check[] = [
     run: () => statusPageProblems(readFileSync(STATUS_FILE, 'utf8')),
   },
   {
-    id: 10,
-    name: "no file exports runtime = 'edge'",
+    id: 13,
+    name: '/motor numbers generated from the current golden inputs',
+    run: () => inputsHashProblems(readFileSync(STATS_FILE, 'utf8')),
+  },
+  {
+    id: 14,
+    name: 'no placeholder left in the READMEs',
     run: () =>
       trackedFiles()
-        .filter((f) => /\.(ts|tsx|js|jsx|mjs)$/.test(f))
-        .flatMap((f) => checkFile(f, readFileSync(f, 'utf8')))
-        .filter((v) => v.rule === 'edge-runtime')
-        .map((v) => v.file),
+        .filter((f) => /^README[^/]*\.md$/.test(f))
+        .flatMap((f) => readmeProblems(f, readFileSync(f, 'utf8'))),
   },
 ];
 
