@@ -4,7 +4,8 @@ import type { PlanId } from '../result.ts';
 export type { PlanId } from '../result.ts';
 
 // ARCHITECTURE §8.1: constants in code (changing a price or a limit = a commit). Values from research 07 §3.1, §3.1b and
-// §3.5 (07 rules on values). Checked against 07 in E17 (catalog.test.ts pins every value to the 07 tables).
+// §3.5 (07 rules on values), with one owner decision on top (D41, `withFreeFloor`). Checked against 07 in E17:
+// catalog.test.ts pins every value of PLANS_07 to the 07 tables, and the effective limits of PLANS.
 
 /** Interface from 07 §3.5, with no name changes. */
 export interface Entitlements {
@@ -32,7 +33,8 @@ export interface Entitlements {
 
 // "—" in 07 §3.5 is 0 for a count and false for a flag. The B2B plans are P1/roadmap: their values follow 07 and
 // nothing in the MVP grants them. Where 07 says "por contrato" (api) the count is 0 here: a contract grants it.
-export const PLANS: Readonly<Record<PlanId, Entitlements>> = {
+/** The 07 §3.5 table as written. What the product grants is `PLANS` (the D41 floor applied). */
+export const PLANS_07: Readonly<Record<PlanId, Entitlements>> = {
   free: {
     priceMonthlyCents: 0,
     priceYearlyCents: null,
@@ -204,6 +206,40 @@ export const PLANS: Readonly<Record<PlanId, Entitlements>> = {
     supportLevel: 'sla',
   },
 };
+
+/** The count limits of an Entitlements row. Flags and modes are not limits: they stay as 07 §3.5 wrote them. */
+export const LIMIT_KEYS = [
+  'maxCpfs',
+  'maxCnpjs',
+  'maxConnectionsPf',
+  'maxConnectionsPj',
+  'askLawMonthly',
+  'seats',
+] as const satisfies readonly (keyof Entitlements)[];
+
+/**
+ * D41 (PLAN §18, 20/11): each limit of a paid plan is the larger of its own and Grátis's, so paying never grants
+ * less than the free tier. This deviates from 07 §3.5, which gave Pessoal 0 CNPJs and 0 PJ connections while Grátis
+ * has 1 of each: upgrading from Grátis would have locked a user out of the company they had already analysed. A plan
+ * is paid when it has a monthly price; Grátis itself and the free B2B tier (accountant_partner) keep 07's values.
+ */
+export function withFreeFloor(
+  table: Readonly<Record<PlanId, Entitlements>>,
+): Readonly<Record<PlanId, Entitlements>> {
+  const free = table.free;
+  const out: Record<PlanId, Entitlements> = { ...table };
+  for (const id of Object.keys(table) as PlanId[]) {
+    const plan = table[id];
+    if (id === 'free' || (plan.priceMonthlyCents ?? 0) <= 0) continue;
+    const floored: Entitlements = { ...plan };
+    for (const key of LIMIT_KEYS) floored[key] = Math.max(plan[key], free[key]);
+    out[id] = floored;
+  }
+  return out;
+}
+
+/** What each plan grants: 07 §3.5 with the D41 floor. */
+export const PLANS: Readonly<Record<PlanId, Entitlements>> = withFreeFloor(PLANS_07);
 
 /** Tier order for "two active subscriptions → the highest tier" (ARCHITECTURE §8.2). */
 export const PLAN_TIER: readonly PlanId[] = [

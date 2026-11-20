@@ -1,15 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import {
   isPixPlan,
+  LIMIT_KEYS,
   liveAnalysesPerMonth,
   PERIOD_DAYS,
   PLANS,
+  PLANS_07,
   pixAmountCents,
   VALIDATION_OFFER,
+  withFreeFloor,
 } from './catalog.ts';
 
 // E17 task 1: the catalog in code against research 07 §3.1, §3.1b and §3.5 (07 rules on values). Each number below is
-// typed from the 07 tables, not from catalog.ts.
+// typed from the 07 tables, not from catalog.ts. D41 (PLAN §18): PLANS = PLANS_07 with each paid limit floored at
+// Grátis's.
+
+function limitRows(table: typeof PLANS) {
+  return Object.fromEntries(
+    Object.entries(table).map(([id, p]) => [
+      id,
+      [p.maxCpfs, p.maxCnpjs, p.maxConnectionsPf, p.maxConnectionsPj, p.askLawMonthly, p.seats],
+    ]),
+  );
+}
 
 describe('plan prices (07 §3.1 and §3.1b)', () => {
   it.each([
@@ -21,21 +34,63 @@ describe('plan prices (07 §3.1 and §3.1b)', () => {
     ['accountant_pro', 34900, 349000],
     ['accounting_firm', 119000, 1190000],
     ['api', 490000, null],
-  ] as const)('%s: monthly %s, yearly %s cents', (plan, monthly, yearly) => {
+  ] as const)('%s: monthly %s, yearly %s cents (unchanged by D41)', (plan, monthly, yearly) => {
     expect(PLANS[plan].priceMonthlyCents).toBe(monthly);
     expect(PLANS[plan].priceYearlyCents).toBe(yearly);
+    expect(PLANS_07[plan].priceMonthlyCents).toBe(monthly);
+    expect(PLANS_07[plan].priceYearlyCents).toBe(yearly);
   });
 });
 
-describe('entitlement matrix (07 §3.5)', () => {
+describe('D41: paid limits floored at Grátis', () => {
+  it('effective limits per plan [cpfs, cnpjs, connPf, connPj, askLaw, seats]', () => {
+    expect(limitRows(PLANS)).toEqual({
+      free: [1, 1, 1, 1, 3, 1],
+      personal: [1, 1, 3, 1, 20, 1],
+      mei: [1, 1, 2, 2, 20, 1],
+      business: [2, 1, 3, 3, 60, 2],
+      accountant_partner: [0, 5, 1, 1, 20, 1],
+      accountant_pro: [1, 30, 2, 2, 300, 3],
+      accounting_firm: [1, 120, 2, 2, 1000, 10],
+      api: [1, 1, 1, 1, 3, 1],
+    });
+  });
+
+  it('only limits change: every other field of every plan is 07 as written', () => {
+    for (const [id, plan] of Object.entries(PLANS)) {
+      const rest = { ...plan };
+      const rest07 = { ...PLANS_07[id as keyof typeof PLANS] };
+      for (const k of LIMIT_KEYS) {
+        delete (rest as Partial<typeof rest>)[k];
+        delete (rest07 as Partial<typeof rest07>)[k];
+      }
+      expect(rest, id).toEqual(rest07);
+    }
+  });
+
+  it('withFreeFloor: max per limit on priced plans; free and R$ 0 plans untouched; input not mutated', () => {
+    const base = PLANS_07.free;
+    const table = {
+      ...PLANS_07,
+      free: { ...base, maxCnpjs: 2, askLawMonthly: 5 },
+      personal: { ...PLANS_07.personal, maxCnpjs: 0, askLawMonthly: 9, seats: 4 },
+      accountant_partner: { ...PLANS_07.accountant_partner, maxCpfs: 0 },
+    };
+    const out = withFreeFloor(table);
+    expect(out.personal).toMatchObject({ maxCnpjs: 2, askLawMonthly: 9, seats: 4 });
+    expect(out.free).toBe(table.free);
+    expect(out.accountant_partner.maxCpfs).toBe(0);
+    expect(table.personal.maxCnpjs).toBe(0);
+    for (const [id, plan] of Object.entries(out)) {
+      if ((plan.priceMonthlyCents ?? 0) <= 0) continue;
+      for (const k of LIMIT_KEYS) expect(plan[k], `${id}.${k}`).toBeGreaterThanOrEqual(out.free[k]);
+    }
+  });
+});
+
+describe('entitlement matrix (07 §3.5, before D41)', () => {
   it('limits per plan', () => {
-    const rows = Object.fromEntries(
-      Object.entries(PLANS).map(([id, p]) => [
-        id,
-        [p.maxCpfs, p.maxCnpjs, p.maxConnectionsPf, p.maxConnectionsPj, p.askLawMonthly, p.seats],
-      ]),
-    );
-    expect(rows).toEqual({
+    expect(limitRows(PLANS_07)).toEqual({
       free: [1, 1, 1, 1, 3, 1],
       personal: [1, 0, 3, 0, 20, 1],
       mei: [1, 1, 2, 2, 20, 1],
