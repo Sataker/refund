@@ -61,7 +61,7 @@ export const ENGINE_STATS = {
     {
       file: 'packages/engine/test/golden/curve.test.ts',
       group: 'golden',
-      passed: 4,
+      passed: 5,
       todo: 0,
     },
     {
@@ -133,7 +133,7 @@ export const ENGINE_STATS = {
     {
       file: 'packages/engine/test/golden/r02.test.ts',
       group: 'golden',
-      passed: 14,
+      passed: 15,
       todo: 0,
     },
     {
@@ -181,11 +181,11 @@ export const ENGINE_STATS = {
   ],
   totals: {
     oracle: 39,
-    golden: 223,
+    golden: 225,
     property: 12,
     invariant: 8,
-    passed: 282,
+    passed: 284,
     todo: 1,
   },
-  inputsHash: 'e86b7fe5e2853afb7c1fcc57e8b1a1fee5a6e02afadcff4893fdff1105e7d6ee',
+  inputsHash: 'd8914406a86e1eff8da0fec7ab73fd4a734d90e6ce672b1c6c7780e19194342a',
 } as const;
