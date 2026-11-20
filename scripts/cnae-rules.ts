@@ -476,14 +476,17 @@ export const AMBIGUOUS: Readonly<Record<string, AmbiguousRule>> = {
     ),
   ),
   ...each(
-    ['4623-1/08', '4632-0/03', '4639-7/02', '4649-4/09'],
+    // 4644-3/01 and 4644-3/02: the IBGE notes include fractioning and repacking of the company's own products (audit
+    // of 20/11).
+    ['4623-1/08', '4632-0/03', '4639-7/02', '4649-4/09', '4644-3/01', '4644-3/02'],
     a(
       ['p4i', 'p4ii'],
       'atacado com fracionamento e acondicionamento: parte revenda (Anexo I), parte industrialização (Anexo II)',
     ),
   ),
   ...each(
-    ['4771-7/02', '4771-7/03'],
+    // 4771-7/04: the IBGE notes include compounded veterinary products (audit of 20/11; Res. 140, art. 25, § 2º).
+    ['4771-7/02', '4771-7/03', '4771-7/04'],
     a(
       ['p4vii'],
       'medicamento manipulado: Anexo III sob encomenda para entrega posterior, Anexo I nos demais casos',
@@ -507,6 +510,14 @@ export const AMBIGUOUS: Readonly<Record<string, AmbiguousRule>> = {
   ),
   '1122-4/99': a(['art17xb', 'p4ii'], 'pode incluir cerveja sem álcool, vedada no Simples'),
   '2092-4/02': a(['art17x', 'p4ii'], 'artigo pirotécnico pode conter pólvora ou explosivo'),
+  // Wholesale whose IBGE notes include firearms or ammunition (audit of 20/11; Res. 140, art. 15, XX, "a").
+  ...each(
+    ['4649-4/99', '4669-9/99'],
+    a(
+      ['art17x', 'p4i'],
+      'o código abrange o atacado de armas de fogo ou munições, vedado no Simples',
+    ),
+  ),
   '2910-7/02': a(
     ['art17viii', 'p4ii'],
     'chassi com motor de automóvel pode ser fabricação de automóvel',
@@ -670,6 +681,10 @@ export const MONOFASICO_QUESTION: readonly string[] = [
   '4541-2/03',
   '4541-2/06',
   '4541-2/07',
+  // Tractors, harvesters and earthmoving machines, with their tyres (Lei 10.485/2002, arts. 1º, 3º, § 2º, and 5º;
+  // audit of 20/11).
+  '4661-3/00',
+  '4662-1/00',
   // Medicines, cosmetics, perfumery and hygiene (Lei 10.147/2000).
   '4644-3/01',
   '4644-3/02',

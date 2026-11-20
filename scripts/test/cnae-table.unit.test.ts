@@ -110,6 +110,13 @@ const COMMERCE_EXCEPTIONS: Readonly<Record<string, string>> = {
   '4635-4/03': 'ambiguous',
   '4635-4/99': 'ambiguous',
   '4684-2/99': 'ambiguous',
+  // Tax audit of 20/11: firearms wholesale in the IBGE notes (art. 17, X, "a"); compounded veterinary products
+  // (§ 4º, VII); fractioning and repacking of own products (§ 4º, II).
+  '4649-4/99': 'ambiguous',
+  '4669-9/99': 'ambiguous',
+  '4771-7/04': 'ambiguous',
+  '4644-3/01': 'ambiguous',
+  '4644-3/02': 'ambiguous',
   // Res. CGSN 140, Anexo VI (LC 123, art. 17, X, "a").
   '4636-2/02': 'impeditive',
 };
@@ -225,6 +232,10 @@ describe('D50: cnae-anexo.json covers every CNAE 2.3 subclass', () => {
       expect(r.cnae).toMatch(/^4[5-7]/);
     }
     expect(byCnae.get('4723-7/00')?.resellsMonofasico).toBe('question');
+    expect(byCnae.get('4661-3/00')?.resellsMonofasico).toBe('question');
+    expect(byCnae.get('4662-1/00')?.resellsMonofasico).toBe('question');
+    // Tabacaria: ICMS-ST is not R06's monofásico case (D.6); open in EXECUTION §9.
+    expect(byCnae.get('4729-6/01')?.resellsMonofasico).toBe(false);
   });
 
   it('scope (C.11.5 item 4): verified, Anexo I, III or V, plain table; everything else is out', () => {
@@ -235,7 +246,7 @@ describe('D50: cnae-anexo.json covers every CNAE 2.3 subclass', () => {
         r.anexoAdjustment === undefined;
       expect(cnaeInScope(r.cnae), r.cnae).toBe(inScope);
     }
-    expect(CNAE_IN_SCOPE.length).toBe(320);
+    expect(CNAE_IN_SCOPE.length).toBe(315);
     expect(cnaeInScope('8630-5/04')).toBe(false);
     expect(cnaeInScope('7711-0/00')).toBe(false); // § 4º, V: Anexo III without the ISS share
     expect(cnaeInScope('6110-8/01')).toBe(false); // § 5º-E: Anexo III without ISS, with ICMS

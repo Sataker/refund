@@ -6769,20 +6769,20 @@
   {
     "cnae": "4644-3/01",
     "description": "Comércio atacadista de medicamentos e drogas de uso humano",
-    "baseAnexo": "I",
+    "baseAnexo": null,
     "subjectToFatorR": false,
     "resellsMonofasico": "question",
-    "status": "verified",
-    "source": "LC 123/2006, art. 18, § 4º, I (revenda de mercadorias → Anexo I) · revenda monofásica a confirmar com o usuário (fora da lista E.5; ENGINE-SPEC D.6 não dá padrão)"
+    "status": "ambiguous",
+    "source": "LC 123/2006, art. 18, § 4º, I; LC 123/2006, art. 18, § 4º, II (atacado com fracionamento e acondicionamento: parte revenda (Anexo I), parte industrialização (Anexo II)) · revenda monofásica a confirmar com o usuário (fora da lista E.5; ENGINE-SPEC D.6 não dá padrão)"
   },
   {
     "cnae": "4644-3/02",
     "description": "Comércio atacadista de medicamentos e drogas de uso veterinário",
-    "baseAnexo": "I",
+    "baseAnexo": null,
     "subjectToFatorR": false,
     "resellsMonofasico": "question",
-    "status": "verified",
-    "source": "LC 123/2006, art. 18, § 4º, I (revenda de mercadorias → Anexo I) · revenda monofásica a confirmar com o usuário (fora da lista E.5; ENGINE-SPEC D.6 não dá padrão)"
+    "status": "ambiguous",
+    "source": "LC 123/2006, art. 18, § 4º, I; LC 123/2006, art. 18, § 4º, II (atacado com fracionamento e acondicionamento: parte revenda (Anexo I), parte industrialização (Anexo II)) · revenda monofásica a confirmar com o usuário (fora da lista E.5; ENGINE-SPEC D.6 não dá padrão)"
   },
   {
     "cnae": "4645-1/01",
@@ -6940,11 +6940,11 @@
   {
     "cnae": "4649-4/99",
     "description": "Comércio atacadista de outros equipamentos e artigos de uso pessoal e doméstico não especificados anteriormente",
-    "baseAnexo": "I",
+    "baseAnexo": null,
     "subjectToFatorR": false,
     "resellsMonofasico": false,
-    "status": "verified",
-    "source": "LC 123/2006, art. 18, § 4º, I (revenda de mercadorias → Anexo I)"
+    "status": "ambiguous",
+    "source": "LC 123/2006, art. 17, X; LC 123/2006, art. 18, § 4º, I (o código abrange o atacado de armas de fogo ou munições, vedado no Simples)"
   },
   {
     "cnae": "4651-6/01",
@@ -6978,18 +6978,18 @@
     "description": "Comércio atacadista de máquinas, aparelhos e equipamentos para uso agropecuário; partes e peças",
     "baseAnexo": "I",
     "subjectToFatorR": false,
-    "resellsMonofasico": false,
+    "resellsMonofasico": "question",
     "status": "verified",
-    "source": "LC 123/2006, art. 18, § 4º, I (revenda de mercadorias → Anexo I)"
+    "source": "LC 123/2006, art. 18, § 4º, I (revenda de mercadorias → Anexo I) · revenda monofásica a confirmar com o usuário (fora da lista E.5; ENGINE-SPEC D.6 não dá padrão)"
   },
   {
     "cnae": "4662-1/00",
     "description": "Comércio atacadista de máquinas, equipamentos para terraplenagem, mineração e construção; partes e peças",
     "baseAnexo": "I",
     "subjectToFatorR": false,
-    "resellsMonofasico": false,
+    "resellsMonofasico": "question",
     "status": "verified",
-    "source": "LC 123/2006, art. 18, § 4º, I (revenda de mercadorias → Anexo I)"
+    "source": "LC 123/2006, art. 18, § 4º, I (revenda de mercadorias → Anexo I) · revenda monofásica a confirmar com o usuário (fora da lista E.5; ENGINE-SPEC D.6 não dá padrão)"
   },
   {
     "cnae": "4663-0/00",
@@ -7030,11 +7030,11 @@
   {
     "cnae": "4669-9/99",
     "description": "Comércio atacadista de outras máquinas e equipamentos não especificados anteriormente; partes e peças",
-    "baseAnexo": "I",
+    "baseAnexo": null,
     "subjectToFatorR": false,
     "resellsMonofasico": false,
-    "status": "verified",
-    "source": "LC 123/2006, art. 18, § 4º, I (revenda de mercadorias → Anexo I)"
+    "status": "ambiguous",
+    "source": "LC 123/2006, art. 17, X; LC 123/2006, art. 18, § 4º, I (o código abrange o atacado de armas de fogo ou munições, vedado no Simples)"
   },
   {
     "cnae": "4671-1/00",
@@ -7804,11 +7804,11 @@
   {
     "cnae": "4771-7/04",
     "description": "Comércio varejista de medicamentos veterinários",
-    "baseAnexo": "I",
+    "baseAnexo": null,
     "subjectToFatorR": false,
     "resellsMonofasico": "question",
-    "status": "verified",
-    "source": "LC 123/2006, art. 18, § 4º, I (revenda de mercadorias → Anexo I) · revenda monofásica a confirmar com o usuário (fora da lista E.5; ENGINE-SPEC D.6 não dá padrão)"
+    "status": "ambiguous",
+    "source": "LC 123/2006, art. 18, § 4º, VII (medicamento manipulado: Anexo III sob encomenda para entrega posterior, Anexo I nos demais casos) · revenda monofásica a confirmar com o usuário (fora da lista E.5; ENGINE-SPEC D.6 não dá padrão)"
   },
   {
     "cnae": "4772-5/00",
