@@ -164,7 +164,7 @@ describe('ENGINE-SPEC D.4 — R04', () => {
     // C.1 item 4: the steady-state IR (2028) uses the 2026 table, flagged before the last step.
     const projected = finding?.trace.find((s) => s.id === 'R04.PROJECTED_PARAMETERS');
     expect(projected?.inputs['irpf.annual.table']?.value).toBe(
-      '2027-12 a 2028-12: usado o de 2026',
+      'dez/2027 a dez/2028: usado o de 2026',
     );
     expect(finding?.trace.at(-1)?.id).toBe('R04.MARGINAL_12M');
     expect(finding?.title).toContain(`Aporte R$`);

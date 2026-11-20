@@ -355,8 +355,8 @@ function visibleAssumptions(
     },
     {
       id: 'P6',
-      text: 'Valor por ano em regime',
-      why: 'A rampa dos 12 primeiros meses depende do histórico mês a mês, que o perfil não tem. O valor em regime é o que se compara com a faixa.',
+      text: 'Valor por ano depois da mudança',
+      why: 'A rampa dos 12 primeiros meses depende do histórico mês a mês, que o perfil não tem. O valor por ano depois da mudança é o que se compara com a faixa.',
       type: 'grid_limit',
     },
     {

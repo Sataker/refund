@@ -192,7 +192,7 @@ export function OptimizerCurve({ points, current, target, recommended }: Optimiz
           <span aria-hidden="true" className="inline-block size-2.5 rounded-full bg-found-chart" />
           pró-labore recomendado
         </span>
-        <span>eixo: pró-labore por mês × custo por ano (DAS + INSS + IR), em regime</span>
+        <span>eixo: pró-labore por mês × custo por ano (DAS + INSS + IR), depois da mudança</span>
       </figcaption>
     </figure>
   );

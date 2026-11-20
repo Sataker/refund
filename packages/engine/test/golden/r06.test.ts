@@ -97,7 +97,7 @@ describe('ENGINE-SPEC D.6 — R06', () => {
     expect(f?.marginalValue12m).toBe(0);
     expect(f?.countsInTotal).toBe(false);
     expect(f?.title).toBe(
-      'Separar a receita monofásica não compensa: só R$ 222,89 a menos nos próximos 12 meses e nada por ano em regime (fora do total).',
+      'Separar a receita monofásica não compensa: só R$ 222,89 a menos nos próximos 12 meses e nada por ano depois da mudança (fora do total).',
     );
     expect(r.total.savings12m).toBe(0);
   });

@@ -60,7 +60,7 @@ describe('hero: findings rule by rule (F.3)', () => {
     expect(f.confidence).toBe('confirmed');
     expect(f.countsInTotal).toBe(true);
     expect(f.title).toBe(
-      'Ajuste o pró-labore para R$ 2.260,00/mês e pague o Simples pelo Anexo III a partir de 04/2027',
+      'Ajuste o pró-labore para R$ 2.260,00/mês e pague o Simples pelo Anexo III a partir de abr/2027',
     );
     const step = (id: string) => f.trace.find((s) => s.id === id)?.result.value;
     expect(step('R01.P_TARGET')).toBe(226000);
@@ -218,8 +218,8 @@ describe('hero: findings rule by rule (F.3)', () => {
       'parâmetro de 2027 ainda não publicado; usado o de 2026',
     );
     const r01 = find(r, 'R01').trace.find((s) => s.id === 'R01.PROJECTED_PARAMETERS');
-    expect(r01?.inputs['inss.ceiling']?.value).toBe('2027-01 a 2028-12: usado o de 2026');
-    expect(r01?.inputs['irpf.annual.table']?.value).toBe('2027-12 a 2028-12: usado o de 2026');
+    expect(r01?.inputs['inss.ceiling']?.value).toBe('jan/2027 a dez/2028: usado o de 2026');
+    expect(r01?.inputs['irpf.annual.table']?.value).toBe('dez/2027 a dez/2028: usado o de 2026');
     expect(r01?.inputs.minimumWage).toBeUndefined(); // read at start = 2026-12, published
   });
 

@@ -13,8 +13,27 @@ export function formatBrl(c: Cents | number): string {
   return `${negative ? '−' : ''}${grouped},${decimals}`;
 }
 
-/** '2027-04' → '04/2027'. */
-export const formatMonth = (m: YearMonth): string => `${m.slice(5, 7)}/${m.slice(0, 4)}`;
+const MONTH_ABBR = [
+  'jan',
+  'fev',
+  'mar',
+  'abr',
+  'mai',
+  'jun',
+  'jul',
+  'ago',
+  'set',
+  'out',
+  'nov',
+  'dez',
+];
+
+/** '2027-04' → 'abr/2027' (D45, PLAN §18: the same month format the UI uses). */
+export function formatMonth(m: YearMonth): string {
+  const name = MONTH_ABBR[Number(m.slice(5, 7)) - 1];
+  if (name === undefined) throw new RangeError(`invalid YearMonth: ${m}`);
+  return `${name}/${m.slice(0, 4)}`;
+}
 
 /** `[step]` or `[]` (optional trace steps). */
 export const nonNull = <T>(x: T | null): T[] => (x === null ? [] : [x]);

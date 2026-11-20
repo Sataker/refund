@@ -3,6 +3,7 @@
 // parameter that fed its cost (engine review of E5).
 import { type ParameterKey, param } from './parameters/index.ts';
 import type { Ctx } from './projection.ts';
+import { formatMonth } from './rules/common.ts';
 import { horizonPas, regimePas } from './scenario.ts';
 import { step } from './trace.ts';
 import type { Step, YearMonth } from './types.ts';
@@ -60,7 +61,10 @@ export function projectedParametersStep(
     inputs: Object.fromEntries(
       found.map((f) => [
         f.key,
-        { value: `${f.from} a ${f.to}: usado o de ${f.used}`, unit: 'text' as const },
+        {
+          value: `${formatMonth(f.from)} a ${formatMonth(f.to)}: usado o de ${f.used}`,
+          unit: 'text' as const,
+        },
       ]),
     ),
     result: {
