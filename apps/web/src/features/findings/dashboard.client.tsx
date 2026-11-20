@@ -561,7 +561,7 @@ function ZeroLead({
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span
               className="type-money-lg num text-foreground"
-              data-testid="dashboard/estimated-lead"
+              data-testid="dashboard/estimated"
               data-cents={estimated}
             >
               {formatBRL(estimated)}
@@ -584,7 +584,6 @@ function ZeroLead({
       ) : null}
       {kind === 'nothing' ? (
         <p className="type-body-lg text-foreground" data-testid="nothing-found">
-          {headline === null ? null : `${NOTHING_FOUND} `}
           <Link
             href={'/demo' as Route}
             data-testid="nothing-found-demo"

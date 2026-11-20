@@ -118,9 +118,10 @@ test.describe('live trust @app (bug bash 20/11)', () => {
     await page.goto(`/app/analises/${id}/painel`);
     await expect(page.getByTestId('zero-lead')).toHaveAttribute('data-kind', kind ?? '');
     await expect(page.getByTestId('dashboard/money-hero')).toHaveAttribute('data-cents', '0');
+    // The headline once, never repeated under it.
     await expect(
       page.getByText(/Ainda não há economia confirmada|não encontramos economia/),
-    ).toBeVisible();
+    ).toHaveCount(1);
   });
 
   for (const [name, cnpj, text] of [
