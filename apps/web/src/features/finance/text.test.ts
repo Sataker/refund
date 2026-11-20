@@ -28,14 +28,16 @@ const finding = (o: Partial<SealFinding> = {}): SealFinding => ({
 describe('chip title and test keys (E14b review)', () => {
   it('the chip shows a title’s first sentence, never cut mid-sentence', () => {
     const r02 =
-      'R$ 9.000,00 retidos voltam na DIRPF 2027. Distribuindo até R$ 50 mil por mês (por exemplo, 2 × R$ 45.000,00), o dinheiro fica com você.';
-    expect(firstSentence(r02)).toBe('R$ 9.000,00 retidos voltam na DIRPF 2027.');
+      'Um mês com mais de R$ 50 mil em dividendos teve R$ 9.000,00 retidos na fonte. Esse valor volta na declaração de 2027. Dividindo a distribuição em meses, não há retenção.';
+    expect(firstSentence(r02)).toBe(
+      'Um mês com mais de R$ 50 mil em dividendos teve R$ 9.000,00 retidos na fonte.',
+    );
     expect(firstSentence('Conforme o art. 18 da LC 123. Depois disso, nada.')).toBe(
       'Conforme o art. 18 da LC 123.',
     );
     expect(firstSentence('Uma frase só')).toBe('Uma frase só');
     expect(sealDetail('attention', finding({ title: r02 }))).toBe(
-      'R$ 9.000,00 retidos voltam na DIRPF 2027.',
+      'Um mês com mais de R$ 50 mil em dividendos teve R$ 9.000,00 retidos na fonte.',
     );
   });
 

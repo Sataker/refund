@@ -149,7 +149,9 @@ export function slotInfo(f: Finding): Record<string, SlotInfo> {
     put('withheld', withheld === null ? null : money(withheld), 'o IR retido na distribuição');
     put('distributed', total === null ? null : money(total), 'o valor distribuído');
     put('withholdingMonth', monthName(w.month), 'o mês da distribuição');
-    const year = /DIRPF (\d{4})/.exec(f.title)?.[1] ?? String(Number(w.month.slice(0, 4)) + 1);
+    const year =
+      /(?:DIRPF|declaração de) (\d{4})/.exec(f.title)?.[1] ??
+      String(Number(w.month.slice(0, 4)) + 1);
     put('returnYear', year, 'o ano da declaração em que o valor volta');
     put(
       'monthsWaiting',

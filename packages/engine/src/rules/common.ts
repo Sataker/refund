@@ -13,6 +13,14 @@ export function formatBrl(c: Cents | number): string {
   return `${negative ? '−' : ''}${grouped},${decimals}`;
 }
 
+/** 11000000 → "R$ 110 mil" (D.3 text, T03-08; D.2 text, D47); amounts not in whole thousands keep the cents. */
+export const inThousands = (c: Cents): string =>
+  c % 100000 === 0
+    ? `R$ ${formatBrl(c)
+        .slice(0, -3)
+        .replace(/\.000$/, '')} mil`
+    : `R$ ${formatBrl(c)}`;
+
 const MONTH_ABBR = [
   'jan',
   'fev',

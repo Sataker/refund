@@ -37,7 +37,9 @@ describe('hero: the four video numbers (F.4)', () => {
     expect(r02.type).toBe('alert');
     expect(r02.confidence).toBe('estimated');
     expect(r02.title).toContain('9.000,00');
-    expect(r02.title).toContain('2 × R$ 45.000,00');
+    expect(r02.title).toBe(
+      'Um mês com mais de R$ 50 mil em dividendos teve R$ 9.000,00 retidos na fonte. Esse valor volta na declaração de 2027. Dividindo a distribuição em meses, não há retenção.',
+    );
   });
 
   it('byConfidence: everything confirmed (answer key #total)', () => {

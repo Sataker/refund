@@ -13,7 +13,7 @@ import {
   type Step,
   type YearMonth,
 } from '../types.ts';
-import { base, formatBrl, formatMonth, ORDER_OF } from './common.ts';
+import { base, formatBrl, formatMonth, inThousands, ORDER_OF } from './common.ts';
 import { refsOf } from './refs.ts';
 
 export interface R02Event {
@@ -116,8 +116,8 @@ export function r02Finding(i: R02Input): Finding | null {
     }),
   );
   const first = events[0] as R02Event;
-  const split = first.suggestedMonths;
-  const perMonth = cents(Math.floor(first.total / split));
+  const threshold = param('dividends.withholding', first.month).value.monthlyThreshold;
+  const monthCount = new Set(events.map((e) => e.month)).size;
   const refundYear = Number(i.dividendRefundMonth.slice(0, 4));
   const confidence: Finding['confidence'] = irpfm ? 'depends_on_regulation' : 'estimated';
   return {
@@ -127,7 +127,8 @@ export function r02Finding(i: R02Input): Finding | null {
     type: 'alert',
     title: irpfm
       ? 'Sua renda passa de R$ 600 mil: a retenção vira antecipação do imposto mínimo (IRPFM, em breve no app).'
-      : `R$ ${formatBrl(withheld)} retidos voltam na DIRPF ${refundYear}. Distribuindo até R$ 50 mil por mês (por exemplo, ${split} × R$ ${formatBrl(perMonth)}), o dinheiro fica com você.`,
+      : // D47 (PLAN §18, 20/11): wording approved by Enzo; every amount and the year come from the data.
+        `${monthCount === 1 ? 'Um mês' : `${monthCount} meses`} com mais de ${inThousands(threshold)} em dividendos ${monthCount === 1 ? 'teve' : 'tiveram'} R$ ${formatBrl(withheld)} retidos na fonte. Esse valor volta na declaração de ${refundYear}. Dividindo a distribuição em meses, não há retenção.`,
     marginalValue12m: cost,
     range: [cost, cost],
     confidence,

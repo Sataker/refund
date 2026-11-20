@@ -101,7 +101,20 @@ describe('ENGINE-SPEC D.2 — R02', () => {
     const [e] = r02Events(input([d('2026-03', '120.000,00')]));
     expect(e?.withheld).toBe(brl('12.000,00'));
     expect(e?.suggestedMonths).toBe(3);
-    expect(r02Finding(input([d('2026-03', '120.000,00')]))?.title).toContain('3 × R$ 40.000,00');
+    expect(r02Finding(input([d('2026-03', '120.000,00')]))?.title).toContain(
+      'Um mês com mais de R$ 50 mil em dividendos teve R$ 12.000,00 retidos na fonte.',
+    );
+  });
+
+  it('D47 text: the threshold, the withheld total and the year come from the data; months are counted once', () => {
+    const months = Array.from({ length: 12 }, (_, i) => `2026-${String(i + 1).padStart(2, '0')}`);
+    expect(r02Finding(input(months.map((m) => d(m as YearMonth, '60.000,00'))))?.title).toBe(
+      '12 meses com mais de R$ 50 mil em dividendos tiveram R$ 72.000,00 retidos na fonte. Esse valor volta na declaração de 2027. Dividindo a distribuição em meses, não há retenção.',
+    );
+    const twoPayers = [d('2026-03', '60.000,00'), d('2026-03', '60.000,00', B)];
+    expect(r02Finding(input(twoPayers))?.title).toContain(
+      'Um mês com mais de R$ 50 mil em dividendos teve R$ 12.000,00',
+    );
   });
 
   it('distributions before Lei 15.270 (2025) have no withholding', () => {

@@ -19,7 +19,7 @@ import {
   type Step,
   type YearMonth,
 } from '../types.ts';
-import { base, formatBrl, ORDER_OF } from './common.ts';
+import { base, formatBrl, inThousands, ORDER_OF } from './common.ts';
 import { refsOf } from './refs.ts';
 
 /** D.3 references, in the order of the spec (LC 123, arts. 3º, 13-A, 18-A, 20 and 30; LC 238/2026). */
@@ -289,14 +289,6 @@ export function simplesLimit(rev: AnnualRevenue): SimplesLimitResult | null {
 }
 
 // ---------- Finding ----------
-
-/** 11000000 → "R$ 110 mil" (D.3 text, T03-08); amounts not in whole thousands keep the cents. */
-const inThousands = (c: Cents): string =>
-  c % 100000 === 0
-    ? `R$ ${formatBrl(cents(c))
-        .slice(0, -3)
-        .replace(/\.000$/, '')} mil`
-    : `R$ ${formatBrl(c)}`;
 
 const marketName = (m: Market) => (m === 'export' ? 'exportação' : 'mercado interno');
 const date = (d: CivilDate) => `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;

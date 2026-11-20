@@ -20,10 +20,10 @@ export function urgencyText(u: Urgency): string {
 
 /**
  * The label of an alert's cash cost (UX review G2 M1): "custo de esperar até a DIRPF 2027 (Selic)". The year is the
- * one the engine wrote in the finding's own title ("… voltam na DIRPF 2027 …"); nothing is derived here.
+ * one the engine wrote in the finding's own title ("… volta na declaração de 2027 …", D47); nothing is derived here.
  */
 export function alertCostLabel(engineTitle: string): string {
-  const year = /\bDIRPF (\d{4})\b/.exec(engineTitle)?.[1];
+  const year = /\b(?:DIRPF|declaração de) (\d{4})\b/.exec(engineTitle)?.[1];
   return year
     ? `custo de esperar até a DIRPF ${year} (Selic)`
     : 'custo de esperar a restituição (Selic)';
