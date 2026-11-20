@@ -2,6 +2,7 @@ import 'server-only';
 import {
   type CivilDate,
   cnaeAnexoRow,
+  cnaeInScope,
   type ProfileAnswers,
   type PublicProfile,
 } from '@refund/engine';
@@ -36,15 +37,13 @@ export interface ProfileQuestions {
 export function profileQuestions(company: PublicCompany): ProfileQuestions {
   const p = toPublicProfile(company);
   const row = cnaeAnexoRow(p.primaryCnae);
-  const inScope =
-    p.isActive &&
-    !p.optedIntoMei &&
-    p.optedIntoSimples &&
-    row !== undefined &&
-    row.status === 'verified' &&
-    row.baseAnexo !== 'II' &&
-    row.baseAnexo !== 'IV';
-  return { revenue: true, employees: inScope && row.subjectToFatorR, abroad: inScope };
+  // C.11.5 item 4 through the engine's own test (cnaeInScope), never a second copy of it.
+  const inScope = p.isActive && !p.optedIntoMei && p.optedIntoSimples && cnaeInScope(p.primaryCnae);
+  return {
+    revenue: true,
+    employees: inScope && row?.subjectToFatorR === true,
+    abroad: inScope,
+  };
 }
 
 /** Every optional answer at its default (C.11.1): used for the list of applicable rules. */

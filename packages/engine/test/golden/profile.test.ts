@@ -3,7 +3,8 @@
 import { describe, expect, it } from 'vitest';
 import { brl } from '../../src/money.ts';
 import {
-  CNAE_ANEXO,
+  type CNAE_ANEXO,
+  CNAE_IN_SCOPE,
   estimateByProfile,
   formatProfileRange,
   NO_RANGE_MESSAGES,
@@ -249,8 +250,10 @@ describe('ENGINE-SPEC C.11.10 — profile-based estimate', () => {
     const e = estimate({}, { primaryCnae: '8630-5/04' });
     expectNoRange(e, 'CNAE_OUT_OF_SCOPE');
     expect(ids(e.rules)).toEqual(['R02']);
-    // Absent from the table: the same reason.
-    expectNoRange(estimate({}, { primaryCnae: '7020-4/00' }), 'CNAE_OUT_OF_SCOPE');
+    // D50 (Enzo, 20/11): 7020-4/00 became verified (LC 123 art. 18 § 5º-I, IX); the table now has every CNAE 2.3
+    // subclass, so "absent" is a code that is not a subclass. An ambiguous row gives the same reason.
+    expectNoRange(estimate({}, { primaryCnae: '0000-0/00' }), 'CNAE_OUT_OF_SCOPE');
+    expectNoRange(estimate({}, { primaryCnae: '4635-4/02' }), 'CNAE_OUT_OF_SCOPE');
   });
 
   it('T11-16: 4771-7/01 (pharmacy, Anexo I), abroad no → NO_RULE_WITH_VALUE; R06 and R02 without range', () => {
@@ -270,14 +273,46 @@ describe('ENGINE-SPEC C.11.10 — profile-based estimate', () => {
 // ---------- T11-18: properties over every answer combination of the table's verified CNAEs ----------
 
 describe('T11-18 — properties of every estimate (96 combinations × verified CNAEs)', () => {
-  // 6201-5/02 has the same row as 6201-5/01 (Anexo III, Fator R): checked once, through the hero's CNAE.
-  const verified = CNAE_ANEXO.filter((r) => r.status === 'verified' && r.cnae !== '6201-5/02');
+  // D50 (Enzo, 20/11): the table has every CNAE 2.3 subclass, so one row per distinct estimate profile
+  // (baseAnexo, subjectToFatorR, resellsMonofasico === true) among the rows the estimate computes (C.11.5 item 4); the
+  // pre-D50 rows are the representatives where they exist (the hero's CNAE first). The estimate reads nothing else of
+  // the row, which the dedup test below proves on two rows of the same profile.
+  const profileKey = (r: (typeof CNAE_ANEXO)[number]) =>
+    `${r.baseAnexo}|${r.subjectToFatorR}|${r.resellsMonofasico === true}`;
+  const preferred = ['6201-5/01', '4771-7/01'];
+  const ordered = [
+    ...CNAE_IN_SCOPE.filter((r) => preferred.includes(r.cnae)),
+    ...CNAE_IN_SCOPE.filter((r) => !preferred.includes(r.cnae)),
+  ];
+  const representatives = new Map<string, (typeof CNAE_ANEXO)[number]>();
+  for (const r of ordered)
+    if (!representatives.has(profileKey(r))) representatives.set(profileKey(r), r);
   const results: { answers: ProfileAnswers; e: ProfileEstimate }[] = [];
-  for (const row of verified) {
+  for (const row of representatives.values()) {
     for (const answers of allAnswers()) {
       results.push({ answers, e: estimate(answers, { primaryCnae: row.cnae }) });
     }
   }
+
+  // Same profile as the hero's row (Anexo III, Fator R): computed here, like `results`, outside the test timeout.
+  const twin = [...allAnswers()].map((answers) => ({
+    answers,
+    web: estimate(answers, { primaryCnae: '6201-5/02' }),
+  }));
+
+  it('dedup: two rows with the same profile give identical cents (6201-5/01 and 6201-5/02)', () => {
+    expect([...representatives.values()].map((r) => r.cnae)).toContain('6201-5/01');
+    const cents = (e: ProfileEstimate) => ({
+      type: e.type,
+      total: e.type === 'range' ? e.total : null,
+      gridTotal: 'gridTotal' in e ? e.gridTotal : null,
+      scenarios: e.scenarios.map((s) => [s.id, s.annualRegimeTotal, s.byRule.R01, s.byRule.R05]),
+      ranges: e.rules.map((r) => [r.ruleId, r.range ?? null]),
+    });
+    for (const { answers, web } of twin) {
+      expect(cents(web)).toEqual(cents(estimate(answers, { primaryCnae: '6201-5/01' })));
+    }
+  });
 
   it('(a) same input → identical output (INV-6)', () => {
     const again = estimate();

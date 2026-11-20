@@ -1,6 +1,6 @@
 // CNAE tables of ENGINE-SPEC E.4 (anexo and Fator R), E.5 (monofásico resale) and E.6 (health and education).
 // Codes compared as 7 digits (subclass), whatever the formatting of the source.
-import type { Anexo } from '@refund/engine';
+import { type Anexo, cnaeAnexoRow, cnaeInScope } from '@refund/engine';
 
 export const cnaeDigits = (code: string | null | undefined): string =>
   (code ?? '').replace(/\D/g, '');
@@ -16,55 +16,35 @@ export interface CnaeTaxProfile {
   source: string;
 }
 
-/**
- * E.4, P0 personas only. The full Res. CGSN 140, Anexo VI table (`cnae-anexo.json`) arrives with E8; until then a
- * CNAE outside this list stops the analysis (CNAE_OUT_OF_SCOPE) instead of guessing an anexo (CLAUDE.md, rule 12).
- */
-const E4: Record<string, CnaeTaxProfile> = {
-  '6201501': {
-    subjectToFatorR: true,
-    baseAnexo: 'III',
-    status: 'verified',
-    source:
-      'CNAE 6201-5/01: LC 123, art. 18, § 5º-D, IV (Anexo III; V abaixo do Fator R de 28%, § 5º-M)',
-  },
-  '6201502': {
-    subjectToFatorR: true,
-    baseAnexo: 'III',
-    status: 'verified',
-    source:
-      'CNAE 6201-5/02: LC 123, art. 18, § 5º-D, IV (Anexo III; V abaixo do Fator R de 28%, § 5º-M)',
-  },
-  '8630504': {
-    subjectToFatorR: true,
-    baseAnexo: 'III',
-    status: 'to_confirm',
-    source: 'CNAE 8630-5/04: sujeito ao Fator R (ENGINE-SPEC E.4, a confirmar na tabela oficial)',
-  },
-  '4771701': {
-    subjectToFatorR: false,
-    baseAnexo: 'I',
-    status: 'verified',
-    source: 'CNAE 4771-7/01: Anexo I, sem Fator R (ENGINE-SPEC E.4)',
-  },
+/** "6201501" or "6201-5/01" → "6201-5/01" (the engine table's key). */
+const formatted = (code: string): string => {
+  const d = cnaeDigits(code);
+  return d.length === 7 ? `${d.slice(0, 4)}-${d.slice(4, 5)}/${d.slice(5)}` : '';
 };
 
-export const cnaeTaxProfile = (code: string): CnaeTaxProfile | undefined => E4[cnaeDigits(code)];
+/**
+ * E.4 through the engine's table (`cnae-anexo.json`, every CNAE 2.3 subclass since D50). A CNAE the estimate can
+ * compute (`cnaeInScope`, C.11.5 item 4) gets its anexo; the dentistry row (`to_confirm`, E.4) keeps running as it did
+ * before D50. Anything else (ambiguous, impeditive, Anexo II or IV, an adjusted anexo) stops the analysis
+ * (CNAE_OUT_OF_SCOPE) instead of guessing an anexo (CLAUDE.md, rule 12).
+ */
+export function cnaeTaxProfile(code: string): CnaeTaxProfile | undefined {
+  const cnae = formatted(code);
+  const row = cnaeAnexoRow(cnae);
+  if (row === undefined || row.baseAnexo === null) return undefined;
+  const status = cnaeInScope(cnae) ? 'verified' : row.status === 'to_confirm' ? 'to_confirm' : null;
+  if (status === null) return undefined;
+  return {
+    subjectToFatorR: row.subjectToFatorR,
+    baseAnexo: row.baseAnexo,
+    status,
+    source: `CNAE ${row.cnae}: ${row.source}`,
+  };
+}
 
-/** E.5. Beverages (4723-7/00) stay switched off until the NCM check. */
-const MONOFASICO = [
-  '4771701',
-  '4771702',
-  '4771703',
-  '4772500',
-  '4530703',
-  '4530705',
-  '4731800',
-  '4711301',
-  '4711302',
-  '4712100',
-];
-export const resellsMonofasico = (code: string): boolean => matchAny(cnaeDigits(code), MONOFASICO);
+/** E.5 through the same table: R06 triggers on a `true` row only; 'question' waits for the user's answer (D.6). */
+export const resellsMonofasico = (code: string): boolean =>
+  cnaeAnexoRow(formatted(code))?.resellsMonofasico === true;
 
 const HEALTH_DEDUCTIBLE = [
   '8610101',

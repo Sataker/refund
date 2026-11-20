@@ -339,7 +339,8 @@ describe('errors (ARCHITECTURE §4.6: what was sent stays)', () => {
 
   it('a CNAE outside E.4 stops before the engine (CNAE_OUT_OF_SCOPE), never guessing an anexo', async () => {
     const data = persona();
-    data.company.primaryCnae = { code: '4520-0/01', description: 'Oficina' };
+    // D50: 4520-0/01 is now verified (§ 5º-B, IX); car washing (4520-0/05) stays ambiguous.
+    data.company.primaryCnae = { code: '4520-0/05', description: 'Lava-rápido' };
     const { events, result } = await run(heroInput({}, data));
     expect(events.at(-2)).toMatchObject({
       type: 'error',
