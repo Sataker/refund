@@ -4,7 +4,7 @@ import { joinWaitlist } from '@/app/(marketing)/actions';
 import { CnpjStep } from '@/features/company/cnpj-step.client';
 import { CompanyCard } from '@/features/company/company-card';
 import { EstimateView } from '@/features/company/estimate-view';
-import { outOfScopeMessage, outOfScopeRegime } from '@/features/company/scope';
+import { regimeStop } from '@/features/company/scope';
 import { ConnectStep } from '@/features/connection/connect-step.client';
 import { ConsentContent } from '@/features/connection/consent-content';
 import { WaitlistForm } from '@/features/landing/waitlist-form.client';
@@ -115,8 +115,8 @@ function StepBody({
       );
     case 'confirmar-empresa': {
       if (!company) return null;
-      const regime = outOfScopeRegime(company.company);
-      if (regime !== null) {
+      const stop = regimeStop(company.company);
+      if (stop !== null) {
         const c = company.company;
         return (
           <>
@@ -125,11 +125,11 @@ function StepBody({
             <section
               className="mt-8 flex flex-col gap-4 rounded-lg border border-warning bg-warning-soft p-5"
               data-testid="out-of-scope"
-              data-regime={regime}
+              data-regime={stop.regime}
               aria-labelledby="fora-titulo"
             >
               <p id="fora-titulo" className="type-body-lg text-foreground" role="status">
-                {outOfScopeMessage(c.displayTradeName ?? c.displayLegalName, regime)}
+                {stop.message}
               </p>
               <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                 <Link

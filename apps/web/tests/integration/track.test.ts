@@ -357,7 +357,7 @@ describe('first-access track state (D19; ARCHITECTURE §13)', () => {
       error: {
         code: 'FORBIDDEN',
         message:
-          'Por enquanto o Refund calcula só empresas do Simples Nacional. A Consultoria Exemplo está no Lucro Presumido.',
+          'Por enquanto o Refund calcula só empresas do Simples Nacional. A Consultoria Presumida Exemplo Ltda está no Lucro Presumido.',
       },
     });
     const { progress } = await loadTrack(h.db, userId);

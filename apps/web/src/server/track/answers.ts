@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Db } from '@refund/db';
 import { z } from 'zod';
-import { outOfScopeMessage, outOfScopeRegime } from '@/features/company/scope.ts';
+import { regimeStop } from '@/features/company/scope.ts';
 import { nextAfter, type Step, stepPath } from '@/features/track/steps.ts';
 import { type ActionResult, fail, ok } from '../result.ts';
 import { trackLimit } from './limits.ts';
@@ -82,11 +82,8 @@ export async function confirmCompanyWith(
   const { company } = await loadTrack(db, userId);
   if (!company) return fail('FORBIDDEN', NO_COMPANY);
   // H3: a company outside the Simples/MEI stops here (the page shows why and the ways out).
-  const regime = outOfScopeRegime(company.company);
-  if (regime !== null) {
-    const c = company.company;
-    return fail('FORBIDDEN', outOfScopeMessage(c.displayTradeName ?? c.displayLegalName, regime));
-  }
+  const stop = regimeStop(company.company);
+  if (stop !== null) return fail('FORBIDDEN', stop.message);
   await setAssumption(db, userId, company.id, TRACK_KEYS.confirmed, true);
   return ok(await nextOf(db, userId, 'confirmar-empresa'));
 }

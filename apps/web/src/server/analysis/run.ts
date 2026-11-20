@@ -19,8 +19,7 @@ import {
   runAnalysis,
 } from '@refund/pipeline';
 import type { FinancialProvider } from '@refund/sources';
-import { titleCase } from '@/demo/view.ts';
-import { outOfScopeMessage, outOfScopeRegime } from '@/features/company/scope.ts';
+import { regimeStop } from '@/features/company/scope.ts';
 import type { Capabilities } from '../capabilities.ts';
 import type { Secrets } from '../crypto.ts';
 import { entitlementsWith } from '../entitlements.ts';
@@ -102,13 +101,12 @@ export async function executeAnalysis(analysisId: string, deps: RunDeps): Promis
     const { input, ids } = built.value;
     // H3: the regime is checked before the pipeline, whose first stop is the activity (CNAE): a Lucro Presumido
     // company must hear about its regime, not "Ainda não calculamos para a atividade …".
-    const regime = outOfScopeRegime(input.company);
+    const regime = regimeStop(input.company);
     if (regime !== null) {
-      const c = input.company;
       const stop: Extract<AnalysisEvent, { type: 'error' }> = {
         type: 'error',
         code: 'REGIME_OUT_OF_SCOPE',
-        message: outOfScopeMessage(titleCase(c.displayTradeName ?? c.displayLegalName), regime),
+        message: regime.message,
         recoverable: false,
       };
       await saveRun(deps.db, analysisId, {

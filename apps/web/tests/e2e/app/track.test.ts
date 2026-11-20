@@ -149,7 +149,7 @@ test.describe('first-access track @app', () => {
     await expect(page).toHaveURL(/\/confirmar-empresa$/);
     const stop = page.getByTestId('out-of-scope');
     await expect(stop).toContainText(
-      'Por enquanto o Refund calcula só empresas do Simples Nacional. A Consultoria Exemplo está no Lucro Presumido.',
+      'Por enquanto o Refund calcula só empresas do Simples Nacional. A Consultoria Presumida Exemplo Ltda está no Lucro Presumido.',
     );
     await expect(page.getByTestId('confirm-company')).toHaveCount(0);
     await expect(page.getByTestId('out-of-scope-demo')).toHaveAttribute('href', '/demo');
