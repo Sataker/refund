@@ -1,14 +1,12 @@
 import type { Route } from 'next';
 
-// Routes the landing links to. /demo exists since E12; the support pages still arrive with the stage that
-// builds them (EXECUTION, "/como-funciona, /seguranca, /motor, /status, /privacidade, /termos"), so they keep
-// a cast (typedRoutes would reject the literals). Remove each cast as its route lands.
+// Routes the landing and the site footer link to (ARCHITECTURE §13). Every one exists, so typedRoutes checks them.
 export const ROUTES = {
-  demo: '/demo' satisfies Route,
-  security: '/seguranca' as Route,
-  howItWorks: '/como-funciona' as Route,
-  engine: '/motor' as Route,
-  status: '/status' as Route,
-  privacy: '/privacidade' as Route,
-  terms: '/termos' as Route,
-} as const;
+  demo: '/demo',
+  security: '/seguranca',
+  howItWorks: '/como-funciona',
+  engine: '/motor',
+  status: '/status',
+  privacy: '/privacidade',
+  terms: '/termos',
+} as const satisfies Record<string, Route>;
