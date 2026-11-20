@@ -74,7 +74,7 @@ export function ReportSender({
           begin(async () => {
             setError(null);
             const r = await send({
-              accountantEmail: email.trim(),
+              accountantEmail: emailOn ? email.trim() : '',
               message: message.trim(),
               include: { calculations: true, laws: true, transactions: false },
             });
@@ -89,25 +89,31 @@ export function ReportSender({
           });
         }}
       >
-        <label htmlFor="accountant-email" className="flex flex-col gap-1">
-          <span className="type-small font-medium text-foreground">
-            E-mail do contador (opcional)
-          </span>
-          <Input
-            id="accountant-email"
-            type="email"
-            autoComplete="off"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            data-testid="accountant-email"
-            placeholder="e-mail do seu contador"
-          />
-          <span className="type-caption text-muted-foreground">
-            {emailOn
-              ? 'Mandamos só para este endereço. Ele fica guardado cifrado.'
-              : 'O envio por e-mail não está ativo neste deploy: copie o link e mande você mesmo.'}
-          </span>
-        </label>
+        {/* M3: without e-mail in this deploy the field is not offered; the link leads (copy and send it). */}
+        {emailOn ? (
+          <label htmlFor="accountant-email" className="flex flex-col gap-1">
+            <span className="type-small font-medium text-foreground">
+              E-mail do contador (opcional)
+            </span>
+            <Input
+              id="accountant-email"
+              type="email"
+              autoComplete="off"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              data-testid="accountant-email"
+              placeholder="e-mail do seu contador"
+            />
+            <span className="type-caption text-muted-foreground">
+              Mandamos só para este endereço. Ele fica guardado cifrado.
+            </span>
+          </label>
+        ) : (
+          <p className="type-small text-muted-foreground" data-testid="report-link-howto">
+            Gere o link e copie: mande para o seu contador pelo WhatsApp ou e-mail. Ele abre sem
+            cadastro e aprova por lá.
+          </p>
+        )}
         <label className="flex flex-col gap-1">
           <span className="type-small font-medium text-foreground">Mensagem (opcional)</span>
           <textarea
@@ -123,7 +129,7 @@ export function ReportSender({
           ) : (
             <Send className="size-4" strokeWidth={1.5} aria-hidden="true" />
           )}
-          {emailOn && email.trim() !== '' ? 'Enviar e gerar o link' : 'Gerar o link do relatório'}
+          {emailOn && email.trim() !== '' ? 'Enviar e gerar o link' : 'Gerar link'}
         </Button>
       </form>
       {error ? (
@@ -143,7 +149,6 @@ export function ReportSender({
             </code>
             <Button
               type="button"
-              variant="outline"
               data-testid="copy-report-link"
               onClick={async () => {
                 try {
