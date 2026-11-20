@@ -61,7 +61,8 @@ export const CONNECT_RATE = { limit: 10, windowMs: 60 * 60_000 } as const;
 
 const CONSENT_FIRST = 'Antes de conectar, confirme o que vamos ler na tela anterior.';
 const NO_COMPANY = 'Comece pelo CNPJ da sua empresa.';
-export const SANDBOX_ONLY = 'Só o sandbox da Pluggy nesta versão. Nenhum banco real é conectado.';
+export const SANDBOX_ONLY =
+  'Só o sandbox da Pluggy nesta versão: a janela lista apenas bancos de teste.';
 const NOT_YOURS = 'Essa conexão não é desta sessão.';
 const holderSchema = z.enum(['PF', 'PJ']);
 

@@ -24,8 +24,9 @@ export default function SecurityPage() {
       <Section title="Em resumo">
         <Bullets>
           <li>
-            Nenhum banco real: só o ambiente de teste da Pluggy. A demonstração usa pessoas e
-            empresas inventadas.
+            Só o ambiente de teste da Pluggy: a janela lista apenas bancos de teste, e uma conexão
+            real feita mesmo assim é apagada na hora. A demonstração usa pessoas e empresas
+            inventadas.
           </li>
           <li>
             CPF, IP e lista de sócios nunca ficam guardados em claro; o que é sensível fica cifrado.

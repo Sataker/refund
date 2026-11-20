@@ -33,10 +33,10 @@ export default function PrivacyPage() {
       <Section title="Esta versão usa só dados de teste do Open Finance">
         <p>
           Nesta versão, a conexão de contas usa apenas o ambiente de teste (sandbox) da Pluggy ou os
-          dados de exemplo de uma pessoa fictícia. Nenhum banco real é conectado. Se um banco real
-          for escolhido, pedimos na hora à Pluggy que apague a conexão e não guardamos nada dela; se
-          a Pluggy não confirmar na hora, guardamos só o identificador cifrado até ela confirmar a
-          remoção.
+          dados de exemplo de uma pessoa fictícia. A janela de conexão lista apenas bancos de teste.
+          Se um banco real for escolhido, pedimos na hora à Pluggy que apague a conexão e não
+          guardamos nada dela; se a Pluggy não confirmar na hora, guardamos só o identificador
+          cifrado até ela confirmar a remoção.
         </p>
         <p>
           A demonstração em /demo usa só pessoas fictícias e não guarda nada no servidor: as
