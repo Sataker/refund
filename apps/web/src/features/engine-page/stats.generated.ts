@@ -10,7 +10,7 @@ export const ENGINE_STATS = {
     },
     {
       id: 'R05',
-      refs: 16,
+      refs: 17,
     },
     {
       id: 'R06',
@@ -22,7 +22,7 @@ export const ENGINE_STATS = {
     },
     {
       id: 'R05-REC',
-      refs: 13,
+      refs: 15,
     },
     {
       id: 'R02',
