@@ -1,9 +1,10 @@
 import { listAnalysisLedger } from '@refund/db';
 import type { Metadata } from 'next';
 import { answerCard, reanalyze } from '@/app/(live)/app/analises/actions';
-import { confirmCards } from '@/features/findings/confirm';
+import { confirmCards, distinguishCards, exampleCardText } from '@/features/findings/confirm';
 import { StartAnalysisButton } from '@/features/live/buttons.client';
 import { LiveConfirm } from '@/features/live/confirm.client';
+import { isExampleBank } from '@/features/live/data-origin';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { questionsOf } from '@/server/analysis/actions.ts';
 import { idMap, loadAnswers } from '@/server/analysis/input.ts';
@@ -26,7 +27,8 @@ export default async function LiveConfirmPage({ params }: { params: Promise<{ id
   ]);
   const ids = idMap(ledger.map((r) => r.transaction));
   const byRowId = new Map(ledger.map((r) => [r.transaction.id, r.transaction]));
-  const cards = confirmCards(
+  const example = isExampleBank(live.origin);
+  const asked = confirmCards(
     questions,
     answers,
     (txIds) => {
@@ -39,10 +41,14 @@ export default async function LiveConfirmPage({ params }: { params: Promise<{ id
                 ? `Pessoa física · ${first.counterpartyMask ?? ''}`
                 : first.description,
             amountCents: Math.abs(first.amountCents),
+            mask: first.counterpartyMask,
           }
         : null;
     },
     { payrollReport: live.origin.bank === 'sample' },
+  );
+  const cards = distinguishCards(asked).map((c) =>
+    example ? { ...c, text: exampleCardText(c.text) } : c,
   );
   return (
     <div className="flex flex-col gap-6">
@@ -51,8 +57,9 @@ export default async function LiveConfirmPage({ params }: { params: Promise<{ id
           Confirmar
         </h1>
         <p className="max-w-[64ch] text-base text-muted-foreground">
-          Estas são as perguntas que a análise fez sobre as suas transações. Responda o que souber;
-          o motor refaz a conta com as respostas e seu contador valida.
+          {example
+            ? 'Estas são as perguntas que a análise fez sobre as transações do extrato de exemplo. Responda para ver como as respostas mudam a conta; o motor refaz a conta e seu contador valida.'
+            : 'Estas são as perguntas que a análise fez sobre as suas transações. Responda o que souber; o motor refaz a conta com as respostas e seu contador valida.'}
         </p>
       </header>
       <LiveConfirm

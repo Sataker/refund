@@ -3,8 +3,8 @@ import { notFound, redirect } from 'next/navigation';
 import { joinWaitlist } from '@/app/(marketing)/actions';
 import { CnpjStep } from '@/features/company/cnpj-step.client';
 import { CompanyCard } from '@/features/company/company-card';
-import { EstimateView } from '@/features/company/estimate-view';
-import { activityStop, regimeStop } from '@/features/company/scope';
+import { EstimateView, RuleList } from '@/features/company/estimate-view';
+import { estimateStop, regimeStop } from '@/features/company/scope';
 import { ConnectStep } from '@/features/connection/connect-step.client';
 import { ConsentContent } from '@/features/connection/consent-content';
 import { WaitlistForm } from '@/features/landing/waitlist-form.client';
@@ -23,7 +23,12 @@ import {
 } from '@/features/track/steps';
 import { StepTitle, TrackShell } from '@/features/track/track-shell';
 import { estimateFor } from '@/server/company/lookup.ts';
-import { completeAnswers } from '@/server/company/profile.ts';
+import {
+  completeAnswers,
+  meiNearLimit,
+  meiRevenueOptions,
+  todayBrt,
+} from '@/server/company/profile.ts';
 import { CONSENT_SCOPES, TERMS_VERSION } from '@/server/connection/connections.ts';
 import { pluggyAvailable } from '@/server/financial/availability.ts';
 import { liveContext } from '@/server/live.ts';
@@ -124,9 +129,13 @@ function StepBody({
             <CompanyCard company={c} />
             <ScopeStop
               message={stop.message}
-              reason="regime"
-              data={{ 'data-regime': stop.regime }}
-              waitlist="Quer saber quando o Refund calcular o seu regime? Entre na lista de espera."
+              reason={stop.reason}
+              data={{ [`data-${stop.reason}`]: stop.regime }}
+              waitlist={
+                stop.reason === 'regime'
+                  ? 'Quer saber quando o Refund calcular o seu regime? Deixe seu e-mail.'
+                  : null
+              }
             />
           </>
         );
@@ -149,19 +158,27 @@ function StepBody({
         </>
       );
     }
-    case 'faturamento':
+    case 'faturamento': {
+      // H5: an MEI only sees the bands an MEI can have (the engine's limit with its tolerance).
+      const allowed =
+        company?.company.mei.optedIn === true
+          ? new Set(meiRevenueOptions(company.company, todayBrt()))
+          : null;
       return (
         <>
           <StepTitle title="Quanto a empresa fatura por mês, em média?" />
           <ChoiceStep
             name="Faturamento médio por mês"
-            options={REVENUE_OPTIONS}
+            options={
+              allowed ? REVENUE_OPTIONS.filter((o) => allowed.has(o.value)) : REVENUE_OPTIONS
+            }
             selected={progress.answers.monthlyRevenueBracket}
             save={answerStep.bind(null, 'faturamento')}
             footnote="É só para estimar. O número exato vem do extrato."
           />
         </>
       );
+    }
     case 'funcionarios':
       return (
         <>
@@ -190,9 +207,34 @@ function StepBody({
       );
     case 'estimativa': {
       if (!company) return null;
+      // H5: an MEI stops here with its own reason (a fixed DAS-MEI, no anexo); the MEI limit alert only when the
+      // revenue band can reach R03's alert floor.
+      const stopHere = estimateStop(company.company);
+      if (stopHere?.reason === 'mei') {
+        const estimate = estimateFor(company.company, completeAnswers(progress.answers));
+        const near = meiNearLimit(
+          company.company,
+          progress.answers.monthlyRevenueBracket,
+          todayBrt(),
+        );
+        const r03 =
+          near && estimate.ok ? estimate.value.rules.filter((r) => r.ruleId === 'R03') : [];
+        return (
+          <>
+            <StepTitle title="Quanto isso pode valer para você?" />
+            <RuleList rules={r03} />
+            <ScopeStop
+              message={stopHere.message}
+              reason="mei"
+              data={{ 'data-cnae': stopHere.cnae }}
+              waitlist={null}
+            />
+          </>
+        );
+      }
       const estimate = estimateFor(company.company, completeAnswers(progress.answers));
       // The activity stop: like the regime one, the track ends here with the ways out (no consent, no bank).
-      const activity = activityStop(company.company);
+      const activity = stopHere;
       return (
         <>
           <StepTitle title="Quanto isso pode valer para você?" />
@@ -208,7 +250,7 @@ function StepBody({
               message={activity.message}
               reason="activity"
               data={{ 'data-cnae': activity.cnae }}
-              waitlist="Quer saber quando o Refund calcular a sua atividade? Entre na lista de espera."
+              waitlist="Quer saber quando o Refund calcular a sua atividade? Deixe seu e-mail."
             />
           ) : (
             <AdvanceButton
@@ -278,9 +320,10 @@ function ScopeStop({
   waitlist,
 }: {
   message: string;
-  reason: 'regime' | 'activity';
+  reason: 'regime' | 'activity' | 'status' | 'mei';
   data: Record<`data-${string}`, string>;
-  waitlist: string;
+  /** The one waitlist line (null: no waitlist, e.g. a closed company). */
+  waitlist: string | null;
 }) {
   return (
     <>
@@ -311,10 +354,11 @@ function ScopeStop({
           />
         </div>
       </section>
-      <section className="mt-8" aria-label="Lista de espera">
-        <p className="type-small mb-3 text-muted-foreground">{waitlist}</p>
-        <WaitlistForm join={joinWaitlist} />
-      </section>
+      {waitlist ? (
+        <section className="mt-8" aria-label="Lista de espera">
+          <WaitlistForm join={joinWaitlist} label={waitlist} cnpjKnown />
+        </section>
+      ) : null}
     </>
   );
 }

@@ -23,9 +23,19 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * `joinWaitlist` action (encrypted e-mail + HMAC, rate limit per IP). The answer is the same for a new
  * and a repeated e-mail, so the form never reveals who is on the list.
  */
-export function WaitlistForm({ join }: { join: WaitlistJoin }) {
+export function WaitlistForm({
+  join,
+  label = 'Quer usar com a sua empresa? Entre na lista.',
+  cnpjKnown = false,
+}: {
+  join: WaitlistJoin;
+  /** The one line above the field (bug bash 20/11: the stop pages say it once). */
+  label?: string;
+  /** The track already has the CNPJ: "Você já tem CNPJ?" is not asked. */
+  cnpjKnown?: boolean;
+}) {
   const [email, setEmail] = useState('');
-  const [hasCnpj, setHasCnpj] = useState<'yes' | 'no' | null>(null);
+  const [hasCnpj, setHasCnpj] = useState<'yes' | 'no' | null>(cnpjKnown ? 'yes' : null);
   const [consent, setConsent] = useState(false);
   const [state, setState] = useState<
     { kind: 'idle' } | { kind: 'done' } | { kind: 'error'; message: string }
@@ -54,7 +64,7 @@ export function WaitlistForm({ join }: { join: WaitlistJoin }) {
         const r = await join({
           email: email.trim(),
           hasCnpj: hasCnpj === 'yes',
-          origin: 'landing',
+          origin: cnpjKnown ? 'track' : 'landing',
           consent: true,
         });
         if (r.ok) setState({ kind: 'done' });
@@ -93,7 +103,7 @@ export function WaitlistForm({ join }: { join: WaitlistJoin }) {
       className="w-full max-w-xl"
     >
       <label htmlFor={emailId} className="type-small mb-2 block font-medium text-foreground">
-        Quer usar com a sua empresa? Entre na lista.
+        {label}
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
@@ -115,37 +125,39 @@ export function WaitlistForm({ join }: { join: WaitlistJoin }) {
           Entrar na lista
         </button>
       </div>
-      <fieldset className="mt-4">
-        <legend className="type-small text-foreground">Você já tem CNPJ?</legend>
-        <div className="mt-2 flex gap-2">
-          {(
-            [
-              ['yes', 'Tenho'],
-              ['no', 'Ainda não'],
-            ] as const
-          ).map(([value, label]) => (
-            <label
-              key={value}
-              className={cx(
-                'type-small inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 transition-colors duration-(--dur-fast) has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-ring',
-                hasCnpj === value
-                  ? 'border-foreground bg-foreground text-background'
-                  : 'border-strong-border bg-surface text-foreground hover:bg-muted',
-              )}
-            >
-              <input
-                type="radio"
-                name="hasCnpj"
-                value={value}
-                checked={hasCnpj === value}
-                onChange={() => setHasCnpj(value)}
-                className="sr-only"
-              />
-              {label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      {cnpjKnown ? null : (
+        <fieldset className="mt-4">
+          <legend className="type-small text-foreground">Você já tem CNPJ?</legend>
+          <div className="mt-2 flex gap-2">
+            {(
+              [
+                ['yes', 'Tenho'],
+                ['no', 'Ainda não'],
+              ] as const
+            ).map(([value, label]) => (
+              <label
+                key={value}
+                className={cx(
+                  'type-small inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 transition-colors duration-(--dur-fast) has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-ring',
+                  hasCnpj === value
+                    ? 'border-foreground bg-foreground text-background'
+                    : 'border-strong-border bg-surface text-foreground hover:bg-muted',
+                )}
+              >
+                <input
+                  type="radio"
+                  name="hasCnpj"
+                  value={value}
+                  checked={hasCnpj === value}
+                  onChange={() => setHasCnpj(value)}
+                  className="sr-only"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
       <div className="mt-4 flex items-start gap-2">
         <input
           id={consentId}

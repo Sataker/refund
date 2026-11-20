@@ -181,6 +181,20 @@ export const REVENUE_OPTIONS: readonly { value: RevenueBracket; label: string; s
   { value: 'dont_know', label: 'Não sei', short: 'faturamento: não sei' },
 ];
 
+/** Monthly bounds of each option in cents, as their labels say (ENGINE-SPEC C.11.2); null = open or unknown. */
+export const REVENUE_BOUNDS: Readonly<
+  Record<RevenueBracket, readonly [number, number | null] | null>
+> = {
+  up_to_15k: [0, 1_500_000],
+  from_15k_to_30k: [1_500_000, 3_000_000],
+  from_30k_to_60k: [3_000_000, 6_000_000],
+  from_60k_to_150k: [6_000_000, 15_000_000],
+  from_150k_to_300k: [15_000_000, 30_000_000],
+  from_300k_to_400k: [30_000_000, 40_000_000],
+  above_400k: [40_000_000, null],
+  dont_know: null,
+};
+
 export const EMPLOYEES_OPTIONS: readonly {
   value: ProfileAnswers['hasEmployees'];
   label: string;

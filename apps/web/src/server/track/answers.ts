@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Db } from '@refund/db';
 import { z } from 'zod';
-import { activityStop, regimeStop } from '@/features/company/scope.ts';
+import { estimateStop, regimeStop } from '@/features/company/scope.ts';
 import { nextAfter, type Step, stepPath } from '@/features/track/steps.ts';
 import { type ActionResult, fail, ok } from '../result.ts';
 import { trackLimit } from './limits.ts';
@@ -113,7 +113,7 @@ export async function markEstimateSeenWith(
     return fail('FORBIDDEN', 'Responda o faturamento para ver a estimativa.');
   }
   // The activity stop: the estimate shows why and the ways out; the bank steps never open.
-  const stop = activityStop(company.company);
+  const stop = estimateStop(company.company);
   if (stop !== null) return fail('FORBIDDEN', stop.message);
   await setAssumption(db, userId, company.id, TRACK_KEYS.estimateSeen, true);
   return ok(await nextOf(db, userId, 'estimativa'));
@@ -144,7 +144,7 @@ const OUT_OF_SCOPE = 'Por enquanto o Refund calcula só empresas do Simples Naci
 export async function requireInScope(db: Db, userId: string): Promise<ActionResult<void>> {
   const { progress, company } = await loadTrack(db, userId);
   if (progress.company?.outOfScope) return fail('FORBIDDEN', OUT_OF_SCOPE);
-  const activity = company ? activityStop(company.company) : null;
+  const activity = company ? estimateStop(company.company) : null;
   if (activity !== null) return fail('FORBIDDEN', activity.message);
   return ok(undefined);
 }

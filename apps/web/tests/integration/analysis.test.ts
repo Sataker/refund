@@ -412,7 +412,7 @@ describe('live jury path (UX review 19/11: H1, C2, H3)', () => {
     expect(log[0]?.data).toMatchObject({
       code: 'REGIME_OUT_OF_SCOPE',
       message:
-        'Por enquanto o Refund calcula só empresas do Simples Nacional. A Consultoria Presumida Exemplo Ltda está no Lucro Presumido.',
+        'Por enquanto o Refund calcula só empresas do Simples Nacional. Consultoria Presumida Exemplo Ltda está no Lucro Presumido.',
       recoverable: false,
     });
     const live = await loadLiveAnalysis(h.db, userId, row.id);

@@ -16,6 +16,39 @@ export interface ConfirmTx {
   date: string;
   label: string;
   amountCents: number;
+  /** The counterparty's masked document (whitelist mask, never a name), to tell two look-alike cards apart. */
+  mask?: string | null;
+}
+
+/**
+ * Bug bash 20/11 (H1): on example statements a card states where its numbers come from, so "12 créditos do exterior"
+ * never reads as the company's own (or as contradicting a profile answer like "exterior: Não").
+ */
+export function exampleCardText(text: string): string {
+  const exportCard = /^Estes (\d+) créditos do exterior \(([^)]+)\) são /.exec(text);
+  if (exportCard)
+    return `No extrato de exemplo há ${exportCard[1]} créditos do exterior (${exportCard[2]}). São ${text.slice(exportCard[0].length)}`;
+  const lowered = /^\p{Lu}\p{Ll}/u.test(text)
+    ? `${text[0]?.toLowerCase() ?? ''}${text.slice(1)}`
+    : text;
+  return `No extrato de exemplo: ${lowered}`;
+}
+
+/**
+ * Two cards with the same text (two payees asked the same question) get the payee's masked document, or else a
+ * number, so they can be told apart (bug bash 20/11). Never a person's name: only the whitelist mask.
+ */
+export function distinguishCards(cards: readonly ConfirmCard[]): ConfirmCard[] {
+  const count = new Map<string, number>();
+  for (const c of cards) count.set(c.text, (count.get(c.text) ?? 0) + 1);
+  const seen = new Map<string, number>();
+  return cards.map((c) => {
+    if ((count.get(c.text) ?? 0) < 2) return c;
+    const n = (seen.get(c.text) ?? 0) + 1;
+    seen.set(c.text, n);
+    const mask = c.sample?.mask?.trim();
+    return { ...c, text: `${c.text} (${mask ? `documento ${mask}` : `pagamento ${n}`})` };
+  });
 }
 
 export interface ConfirmCard {

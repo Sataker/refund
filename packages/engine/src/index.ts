@@ -63,6 +63,7 @@ export {
   rulesByRef,
 } from './ref-index.ts';
 export { formatBrl } from './rules/common.ts';
+export { type MeiBand, type MeiLimitResult, meiLimit } from './rules/r03.ts';
 export {
   addMonths,
   civilDate,

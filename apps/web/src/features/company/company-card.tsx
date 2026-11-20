@@ -18,7 +18,15 @@ function regimeLabel(c: PublicCompany): string {
   if (c.mei.optedIn) return 'MEI';
   if (c.simples.optedIn) return 'Simples Nacional';
   const last = c.taxRegimeHistory.at(-1);
-  return last ? `Fora do Simples (${last.form.toLowerCase()} em ${last.year})` : 'Fora do Simples';
+  if (!last || last.form.trim() === '') return 'Fora do Simples';
+  // Bug bash 20/11: the declared form with its context, not a raw "(lucro presumido em 2024)".
+  const form = last.form
+    .trim()
+    .toLowerCase()
+    .replace(/(^|\s)\p{L}/gu, (c) => c.toUpperCase())
+    .replace(/\b(Do|De|Da)\b/g, (w) => w.toLowerCase())
+    .replace(/\bIrpj\b/, 'IRPJ');
+  return `Fora do Simples · regime em ${last.year}: ${form}`;
 }
 
 function yearOf(date: string | null): string | null {

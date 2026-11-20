@@ -40,6 +40,10 @@ export const OTHER_SYNTHETIC_CNPJS: readonly PersonaCnpj[] = [
     'no persona: Simples company with an ambiguous CNAE, beer wholesale (replay)',
   ),
   synthetic('RFNONE01000122', 'no persona: "not found" CNPJ of the live-track tests'),
+  synthetic('RFBAIX01000136', 'no persona: closed (baixada) company of the live track (replay)'),
+  synthetic('RFINAP01000143', 'no persona: inapta company of the live track (replay)'),
+  synthetic('RFSUSP01000170', 'no persona: suspensa company of the live track (replay)'),
+  synthetic('RFMEIS01000128', 'no persona: MEI of the live track (replay)'),
   synthetic('RFDEV002000100', 'no persona: second payer in the engine same-holder test'),
 ];
 

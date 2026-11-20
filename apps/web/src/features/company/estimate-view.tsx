@@ -48,7 +48,7 @@ function whySentence(scenarios: readonly BoundaryScenario[]): string {
   return `Rodamos o mesmo motor da análise em ${scenarios.length} cenários-limite do seu perfil: faturamento de ${listPt(revenues.map((r) => `R$ ${thousands(r)} mil`))} por mês; ${fractionText}; ${payrollText}. A faixa vai do menor ao maior resultado, com o mínimo reduzido em 15% por segurança. Não é média de mercado.`;
 }
 
-function RuleList({ rules }: { rules: ApplicableRule[] }) {
+export function RuleList({ rules }: { rules: ApplicableRule[] }) {
   if (rules.length === 0) return null;
   return (
     <section aria-labelledby="rules-title" className="mb-8">

@@ -19,7 +19,7 @@ import {
   runAnalysis,
 } from '@refund/pipeline';
 import type { FinancialProvider, PublicCompany } from '@refund/sources';
-import { activityStop, regimeStop } from '@/features/company/scope.ts';
+import { estimateStop, regimeStop } from '@/features/company/scope.ts';
 import type { Capabilities } from '../capabilities.ts';
 import type { Secrets } from '../crypto.ts';
 import { entitlementsWith } from '../entitlements.ts';
@@ -83,9 +83,17 @@ async function drain(
 /** The regime first, then the activity (the order of the track's stops). */
 function scopeStop(company: PublicCompany): { code: string; message: string } | null {
   const regime = regimeStop(company);
-  if (regime !== null) return { code: 'REGIME_OUT_OF_SCOPE', message: regime.message };
-  const activity = activityStop(company);
-  return activity === null ? null : { code: 'CNAE_OUT_OF_SCOPE', message: activity.message };
+  if (regime !== null)
+    return {
+      code: regime.reason === 'status' ? 'COMPANY_NOT_ACTIVE' : 'REGIME_OUT_OF_SCOPE',
+      message: regime.message,
+    };
+  const activity = estimateStop(company);
+  if (activity === null) return null;
+  return {
+    code: activity.reason === 'mei' ? 'MEI_OUT_OF_SCOPE' : 'CNAE_OUT_OF_SCOPE',
+    message: activity.message,
+  };
 }
 
 /**

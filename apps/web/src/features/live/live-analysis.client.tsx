@@ -72,7 +72,12 @@ const STAGES: { key: keyof AnalysisView['stages']; label: string }[] = [
 ];
 
 /** Fatal errors whose reason is the company itself (no retry helps): the way out is another CNPJ or the demo. */
-const COMPANY_ERRORS = new Set(['REGIME_OUT_OF_SCOPE', 'CNAE_OUT_OF_SCOPE']);
+const COMPANY_ERRORS = new Set([
+  'REGIME_OUT_OF_SCOPE',
+  'CNAE_OUT_OF_SCOPE',
+  'COMPANY_NOT_ACTIVE',
+  'MEI_OUT_OF_SCOPE',
+]);
 
 export function LiveAnalysis({
   analysisId,

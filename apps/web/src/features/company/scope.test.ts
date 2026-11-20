@@ -4,7 +4,9 @@ import {
   companyNameOf,
   outOfScopeMessage,
   outOfScopeRegime,
+  regimePhrase,
   regimeStop,
+  statusStopMessage,
 } from './scope';
 
 const off = { optedIn: false, since: null, excludedAt: null };
@@ -24,7 +26,7 @@ describe('regime scope (H3)', () => {
     } as never;
     expect(outOfScopeRegime(presumido)).toBe('Lucro Presumido');
     expect(outOfScopeMessage('Consultoria Exemplo', 'Lucro Presumido')).toBe(
-      'Por enquanto o Refund calcula só empresas do Simples Nacional. A Consultoria Exemplo está no Lucro Presumido.',
+      'Por enquanto o Refund calcula só empresas do Simples Nacional. Consultoria Exemplo está no Lucro Presumido.',
     );
   });
 
@@ -41,13 +43,50 @@ describe('regime scope (H3)', () => {
       taxRegimeHistory: [{ year: 2024, form: 'LUCRO REAL' }],
       displayLegalName: 'BANCO DO BRASIL SA',
       displayTradeName: 'DIRECAO GERAL',
+      registrationStatus: 'ATIVA',
       masked: false,
     } as never;
     expect(regimeStop(bb)).toEqual({
+      reason: 'regime',
       regime: 'Lucro Real',
       message:
-        'Por enquanto o Refund calcula só empresas do Simples Nacional. A Banco do Brasil SA está no Lucro Real.',
+        'Por enquanto o Refund calcula só empresas do Simples Nacional. Banco do Brasil SA está no Lucro Real.',
     });
+  });
+
+  it('regime phrases: no article, "é isenta de IRPJ" (bug bash 20/11)', () => {
+    expect(regimePhrase('Lucro Presumido')).toBe('está no Lucro Presumido');
+    expect(regimePhrase('Isenta do IRPJ')).toBe('é isenta de IRPJ');
+    expect(regimePhrase('regime fora do Simples Nacional')).toBe('está fora do Simples Nacional');
+    expect(outOfScopeMessage('sua empresa', 'Lucro Real')).toBe(
+      'Por enquanto o Refund calcula só empresas do Simples Nacional. Sua empresa está no Lucro Real.',
+    );
+  });
+
+  it('H4: baixada, inapta and suspensa stop with their own reason, before the regime', () => {
+    const closed = (registrationStatus: string) =>
+      regimeStop({
+        simples: off,
+        mei: off,
+        taxRegimeHistory: [],
+        displayLegalName: 'X LTDA',
+        masked: false,
+        registrationStatus,
+      });
+    expect(closed('BAIXADA')).toEqual({
+      reason: 'status',
+      regime: 'baixada',
+      message:
+        'Esta empresa está baixada na Receita (encerrada). O Refund analisa empresas ativas.',
+    });
+    expect(closed('INAPTA')?.message).toBe(
+      'Esta empresa está inapta na Receita. Regularize a situação com seu contador antes de planejar impostos.',
+    );
+    expect(closed('SUSPENSA')?.message).toBe(
+      'Esta empresa está suspensa na Receita. Regularize a situação com seu contador antes de planejar impostos.',
+    );
+    expect(closed('ATIVA')?.reason).toBe('regime');
+    expect(statusStopMessage('ativa')).toBeNull();
   });
 
   it('a masked EI reads "sua empresa", never the mask text', () => {

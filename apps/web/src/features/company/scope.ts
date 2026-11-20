@@ -49,22 +49,67 @@ export function outOfScopeRegime(
   return last && last.form.trim() !== '' ? title(last.form) : 'regime fora do Simples Nacional';
 }
 
-/** The stop message, with the company's own name and regime. */
-export function outOfScopeMessage(companyName: string, regime: string): string {
-  return `Por enquanto o Refund calcula só empresas do Simples Nacional. A ${companyName} está no ${regime}.`;
+/**
+ * The regime as a predicate (bug bash 20/11): "está no Lucro Real", "é isenta de IRPJ"; no article before the company
+ * name, whose gender we do not know ("Banco do Brasil SA está no Lucro Real.").
+ */
+export function regimePhrase(regime: string): string {
+  const r = regime.trim().toLowerCase();
+  if (r.startsWith('isenta')) return 'é isenta de IRPJ';
+  if (r.startsWith('imune')) return 'é imune do IRPJ';
+  if (r.startsWith('lucro')) return `está no ${regime}`;
+  return 'está fora do Simples Nacional';
 }
 
-/** The regime stop of a company, or null when its regime is in scope. */
+/** The stop message, with the company's own name and regime. */
+export function outOfScopeMessage(companyName: string, regime: string): string {
+  const name = companyName === 'sua empresa' ? 'Sua empresa' : companyName;
+  return `Por enquanto o Refund calcula só empresas do Simples Nacional. ${name} ${regimePhrase(regime)}.`;
+}
+
+/**
+ * Bug bash 20/11 (H4): a company that is not active at the Receita stops at "É você?" with that reason, before the
+ * regime (a closed company is "fora do Simples" too, but that is not why we stop).
+ */
+export function statusStopMessage(registrationStatus: string): string | null {
+  const status = registrationStatus.trim().toUpperCase();
+  if (status === 'ATIVA' || status === '') return null;
+  if (status === 'BAIXADA')
+    return 'Esta empresa está baixada na Receita (encerrada). O Refund analisa empresas ativas.';
+  if (status === 'INAPTA')
+    return 'Esta empresa está inapta na Receita. Regularize a situação com seu contador antes de planejar impostos.';
+  if (status === 'SUSPENSA')
+    return 'Esta empresa está suspensa na Receita. Regularize a situação com seu contador antes de planejar impostos.';
+  if (status === 'NULA')
+    return 'Este CNPJ foi anulado na Receita. O Refund analisa empresas ativas.';
+  return `Esta empresa não está ativa na Receita (situação: ${status.toLowerCase()}). O Refund analisa empresas ativas.`;
+}
+
+/**
+ * The company stop at "É você?", or null when it goes on: first the registration status (H4), then the regime (H3).
+ * `regime` is the regime name for a regime stop, the status for a status stop.
+ */
 export function regimeStop(
   company: Pick<
     PublicCompany,
-    'simples' | 'mei' | 'taxRegimeHistory' | 'displayLegalName' | 'masked'
+    'simples' | 'mei' | 'taxRegimeHistory' | 'displayLegalName' | 'masked' | 'registrationStatus'
   >,
-): { regime: string; message: string } | null {
+): { reason: 'status' | 'regime'; regime: string; message: string } | null {
+  const status = statusStopMessage(company.registrationStatus);
+  if (status !== null)
+    return {
+      reason: 'status',
+      regime: company.registrationStatus.trim().toLowerCase(),
+      message: status,
+    };
   const regime = outOfScopeRegime(company);
   return regime === null
     ? null
-    : { regime, message: outOfScopeMessage(companyNameOf(company), regime) };
+    : {
+        reason: 'regime',
+        regime,
+        message: outOfScopeMessage(companyNameOf(company), regime),
+      };
 }
 
 /** "4120-4/00 Construção de edifícios": the company's own code and description, as the public data gives them. */
@@ -91,6 +136,23 @@ export function activityOutOfScopeMessage(cnae: { code: string; description: str
   }
   // Ambiguous (or a row still to be confirmed): the anexo is not fixed for us yet.
   return `O anexo da sua atividade (${cnae.code}) depende do que exatamente a empresa faz; por enquanto não calculamos esse caso.`;
+}
+
+/**
+ * Bug bash 20/11 (H5): an MEI pays a fixed DAS-MEI, so there is no saving to calculate; the track stops at the
+ * estimate with this, never with an "anexo" (an MEI has none to choose).
+ */
+export const MEI_STOP_MESSAGE =
+  'No MEI o imposto é um valor fixo por mês (DAS-MEI), então não há economia a calcular aqui. Fique de olho no limite de faturamento do MEI.';
+
+/** The stop at the estimate: the MEI first, then the activity (CNAE); null when the track goes on. */
+export function estimateStop(
+  company: Pick<PublicCompany, 'primaryCnae' | 'mei'>,
+): { reason: 'mei' | 'activity'; cnae: string; message: string } | null {
+  if (company.mei.optedIn)
+    return { reason: 'mei', cnae: company.primaryCnae.code, message: MEI_STOP_MESSAGE };
+  const activity = activityStop(company);
+  return activity === null ? null : { reason: 'activity', ...activity };
 }
 
 /** The activity stop of a company whose regime is in scope, or null when its CNAE is in the verified table. */
