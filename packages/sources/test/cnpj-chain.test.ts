@@ -8,6 +8,7 @@ import {
   type CnpjSource,
   type ExternalCachePort,
   LiveCnpj,
+  MAX_RETRY_AFTER_MS,
   type PublicCompany,
   preferDatedSimples,
   ReplayCnpj,
@@ -485,5 +486,120 @@ describe('privacy', () => {
         expect(logs).not.toContain(leak);
       }
     }
+  });
+});
+
+describe('E21 review fixes', () => {
+  const base = sanitized('brasilapi');
+  const simples = (optedIn: boolean, since: string | null): PublicCompany['simples'] => ({
+    optedIn,
+    since: since as PublicCompany['simples']['since'],
+    excludedAt: null,
+  });
+
+  it('item 2: a Simples disagreement is judged on Simples dates only, the same way for both', () => {
+    // The second answer is dated only on MEI: that says nothing about the Simples it contradicts.
+    const first: PublicCompany = { ...base, simples: simples(true, null) };
+    const meiDatedOnly: PublicCompany = {
+      ...base,
+      source: 'opencnpj',
+      simples: simples(false, null),
+      mei: { optedIn: false, since: '2019-01-01', excludedAt: '2020-01-01' },
+    };
+    expect(preferDatedSimples(first, meiDatedOnly)).toBe(first);
+    // A Simples-dated first answer keeps its place even if its MEI is undated.
+    const firstDated: PublicCompany = {
+      ...base,
+      simples: simples(true, '2010-01-01'),
+      mei: { optedIn: true, since: null, excludedAt: null },
+    };
+    const second: PublicCompany = { ...base, source: 'opencnpj', simples: simples(false, null) };
+    expect(preferDatedSimples(firstDated, second)).toBe(firstDated);
+  });
+
+  it('item 2: a MEI disagreement is judged on MEI dates', () => {
+    const first: PublicCompany = {
+      ...base,
+      mei: { optedIn: true, since: null, excludedAt: null },
+    };
+    const second: PublicCompany = {
+      ...base,
+      source: 'cnpja',
+      mei: { optedIn: false, since: '2019-01-01', excludedAt: '2021-06-30' },
+    };
+    expect(preferDatedSimples(first, second)).toBe(second);
+    expect(preferDatedSimples(second, first)).toBe(second);
+  });
+
+  it('item 3: one mirror 404 with the other sources skipped → UNAVAILABLE, not NOT_FOUND', async () => {
+    let now = 0;
+    const guard = new CnpjProviderGuard({ failureThreshold: 1, openMs: 60_000, now: () => now });
+    const c = chain({ guard });
+    // Open every circuit except OpenCNPJ's.
+    await run(
+      c,
+      routedFetch({
+        brasilapi: s500,
+        opencnpj: ok200('opencnpj'),
+      }),
+    );
+    for (const s of ['cnpja', 'minhareceita', 'cnpjws', 'receitaws'] as const) {
+      guard.failure(s, { code: 'UNAVAILABLE', message: 'x', recoverable: true, source: s });
+    }
+    now += 1;
+    const { r } = await run(c, routedFetch({ opencnpj: s404 }));
+    expect(r).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+    // With nothing skipped, the same lone answer stays a NOT_FOUND (single-source rule).
+    const only = new ChainedCnpj({
+      live: [new LiveCnpj(CNPJ_SOURCES[1] as (typeof CNPJ_SOURCES)[number], { timeoutMs: 50 })],
+    });
+    const lone = await only.lookup(BB, { mode: 'live', fetch: routedFetch({ opencnpj: s404 }) });
+    expect(lone).toMatchObject({ ok: false, error: { code: 'NOT_FOUND' } });
+  });
+
+  it('item 4: CNPJá open is paced (12 s)', () => {
+    expect(CNPJ_SOURCES.find((s) => s.source === 'cnpja')?.minIntervalMs).toBe(12_000);
+  });
+
+  it('item 5: a Retry-After is capped at 10 minutes', () => {
+    let now = 0;
+    const guard = new CnpjProviderGuard({ now: () => now });
+    guard.failure('brasilapi', {
+      code: 'RATE_LIMITED',
+      message: 'x',
+      recoverable: true,
+      source: 'brasilapi',
+      retryInMs: 3 * 60 * 60_000,
+    });
+    now = MAX_RETRY_AFTER_MS - 1;
+    expect(guard.admit('brasilapi')).toEqual({ ok: false, reason: 'circuit_open' });
+    now = MAX_RETRY_AFTER_MS;
+    expect(guard.admit('brasilapi')).toEqual({ ok: true });
+  });
+
+  it('item 6: half-open lets one probe through; concurrent lookups keep skipping until it ends', () => {
+    let now = 0;
+    const guard = new CnpjProviderGuard({ failureThreshold: 1, openMs: 1_000, now: () => now });
+    const down = {
+      code: 'UNAVAILABLE' as const,
+      message: 'x',
+      recoverable: true,
+      source: 'opencnpj',
+    };
+    guard.failure('opencnpj', down);
+    now = 1_000;
+    expect(guard.admit('opencnpj')).toEqual({ ok: true });
+    expect(guard.admit('opencnpj')).toEqual({ ok: false, reason: 'circuit_open' });
+    guard.success('opencnpj');
+    expect(guard.admit('opencnpj')).toEqual({ ok: true });
+    expect(guard.admit('opencnpj')).toEqual({ ok: true });
+  });
+
+  it('item 7: the health gives the last success to the minute only', () => {
+    const now = Date.parse('2026-11-20T12:34:56.789Z');
+    const guard = new CnpjProviderGuard({ now: () => now });
+    guard.admit('brasilapi');
+    guard.success('brasilapi');
+    expect(guard.snapshot(CNPJ_SOURCES)[0]?.lastOkAt).toBe('2026-11-20T12:34:00.000Z');
   });
 });

@@ -47,18 +47,21 @@ function undatedOptIn(c: PublicCompany): boolean {
 
 /**
  * Simples/MEI disagreement rule (E21): when two sources disagree on the Simples or MEI flag, the one
- * that gives the opt-in or exclusion dates wins, because a dated answer comes from the Receita's Simples
- * file itself, while a bare flag may be a stale copy. The winner's whole company is used (never a field
- * mix), so the EI/MEI mask and the size stay consistent with its own flags.
+ * that gives the dates of THAT regime wins, because a dated answer comes from the Receita's Simples file
+ * itself, while a bare flag may be a stale copy. Both answers are judged by the same rule, on the field
+ * that disagrees (Simples first when both do; E21 review, item 2). The winner's whole company is used
+ * (never a field mix), so the EI/MEI mask and the size stay consistent with its own flags.
  */
 export function preferDatedSimples(first: PublicCompany, second: PublicCompany): PublicCompany {
   const dated = (o: PublicCompany['simples']) => o.since !== null || o.excludedAt !== null;
-  const disagree =
-    first.simples.optedIn !== second.simples.optedIn || first.mei.optedIn !== second.mei.optedIn;
-  if (!disagree) return first;
-  const firstDated = dated(first.simples) && (!first.mei.optedIn || dated(first.mei));
-  const secondDated = dated(second.simples) || dated(second.mei);
-  return !firstDated && secondDated ? second : first;
+  const field: 'simples' | 'mei' | null =
+    first.simples.optedIn !== second.simples.optedIn
+      ? 'simples'
+      : first.mei.optedIn !== second.mei.optedIn
+        ? 'mei'
+        : null;
+  if (field === null) return first;
+  return !dated(first[field]) && dated(second[field]) ? second : first;
 }
 
 /**
@@ -111,7 +114,7 @@ export class ChainedCnpj implements CnpjProvider {
       return ok(walk.company);
     }
 
-    const { errors, authoritativeNotFound } = walk;
+    const { errors, authoritativeNotFound, skipped } = walk;
     if (cached && !authoritativeNotFound) {
       ctx.log?.('provider.answered', { source: 'external_cache', fresh: false });
       return ok(cached);
@@ -125,7 +128,9 @@ export class ChainedCnpj implements CnpjProvider {
     if (
       authoritativeNotFound ||
       notFound.length >= NOT_FOUND_QUORUM ||
-      (errors.length > 0 && notFound.length === errors.length)
+      // "Every source that answered said 404" only counts when no source was left out: a lone mirror's
+      // 404 with the others skipped (breaker, pacing, budget) is not enough (E21 review, item 3).
+      (skipped === 0 && errors.length > 0 && notFound.length === errors.length)
     ) {
       return fail(
         'NOT_FOUND',
@@ -152,26 +157,32 @@ export class ChainedCnpj implements CnpjProvider {
     company: PublicCompany | null;
     errors: ProviderError[];
     authoritativeNotFound: boolean;
+    /** Sources left out without being asked (switch, budget, breaker, pacing). */
+    skipped: number;
   }> {
     const { live, skip = [], authoritative = ['brasilapi'], budgetMs = 12_000 } = this.options;
     const errors: ProviderError[] = [];
     const deadline = this.guard.now() + budgetMs;
     let company: PublicCompany | null = null;
+    let skipped = 0;
 
     for (const provider of live) {
       const { source } = provider;
       if (skip.includes(source)) {
         ctx.log?.('provider.skipped', { source, reason: 'disabled' });
+        skipped++;
         continue;
       }
       const remaining = deadline - this.guard.now();
       if (remaining <= 0) {
         ctx.log?.('provider.skipped', { source, reason: 'budget' });
+        skipped++;
         continue;
       }
       const admitted = this.guard.admit(source, provider.minIntervalMs);
       if (!admitted.ok) {
         ctx.log?.('provider.skipped', { source, reason: admitted.reason });
+        skipped++;
         continue;
       }
 
@@ -204,10 +215,10 @@ export class ChainedCnpj implements CnpjProvider {
       if (company !== null) break;
       errors.push(r.error);
       if (r.error.code === 'NOT_FOUND' && authoritative.includes(source)) {
-        return { company: null, errors, authoritativeNotFound: true };
+        return { company: null, errors, authoritativeNotFound: true, skipped };
       }
       ctx.log?.('provider.fallback', { from: source });
     }
-    return { company, errors, authoritativeNotFound: false };
+    return { company, errors, authoritativeNotFound: false, skipped };
   }
 }

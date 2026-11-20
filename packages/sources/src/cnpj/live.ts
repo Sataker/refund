@@ -90,13 +90,14 @@ export const CNPJ_SOURCES: readonly CnpjSourceSpec[] = [
     minIntervalMs: 0,
   },
   {
+    // CNPJá open tier: a free, rate-limited tier like the 3/min ones; paced at 5/min (E21 review, item 4).
     source: 'cnpja',
     baseUrl: 'https://open.cnpja.com/office',
     rawSchema: cnpjaSchema,
     sanitize: sanitizeCnpjaCompany,
     timeoutMs: 4000,
     retries: 0,
-    minIntervalMs: 0,
+    minIntervalMs: 12_000,
   },
   {
     source: 'minhareceita',

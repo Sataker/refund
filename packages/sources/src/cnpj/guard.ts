@@ -24,7 +24,7 @@ export interface ProviderHealth {
    */
   state: 'up' | 'failing' | 'down' | 'paced' | 'unknown';
   consecutiveFailures: number;
-  /** ISO-8601 of the last answer (a company or an authoritative "not found"). */
+  /** ISO-8601 of the last answer (a company or a "not found"), rounded down to the minute. */
   lastOkAt: string | null;
   /** Error code of the last failure, never its message. */
   lastFailure: ProviderError['code'] | null;
@@ -36,7 +36,12 @@ interface Entry {
   lastCallAt: number | null;
   lastOkAt: number | null;
   lastFailure: ProviderError['code'] | null;
+  /** Half-open: one probe call is in flight until this time (a safety cap; the call clears it). */
+  probingUntil: number;
 }
+
+/** A Retry-After above this is treated as a misconfigured header, not a 3-hour outage. */
+export const MAX_RETRY_AFTER_MS = 10 * 60_000;
 
 /** Codes that say "this source is not answering", as opposed to an answer about the CNPJ itself. */
 const BREAKER_CODES: ReadonlySet<ProviderError['code']> = new Set([
@@ -63,7 +68,14 @@ export class CnpjProviderGuard {
   private entry(source: string): Entry {
     let e = this.entries.get(source);
     if (!e) {
-      e = { failures: 0, openUntil: 0, lastCallAt: null, lastOkAt: null, lastFailure: null };
+      e = {
+        failures: 0,
+        openUntil: 0,
+        lastCallAt: null,
+        lastOkAt: null,
+        lastFailure: null,
+        probingUntil: 0,
+      };
       this.entries.set(source, e);
     }
     return e;
@@ -71,15 +83,19 @@ export class CnpjProviderGuard {
 
   /**
    * May the source be called now? When it may, the call is booked (pacing counts from here). After the
-   * open window a single call goes through (half-open): one more failure re-opens the circuit at once.
+   * open window a single call goes through (half-open): concurrent lookups keep skipping the source
+   * while that probe is in flight, and one more failure re-opens the circuit at once.
    */
   admit(source: string, minIntervalMs = 0): { ok: true } | { ok: false; reason: SkipReason } {
     const e = this.entry(source);
     const now = this.now();
     if (now < e.openUntil) return { ok: false, reason: 'circuit_open' };
+    const halfOpen = e.openUntil > 0;
+    if (halfOpen && now < e.probingUntil) return { ok: false, reason: 'circuit_open' };
     if (minIntervalMs > 0 && e.lastCallAt !== null && now - e.lastCallAt < minIntervalMs) {
       return { ok: false, reason: 'paced' };
     }
+    if (halfOpen) e.probingUntil = now + this.openMs;
     e.lastCallAt = now;
     return { ok: true };
   }
@@ -89,6 +105,7 @@ export class CnpjProviderGuard {
     const e = this.entry(source);
     e.failures = 0;
     e.openUntil = 0;
+    e.probingUntil = 0;
     e.lastOkAt = this.now();
   }
 
@@ -99,11 +116,19 @@ export class CnpjProviderGuard {
     }
     const e = this.entry(source);
     e.lastFailure = error.code;
+    e.probingUntil = 0;
     if (error.code === 'RATE_LIMITED') {
-      e.openUntil = this.now() + Math.max(error.retryInMs ?? 0, this.rateLimitedMs);
+      const pause = Math.min(
+        Math.max(error.retryInMs ?? 0, this.rateLimitedMs),
+        MAX_RETRY_AFTER_MS,
+      );
+      e.openUntil = this.now() + pause;
       return;
     }
-    if (!BREAKER_CODES.has(error.code)) return;
+    if (!BREAKER_CODES.has(error.code)) {
+      // A probe that ended in a neutral error (e.g. 400) keeps the circuit half-open for the next call.
+      return;
+    }
     e.failures += 1;
     if (e.failures >= this.failureThreshold) e.openUntil = this.now() + this.openMs;
   }
@@ -128,7 +153,11 @@ export class CnpjProviderGuard {
         source,
         state: open ? 'down' : e.failures > 0 ? 'failing' : paced ? 'paced' : 'up',
         consecutiveFailures: e.failures,
-        lastOkAt: e.lastOkAt === null ? null : new Date(e.lastOkAt).toISOString(),
+        // Minute precision: enough to read the health, without timing individual lookups (review, item 7).
+        lastOkAt:
+          e.lastOkAt === null
+            ? null
+            : new Date(Math.floor(e.lastOkAt / 60_000) * 60_000).toISOString(),
         lastFailure: e.lastFailure,
       };
     });

@@ -3,6 +3,7 @@ export const PACKAGE_NAME = '@refund/sources';
 export { ChainedCnpj, type ChainedCnpjOptions, preferDatedSimples } from './cnpj/chain.ts';
 export {
   CnpjProviderGuard,
+  MAX_RETRY_AFTER_MS,
   type ProviderGuardOptions,
   type ProviderHealth,
   type SkipReason,
