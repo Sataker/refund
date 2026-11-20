@@ -439,7 +439,7 @@ describe('plan limits on the server (ARCHITECTURE §8.2)', () => {
     });
   });
 
-  it('countLive: Pessoal has no PJ connection; free allows one of each', async () => {
+  it('countLive: Pessoal keeps the free PJ connection (D41) and stops at it', async () => {
     const userId = await newUserId();
     expect((await requireLiveRoomWith(h.db, userId, 'connections_pj')).ok).toBe(true);
     const gateway = new FakeAbacatePay('test');
@@ -448,11 +448,13 @@ describe('plan limits on the server (ARCHITECTURE §8.2)', () => {
     if (!s.ok) throw new Error(s.error.code);
     await simulateDevPaymentWith({ chargeId: s.value.chargeId }, deps);
     await webhook(deliver(gateway.deliveries.at(-1) as string));
-    expect(await requireLiveRoomWith(h.db, userId, 'connections_pj')).toMatchObject({
+    expect((await activePlanWith(h.db, userId)).plan).toBe('personal');
+    expect((await requireLiveRoomWith(h.db, userId, 'connections_pj')).ok).toBe(true);
+    expect(await requireLiveRoomWith(h.db, userId, 'connections_pj', 2)).toMatchObject({
       ok: false,
       error: { code: 'PLAN_LIMIT', upgrade: { resource: 'connections_pj' } },
     });
-    expect((await requireLiveRoomWith(h.db, userId, 'connections_pf')).ok).toBe(true);
+    expect((await requireLiveRoomWith(h.db, userId, 'connections_pf', 3)).ok).toBe(true);
   });
 });
 
