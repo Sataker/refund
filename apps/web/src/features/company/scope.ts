@@ -92,7 +92,7 @@ export function activityOutOfScopeMessage(cnae: { code: string; description: str
         : 'sem a parcela do ISS e com a do ICMS';
     return `Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples na tabela comum. A sua (${activityLabel(cnae)}) é do Anexo III ${how}.`;
   }
-  // Ambiguous, and the dentistry row still to be confirmed (E.4): the anexo is not fixed for us yet.
+  // Ambiguous (or a row still to be confirmed): the anexo is not fixed for us yet.
   return `O anexo da sua atividade (${cnae.code}) depende do que exatamente a empresa faz; por enquanto não calculamos esse caso.`;
 }
 

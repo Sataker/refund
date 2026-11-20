@@ -64,6 +64,7 @@ describe('activity scope', () => {
   it('a CNAE the engine calculates goes on (software; commerce since D50)', () => {
     expect(stop('6201-5/01', 'x')).toBeNull();
     expect(stop('4772-5/00', 'Comércio varejista de cosméticos')).toBeNull();
+    expect(stop('8630-5/04', 'Atividade odontológica')).toBeNull(); // D51
   });
 
   it('Anexo II or IV: the anexo, never a list of activities', () => {
@@ -83,14 +84,11 @@ describe('activity scope', () => {
     );
   });
 
-  it('ambiguous, and the dentistry row still to be confirmed', () => {
+  it('ambiguous', () => {
     const ambiguous =
       'O anexo da sua atividade (4635-4/02) depende do que exatamente a empresa faz; por enquanto não calculamos esse caso.';
     expect(stop('4635-4/02', 'Comércio atacadista de cerveja, chope e refrigerante')?.message).toBe(
       ambiguous,
-    );
-    expect(stop('8630-5/04', 'Atividade odontológica')?.message).toBe(
-      'O anexo da sua atividade (8630-5/04) depende do que exatamente a empresa faz; por enquanto não calculamos esse caso.',
     );
   });
 

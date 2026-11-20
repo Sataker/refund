@@ -11243,8 +11243,9 @@
     "baseAnexo": "III",
     "subjectToFatorR": true,
     "resellsMonofasico": false,
-    "status": "to_confirm",
-    "source": "ENGINE-SPEC E.4: sujeita ao Fator R a confirmar; odontologia não aparece nos incisos capturados de LC 123, art. 18, §§ 5º-D e 5º-I (EXECUTION §9, E1/E8)"
+    "status": "verified",
+    "source": "LC 123/2006, art. 18, § 5º-B, XX; LC 123/2006, art. 18, § 5º-M, I; Res. CGSN 140/2018, art. 25, § 1º, V, \"n\" (Anexo III; Anexo V com Fator R abaixo de 28%)",
+    "refs": ["lc123-2006/art18/p5-m"]
   },
   {
     "cnae": "8630-5/06",

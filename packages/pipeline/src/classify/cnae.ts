@@ -11,8 +11,7 @@ const matchAny = (digits: string, list: readonly string[]): boolean =>
 export interface CnaeTaxProfile {
   subjectToFatorR: boolean;
   baseAnexo: Anexo;
-  /** E.4 marks dentistry as "to be confirmed in the official table". */
-  status: 'verified' | 'to_confirm';
+  status: 'verified';
   source: string;
 }
 
@@ -24,20 +23,18 @@ const formatted = (code: string): string => {
 
 /**
  * E.4 through the engine's table (`cnae-anexo.json`, every CNAE 2.3 subclass since D50). A CNAE the estimate can
- * compute (`cnaeInScope`, C.11.5 item 4) gets its anexo; the dentistry row (`to_confirm`, E.4) keeps running as it did
- * before D50. Anything else (ambiguous, impeditive, Anexo II or IV, an adjusted anexo) stops the analysis
+ * compute (`cnaeInScope`, C.11.5 item 4) gets its anexo. Anything else (ambiguous, impeditive, Anexo II or IV, an
+ * adjusted anexo) stops the analysis
  * (CNAE_OUT_OF_SCOPE) instead of guessing an anexo (CLAUDE.md, rule 12).
  */
 export function cnaeTaxProfile(code: string): CnaeTaxProfile | undefined {
   const cnae = formatted(code);
   const row = cnaeAnexoRow(cnae);
-  if (row === undefined || row.baseAnexo === null) return undefined;
-  const status = cnaeInScope(cnae) ? 'verified' : row.status === 'to_confirm' ? 'to_confirm' : null;
-  if (status === null) return undefined;
+  if (row === undefined || row.baseAnexo === null || !cnaeInScope(cnae)) return undefined;
   return {
     subjectToFatorR: row.subjectToFatorR,
     baseAnexo: row.baseAnexo,
-    status,
+    status: 'verified',
     source: `CNAE ${row.cnae}: ${row.source}`,
   };
 }

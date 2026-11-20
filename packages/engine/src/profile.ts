@@ -54,7 +54,7 @@ import { ENGINE_VERSION } from './version.ts';
  * - `ambiguous`: the anexo depends on what the company actually does (Res. CGSN 140, Anexo VII, or activities split
  *   across LC 123, art. 18, §§ 4º–5º-I); `baseAnexo` is null;
  * - `impeditive`: Res. CGSN 140, Anexo VI (LC 123, art. 17); `baseAnexo` is null;
- * - `to_confirm`: the dentistry row of E.4, kept as it was before D50.
+ * - `to_confirm`: a row still waiting for confirmation (none since D51, when dentistry became verified).
  * `resellsMonofasico` is 'question' when the typical goods are monofásico but the CNAE is not in E.5 (D.6: no default).
  * `anexoAdjustment` marks a verified anexo whose DAS drops the ISS share (LC 123, art. 18, § 4º, V) or swaps it for
  * the ICMS of Anexo I (§ 5º-E); the engine computes neither.

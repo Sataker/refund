@@ -21,12 +21,13 @@ describe('CNAE scope (C.11.5 item 4)', () => {
     expect(cnaeInScope('1091-1/01')).toBe(false); // Anexo II
     expect(cnaeInScope('4120-4/00')).toBe(false); // Anexo IV
     expect(cnaeInScope('7711-0/00')).toBe(false); // Anexo III without the ISS share
-    expect(cnaeInScope('8630-5/04')).toBe(false); // to_confirm (E.4)
     expect(cnaeInScope('')).toBe(false);
     expect(cnaeInScope('0000-0/00')).toBe(false);
   });
 
   it('commerce is in scope since D50 (cosmetics retail, Anexo I)', () => {
     expect(cnaeInScope('4772-5/00')).toBe(true);
+    // D51: dentistry, LC 123, art. 18, § 5º-B, XX + § 5º-M, I.
+    expect(cnaeInScope('8630-5/04')).toBe(true);
   });
 });

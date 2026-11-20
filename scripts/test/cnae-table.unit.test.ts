@@ -23,7 +23,7 @@ const byCnae = new Map(rows.map((r) => [r.cnae, r]));
 const IBGE_CODES_SHA256 = '70eed7d582c501444ede33f14fc04212873c7fb5e369da6eccd88253d762a336';
 const IBGE_SUBCLASSES = 1332;
 
-/** The four rows of cnae-anexo.json before D50 (14/11/2026), byte for byte. */
+/** The rows of cnae-anexo.json before D50 (14/11/2026), byte for byte (dentistry left this list with D51). */
 const ORIGINAL_ROWS = [
   {
     cnae: '6201-5/01',
@@ -54,16 +54,6 @@ const ORIGINAL_ROWS = [
     status: 'verified',
     source:
       'Revenda de mercadorias → Anexo I (LC 123/2006, art. 18, § 4º, I; ENGINE-SPEC E.4); revenda monofásica de medicamentos (Lei 10.147/2000, arts. 1º e 2º; LC 123, art. 18, § 4º-A, I; ENGINE-SPEC E.5)',
-  },
-  {
-    cnae: '8630-5/04',
-    description: 'Atividade odontológica',
-    baseAnexo: 'III',
-    subjectToFatorR: true,
-    resellsMonofasico: false,
-    status: 'to_confirm',
-    source:
-      'ENGINE-SPEC E.4: sujeita ao Fator R a confirmar; odontologia não aparece nos incisos capturados de LC 123, art. 18, §§ 5º-D e 5º-I (EXECUTION §9, E1/E8)',
   },
 ];
 
@@ -150,9 +140,18 @@ describe('D50: cnae-anexo.json covers every CNAE 2.3 subclass', () => {
     expect(createHash('sha256').update(codes.join('\n')).digest('hex')).toBe(IBGE_CODES_SHA256);
   });
 
-  it('the four rows that existed before D50 are unchanged', () => {
+  it('the rows that existed before D50 are unchanged; dentistry is verified since D51', () => {
     expect(ORIGINAL_CNAES).toEqual(ORIGINAL_ROWS.map((r) => r.cnae));
     for (const original of ORIGINAL_ROWS) expect(byCnae.get(original.cnae)).toEqual(original);
+    expect(byCnae.get('8630-5/04')).toMatchObject({
+      baseAnexo: 'III',
+      subjectToFatorR: true,
+      status: 'verified',
+      source: expect.stringMatching(
+        /^LC 123\/2006, art\. 18, § 5º-B, XX; .*§ 5º-M, I; Res\. CGSN 140\/2018, art\. 25, § 1º, V, "n"/,
+      ),
+    });
+    expect(rows.filter((r) => r.status === 'to_confirm')).toEqual([]);
   });
 
   it('statuses and anexos are consistent: verified rows have an anexo; the others have none', () => {
@@ -246,8 +245,8 @@ describe('D50: cnae-anexo.json covers every CNAE 2.3 subclass', () => {
         r.anexoAdjustment === undefined;
       expect(cnaeInScope(r.cnae), r.cnae).toBe(inScope);
     }
-    expect(CNAE_IN_SCOPE.length).toBe(315);
-    expect(cnaeInScope('8630-5/04')).toBe(false);
+    expect(CNAE_IN_SCOPE.length).toBe(316);
+    expect(cnaeInScope('8630-5/04')).toBe(true); // D51
     expect(cnaeInScope('7711-0/00')).toBe(false); // § 4º, V: Anexo III without the ISS share
     expect(cnaeInScope('6110-8/01')).toBe(false); // § 5º-E: Anexo III without ISS, with ICMS
   });

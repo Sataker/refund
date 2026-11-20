@@ -220,6 +220,7 @@ export const PROVISIONS = {
     'art. 25, § 1º, III, "j"',
     'j) corretagem de imóveis de terceiros, assim entendida a intermediação na compra, venda, permuta e locação de imóveis;',
   ),
+  r25Vn: res('art. 25, § 1º, V, "n"', 'n) odontologia e prótese dentária;'),
   r25IIIm: res(
     'art. 25, § 1º, III, "m"',
     '1. não tenham por finalidade a prestação de serviços decorrentes do exercício de atividade intelectual, de natureza técnica, científica, desportiva, artística ou cultural, que constitua profissão regulamentada ou não; e',
@@ -331,6 +332,8 @@ export const VERIFIED_SERVICES: Readonly<Record<string, VerifiedRule>> = {
     ].map((c) => [c, bFr('p5bXIX')]),
   ),
   '3250-7/06': bFr('p5bXX'),
+  // D51 (Enzo, 20/11): dentistry, confirmed by the tax audit of 20/11.
+  '8630-5/04': v('III', ['p5bXX', 'p5mI', 'r25Vn'], { fatorR: true }),
   ...Object.fromEntries(
     [
       '8630-5/06',

@@ -42,8 +42,11 @@ export const INPUT_SHA256: Readonly<Record<string, string>> = {
   'lc-123-2006-planalto.md': '4b9be50796785eb69a80e0067955d694d76183ef7ea4121f6bffe64cb6e0329b',
 };
 
-/** The rows of cnae-anexo.json before D50 (14/11/2026): kept exactly as they were. */
-export const ORIGINAL_CNAES = ['6201-5/01', '6201-5/02', '4771-7/01', '8630-5/04'] as const;
+/**
+ * The rows of cnae-anexo.json before D50 (14/11/2026), kept exactly as they were. The fourth, dentistry (8630-5/04,
+ * `to_confirm`), comes from the rules since D51 (Enzo, 20/11).
+ */
+export const ORIGINAL_CNAES = ['6201-5/01', '6201-5/02', '4771-7/01'] as const;
 
 export type Status = 'verified' | 'ambiguous' | 'impeditive' | 'to_confirm';
 

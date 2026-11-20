@@ -246,14 +246,52 @@ describe('ENGINE-SPEC C.11.10 — profile-based estimate', () => {
     expect(e.rules).toEqual([]);
   });
 
-  it('T11-15: 8630-5/04 (dentistry, to_confirm) → CNAE_OUT_OF_SCOPE (R02 listed)', () => {
-    const e = estimate({}, { primaryCnae: '8630-5/04' });
+  it('T11-15: 4635-4/02 (ambiguous, Res. CGSN 140, Anexo VII) → CNAE_OUT_OF_SCOPE (R02 listed)', () => {
+    // D51 (Enzo, 20/11): dentistry (8630-5/04) became verified (LC 123, art. 18, § 5º-B, XX + § 5º-M, I), so the
+    // "not calculated" example is an ambiguous row.
+    const e = estimate({}, { primaryCnae: '4635-4/02' });
     expectNoRange(e, 'CNAE_OUT_OF_SCOPE');
     expect(ids(e.rules)).toEqual(['R02']);
     // D50 (Enzo, 20/11): 7020-4/00 became verified (LC 123 art. 18 § 5º-I, IX); the table now has every CNAE 2.3
-    // subclass, so "absent" is a code that is not a subclass. An ambiguous row gives the same reason.
+    // subclass, so "absent" is a code that is not a subclass.
     expectNoRange(estimate({}, { primaryCnae: '0000-0/00' }), 'CNAE_OUT_OF_SCOPE');
-    expectNoRange(estimate({}, { primaryCnae: '4635-4/02' }), 'CNAE_OUT_OF_SCOPE');
+  });
+
+  // D51 (Enzo, 20/11): dentistry, LC 123, art. 18, § 5º-B, XX + § 5º-M, I (Res. CGSN 140, art. 25, § 1º, V, "n"):
+  // Anexo III with a Fator R of 28% or more, V below. Answers: 15–30 mil, no employees, no clients abroad → f = 0 and
+  // s = 0 (C.11.2), so only R01 can carry a value. By hand (C.11.9 conventions; 2028 steady state = LC 214 Anexos XX
+  // (III) and XXII (V); each tax rounded half-up separately, D12; R01 at P* = 0,29 × R, D.1):
+  //   R = 15.000, RBT12 180.000, 1st bracket:
+  //     DAS_V = 15.000 × 15,5% → 581,25 + 348,75 + CBS 394,32 + IBS 4,42 + 670,76 + 325,50 = 2.325,00
+  //     DAS_III = 15.000 × 6% → 36,00 + 31,50 + CBS 138,87 + IBS 1,53 + 390,60 + 301,50 = 900,00
+  //     P* = 4.350,00; INSS 11% = 478,50 (at 1 SM: 178,31); annual RT 52.200 ≤ 60.000 → no IR
+  //     R01 = 12 × (2.325,00 − 900,00) − 12 × (478,50 − 178,31) = 17.100,00 − 3.602,28 = 13.497,72 (maximum)
+  //   R = 30.000, RBT12 360.000, 2nd bracket:
+  //     DAS_V = 30.000 × (360.000 × 18% − 4.500) / 360.000 = 16,75% → 1.155,75 + 753,75 + 852,24 + 9,55 + 1.399,46
+  //       + 854,25 = 5.025,00
+  //     DAS_III = 30.000 × (360.000 × 11,2% − 9.360) / 360.000 = 8,6% → 103,20 + 90,30 + 436,28 + 4,90 + 1.119,72
+  //       + 825,60 = 2.580,00
+  //     P* = 8.700,00; INSS at the ceiling 932,31; annual IR on RT 104.400 = (104.400 − 17.640) × 27,5% − 10.904,66
+  //       = 12.954,34
+  //     R01 = 12 × 2.445,00 − 12 × 754,00 − 12.954,34 = 29.340,00 − 9.048,00 − 12.954,34 = 7.337,66 (minimum)
+  //   Displayed: [r2(0,85 × 7.337,66) = 6.237,01; 13.497,72]; ratio 2,16 ≤ 10.
+  it('D51: 8630-5/04 (dentistry, Anexo III with Fator R) is in scope: 15–30 mil, no employees, no abroad → range', () => {
+    const e = estimate(
+      { monthlyRevenueBracket: 'from_15k_to_30k', hasEmployees: 'no', receivesFromAbroad: 'no' },
+      { primaryCnae: '8630-5/04' },
+    );
+    expectRange(e, '6.237,01', '13.497,72');
+    if (e.type !== 'range') return;
+    expect(e.gridTotal).toEqual([brl('7.337,66'), brl('13.497,72')]);
+    expect(e.scenarios.map((s) => s.id)).toEqual([
+      'R1500000-S0-F0',
+      'R2250000-S0-F0',
+      'R3000000-S0-F0',
+    ]);
+    expect(e.scenarios[0]?.byRule).toEqual({ R01: brl('13.497,72'), R05: 0 });
+    expect(e.scenarios[2]?.byRule).toEqual({ R01: brl('7.337,66'), R05: 0 });
+    expect(ids(e.rules)).toEqual(['R01', 'R02']);
+    expect(rule(e, 'R01')?.range).toEqual([brl('6.237,01'), brl('13.497,72')]);
   });
 
   it('T11-16: 4771-7/01 (pharmacy, Anexo I), abroad no → NO_RULE_WITH_VALUE; R06 and R02 without range', () => {
