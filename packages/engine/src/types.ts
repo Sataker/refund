@@ -122,7 +122,8 @@ export interface Facts {
   };
   dasPaid: Fact<DasPayment[]>; // PGDAS-D inference (C.3.7)
   qualifications: {
-    exportResultAbroad?: Fact<boolean>; // question (R05)
+    exportResultAbroad?: Fact<boolean>; // question (R05, export of services: Anexos III–V)
+    exportOfGoods?: Fact<boolean>; // question (R05, export of goods: Anexos I–II; D54)
     pgdasSegregatesExport?: Fact<'yes' | 'no' | 'unknown'>; // derived from C.3.7 or from the user
     contributesToRgps: Fact<boolean>; // derived: there is INSS on the pró-labore/salary
   };

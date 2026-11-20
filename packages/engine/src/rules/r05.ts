@@ -50,12 +50,21 @@ export const exportKindOf = (anexo: Anexo): ExportKind =>
   anexo === 'I' || anexo === 'II' ? 'goods' : 'services';
 const exportKind = (ctx: Ctx): ExportKind => exportKindOf(ctx.facts.companyDetails.value.baseAnexo);
 
+/**
+ * D54 (audit H1): the qualification question that matches what the company exports. Goods (manual item 1.5; LC 123,
+ * art. 18, § 4º-A, IV) have no inflow-of-currency test; services keep the D.5 question.
+ */
+const exportQualification = (ctx: Ctx) =>
+  exportKind(ctx) === 'goods'
+    ? ctx.facts.qualifications.exportOfGoods
+    : ctx.facts.qualifications.exportResultAbroad;
+
 /** Trigger of D.5: Simples, export revenue in the statement, qualification confirmed, PGDAS-D not segregated. */
 export function eligibleR05(ctx: Ctx, segregates: 'yes' | 'no' | 'unknown'): boolean {
   const f = ctx.facts;
   if (f.company.value.regime !== 'SIMPLES') return false;
   if (!r05CoversAnexo(f.companyDetails.value.baseAnexo)) return false;
-  if (f.qualifications.exportResultAbroad?.value !== true) return false;
+  if (exportQualification(ctx)?.value !== true) return false;
   if (!ctx.observed.some((m) => revenue(ctx, 'export', m) > 0)) return false;
   return segregates !== 'yes';
 }
@@ -65,7 +74,7 @@ export const segregationStatus = (ctx: Ctx, inference: PgdasInference) =>
   ctx.facts.qualifications.pgdasSegregatesExport?.value ?? inference.segregates;
 
 export function confidenceR05(ctx: Ctx, inference: PgdasInference): Finding['confidence'] {
-  const user = ctx.facts.qualifications.exportResultAbroad?.provenance.origin === 'user';
+  const user = exportQualification(ctx)?.provenance.origin === 'user';
   return inference.segregates === 'no' && user ? 'confirmed' : 'estimated';
 }
 
@@ -78,8 +87,8 @@ const R05_DO_NOT = [
 // D54: goods (Anexos I and II). LC 123, art. 18, §§ 4º-A, IV, and 14; PGDAS-D manual, item 1.5; Res. CGSN 140,
 // art. 25, § 3º, in the 2026 wording and in that of Res. CGSN 190/2026 (from 01/2027).
 const R05_GOODS_DO_NOT = [
-  'Não marque como exportação a venda de mercadoria no mercado interno: só conta a venda (indústria) ou a revenda (comércio) de mercadorias para o exterior do país, inclusive a feita por meio de comercial exportadora (LC 123, art. 18, § 4º-A, IV; Manual do PGDAS-D, item 1.5).',
-  'Não tire do DAS as parcelas de IRPJ, CSLL e CPP: na exportação saem só, conforme o caso, as de Cofins, PIS, IPI, ICMS e ISS (LC 123, art. 18, § 14; Res. CGSN 140, art. 25, § 3º) e, a partir do PA 01/2027, as de IBS, CBS, IPI, ICMS e ISS (Res. CGSN 140, art. 25, § 3º, na redação da Res. CGSN 190/2026).',
+  'Não marque como exportação a venda de mercadoria no mercado interno: só conta a venda (indústria) ou a revenda (comércio) de mercadorias para o exterior do país, inclusive a venda a comercial exportadora com o fim específico de exportação para o exterior (LC 123, art. 18, §§ 4º-A, IV, e 7º; Manual do PGDAS-D, item 1.5).',
+  'Não tire do DAS as parcelas de IRPJ, CSLL e CPP: na exportação saem só, conforme o caso, as de Cofins, PIS, IPI, ICMS e ISS (LC 123, art. 18, § 14; Res. CGSN 140, art. 25, § 3º) e, a partir do PA 01/2027, as de IBS, CBS, IPI, ICMS e ISS (LC 123, art. 18, §§ 14 e 14-A, na redação da LC 214/2025; Res. CGSN 140, art. 25, § 3º, na redação da Res. CGSN 190/2026).',
   'Não peça a restituição sem antes retificar o PGDAS-D.',
 ];
 // R05 is about the months ahead (nothing is amended there); R05-REC amends past PGDAS-D (E10 UX review, M6).
@@ -90,13 +99,16 @@ const REC_TRADEOFFS = [
   'Ao retificar, a prefeitura pode questionar o ISS. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento).',
 ];
 // D54: goods have no ISS. R05: the documents are kept while the period to review the calculation is open (Res. CGSN
-// 140, art. 66; CTN, art. 173). R05-REC: an amended return may be held for review (Res. CGSN 140, art. 39-A). Which
-// documents prove the export stays a question (research 08 §11, item 8).
+// 140, art. 66; CTN, art. 173); from 2027 a direct exporter that does not prove the export in 180 days pays CBS and
+// IBS (LC 214, art. 81-A, § 1º; audit M5). R05-REC: an amended return may be held for review (Res. CGSN 140,
+// art. 39-A); a tax that transfers its burden is refunded only to who proves bearing it (CTN, art. 166; audit M7).
 const R05_GOODS_TRADEOFFS = [
   'O Fisco pode revisar essa apuração enquanto não acabar o prazo. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação das mercadorias.',
+  'Na exportação direta, a partir de 01/2027: se a exportação não for comprovada em 180 dias da emissão da nota fiscal eletrônica, a CBS e o IBS da operação são cobrados do exportador, com os acréscimos (LC 214, art. 81-A, § 1º).',
 ];
 const REC_GOODS_TRADEOFFS = [
   'Ao retificar, a declaração pode ficar retida para análise. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação das mercadorias.',
+  'A devolução de tributo que, por sua natureza, transfere o encargo financeiro, como o ICMS e o IPI, só é feita a quem provar que assumiu esse encargo ou que está autorizado por quem o assumiu (CTN, art. 166).',
 ];
 
 export const R05_REFS = refsOf([
@@ -127,9 +139,10 @@ export const R05_GOODS_REFS = refsOf([
   'res-cgsn140-2018/art25/p3',
   'res-cgsn190-2026/art1/res140-art25',
   'res-cgsn190-2026/art9',
-  'lei10833-2003/art6',
-  'lei10637-2002/art5',
+  'lc123-2006/art18/p7',
+  'lc214-2025/art517/lc123-art18',
   'lc214-2025/art79',
+  'lc214-2025/art81-a',
 ]);
 
 function removedShares(pa: YearMonth): string {
@@ -248,9 +261,15 @@ export function r05Finding(
   const assumptionsUsed = [
     'Receita do exterior futura = média dos 12 meses observados.',
     goods
-      ? 'A pergunta de qualificação confirmada vale para a venda de mercadorias para o exterior (LC 123, art. 18, § 4º-A, IV) e, a partir de 01/2027, para a imunidade da CBS e do IBS na exportação de bens (LC 214, art. 79).'
+      ? 'A pergunta de qualificação confirmada vale para a venda de mercadorias para o exterior (LC 123, art. 18, § 4º-A, IV) e, a partir de 01/2027, para tirar do DAS as parcelas de IPI, IBS e CBS (LC 123, art. 18, § 14-A, na redação da LC 214/2025).'
       : 'A pergunta de qualificação confirmada vale para o ISS (LC 116, art. 2º) e, a partir de 01/2027, para a CBS e o IBS (LC 214, art. 80, § 1º-A, II).',
   ];
+  // D54 (audit H1): sales to a comercial exportadora are paid in reais by a Brazilian company, so the statement's
+  // foreign-currency credits (E.3) do not include them.
+  if (goods)
+    assumptionsUsed.push(
+      'Vendas a comercial exportadora são pagas em reais e não entram no valor mostrado: ele considera só os créditos do exterior do extrato.',
+    );
   if (confidence !== 'confirmed') assumptionsUsed.push('o contador não segregou');
   if (next.horizon.some((r) => is2027(r.pa)) || next.regime.some((r) => is2027(r.pa))) {
     assumptionsUsed.push('a empresa não optou por recolher IBS e CBS fora do DAS');
@@ -301,15 +320,18 @@ export const REC_REFS = refsOf([
   'lei810-1949/art3',
 ]);
 
-/** D54: R05-REC for goods (Anexos I and II): no LC 116 and no services test; the goods segregation instead. */
+/**
+ * D54: R05-REC for goods (Anexos I and II): no LC 116 and no services test; the goods segregation instead. No Lei
+ * 10.833, art. 6º, nor Lei 10.637, art. 5º: their arts. 10 and 8º leave Simples companies out (audit M2).
+ */
 export const REC_GOODS_REFS = refsOf([
   'res-cgsn140-2018/art25/p3',
   'lc123-2006/art18/p4-a',
+  'lc123-2006/art18/p7',
   'lc123-2006/art18/p14',
   'res-cgsn140-2018/art128',
   'res-cgsn140-2018/art131',
-  'lei10833-2003/art6',
-  'lei10637-2002/art5',
+  'lei5172-1966/art166',
   'lei5172-1966/art168',
   'lei5172-1966/art210',
   'lei810-1949/art1',

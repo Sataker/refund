@@ -121,10 +121,6 @@ function holds(c: Condition, finding: Finding, ctx: PlanContext): boolean {
       return exportKindOf(facts.companyDetails.value.baseAnexo) === 'services';
     case 'export_goods':
       return exportKindOf(facts.companyDetails.value.baseAnexo) === 'goods';
-    case 'export_goods_resale':
-      return facts.companyDetails.value.baseAnexo === 'I';
-    case 'export_goods_industry':
-      return facts.companyDetails.value.baseAnexo === 'II';
   }
 }
 
@@ -188,6 +184,9 @@ function resolveDate(
     }
     case 'year_end':
       return civilDate(`${ctx.facts.analysisDate.slice(0, 4)}-12-31`);
+    case 'defis_due':
+      // Manual do PGDAS-D, item 9.1.2: the DEFIS of a year is due on 31/03 of the next year (no business-day rule).
+      return civilDate(`${Number(ctx.start.slice(0, 4)) + 1}-03-31`);
     case 'earliest_claim_until':
       return [...(finding.recoveryItems ?? [])].map((i) => i.claimUntil).sort()[0];
   }

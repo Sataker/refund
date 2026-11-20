@@ -139,6 +139,31 @@ export const REFS = {
     'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
     'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
   ),
+  // D54 (audit of the goods plan): LC 123, art. 18, § 7º; CTN, art. 166; LC 214, arts. 81-A and 517.
+  'lc123-2006/art18/p7': ref(
+    'lc123-2006/art18/p7',
+    'LC 123/2006, art. 18, § 7º',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    '4b9be50796785eb69a80e0067955d694d76183ef7ea4121f6bffe64cb6e0329b',
+  ),
+  'lei5172-1966/art166': ref(
+    'lei5172-1966/art166',
+    'CTN, art. 166',
+    'https://www.planalto.gov.br/ccivil_03/leis/l5172compilado.htm',
+    '410707c773eb0decd180e06e6ab6e5126f62d7c5b991f0c422ecea6663a5e15e',
+  ),
+  'lc214-2025/art81-a': ref(
+    'lc214-2025/art81-a',
+    'LC 214/2025, art. 81-A',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm',
+    'b6e0d63a71305f6d0384fab10a759b0b7fa2f049d67f162e6ce656e08910f32d',
+  ),
+  'lc214-2025/art517/lc123-art18': ref(
+    'lc214-2025/art517/lc123-art18',
+    'LC 214/2025, art. 517 (art. 18 da LC 123/2006)',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm',
+    '20e51b3fd6f208ee0d3533a16d37e79f1477515c7c0cbb4081b5d92c6e04d2cb',
+  ),
   'lc123-2006/art18/p14': ref(
     'lc123-2006/art18/p14',
     'LC 123/2006, art. 18, § 14',

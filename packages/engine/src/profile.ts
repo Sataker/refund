@@ -275,7 +275,11 @@ export function syntheticFacts(
       projectedAnnualTotalIncome: cents(12 * sm),
     }),
   };
-  if (exportAmount > 0) facts.qualifications.exportResultAbroad = fact(true);
+  // P4; D54: the qualification that matches the CNAE (goods in Anexos I and II, services otherwise).
+  if (exportAmount > 0) {
+    if (exportKindOf(baseAnexo) === 'goods') facts.qualifications.exportOfGoods = fact(true);
+    else facts.qualifications.exportResultAbroad = fact(true);
+  }
   return facts;
 }
 

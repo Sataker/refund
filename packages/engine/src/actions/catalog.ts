@@ -29,6 +29,7 @@ export type DateRule =
   | 'esocial_due' // S-1200/S-1299/DCTFWeb of `start`: day 15 of the next month, postponed (MOS S-1.3; [F23])
   | 'darf_irrf_due' // DARF 1841 of the next withholding month (see build.ts): last business day of the 2nd decêndio (F29 q6)
   | 'year_end' // 31/12 of the analysis year (PGBL "pagas no ano-calendário", P&R IRPF 2026)
+  | 'defis_due' // D54: 31/03 of the year after `start`'s year, the DEFIS of that year (PGDAS-D manual, item 9.1.2)
   | 'earliest_claim_until'; // min(recoveryItems.claimUntil)
 
 /** Conditions on the finding and the facts; a template applies when all of its conditions hold. */
@@ -48,9 +49,7 @@ export type Condition =
   | 'limit_exceeded' // R03: the projected revenue passes the MEI limit, or the Simples ceiling (exclusion)
   // D54 (R05, R05-REC): what is exported, by the base anexo (rules/r05.ts `exportKindOf`).
   | 'export_services' // Anexos III, IV and V: export of services
-  | 'export_goods' // Anexos I and II: export of goods
-  | 'export_goods_resale' // Anexo I: resale of goods (LC 123, art. 18, § 4º, I)
-  | 'export_goods_industry'; // Anexo II: sale of goods the company manufactures (LC 123, art. 18, § 4º, II)
+  | 'export_goods'; // Anexos I and II: export of goods
 
 export interface ActionTemplate {
   id: string; // `${RuleKey}.action.${n}`: stable; variants with exclusive conditions share the id
@@ -104,36 +103,22 @@ const EXPORT_TEST =
 
 /**
  * D54: the export-of-goods test (R05.1 and R05-REC.1 for Anexos I and II), in the words of the PGDAS-D manual, item 1.5,
- * and LC 123, art. 18, § 4º-A, IV ("inclusive as vendas realizadas por meio de comercial exportadora").
+ * and LC 123, art. 18, §§ 4º-A, IV ("inclusive as vendas realizadas por meio de comercial exportadora"), and 7º
+ * ("com o fim específico de exportação para o exterior"; audit M4). No inflow-of-currency test for goods.
  */
 const GOODS_EXPORT_TEST =
-  'venda (indústria) ou revenda (comércio) de mercadorias para o exterior do país';
+  'venda (indústria) ou revenda (comércio) de mercadorias para o exterior do país, inclusive a venda a comercial exportadora com o fim específico de exportação para o exterior';
 const GOODS_EXPORT_REFS: ActionRefId[] = [
   'manual-pgdas-d#1.5',
   'lc123-2006/art18/p4-a',
+  'lc123-2006/art18/p7',
   'res-cgsn140-2018/art25/p3',
+  'pr-simples-2026-10-09#7.10',
 ];
-/** D54: the PGDAS-D step for goods; only the activity changes between Anexo I (resale) and Anexo II (industry). */
-const goodsDeclareStep = (
-  activity: string,
-  path: string,
-  condition: Condition,
-): ActionTemplate => ({
-  id: 'R05.action.2',
-  who: 'accountant',
-  what: `No PGDAS-D de cada mês, lance a receita da venda para o exterior como mercado externo, na atividade de ${activity}, e gere o DAS.`,
-  where: { name: PGDAS_D, path: `${DECLARAR} › "${path}"` },
-  from: 'start',
-  until: 'das_due',
-  refIds: [
-    'manual-pgdas-d#6.4',
-    'manual-pgdas-d#6.5-mercadorias',
-    'res-cgsn140-2018/art25/p3',
-    'res-cgsn190-2026/art1/res140-art25',
-    'res-cgsn140-2018/art40/p3',
-  ],
-  appliesIf: [condition],
-});
+const DEFIS = {
+  name: 'DEFIS (Portal do Simples Nacional)',
+  path: 'DEFIS › Acessar DEFIS › Declarar',
+};
 
 // eSocial, DCTFWeb and INSS of the pró-labore (R01.2–R01.4; A02.2–A02.3).
 const ESOCIAL_REFS: ActionRefId[] = ['esocial-mos-s-1.3#s-1200', 'esocial-mos-s-1.3#s-1299'];
@@ -262,12 +247,11 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
       {
         id: 'R05.action.1',
         who: 'you_or_accountant',
-        what: `Confirme com o contador que a receita conta como exportação de mercadorias: ${GOODS_EXPORT_TEST}, inclusive a venda feita por meio de comercial exportadora.`,
+        what: `Confirme com o contador que a receita conta como exportação de mercadorias: ${GOODS_EXPORT_TEST}.`,
         refIds: [
           ...GOODS_EXPORT_REFS,
           'res-cgsn190-2026/art1/res140-art25',
-          'lei10833-2003/art6',
-          'lei10637-2002/art5',
+          'lc214-2025/art517/lc123-art18',
           'lc214-2025/art79',
         ],
         appliesIf: ['export_goods'],
@@ -288,22 +272,39 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
         ],
         appliesIf: ['export_services'],
       },
-      goodsDeclareStep(
-        'revenda de mercadorias para o exterior',
-        '2 - Revenda de mercadorias para o exterior',
-        'export_goods_resale',
-      ),
-      goodsDeclareStep(
-        'venda de mercadorias industrializadas pela empresa para o exterior',
-        '4 - Venda de mercadorias industrializadas pelo contribuinte para o exterior',
-        'export_goods_industry',
-      ),
+      // Audit M6: the activity follows the operation, not the anexo (from 2027 most industries are in Anexo I).
+      {
+        id: 'R05.action.2',
+        who: 'accountant',
+        what: 'No PGDAS-D de cada mês, lance a receita da venda para o exterior como mercado externo e gere o DAS. Escolha a atividade pela operação: revenda de mercadorias para o exterior, ou venda para o exterior de mercadorias industrializadas pela própria empresa.',
+        where: {
+          name: PGDAS_D,
+          path: `${DECLARAR} › "2 - Revenda de mercadorias para o exterior" ou "4 - Venda de mercadorias industrializadas pelo contribuinte para o exterior"`,
+        },
+        from: 'start',
+        until: 'das_due',
+        refIds: [
+          'manual-pgdas-d#6.4',
+          'manual-pgdas-d#6.5-mercadorias',
+          'res-cgsn140-2018/art25/p3',
+          'res-cgsn190-2026/art1/res140-art25',
+          'res-cgsn140-2018/art40/p3',
+        ],
+        appliesIf: ['export_goods'],
+      },
+      // Audit M3: the DEFIS of the year, by 31/03 of the next year; the PGDAS-D from March waits for it.
       {
         id: 'R05.action.5',
         who: 'accountant',
-        what: 'Na DEFIS, módulo do PGDAS-D, informe a receita de exportação direta declarada no PGDAS-D e, para as vendas feitas por meio de comercial exportadora, o CNPJ de cada uma e o valor correspondente.',
-        where: { name: 'DEFIS (Portal do Simples Nacional)', path: 'DEFIS › Acessar DEFIS' },
-        refIds: ['manual-pgdas-d#9.2', 'manual-pgdas-d#9.4.3.1'],
+        what: 'Entregue a DEFIS do ano, módulo do PGDAS-D, até o prazo indicado, informando a receita de exportação direta declarada no PGDAS-D e, se houver vendas por meio de comercial exportadora, o CNPJ de cada uma e o valor correspondente. As apurações no PGDAS-D a partir de março ficam condicionadas à entrega da DEFIS do ano anterior.',
+        where: DEFIS,
+        until: 'defis_due',
+        refIds: [
+          'manual-pgdas-d#9',
+          'manual-pgdas-d#9.1.2',
+          'manual-pgdas-d#9.2',
+          'manual-pgdas-d#9.4.3.1',
+        ],
         appliesIf: ['export_goods'],
       },
       {
@@ -311,6 +312,14 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
         who: 'you',
         what: 'Guarde os documentos que sustentam essa apuração enquanto o Fisco ainda puder revisá-la.',
         refIds: ['res-cgsn140-2018/art66', 'lei5172-1966/art173'],
+      },
+      // Audit M5: for CBS and IBS (from 2027) LC 214, art. 81-A says how the export of goods is proven.
+      {
+        id: 'R05.action.6',
+        who: 'you_or_accountant',
+        what: 'Para a CBS e o IBS, a exportação de mercadorias é comprovada mediante registro pelo órgão competente ou documentação e procedimentos estabelecidos na legislação aduaneira. Se a sua empresa exporta diretamente, guarde esse registro ou essa documentação.',
+        refIds: ['lc214-2025/art81-a'],
+        appliesIf: ['export_goods'],
       },
       noSource('R05.action.4', 'accountant', 'Quais documentos provam a exportação?'),
     ],
@@ -338,8 +347,8 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
       {
         id: 'R05-REC.action.1',
         who: 'accountant',
-        what: `Confirme, mês a mês, que a receita do exterior era exportação de mercadorias: ${GOODS_EXPORT_TEST}.`,
-        refIds: [...GOODS_EXPORT_REFS, 'lei10833-2003/art6', 'lei10637-2002/art5'],
+        what: `Confirme, mês a mês, que a receita era exportação de mercadorias: ${GOODS_EXPORT_TEST}.`,
+        refIds: GOODS_EXPORT_REFS,
         appliesIf: ['export_goods'],
       },
       {
@@ -382,6 +391,15 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
         who: 'you_or_accountant',
         what: 'Espere a retificação aparecer no sistema de cobrança antes de pedir: em geral, leva até cinco dias úteis.',
         refIds: ['manual-pgdas-d#6.10.1'],
+      },
+      // Audit M3 (c): the DEFIS of each amended year (manual items 9.2.1, 9.3 and 9.4.3.1, field 5).
+      {
+        id: 'R05-REC.action.12',
+        who: 'accountant',
+        what: 'Se a DEFIS de um ano retificado já foi entregue, faça a DEFIS retificadora desse ano, informando a receita de exportação direta que passou a constar no PGDAS-D.',
+        where: DEFIS,
+        refIds: ['manual-pgdas-d#9.2.1', 'manual-pgdas-d#9.3', 'manual-pgdas-d#9.4.3.1'],
+        appliesIf: ['export_goods'],
       },
       {
         id: 'R05-REC.action.6',
