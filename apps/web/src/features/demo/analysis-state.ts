@@ -19,7 +19,10 @@ export interface AnalysisView {
   cards: { finding: FindingDto; kind: 'finding' | 'alert' }[];
   /** Rule ids already seen (to tick the list of rules in stage 3). */
   rulesSeen: string[];
-  /** Counter target: `partialTotal.savings12m` of the last finding (climbs exactly to the total). */
+  /**
+   * Counter target: the CONFIRMED savings only (ENGINE-SPEC C.9; UX review H2): `partialTotal.byConfidence.confirmed`
+   * of the last finding, then the total's. An estimated finding never enters the big number.
+   */
   target: number;
   total: TotalDto | null;
   explanations: Record<string, string>;
@@ -81,7 +84,7 @@ export function reduceAnalysis(v: AnalysisView, e: AnalysisEvent, seq: number): 
         ...base,
         cards: [...base.cards, { finding: e.finding, kind: 'finding' }],
         rulesSeen: [...base.rulesSeen, e.finding.ruleId],
-        target: Math.max(base.target, e.partialTotal.savings12m),
+        target: Math.max(base.target, e.partialTotal.byConfidence.confirmed),
       };
     case 'alert':
       return {
@@ -90,7 +93,7 @@ export function reduceAnalysis(v: AnalysisView, e: AnalysisEvent, seq: number): 
         rulesSeen: [...base.rulesSeen, e.finding.ruleId],
       };
     case 'total':
-      return { ...base, total: e.total, target: e.total.savings12m };
+      return { ...base, total: e.total, target: e.total.byConfidence.confirmed };
     case 'explanation':
       return { ...base, explanations: { ...base.explanations, [e.ruleId]: e.text } };
     case 'end':

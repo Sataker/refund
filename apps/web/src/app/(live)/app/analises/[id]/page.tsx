@@ -2,8 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
+import { liveSealLabel } from '@/features/live/data-origin';
 import { LiveAnalysis } from '@/features/live/live-analysis.client';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
+import { loadAnswers } from '@/server/analysis/input.ts';
 import { livePage } from '@/server/analysis/page.ts';
 
 // Screen 4 in /app (ARCHITECTURE §13 `/app/analises/[id]`): the browser opens the SSE; the first connection claims
@@ -15,6 +17,8 @@ export default async function LiveAnalysisPage({ params }: { params: Promise<{ i
   const { id } = await params;
   const page = await livePage(id);
   if (page.kind === 'off') return <LiveUnavailable message={page.message} />;
+  const { ctx, live } = page;
+  const answers = await loadAnswers(ctx.db, ctx.userId, live.analysis.companyId);
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="border-b border-border bg-surface">
@@ -22,14 +26,19 @@ export default async function LiveAnalysisPage({ params }: { params: Promise<{ i
           <Link href="/" aria-label="Refund, página inicial" className="text-xl">
             <Logo />
           </Link>
-          <SandboxSeal live className="hidden sm:inline-flex" />
+          <SandboxSeal live label={liveSealLabel(live.origin)} className="hidden sm:inline-flex" />
         </div>
       </header>
       <main
         id="conteudo"
-        className="mx-auto w-full max-w-[1120px] flex-1 px-4 py-6 sm:px-6 lg:py-10"
+        className="mx-auto w-full min-w-0 max-w-[1120px] flex-1 overflow-x-clip px-4 py-6 sm:px-6 lg:py-10"
       >
-        <LiveAnalysis analysisId={id} companyName={page.live.companyName} />
+        <LiveAnalysis
+          analysisId={id}
+          companyName={live.companyName}
+          answered={answers.map((a) => a.questionId)}
+          origin={live.origin}
+        />
       </main>
     </div>
   );

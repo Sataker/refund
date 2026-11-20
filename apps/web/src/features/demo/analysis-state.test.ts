@@ -34,4 +34,22 @@ describe('Screen 4 state with the A01 risk (ENGINE-SPEC D.7; IDENTITY-AND-UI §4
     expect(after.target).toBe(123);
     expect(after.cards).toEqual([{ finding, kind: 'alert' }]);
   });
+
+  it('H2: an estimated finding never enters the counter, only the confirmed cents do', () => {
+    const t = (confirmed: number, estimated: number) => ({
+      savings12m: confirmed + estimated,
+      annualRegimeSavings: null,
+      byConfidence: { confirmed, estimated, depends_on_regulation: 0 },
+      recoveryRange: null,
+    });
+    const finding = { ruleId: 'R01', type: 'savings', countsInTotal: true } as never;
+    const mid = reduceAnalysis(
+      INITIAL_VIEW,
+      { type: 'finding', finding, partialTotal: t(0, 2831652) } as never,
+      1,
+    );
+    expect(mid.target).toBe(0);
+    const end = reduceAnalysis(mid, { type: 'total', total: t(500, 2831652) } as never, 2);
+    expect(end.target).toBe(500);
+  });
 });

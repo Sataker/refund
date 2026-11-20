@@ -14,6 +14,7 @@ import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ConfirmCard } from './confirm';
 import type { DashboardFinding, DashboardModel, Holder } from './model';
+import { estimatedLine } from './progress';
 import {
   alertCostLabel,
   formatCivilDate,
@@ -181,7 +182,7 @@ export function DashboardView({
               ) : null}
               {m.estimated > 0 ? (
                 <span data-testid="dashboard/estimated" data-cents={m.estimated} className="num">
-                  + até {formatBRL(m.estimated)} ainda estimado (fora do número grande)
+                  {estimatedLine({ estimated: m.estimated, open })}
                 </span>
               ) : null}
             </span>

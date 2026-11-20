@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { reanalyze } from '@/app/(live)/app/analises/actions';
 import { FinanceEntryCard } from '@/features/finance/entry';
 import { DashboardView } from '@/features/findings/dashboard.client';
+import { confirmProgress } from '@/features/findings/progress';
 import { StartAnalysisButton } from '@/features/live/buttons.client';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { questionsOf } from '@/server/analysis/actions.ts';
@@ -25,8 +26,12 @@ export default async function LiveDashboardPage({ params }: { params: Promise<{ 
     loadAnswers(ctx.db, ctx.userId, live.analysis.companyId),
     liveFinance(ctx.db, live),
   ]);
-  const answered = new Set(answers.map((a) => a.questionId));
-  const open = questions.filter((q) => !answered.has(q.id)).length;
+  // The same count Screen 4's CTA shows (H2: one source of truth).
+  const { open } = confirmProgress(
+    live.total,
+    questions.map((q) => q.id),
+    answers.map((a) => a.questionId),
+  );
   const base = `/app/analises/${id}`;
   return (
     <DashboardView

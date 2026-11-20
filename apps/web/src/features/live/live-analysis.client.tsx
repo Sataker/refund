@@ -14,8 +14,11 @@ import {
   reduceAnalysis,
 } from '@/features/demo/analysis-state';
 import { keepCurrency, shortTitle } from '@/features/demo/display';
+import { confirmCta, confirmProgress, estimatedLine } from '@/features/findings/progress';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import type { DataOrigin } from './data-origin';
+import { OriginBanner } from './origin-banner';
 
 // Screen 4 in /app (IDENTITY-AND-UI §5 Screen 4; ARCHITECTURE §4.6): the same reducer as /demo over the persisted log.
 // The tab remembers the last event it rendered (sessionStorage); after a reload the server sends those at once and the
@@ -61,24 +64,26 @@ function writeSeen(id: string, seq: number): void {
   }
 }
 
-/** D36: "Responda N perguntas para confirmar até R$ X" (N and X from the run). */
-export function confirmLabel(n: number, cents: number): string {
-  const what = n === 1 ? 'Responda 1 pergunta' : `Responda ${n} perguntas`;
-  return cents > 0 ? `${what} para confirmar até ${formatBRL(cents)}` : `${what} para confirmar`;
-}
-
 const STAGES: { key: keyof AnalysisView['stages']; label: string }[] = [
   { key: 'reading', label: 'Lendo as transações' },
   { key: 'separating', label: 'Separando empresa e pessoa' },
   { key: 'rules', label: 'Aplicando as regras' },
 ];
 
+/** Fatal errors whose reason is the company itself (no retry helps): the way out is another CNPJ or the demo. */
+const COMPANY_ERRORS = new Set(['REGIME_OUT_OF_SCOPE', 'CNAE_OUT_OF_SCOPE']);
+
 export function LiveAnalysis({
   analysisId,
   companyName,
+  answered,
+  origin,
 }: {
   analysisId: string;
   companyName: string;
+  /** Card ids already answered for this company (the same count the dashboard shows; H2). */
+  answered: readonly string[];
+  origin: DataOrigin;
 }) {
   const [view, dispatch] = useReducer(reducer, INITIAL_VIEW);
   const [lost, setLost] = useState(false);
@@ -130,25 +135,33 @@ export function LiveAnalysis({
     return () => source.current?.close();
   }, [connect]);
 
-  const finished = view.status === 'done';
   const fatal = view.errors.find((e) => !e.recoverable);
+  // A fatal error is a final status too (H3): the spinner stops, the title says so, there is a way back.
+  const failed = fatal !== undefined && view.status !== 'done';
+  const finished = view.status === 'done';
   const savings = view.cards.filter((c) => c.kind === 'finding' && c.finding.type === 'savings');
   const recovery = view.cards.filter((c) => c.finding.type === 'recovery');
   const alerts = view.cards.filter((c) => c.kind === 'alert');
   const pct = progressPercent(view);
-  const confirmFirst = view.endStatus === 'awaiting_confirmation' && questions.length > 0;
-  // "até R$ X": what is still not confirmed in the engine's total (estimated + depends on regulation).
-  const pendingCents =
-    (view.total?.byConfidence.estimated ?? 0) +
-    (view.total?.byConfidence.depends_on_regulation ?? 0);
+  // H2: confirmed (the big number), estimated (the line under it) and N open, from one place.
+  const progress = confirmProgress(view.total, questions, answered);
+  const confirmFirst = view.endStatus === 'awaiting_confirmation' && progress.open > 0;
+  const second = finished ? estimatedLine(progress) : null;
 
   return (
-    <div className="flex flex-col gap-6" data-testid="analysis" data-status={view.status}>
-      <h1 className="type-h3 text-foreground">
-        {finished ? 'Análise de' : 'Analisando'} {companyName}
+    <div
+      className="flex min-w-0 flex-col gap-6"
+      data-testid="analysis"
+      data-status={failed ? 'error' : view.status}
+    >
+      <OriginBanner origin={origin} companyName={companyName} />
+      <h1 className="type-h3 break-words text-foreground">
+        {failed
+          ? `Não conseguimos analisar ${companyName}`
+          : `${finished ? 'Análise de' : 'Analisando'} ${companyName}`}
       </h1>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-10">
-        <section aria-label="Etapas" className="order-2 flex flex-col gap-4 lg:order-1">
+        <section aria-label="Etapas" className="order-2 flex min-w-0 flex-col gap-4 lg:order-1">
           <ol className="flex flex-col gap-3">
             {STAGES.map((s) => {
               const st = view.stages[s.key];
@@ -164,12 +177,14 @@ export function LiveAnalysis({
                 >
                   {st === 'done' ? (
                     <Check className="size-4 text-success" aria-hidden="true" />
+                  ) : failed && st === 'active' ? (
+                    <CircleAlert className="size-4 text-risk" aria-hidden="true" />
                   ) : (
                     <span
                       aria-hidden="true"
                       className={cn(
                         'inline-block size-2.5 rounded-full',
-                        st === 'active' ? 'bg-cobalt' : 'bg-surface-3',
+                        st === 'active' && !failed ? 'bg-cobalt' : 'bg-surface-3',
                       )}
                     />
                   )}
@@ -190,24 +205,25 @@ export function LiveAnalysis({
             aria-valuemax={100}
           >
             <span
-              className="block h-full bg-foreground transition-all"
+              className={cn('block h-full transition-all', failed ? 'bg-risk' : 'bg-foreground')}
               style={{ width: `${pct}%` }}
             />
           </div>
           {view.sample.length > 0 ? (
             <ul
-              className="type-caption flex flex-col gap-1 text-muted-foreground"
+              className="type-caption flex min-w-0 flex-col gap-1 text-muted-foreground"
               aria-label="Algumas transações lidas"
+              data-testid="analysis-ticker"
             >
               {view.sample.map((t) => (
                 <li
                   key={`${t.date}-${t.description}-${t.amountCents}`}
-                  className="flex justify-between gap-3"
+                  className="flex min-w-0 justify-between gap-3"
                 >
-                  <span className="truncate">
+                  <span className="min-w-0 truncate">
                     {t.holder} · {t.description}
                   </span>
-                  <span className="num">{formatBRL(t.amountCents)}</span>
+                  <span className="num shrink-0">{formatBRL(t.amountCents)}</span>
                 </li>
               ))}
             </ul>
@@ -220,30 +236,40 @@ export function LiveAnalysis({
         >
           <div className="rounded-xl border border-border bg-surface p-6">
             <p className="type-overline text-muted-foreground" data-testid="found-label">
-              {finished ? 'Encontramos' : 'Encontrado até agora'}
+              {finished ? 'Confirmado' : failed ? 'Confirmado até aqui' : 'Confirmado até agora'}
             </p>
+            {/* ENGINE-SPEC C.9: the big number is the confirmed savings only. */}
             <MoneyCounter
               cents={view.target}
               testId="analysis/money-hero"
-              settled={finished}
-              srLabel="Encontramos"
+              settled={finished || failed}
+              srLabel="Confirmado nos próximos 12 meses"
               className="mt-2"
-              subline="nos próximos 12 meses · seu contador valida"
+              subline="confirmado nos próximos 12 meses · seu contador valida"
             />
+            {second ? (
+              <p
+                className="type-small num mt-2 text-muted-foreground"
+                data-testid="analysis/estimated"
+                data-cents={progress.estimated}
+                data-open={progress.open}
+              >
+                {second}
+              </p>
+            ) : null}
             {finished ? (
               // D36 (19/11): with open cards, Confirmar comes first (the cards are already ordered by effect, D23)
               // and the dashboard after; the big number above stays the run's own counter.
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 {confirmFirst ? (
                   <Link
                     href={`${base}/confirmar` as Route}
                     data-testid="open-confirm"
-                    data-count={questions.length}
-                    data-cents={pendingCents}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-5 font-medium text-primary-foreground"
+                    data-count={progress.open}
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary px-5 py-2 text-center font-medium text-primary-foreground sm:w-auto"
                   >
-                    {confirmLabel(questions.length, pendingCents)}
-                    <ArrowRight className="size-4" strokeWidth={1.5} aria-hidden="true" />
+                    <span className="min-w-0">{confirmCta(progress.open)}</span>
+                    <ArrowRight className="size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
                   </Link>
                 ) : null}
                 <Link
@@ -252,7 +278,7 @@ export function LiveAnalysis({
                   className={
                     confirmFirst
                       ? 'type-small inline-flex min-h-11 items-center font-medium text-cobalt underline-offset-4 hover:underline'
-                      : 'inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-5 font-medium text-primary-foreground'
+                      : 'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary px-5 font-medium text-primary-foreground sm:w-auto'
                   }
                 >
                   Ver o painel
@@ -271,10 +297,41 @@ export function LiveAnalysis({
               data-testid="analysis-error"
             >
               <CircleAlert className="mt-0.5 size-4 shrink-0 text-risk" aria-hidden="true" />
-              <p className="type-small text-foreground">{fatal.message}</p>
+              <div className="flex min-w-0 flex-col gap-3">
+                <p className="type-small text-foreground" data-code={fatal.code}>
+                  {fatal.message}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {COMPANY_ERRORS.has(fatal.code) ? (
+                    <>
+                      <Link
+                        href="/demo"
+                        data-testid="error-demo"
+                        className="type-small inline-flex min-h-10 items-center rounded-md bg-primary px-4 font-medium text-primary-foreground"
+                      >
+                        Ver a demo com a Marina
+                      </Link>
+                      <Link
+                        href={'/app/comecar/cnpj' as Route}
+                        data-testid="error-other-cnpj"
+                        className="type-small inline-flex min-h-10 items-center rounded-md border border-border px-4 font-medium text-foreground"
+                      >
+                        Usar outro CNPJ
+                      </Link>
+                    </>
+                  ) : null}
+                  <Link
+                    href={'/app' as Route}
+                    data-testid="error-home"
+                    className="type-small inline-flex min-h-10 items-center rounded-md border border-border px-4 font-medium text-foreground"
+                  >
+                    Voltar ao início
+                  </Link>
+                </div>
+              </div>
             </div>
           ) : null}
-          {lost && !finished && !fatal ? (
+          {lost && !finished && !failed ? (
             <div
               role="status"
               className="flex flex-col gap-3 rounded-lg border border-warning bg-warning-soft p-4 sm:flex-row sm:items-center sm:justify-between"
