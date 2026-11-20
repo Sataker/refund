@@ -29,7 +29,9 @@ const USED_BY_PRIMITIVES: readonly ParameterKey[] = [
   'inss.employee.brackets',
   'inss.cpp.rate',
   'simples.anexo.I',
+  'simples.anexo.II',
   'simples.anexo.III',
+  'simples.anexo.IV',
   'simples.anexo.V',
   'simples.effectiveRate',
   'simples.export.exclude',
@@ -43,6 +45,14 @@ const USED_BY_PRIMITIVES: readonly ParameterKey[] = [
   'mei.limit',
   'mei.excess',
 ];
+
+const ANEXO_KEYS = [
+  'simples.anexo.I',
+  'simples.anexo.II',
+  'simples.anexo.III',
+  'simples.anexo.IV',
+  'simples.anexo.V',
+] as const;
 
 const MONTHS: YearMonth[] = ['2026-01', '2026-12', '2027-01', '2027-06', '2028-12'];
 
@@ -78,7 +88,7 @@ describe('parameters: source and verification (H.2, item 1)', () => {
 
   it('the Simples apportionments sum to 100% in every bracket (2026 and 2027–2028)', () => {
     for (const month of ['2026-06', '2027-06'] as const) {
-      for (const key of ['simples.anexo.I', 'simples.anexo.III', 'simples.anexo.V'] as const) {
+      for (const key of ANEXO_KEYS) {
         const table: SimplesAnexoTable = param(key, month).value;
         for (const b of table.brackets) {
           const sum = Object.values(b.apportionment).reduce((acc, v) => acc.plus(v), D(0));
@@ -97,7 +107,7 @@ describe('parameters: source and verification (H.2, item 1)', () => {
 
   it('effective rates are continuous between brackets 1–5 (the deduction amounts close the steps)', () => {
     for (const month of ['2026-06', '2027-06'] as const) {
-      for (const key of ['simples.anexo.I', 'simples.anexo.III', 'simples.anexo.V'] as const) {
+      for (const key of ANEXO_KEYS) {
         const brackets = param(key, month).value.brackets;
         for (let i = 0; i < 4; i++) {
           const a = brackets[i];
@@ -168,7 +178,9 @@ describe('param(key, month): effective period', () => {
     // LC 155/2016, "Vigência: 01/01/2018" (lc-123-2006-planalto.md).
     for (const key of [
       'simples.anexo.I',
+      'simples.anexo.II',
       'simples.anexo.III',
+      'simples.anexo.IV',
       'simples.anexo.V',
       'simples.effectiveRate',
       'simples.fatorR.limit',

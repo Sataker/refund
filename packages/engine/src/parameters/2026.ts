@@ -7,6 +7,8 @@ import type { AnyParameterEntry, ParameterSource, SimplesAnexoTable } from './ty
 const VERIFIED = '2026-11-12' as const;
 /** H.1 closed at the primary source (capture index: docs/conferencias/fontes-oficiais/E1-H1-fechamento.md). */
 const VERIFIED_H1 = '2026-11-14' as const;
+/** D52: Anexos II and IV checked cell by cell (capture index: docs/conferencias/anexos-ii-iv-2026-11-20/FONTE.md). */
+const VERIFIED_D52 = '2026-11-20' as const;
 const FROM = '2026-01' as const;
 const PUBLISHED_THROUGH = '2026-12' as const;
 
@@ -137,6 +139,75 @@ const ANEXO_I: SimplesAnexoTable = {
   // ENGINE-SPEC A.3 and G4: Anexo I has no ISS/ICMS redistribution note.
 };
 
+// LC 123/2006, Anexo II (wording of LC 155/2016, "Vigência: 01/01/2018"), checked cell by cell against three texts:
+// LC 155 at Planalto (lcp155.htm), LC 123 compiled at Planalto (lcp123.htm) and Res. CGSN 140/2018, Anexo II (Normas
+// RFB, ato 92278, anexo 48431). Brackets 1–5 share one split; the 6th has no ICMS (paid outside the DAS above the
+// sublimit). Captures: docs/conferencias/anexos-ii-iv-2026-11-20/ (D52).
+const ANEXO_II_SPLIT_1_TO_5 = {
+  IRPJ: p('5.50'),
+  CSLL: p('3.50'),
+  COFINS: p('11.51'),
+  PIS: p('2.49'),
+  CPP: p('37.50'),
+  IPI: p('7.50'),
+  ICMS: p('32.00'),
+} as const;
+
+const ANEXO_II: SimplesAnexoTable = {
+  brackets: [
+    {
+      bracket: 1,
+      upTo: brl('180.000,00'),
+      nominal: p('0.045'),
+      deduction: brl('0,00'),
+      apportionment: ANEXO_II_SPLIT_1_TO_5,
+    },
+    {
+      bracket: 2,
+      upTo: brl('360.000,00'),
+      nominal: p('0.078'),
+      deduction: brl('5.940,00'),
+      apportionment: ANEXO_II_SPLIT_1_TO_5,
+    },
+    {
+      bracket: 3,
+      upTo: brl('720.000,00'),
+      nominal: p('0.10'),
+      deduction: brl('13.860,00'),
+      apportionment: ANEXO_II_SPLIT_1_TO_5,
+    },
+    {
+      bracket: 4,
+      upTo: brl('1.800.000,00'),
+      nominal: p('0.112'),
+      deduction: brl('22.500,00'),
+      apportionment: ANEXO_II_SPLIT_1_TO_5,
+    },
+    {
+      bracket: 5,
+      upTo: brl('3.600.000,00'),
+      nominal: p('0.147'),
+      deduction: brl('85.500,00'),
+      apportionment: ANEXO_II_SPLIT_1_TO_5,
+    },
+    {
+      bracket: 6,
+      upTo: brl('4.800.000,00'),
+      nominal: p('0.30'),
+      deduction: brl('720.000,00'),
+      apportionment: {
+        IRPJ: p('8.50'),
+        CSLL: p('7.50'),
+        COFINS: p('20.96'),
+        PIS: p('4.54'),
+        CPP: p('23.50'),
+        IPI: p('35.00'),
+      },
+    },
+  ],
+  // No ISS cap: the IPI + ISS note of Res. CGSN 140, Anexo II (art. 25, VII) is a different activity, out of scope.
+};
+
 const ANEXO_III: SimplesAnexoTable = {
   brackets: [
     {
@@ -237,6 +308,103 @@ const ANEXO_III: SimplesAnexoTable = {
   },
 };
 
+// LC 123/2006, Anexo IV (wording of LC 155/2016, "Vigência: 01/01/2018"), same three texts as Anexo II (Res. CGSN 140,
+// Anexo IV: anexo 48433). No CPP share: in Anexo IV the CPP is paid outside the DAS (LC 123, art. 13, VI, and art. 18,
+// § 5º-C). Note (*): ISS capped at 5%; in the 5th bracket, above an effective rate of 12,5% (= 5% ÷ 40%), ISS is fixed
+// at 5% of revenue and the federal taxes split (e − 5%) as IRPJ 31,33 · CSLL 32,00 · Cofins 30,13 · PIS 6,54.
+const ANEXO_IV: SimplesAnexoTable = {
+  brackets: [
+    {
+      bracket: 1,
+      upTo: brl('180.000,00'),
+      nominal: p('0.045'),
+      deduction: brl('0,00'),
+      apportionment: {
+        IRPJ: p('18.80'),
+        CSLL: p('15.20'),
+        COFINS: p('17.67'),
+        PIS: p('3.83'),
+        ISS: p('44.50'),
+      },
+    },
+    {
+      bracket: 2,
+      upTo: brl('360.000,00'),
+      nominal: p('0.09'),
+      deduction: brl('8.100,00'),
+      apportionment: {
+        IRPJ: p('19.80'),
+        CSLL: p('15.20'),
+        COFINS: p('20.55'),
+        PIS: p('4.45'),
+        ISS: p('40.00'),
+      },
+    },
+    {
+      bracket: 3,
+      upTo: brl('720.000,00'),
+      nominal: p('0.102'),
+      deduction: brl('12.420,00'),
+      apportionment: {
+        IRPJ: p('20.80'),
+        CSLL: p('15.20'),
+        COFINS: p('19.73'),
+        PIS: p('4.27'),
+        ISS: p('40.00'),
+      },
+    },
+    {
+      bracket: 4,
+      upTo: brl('1.800.000,00'),
+      nominal: p('0.14'),
+      deduction: brl('39.780,00'),
+      apportionment: {
+        IRPJ: p('17.80'),
+        CSLL: p('19.20'),
+        COFINS: p('18.90'),
+        PIS: p('4.10'),
+        ISS: p('40.00'),
+      },
+    },
+    {
+      bracket: 5,
+      upTo: brl('3.600.000,00'),
+      nominal: p('0.22'),
+      deduction: brl('183.780,00'),
+      apportionment: {
+        IRPJ: p('18.80'),
+        CSLL: p('19.20'),
+        COFINS: p('18.08'),
+        PIS: p('3.92'),
+        ISS: p('40.00'),
+      },
+    },
+    {
+      bracket: 6,
+      upTo: brl('4.800.000,00'),
+      nominal: p('0.33'),
+      deduction: brl('828.000,00'),
+      apportionment: {
+        IRPJ: p('53.50'),
+        CSLL: p('21.50'),
+        COFINS: p('20.55'),
+        PIS: p('4.45'),
+      },
+    },
+  ],
+  issCap: {
+    bracket: 5,
+    threshold: p('0.125'),
+    fixedIssRate: p('0.05'),
+    federalSplit: {
+      IRPJ: p('31.33'),
+      CSLL: p('32.00'),
+      COFINS: p('30.13'),
+      PIS: p('6.54'),
+    },
+  },
+};
+
 const ANEXO_V: SimplesAnexoTable = {
   brackets: [
     {
@@ -324,6 +492,9 @@ const ANEXO_V: SimplesAnexoTable = {
     },
   ],
 };
+
+const ANEXOS_II_IV_NOTE =
+  'D52: conferido célula a célula em três textos que coincidem: LC 155/2016 no Planalto (lcp155.htm), LC 123/2006 compilada no Planalto (lcp123.htm) e Res. CGSN 140/2018, Anexos II e IV (Normas RFB, ato 92278, anexos 48431 e 48433). Captura: docs/conferencias/anexos-ii-iv-2026-11-20/FONTE.md. O Manual do PGDAS-D não traz exemplo numérico dos Anexos II e IV.';
 
 const EXPORT_EXCLUDED_2026: readonly Tax[] = ['COFINS', 'PIS', 'IPI', 'ICMS', 'ISS'];
 
@@ -591,6 +762,16 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
     note: 'Conferido célula a célula; bate com o Manual do PGDAS-D (Ex. 1–7).',
   },
   {
+    key: 'simples.anexo.II',
+    value: ANEXO_II,
+    source: src('LC 123/2006 (redação da LC 155/2016)', 'Anexo II', SOURCE_URL.lc155),
+    effectiveFrom: '2018-01',
+    publishedThrough: PUBLISHED_THROUGH,
+    verifiedAt: VERIFIED_D52,
+    status: 'verified',
+    note: ANEXOS_II_IV_NOTE,
+  },
+  {
     key: 'simples.anexo.III',
     value: ANEXO_III,
     source: src('LC 123/2006 (redação da LC 155/2016)', 'Anexo III', SOURCE_URL.lc155),
@@ -598,6 +779,16 @@ export const PARAMETERS_2026: readonly AnyParameterEntry[] = [
     publishedThrough: PUBLISHED_THROUGH,
     verifiedAt: VERIFIED,
     status: 'verified',
+  },
+  {
+    key: 'simples.anexo.IV',
+    value: ANEXO_IV,
+    source: src('LC 123/2006 (redação da LC 155/2016)', 'Anexo IV', SOURCE_URL.lc155),
+    effectiveFrom: '2018-01',
+    publishedThrough: PUBLISHED_THROUGH,
+    verifiedAt: VERIFIED_D52,
+    status: 'verified',
+    note: `${ANEXOS_II_IV_NOTE} Sem parcela de CPP: no Anexo IV a CPP é recolhida fora do DAS (LC 123, art. 13, VI, e art. 18, § 5º-C). Nota (*): ISS limitado a 5%; na 5ª faixa, com alíquota efetiva acima de 12,5%, ISS fixo em 5% e (efetiva − 5%) repartida em IRPJ 31,33%, CSLL 32,00%, Cofins 30,13%, PIS 6,54%.`,
   },
   {
     key: 'simples.anexo.V',

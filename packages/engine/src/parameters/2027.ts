@@ -7,6 +7,8 @@ import type { AnyParameterEntry, ParameterSource, SimplesAnexoTable } from './ty
 const VERIFIED = '2026-11-12' as const;
 /** H.1 closed at the primary source (capture index: docs/conferencias/fontes-oficiais/E1-H1-fechamento.md). */
 const VERIFIED_H1 = '2026-11-14' as const;
+/** D52: Anexos II and IV of 2027–2028 (capture index: docs/conferencias/anexos-ii-iv-2026-11-20/FONTE.md). */
+const VERIFIED_D52 = '2026-11-20' as const;
 
 const SOURCE_URL = {
   resCgsn190: 'https://normasinternet2.receita.fazenda.gov.br/#/consulta/externa/152832',
@@ -108,6 +110,72 @@ const ANEXO_I_2027: SimplesAnexoTable = {
   ],
 };
 
+// LC 214/2025, Anexo XIX = LC 123, Anexo II "para os anos-calendário 2027 e 2028" (D52). PIS + Cofins become CBS + IBS
+// (CBS 13,85 + IBS 0,15 = Cofins 11,51 + PIS 2,49 = 14,00); the 6th bracket changes its nominal rate (30% → 29,90%) and
+// its split. Same cells in Res. CGSN 140, Anexo II, wording of Res. CGSN 190/2026 (Normas RFB, ato 152832, anexo 85770).
+const ANEXO_II_2027_SPLIT_1_TO_5 = {
+  IRPJ: p('5.50'),
+  CSLL: p('3.50'),
+  CBS: p('13.85'),
+  IBS: p('0.15'),
+  CPP: p('37.50'),
+  IPI: p('7.50'),
+  ICMS: p('32.00'),
+} as const;
+
+const ANEXO_II_2027: SimplesAnexoTable = {
+  brackets: [
+    {
+      bracket: 1,
+      upTo: brl('180.000,00'),
+      nominal: p('0.045'),
+      deduction: brl('0,00'),
+      apportionment: ANEXO_II_2027_SPLIT_1_TO_5,
+    },
+    {
+      bracket: 2,
+      upTo: brl('360.000,00'),
+      nominal: p('0.078'),
+      deduction: brl('5.940,00'),
+      apportionment: ANEXO_II_2027_SPLIT_1_TO_5,
+    },
+    {
+      bracket: 3,
+      upTo: brl('720.000,00'),
+      nominal: p('0.10'),
+      deduction: brl('13.860,00'),
+      apportionment: ANEXO_II_2027_SPLIT_1_TO_5,
+    },
+    {
+      bracket: 4,
+      upTo: brl('1.800.000,00'),
+      nominal: p('0.112'),
+      deduction: brl('22.500,00'),
+      apportionment: ANEXO_II_2027_SPLIT_1_TO_5,
+    },
+    {
+      bracket: 5,
+      upTo: brl('3.600.000,00'),
+      nominal: p('0.147'),
+      deduction: brl('85.500,00'),
+      apportionment: ANEXO_II_2027_SPLIT_1_TO_5,
+    },
+    {
+      bracket: 6,
+      upTo: brl('4.800.000,00'),
+      nominal: p('0.299'),
+      deduction: brl('720.000,00'),
+      apportionment: {
+        IRPJ: p('8.53'),
+        CSLL: p('7.53'),
+        CBS: p('25.22'),
+        CPP: p('23.59'),
+        IPI: p('35.13'),
+      },
+    },
+  ],
+};
+
 const ANEXO_III_2027: SimplesAnexoTable = {
   brackets: [
     {
@@ -203,6 +271,97 @@ const ANEXO_III_2027: SimplesAnexoTable = {
   },
 };
 
+// LC 214/2025, Anexo XXI = LC 123, Anexo IV "para os anos-calendário 2027 e 2028" (D52). No CPP share (art. 18,
+// § 5º-C). The 6th bracket changes its nominal rate (33% → 32,90%) and its split. The 5% ISS cap note keeps 12,5% and
+// splits (e − 5%) as IRPJ 31,33 · CSLL 32,00 · CBS 36,27 · IBS 0,40 (= Cofins 30,13 + PIS 6,54 = 36,67).
+const ANEXO_IV_2027: SimplesAnexoTable = {
+  brackets: [
+    {
+      bracket: 1,
+      upTo: brl('180.000,00'),
+      nominal: p('0.045'),
+      deduction: brl('0,00'),
+      apportionment: {
+        IRPJ: p('18.80'),
+        CSLL: p('15.20'),
+        CBS: p('21.26'),
+        IBS: p('0.24'),
+        ISS: p('44.50'),
+      },
+    },
+    {
+      bracket: 2,
+      upTo: brl('360.000,00'),
+      nominal: p('0.09'),
+      deduction: brl('8.100,00'),
+      apportionment: {
+        IRPJ: p('19.80'),
+        CSLL: p('15.20'),
+        CBS: p('24.73'),
+        IBS: p('0.27'),
+        ISS: p('40.00'),
+      },
+    },
+    {
+      bracket: 3,
+      upTo: brl('720.000,00'),
+      nominal: p('0.102'),
+      deduction: brl('12.420,00'),
+      apportionment: {
+        IRPJ: p('20.80'),
+        CSLL: p('15.20'),
+        CBS: p('23.74'),
+        IBS: p('0.26'),
+        ISS: p('40.00'),
+      },
+    },
+    {
+      bracket: 4,
+      upTo: brl('1.800.000,00'),
+      nominal: p('0.14'),
+      deduction: brl('39.780,00'),
+      apportionment: {
+        IRPJ: p('17.80'),
+        CSLL: p('19.20'),
+        CBS: p('22.75'),
+        IBS: p('0.25'),
+        ISS: p('40.00'),
+      },
+    },
+    {
+      bracket: 5,
+      upTo: brl('3.600.000,00'),
+      nominal: p('0.22'),
+      deduction: brl('183.780,00'),
+      apportionment: {
+        IRPJ: p('18.80'),
+        CSLL: p('19.20'),
+        CBS: p('21.76'),
+        IBS: p('0.24'),
+        ISS: p('40.00'),
+      },
+    },
+    {
+      bracket: 6,
+      upTo: brl('4.800.000,00'),
+      nominal: p('0.329'),
+      deduction: brl('828.000,00'),
+      apportionment: { IRPJ: p('53.71'), CSLL: p('21.59'), CBS: p('24.70') },
+    },
+  ],
+  issCap: {
+    bracket: 5,
+    threshold: p('0.125'),
+    fixedIssRate: p('0.05'),
+    federalSplit: {
+      IRPJ: p('31.33'),
+      CSLL: p('32.00'),
+      CBS: p('36.27'),
+      IBS: p('0.40'),
+    },
+  },
+};
+
 const ANEXO_V_2027: SimplesAnexoTable = {
   brackets: [
     {
@@ -290,6 +449,9 @@ const EXPORT_EXCLUDED_2027: readonly Tax[] = ['CBS', 'IBS', 'IPI', 'ICMS', 'ISS'
 const TABLES_NOTE =
   'H.1 item 3 fechado (14/11): texto do Planalto (trechos tachados removidos), confere célula a célula com os anexos oficiais da Res. CGSN 190/2026. Vigência 1º/1/2027 a 31/12/2028; a partir de 2029 há outra tabela (fora do escopo). Capturas: lc-214-2025-planalto-simples.md e res-cgsn-190-2026-anexos-i-iii-v.md.';
 
+const TABLES_II_IV_NOTE =
+  'D52 (20/11): texto do Planalto (lcp214.htm capturado em 12/11/2026, trechos tachados removidos e conferidos também com eles), igual célula a célula à impressão em PDF do Planalto (lc214anexos.pdf). Anexo II também igual ao Anexo II da Res. CGSN 140 na redação da Res. CGSN 190/2026 (Normas RFB, ato 152832, anexo 85770); o PDF do Anexo IV (anexo 85772) devolveu HTTP 403 em 20/11. Vigência 1º/1/2027 a 31/12/2028. Captura: docs/conferencias/anexos-ii-iv-2026-11-20/FONTE.md.';
+
 export const PARAMETERS_2027: readonly AnyParameterEntry[] = [
   // ---------- A.3: window "12 months preceding the month before the PA" from PA 01/2027 (D4, G2) ----------
   {
@@ -335,6 +497,20 @@ export const PARAMETERS_2027: readonly AnyParameterEntry[] = [
     note: TABLES_NOTE,
   },
   {
+    key: 'simples.anexo.II',
+    value: ANEXO_II_2027,
+    source: src(
+      'LC 123/2006, Anexo II (redação da LC 214/2025, Anexo XIX, e da LC 227/2026)',
+      'Anexo II, anos-calendário 2027 e 2028',
+      SOURCE_URL.lc214,
+    ),
+    effectiveFrom: '2027-01',
+    publishedThrough: '2028-12',
+    verifiedAt: VERIFIED_D52,
+    status: 'verified',
+    note: TABLES_II_IV_NOTE,
+  },
+  {
     key: 'simples.anexo.III',
     value: ANEXO_III_2027,
     source: src(
@@ -347,6 +523,20 @@ export const PARAMETERS_2027: readonly AnyParameterEntry[] = [
     verifiedAt: VERIFIED_H1,
     status: 'verified',
     note: TABLES_NOTE,
+  },
+  {
+    key: 'simples.anexo.IV',
+    value: ANEXO_IV_2027,
+    source: src(
+      'LC 123/2006, Anexo IV (redação da LC 214/2025, Anexo XXI, e da LC 227/2026)',
+      'Anexo IV, anos-calendário 2027 e 2028',
+      SOURCE_URL.lc214,
+    ),
+    effectiveFrom: '2027-01',
+    publishedThrough: '2028-12',
+    verifiedAt: VERIFIED_D52,
+    status: 'verified',
+    note: `${TABLES_II_IV_NOTE} Sem parcela de CPP (art. 18, § 5º-C). Nota (*): na 5ª faixa, acima de 12,5%, ISS fixo em 5% e (efetiva − 5%) repartida em IRPJ 31,33%, CSLL 32,00%, CBS 36,27%, IBS 0,40%.`,
   },
   {
     key: 'simples.anexo.V',

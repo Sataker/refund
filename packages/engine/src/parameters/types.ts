@@ -34,10 +34,12 @@ export interface SimplesTableBracket {
   apportionment: Partial<Record<Tax, Rate>>;
 }
 
-/** 5% ISS cap note (Anexo III, 5th bracket). The operator is subtraction: federal taxes split (e − 5%). */
+/**
+ * 5% ISS cap note (Anexo III and Anexo IV, 5th bracket). The operator is subtraction: federal taxes split (e − 5%).
+ */
 export interface IssCap {
   bracket: SimplesBracket;
-  threshold: Rate; // effective rate above which ISS is fixed (0.1492537)
+  threshold: Rate; // effective rate above which ISS is fixed (III 0.1492537; IV 0.125)
   fixedIssRate: Rate; // 0.05 of revenue
   federalSplit: Partial<Record<Tax, Rate>>; // percentages, sum 100
 }
@@ -89,7 +91,9 @@ export interface ParameterValues {
   minimumWage: Cents;
   // A.3 Simples Nacional
   'simples.anexo.I': SimplesAnexoTable;
+  'simples.anexo.II': SimplesAnexoTable;
   'simples.anexo.III': SimplesAnexoTable;
+  'simples.anexo.IV': SimplesAnexoTable;
   'simples.anexo.V': SimplesAnexoTable;
   'simples.effectiveRate': { zeroRbt12Substitute: Cents };
   'simples.calculation': string;
