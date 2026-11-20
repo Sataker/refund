@@ -70,12 +70,13 @@ describe('D54: what is exported, and the question that qualifies it', () => {
   });
 
   it('audit H1: a goods company is not qualified by the services answer, nor a services company by the goods one', () => {
+    const yes = fact(true, { origin: 'user', source: 'question' });
     const goods = exporter('I', false);
-    goods.qualifications.exportResultAbroad = goods.qualifications.exportOfGoods;
+    goods.qualifications.exportResultAbroad = yes;
     delete goods.qualifications.exportOfGoods;
     expect(run(goods).findings.some((f) => f.ruleId === 'R05')).toBe(false);
     const services = exporter('III', false);
-    services.qualifications.exportOfGoods = services.qualifications.exportResultAbroad;
+    services.qualifications.exportOfGoods = yes;
     delete services.qualifications.exportResultAbroad;
     expect(run(services).findings.some((f) => f.ruleId === 'R05')).toBe(false);
   });
