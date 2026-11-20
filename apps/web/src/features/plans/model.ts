@@ -22,12 +22,19 @@ export interface PlansModel {
   freeAnalysesPerMonth: number;
   paidAnalysesPerMonth: number;
   businessCpfs: number;
+  /** D41: Pessoal keeps Grátis's CNPJ (the larger of the two limits). */
+  personalCnpjs: number;
+  meiCnpjs: number;
   /** D4: success fee in percent (roadmap; text only). */
   successFeePct: { monthly: number; yearly: number };
   /** The hidden R$ 1,00 offer (Empresa for N days). */
   validation: { amountCents: number; days: number };
-  /** 07 §3.3: 30-day money-back guarantee. */
+  /** 07 §3.3 and D37: money-back guarantee of the first payment, counted from the payment. */
   guaranteeDays: number;
+  /** D37: a guarantee refund is paid by Pix within this many days of the request. */
+  refundWithinDays: number;
+  /** D37: right of withdrawal on any payment (Código de Defesa do Consumidor, art. 49). */
+  withdrawalDays: number;
 }
 
 export const PLAN_NAME: Record<SellablePlan | 'free', string> = {

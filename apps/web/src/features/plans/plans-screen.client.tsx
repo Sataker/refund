@@ -2,6 +2,7 @@
 
 import { Check, Copy, Loader2, ShieldCheck, Sparkles, X } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -59,7 +60,7 @@ export interface PlansScreenProps {
   offMessage?: string;
   /**
    * The company of the live track: 'mei' (an MEI CNPJ), 'other' (any other CNPJ) or null (none, and always on /demo).
-   * Pessoal has no CNPJ in 07 §3.5, so it is not sold to a session whose analysis uses one (product review E17, H1).
+   * It only picks the hint on the Pessoal card: since D41, Pessoal keeps Grátis's CNPJ and is sold to every session.
    */
   linkedCompany?: 'mei' | 'other' | null;
   /** Where the paid state leads (a same-origin /app path checked on the server). */
@@ -83,12 +84,13 @@ export function PlansScreen(props: PlansScreenProps) {
   const personalPrice = mei ? model.mei : model.personal;
 
   const buy = (plan: SellablePlan, p: Period | 'validation') => setCheckout({ plan, period: p });
-  // Pessoal has no CNPJ and Pessoal + MEI only an MEI one (07 §3.5): never sell them to an analysis they cannot run.
-  const personalBlock =
+  // D41: Pessoal keeps Grátis's CNPJ, so it runs any analysis the user already has and is always sold. The hint only
+  // points to the plan that fits the linked company better.
+  const personalHint =
     props.linkedCompany === 'other'
-      ? 'Sua análise usa o CNPJ de uma empresa do Simples: o plano certo é o Empresa.'
+      ? `Sua análise usa o CNPJ de uma empresa do Simples. O Pessoal cobre ${model.personalCnpjs} CNPJ, como o Grátis; com sócios ou mais contas da empresa, o Empresa serve melhor.`
       : props.linkedCompany === 'mei' && !mei
-        ? 'O Pessoal é para quem não tem CNPJ. Sua análise usa um CNPJ MEI: marque “Tenho MEI”.'
+        ? 'Sua análise usa um CNPJ MEI: marque “Tenho MEI” para ter o alerta contínuo do limite do MEI.'
         : null;
 
   return (
@@ -113,8 +115,9 @@ export function PlansScreen(props: PlansScreenProps) {
       {effective !== 'free' && !simulated ? (
         <p className="type-small text-muted-foreground" data-testid="change-plan-note">
           Ao trocar de plano, o novo período começa no dia do pagamento. O que sobrou do plano atual
-          não é descontado; se preferir, peça a devolução dentro da garantia de{' '}
-          {model.guaranteeDays} dias.
+          não é descontado. Se mudar de ideia, você pode desistir do novo pagamento em até{' '}
+          {model.withdrawalDays} dias e receber tudo de volta (Código de Defesa do Consumidor, art.
+          49).
         </p>
       ) : null}
 
@@ -194,7 +197,7 @@ export function PlansScreen(props: PlansScreenProps) {
           features={
             mei
               ? [
-                  'Sua pessoa física + 1 CNPJ MEI',
+                  `Sua pessoa física + ${model.meiCnpjs} CNPJ MEI`,
                   'Todos os cálculos abertos',
                   'Plano de ação passo a passo',
                   'Alerta contínuo do limite do MEI',
@@ -203,7 +206,7 @@ export function PlansScreen(props: PlansScreenProps) {
                   'IRPF: completa × simplificada e PGBL',
                   'Todos os cálculos abertos',
                   'Plano de ação passo a passo',
-                  'Só pessoa física (sem CNPJ)',
+                  `Pessoa física + ${model.personalCnpjs} CNPJ, como no Grátis`,
                 ]
           }
           extra={
@@ -222,20 +225,23 @@ export function PlansScreen(props: PlansScreenProps) {
           action={
             effective === personalPlan ? (
               <CurrentBadge />
-            ) : personalBlock ? (
-              <p className="type-caption text-muted-foreground" data-testid="personal-unavailable">
-                {personalBlock}
-              </p>
             ) : (
-              <SubscribeButton
-                port={props.port}
-                offMessage={props.offMessage}
-                onClick={() => buy(personalPlan, period)}
-                testId={`subscribe-${personalPlan}`}
-                variant="outline"
-              >
-                Assinar {mei ? 'Pessoal + MEI' : 'Pessoal'}
-              </SubscribeButton>
+              <div className="flex flex-col gap-2">
+                {personalHint ? (
+                  <p className="type-caption text-muted-foreground" data-testid="personal-hint">
+                    {personalHint}
+                  </p>
+                ) : null}
+                <SubscribeButton
+                  port={props.port}
+                  offMessage={props.offMessage}
+                  onClick={() => buy(personalPlan, period)}
+                  testId={`subscribe-${personalPlan}`}
+                  variant="outline"
+                >
+                  Assinar {mei ? 'Pessoal + MEI' : 'Pessoal'}
+                </SubscribeButton>
+              </div>
             )
           }
         />
@@ -314,10 +320,14 @@ export function PlansScreen(props: PlansScreenProps) {
           dinheiro entra e devolvida se a Receita glosar. Em breve: hoje o Refund mostra o valor e o
           caminho; o pedido à Receita fica com você e o seu contador.
         </p>
-        <p className="type-small inline-flex items-start gap-1.5 text-muted-foreground">
+        <p
+          className="type-small inline-flex items-start gap-1.5 text-muted-foreground"
+          data-testid="guarantee"
+        >
           <ShieldCheck className="mt-0.5 size-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
           <span>
-            Garantia de {model.guaranteeDays} dias: devolvemos o primeiro pagamento, sem perguntas
+            Garantia de {model.guaranteeDays} dias a partir do pagamento: devolvemos o primeiro
+            pagamento, sem perguntas, por Pix, em até {model.refundWithinDays} dias depois do pedido
             {props.contactEmail ? (
               <>
                 . É só pedir em{' '}
@@ -329,7 +339,13 @@ export function PlansScreen(props: PlansScreenProps) {
                 </a>
               </>
             ) : null}
-            . Um Pix libera o período (anual: 12 meses; mensal: 31 dias). Sem renovação automática.
+            . Em qualquer pagamento, você também pode desistir em até {model.withdrawalDays} dias e
+            receber tudo de volta (Código de Defesa do Consumidor, art. 49). Um Pix libera o período
+            (anual: 12 meses; mensal: 31 dias). Sem renovação automática. Detalhes nos{' '}
+            <Link href="/termos" className="text-cobalt underline underline-offset-4">
+              Termos
+            </Link>
+            .
           </span>
         </p>
       </div>

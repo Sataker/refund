@@ -29,6 +29,10 @@ test.describe('plans @demo', () => {
     await expect(page.getByTestId('period-yearly')).toBeChecked();
     await expect(page.getByTestId('plan-card-business')).toContainText('R$ 599/ano');
     await expect(page.getByTestId('plan-card-personal')).toContainText('R$ 199/ano');
+    // D41: Pessoal keeps Grátis's CNPJ. D37: the guarantee and the CDC art. 49 withdrawal, as on /termos.
+    await expect(page.getByTestId('plan-card-personal')).toContainText('Pessoa física + 1 CNPJ');
+    await expect(page.getByTestId('guarantee')).toContainText('30 dias a partir do pagamento');
+    await expect(page.getByTestId('guarantee')).toContainText('art. 49');
     await page.getByTestId('toggle-mei').check();
     await expect(page.getByTestId('plan-card-personal')).toContainText('R$ 299/ano');
     await page.getByTestId('period-monthly').check({ force: true });

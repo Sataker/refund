@@ -12,8 +12,15 @@ function price(plan: PlanId): Price {
   return { monthlyCents: p.priceMonthlyCents, yearlyCents: p.priceYearlyCents };
 }
 
-/** 07 §3.3 "Garantia 1": 30 days, full refund of the first payment. */
-const GUARANTEE_DAYS = 30;
+/**
+ * 07 §3.3 "Garantia 1" and D37 (PLAN §18): 30 days counted from the payment, full refund of the first payment, by
+ * Pix within REFUND_WITHIN_DAYS of the request. The refund webhook cancels the charge's period
+ * (server/webhooks/abacatepay.ts → refundCharge), so the plan ends when the money goes back.
+ */
+export const GUARANTEE_DAYS = 30;
+export const REFUND_WITHIN_DAYS = 7;
+/** D37: Código de Defesa do Consumidor, art. 49: 7 days to withdraw from a purchase made outside a shop. */
+export const WITHDRAWAL_DAYS = 7;
 
 export function plansModel(): PlansModel {
   const free = PLANS.free;
@@ -29,11 +36,15 @@ export function plansModel(): PlansModel {
     freeAnalysesPerMonth: liveAnalysesPerMonth('free'),
     paidAnalysesPerMonth: liveAnalysesPerMonth('business'),
     businessCpfs: business.maxCpfs,
+    personalCnpjs: PLANS.personal.maxCnpjs,
+    meiCnpjs: PLANS.mei.maxCnpjs,
     successFeePct: {
       monthly: business.successFeeBps.monthly / 100,
       yearly: business.successFeeBps.yearly / 100,
     },
     validation: { amountCents: VALIDATION_OFFER.amountCents, days: VALIDATION_OFFER.days },
     guaranteeDays: GUARANTEE_DAYS,
+    refundWithinDays: REFUND_WITHIN_DAYS,
+    withdrawalDays: WITHDRAWAL_DAYS,
   };
 }

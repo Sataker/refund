@@ -73,9 +73,12 @@ test.describe('plans and Pix @app', () => {
     await expect(page.getByTestId('calc-trace')).toBeVisible();
     await page.goto('/app/plano');
     await expect(page.getByTestId('current-plan')).toHaveAttribute('data-plan', 'business');
-    await expect(page.getByTestId('change-plan-note')).toBeVisible();
-    // The analysis uses an ME/EPP CNPJ: Pessoal is not sold to it.
-    await expect(page.getByTestId('personal-unavailable')).toBeVisible();
+    // A second payment is not under the guarantee: the note points to the CDC art. 49 withdrawal (D37).
+    await expect(page.getByTestId('change-plan-note')).toContainText('art. 49');
+    await expect(page.getByTestId('change-plan-note')).not.toContainText('garantia');
+    // D41: the analysis uses an ME/EPP CNPJ and Pessoal keeps Grátis's CNPJ, so it is still sold, with a hint.
+    await expect(page.getByTestId('personal-hint')).toContainText('Empresa');
+    await expect(page.getByTestId('subscribe-personal')).toBeVisible();
     await page.goto(`/app/analises/${id}/achados/${locked.id}`);
     await expect(page.getByTestId('trace-locked')).toHaveCount(0);
     await expect(page.getByTestId('plan-label')).toContainText('Empresa');
