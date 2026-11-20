@@ -11,7 +11,7 @@ import { formatBrl } from './rules/common.ts';
 import { R01_REFS } from './rules/r01.ts';
 import { R02_REFS } from './rules/r02.ts';
 import { R03_REFS } from './rules/r03.ts';
-import { R05_REFS, r05CoversAnexo } from './rules/r05.ts';
+import { exportKindOf, R05_REFS, r05CoversAnexo } from './rules/r05.ts';
 import { R06_REFS } from './rules/r06.ts';
 import { REFS } from './rules/refs.ts';
 import {
@@ -291,11 +291,30 @@ const RULE_TITLES: Record<ApplicableRule['ruleId'], string> = {
 
 const firstRef = (refs: readonly LegalRef[]): LegalRef => refs[0] as LegalRef;
 
-function applicable(ruleId: ApplicableRule['ruleId'], why: string): ApplicableRule {
+/** D54: R05 for a goods CNAE (Anexos I and II); the first ref (LC 123, art. 18, § 4º-A) is the same. */
+const R05_GOODS_TITLE = 'Exportação de mercadorias';
+
+function applicable(
+  ruleId: ApplicableRule['ruleId'],
+  why: string,
+  title: string = RULE_TITLES[ruleId],
+): ApplicableRule {
   const refs = { R01: R01_REFS, R05: R05_REFS, R06: R06_REFS, R03: R03_REFS, R02: R02_REFS }[
     ruleId
   ];
-  return { ruleId, title: RULE_TITLES[ruleId], why, ref: firstRef(refs) };
+  return { ruleId, title, why, ref: firstRef(refs) };
+}
+
+/** C.11.6 "why" of R05: the shares that leave the DAS (LC 123, art. 18, § 14), as the CNAE's anexo has them. */
+function r05Why(row: CnaeAnexoRow): string {
+  // C.11.4: recovery (R05-REC) does not enter the estimate; the item only mentions it.
+  const tail =
+    'mas só se o contador separar no PGDAS-D. E talvez valores pagos a mais nos últimos 5 anos (só com o extrato).';
+  if (row.baseAnexo === 'I')
+    return `Receita da venda de mercadorias para o exterior não paga PIS, Cofins nem ICMS dentro do Simples, ${tail}`;
+  if (row.baseAnexo === 'II')
+    return `Receita da venda de mercadorias para o exterior não paga PIS, Cofins, IPI nem ICMS dentro do Simples, ${tail}`;
+  return `Receita de cliente no exterior não paga PIS, Cofins nem ISS dentro do Simples, ${tail}`;
 }
 
 const R03_MEI = () => applicable('R03', 'Seu faturamento está perto ou acima de um limite do MEI.');
@@ -325,12 +344,9 @@ function applicableRules(
   }
   // D52: R05 stays off for Anexo II goods until their export is specified (EXECUTION §9).
   if (answers.receivesFromAbroad !== 'no' && exportRuleApplies(row)) {
+    const goods = row.baseAnexo !== null && exportKindOf(row.baseAnexo) === 'goods';
     out.push(
-      applicable(
-        'R05',
-        // C.11.4: recovery (R05-REC) does not enter the estimate; the item only mentions it.
-        'Receita de cliente no exterior não paga PIS, Cofins nem ISS dentro do Simples, mas só se o contador separar no PGDAS-D. E talvez valores pagos a mais nos últimos 5 anos (só com o extrato).',
-      ),
+      goods ? applicable('R05', r05Why(row), R05_GOODS_TITLE) : applicable('R05', r05Why(row)),
     );
   }
   if (row.resellsMonofasico === true) {
@@ -379,16 +395,29 @@ function visibleAssumptions(
     });
   }
   if (grid.some((c) => !D(c.exportFraction).isZero())) {
-    out.push({
-      id: 'P4',
-      text: 'A exportação ainda não é separada no PGDAS-D e é de serviço usufruído no exterior, com ingresso de divisas',
-      why: 'Premissa do "valor potencial": a faixa mede quanto as regras valem para quem ainda não as usa. Se o contador já separa, o extrato mostra isso pelo DAS pago e a regra sai. A confirmação da exportação continua obrigatória na análise.',
-      type: 'potential_value',
-      ref:
-        compareYearMonth(start, '2027-01') < 0
-          ? REFS['res-cgsn140-2018/art25/p4']
-          : REFS['res-cgsn190-2026/art1/res140-art25'],
-    });
+    const why =
+      'Premissa do "valor potencial": a faixa mede quanto as regras valem para quem ainda não as usa. Se o contador já separa, o extrato mostra isso pelo DAS pago e a regra sai. A confirmação da exportação continua obrigatória na análise.';
+    // D54: a goods CNAE (Anexos I and II) exports goods: LC 123, art. 18, § 4º-A, IV, in force in both periods.
+    if (row.baseAnexo !== null && exportKindOf(row.baseAnexo) === 'goods') {
+      out.push({
+        id: 'P4',
+        text: 'A exportação ainda não é separada no PGDAS-D e é venda ou revenda de mercadorias para o exterior do país',
+        why,
+        type: 'potential_value',
+        ref: REFS['lc123-2006/art18/p4-a'],
+      });
+    } else {
+      out.push({
+        id: 'P4',
+        text: 'A exportação ainda não é separada no PGDAS-D e é de serviço usufruído no exterior, com ingresso de divisas',
+        why,
+        type: 'potential_value',
+        ref:
+          compareYearMonth(start, '2027-01') < 0
+            ? REFS['res-cgsn140-2018/art25/p4']
+            : REFS['res-cgsn190-2026/art1/res140-art25'],
+      });
+    }
   }
   out.push(
     {

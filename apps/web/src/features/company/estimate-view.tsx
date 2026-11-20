@@ -18,6 +18,11 @@ const RULE_NAME: Record<ApplicableRule['ruleId'], string> = {
   R02: 'Dividendos acima de R$ 50 mil por mês',
 };
 
+/** D54: for a goods CNAE (Anexos I and II) the engine titles R05 "Exportação de mercadorias". */
+const GOODS_EXPORT = 'Exportação de mercadorias';
+const ruleName = (r: ApplicableRule): string =>
+  r.ruleId === 'R05' && r.title === GOODS_EXPORT ? GOODS_EXPORT : RULE_NAME[r.ruleId];
+
 /** Grid revenues are whole thousands of reais (C.11.2), so the integer division is exact. */
 const thousands = (cents: number): string =>
   String((cents - (cents % 100_000)) / 100_000).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -57,7 +62,7 @@ function RuleList({ rules }: { rules: ApplicableRule[] }) {
       <ul className="mt-4 flex flex-col divide-y divide-border rounded-lg border border-border bg-surface">
         {rules.map((r) => (
           <li key={r.ruleId} className="p-4" data-testid={`applicable-${r.ruleId}`}>
-            <p className="type-small font-semibold text-foreground">{RULE_NAME[r.ruleId]}</p>
+            <p className="type-small font-semibold text-foreground">{ruleName(r)}</p>
             <p className="type-small mt-1 text-muted-foreground">{r.why}</p>
             <LawSeal lawRef={r.ref} className="mt-3" />
           </li>
@@ -146,7 +151,7 @@ function WhyRange({ estimate, noRange = false }: { estimate: ProfileEstimate; no
               {ranged.map((r) =>
                 r.range ? (
                   <li key={r.ruleId} className="type-small num text-foreground">
-                    {RULE_NAME[r.ruleId]}: {formatRuleRange(r.range)}
+                    {ruleName(r)}: {formatRuleRange(r.range)}
                   </li>
                 ) : null,
               )}
