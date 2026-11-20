@@ -82,17 +82,43 @@ describe('D50: profile estimate of a commerce company (4772-5/00, Anexo I)', () 
     expect(e.rules.map((r) => r.ruleId)).toEqual(['R06', 'R02']);
   });
 
-  it('an ambiguous, an impeditive and an Anexo IV CNAE stay out of scope (CNAE_OUT_OF_SCOPE)', () => {
+  it('an ambiguous, an impeditive and an adjusted-anexo CNAE stay out of scope (CNAE_OUT_OF_SCOPE)', () => {
     const answers: ProfileAnswers = {
       monthlyRevenueBracket: 'from_30k_to_60k',
       hasEmployees: 'yes',
       receivesFromAbroad: 'half_or_more',
     };
-    for (const primaryCnae of ['4635-4/02', '1220-4/01', '4120-4/00', '6110-8/01']) {
+    for (const primaryCnae of ['4635-4/02', '1220-4/01', '6110-8/01']) {
       const r = estimateByProfile({ ...COSMETICS, primaryCnae }, answers, {
         analysisDate: '2026-11-12',
       });
       expect(r.ok && r.value.type === 'no_range' && r.value.reason).toBe('CNAE_OUT_OF_SCOPE');
     }
+  });
+
+  // D52 (approved by Enzo 20/11 after a green audit): Anexo IV is in scope. Oracle by hand (2028 steady state, LC 214,
+  // Anexo XXI = LC 123, Anexo IV for 2027–2028; per-tax half-up rounding, D12). No Fator R (§ 5º-C), so R05 alone:
+  //   minimum R 30.000, s 0,5: unsegregated 30.000 at RBT12 360.000, 2nd bracket (360.000 × 9% − 8.100) / 360.000 =
+  //     6,75% → IRPJ 400,95 + CSLL 307,80 + CBS 500,78 + IBS 5,47 + ISS 810,00 = 2.025,00; segregated: domestic 15.000
+  //     (RBT12 180.000, 4,5%) = 126,90 + 102,60 + 143,51 + 1,62 + 300,38 = 675,01, export 15.000 keeps IRPJ 126,90 +
+  //     CSLL 102,60 = 229,50 → 904,51; R05 = 12 × 1.120,49 = 13.445,88
+  //   maximum R 60.000, s 1: RBT12 720.000, 3rd bracket (720.000 × 10,2% − 12.420) / 720.000 = 8,475% → 5.085,00 =
+  //     IRPJ 1.057,68 + CSLL 772,92 + CBS 1.207,18 + IBS 13,22 + ISS 2.034,00; kept 1.830,60 → R05 = 12 × 3.254,40 =
+  //     39.052,80
+  //   Displayed: [r2(0,85 × 13.445,88) = 11.429,00; 39.052,80]; ratio 3,42 ≤ 10.
+  it('an Anexo IV CNAE (4120-4/00) gets an estimate: [11.429,00; 39.052,80], R05 and R02', () => {
+    const r = estimateByProfile(
+      { ...COSMETICS, primaryCnae: '4120-4/00' },
+      {
+        monthlyRevenueBracket: 'from_30k_to_60k',
+        hasEmployees: 'yes',
+        receivesFromAbroad: 'half_or_more',
+      },
+      { analysisDate: '2026-11-12' },
+    );
+    if (!r.ok || r.value.type !== 'range') throw new Error('expected a range');
+    expect(r.value.gridTotal).toEqual([brl('13.445,88'), brl('39.052,80')]);
+    expect(r.value.total).toEqual([brl('11.429,00'), brl('39.052,80')]);
+    expect(r.value.rules.map((x) => x.ruleId)).toEqual(['R05', 'R02']);
   });
 });

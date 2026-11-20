@@ -98,10 +98,11 @@ describe('ENGINE-SPEC D.3 — R03, MEI', () => {
     expect(mei('70.000,00', { year: 2027 }).band).toBe('warning');
   });
 
-  it('an anexo without a table (II/IV) keeps the alert and leaves the cost out', () => {
+  // D52 (approved by Enzo 20/11 after a green audit): Anexo IV has its table, so the cost is computed.
+  it('an Anexo IV MEI keeps the alert; cost (97.200 − 81.000) × 4,50% (IV, 1st bracket) = 729,00', () => {
     const r = mei('97.200,00', { anexo: 'IV' });
     expect(r.band).toBe('overrun_up_to_20');
-    expect(r.cost).toBeNull();
+    expect(r.cost).toBe(72900);
   });
 
   it('analyze() of an MEI: RBA_proj = Σ jan..oct + average(aug–oct) × 2 → 97.200 → overrun_up_to_20', () => {
