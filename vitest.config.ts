@@ -74,6 +74,9 @@ export default defineConfig({
           environment: 'node',
           pool: 'forks',
           testTimeout: 20_000,
+          // PGlite migrations in beforeAll take seconds each; under parallel load the 10 s default timed out.
+          hookTimeout: 60_000,
+          maxWorkers: 4,
         },
       },
     ],
