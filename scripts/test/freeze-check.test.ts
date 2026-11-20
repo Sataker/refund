@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { contactProblems, readmeProblems, statusPageProblems } from '../freeze-check.ts';
+import {
+  cityProblems,
+  contactProblems,
+  readmeProblems,
+  statusPageProblems,
+} from '../freeze-check.ts';
 import { inputsHashProblems } from '../generate-engine-page.ts';
 
 // Freeze check 11 (compliance review E14, M1): the contact address on /privacidade must be real before the freeze.
@@ -88,5 +93,29 @@ describe('readmeProblems', () => {
 
   it('passes on a finished README', () => {
     assert.deepEqual(readmeProblems('README.md', '# Refund\n\n![demo](demo.gif)\n'), []);
+  });
+});
+
+// Freeze check 15 (D37): the /termos identification needs the real city before the freeze.
+describe('cityProblems', () => {
+  it('fails on the placeholder', () => {
+    const src =
+      "export const CITY_PLACEHOLDER = 'CIDADE_PENDENTE';\nexport const CONTACT_CITY: string = CITY_PLACEHOLDER;\n";
+    assert.equal(cityProblems(src).length, 1);
+    assert.equal(cityProblems("export const CONTACT_CITY = 'CIDADE_PENDENTE';").length, 1);
+  });
+
+  it('fails when the constant is missing, empty or not a place name', () => {
+    assert.equal(cityProblems('export const OTHER = 1;').length, 1);
+    assert.equal(cityProblems("export const CONTACT_CITY = '';").length, 1);
+    assert.equal(cityProblems("export const CONTACT_CITY = 'TODO 123';").length, 1);
+  });
+
+  it('passes on a city name, with accents and the state', () => {
+    assert.deepEqual(cityProblems("export const CONTACT_CITY: string = 'São Paulo';"), []);
+    assert.deepEqual(
+      cityProblems("export const CONTACT_CITY: string = 'Ribeirão Preto - SP';"),
+      [],
+    );
   });
 });

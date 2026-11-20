@@ -1,5 +1,5 @@
 // Freeze checklist, automatable items (INFRA-CI §8.4). E0 implements the static items 1–5 and 10; E14 item 11; E20
-// items 12–14. Items 6–9 (guard, recordings, production/backup health) are added at G3/E22.
+// items 12–14; D37 item 15. Items 6–9 (guard, recordings, production/backup health) are added at G3/E22.
 // Usage: node scripts/freeze-check.ts
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -41,6 +41,19 @@ export function contactProblems(source: string): string[] {
   const value = /=\s*'([^']*)'/.exec(line)?.[1];
   if (value === undefined || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
     return [`${CONTACT_FILE}: CONTACT_EMAIL is not an e-mail yet (placeholder CONTATO_PENDENTE)`];
+  return [];
+}
+
+/**
+ * Item 15 (D37): /termos identifies the seller by name, city and contact e-mail. The city lives in one constant; while
+ * it is the placeholder (or not a plain place name), the freeze cannot pass.
+ */
+export function cityProblems(source: string): string[] {
+  const line = source.split('\n').find((l) => /export const CONTACT_CITY\b/.test(l));
+  if (line === undefined) return [`${CONTACT_FILE}: CONTACT_CITY not found`];
+  const value = /=\s*'([^']*)'/.exec(line)?.[1]?.trim();
+  if (value === undefined || value === 'CIDADE_PENDENTE' || !/^\p{L}[\p{L} '’.,/-]*$/u.test(value))
+    return [`${CONTACT_FILE}: CONTACT_CITY is not a city yet (placeholder CIDADE_PENDENTE)`];
   return [];
 }
 
@@ -165,6 +178,11 @@ const checks: Check[] = [
       trackedFiles()
         .filter((f) => /^README[^/]*\.md$/.test(f))
         .flatMap((f) => readmeProblems(f, readFileSync(f, 'utf8'))),
+  },
+  {
+    id: 15,
+    name: 'seller city set (/termos identification)',
+    run: () => cityProblems(readFileSync(CONTACT_FILE, 'utf8')),
   },
 ];
 
