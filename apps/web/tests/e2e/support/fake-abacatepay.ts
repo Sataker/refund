@@ -135,7 +135,7 @@ export async function startFakeAbacatePay(options: {
         });
       }
       if (req.method === 'POST' && url.pathname === '/v2/transparents/simulate-payment') {
-        if (!c || c.status !== 'PENDING') {
+        if (c?.status !== 'PENDING') {
           return send(res, 404, { data: null, success: false, error: 'Pix QR Code not found' });
         }
         c.status = 'PAID';
