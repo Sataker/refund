@@ -127,7 +127,7 @@ export const ENGINE_STATS = {
     {
       file: 'packages/engine/test/golden/profile.test.ts',
       group: 'golden',
-      passed: 27,
+      passed: 28,
       todo: 0,
     },
     {
@@ -187,11 +187,11 @@ export const ENGINE_STATS = {
   ],
   totals: {
     oracle: 39,
-    golden: 230,
+    golden: 231,
     property: 12,
     invariant: 8,
-    passed: 289,
+    passed: 290,
     todo: 1,
   },
-  inputsHash: '89d8f213f667817616ccdf7ef53815b8f196dbc3f637a61ae0c5c1f9596e6323',
+  inputsHash: '8b85c060a15a73ccde087adeb25bae64d4629ddf55263d824b285a9696659a77',
 } as const;
