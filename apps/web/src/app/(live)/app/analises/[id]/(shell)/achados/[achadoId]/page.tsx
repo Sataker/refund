@@ -14,7 +14,7 @@ import { ActionPlan, formatWhen } from '@/features/findings/action-plan';
 import { type Excerpt, RefSheet } from '@/features/findings/ref-sheet';
 import { steadyStateSuffix } from '@/features/findings/text';
 import { MarkFindingButton } from '@/features/live/buttons.client';
-import { exampleText, isExampleBank } from '@/features/live/data-origin';
+import { exampleFor, exampleText, isExampleBank } from '@/features/live/data-origin';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -88,7 +88,9 @@ export default async function LiveFindingPage({
           )}
         </div>
         <h1 className="font-serif text-[32px] leading-[36px] font-normal tracking-[-0.01em] text-foreground lg:text-[44px] lg:leading-[48px]">
-          {title === f.title && alertish ? exampleText(title, example) : title}
+          {title === f.title && alertish
+            ? exampleText(title, exampleFor(f.ruleId, example))
+            : title}
         </h1>
         {f.type === 'savings' ? (
           <MoneyHero
@@ -132,7 +134,7 @@ export default async function LiveFindingPage({
         ) : null}
         {title !== f.title ? (
           <p className="type-body-lg max-w-[68ch] text-foreground">
-            {keepCurrency(exampleText(findingText(f), example && alertish))}
+            {keepCurrency(exampleText(findingText(f), exampleFor(f.ruleId, example) && alertish))}
           </p>
         ) : null}
         {f.type === 'risk' && dto.explanation === f.title ? (

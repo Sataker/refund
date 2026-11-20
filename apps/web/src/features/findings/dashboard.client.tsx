@@ -10,7 +10,7 @@ import { LawSeal } from '@/components/brand/law-seal';
 import { MoneyHero } from '@/components/brand/money-hero';
 import { Button } from '@/components/ui/button';
 import { keepCurrency, RISK_LINE } from '@/features/demo/display';
-import { exampleText } from '@/features/live/data-origin';
+import { exampleFor, exampleText } from '@/features/live/data-origin';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ConfirmCard } from './confirm';
@@ -479,12 +479,14 @@ export function DashboardView({
               </p>
               <p className="text-base font-medium text-foreground">
                 {keepCurrency(
-                  f.title === f.engineTitle ? exampleText(f.title, isExample) : f.title,
+                  f.title === f.engineTitle
+                    ? exampleText(f.title, exampleFor(f.ruleId, isExample))
+                    : f.title,
                 )}
               </p>
               {f.title !== f.engineTitle ? (
                 <p className="type-small text-muted-foreground" data-testid="alert-text">
-                  {keepCurrency(exampleText(f.engineTitle, isExample))}
+                  {keepCurrency(exampleText(f.engineTitle, exampleFor(f.ruleId, isExample)))}
                 </p>
               ) : null}
               {f.personalSpend ? (

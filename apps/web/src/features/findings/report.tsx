@@ -7,7 +7,7 @@ import { Logo } from '@/components/brand/logo';
 import { sealLabel } from '@/components/brand/sandbox-seal';
 import { traceInputLabel, traceTextValue } from '@/components/brand/trace-labels';
 import { displayTitle, findingText, keepCurrency } from '@/features/demo/display';
-import { exampleText } from '@/features/live/data-origin';
+import { exampleFor, exampleText } from '@/features/live/data-origin';
 import { formatBRL, formatRatePercent, formatYearMonth } from '@/lib/format';
 import { formatWhen, NO_MONEY_TEXT, RecoveryTable } from './action-plan';
 import { ACTOR_LABEL, type DashboardModel, formatCivilDate, stepsByActor } from './model';
@@ -252,7 +252,7 @@ function FindingBlock({
         <span className="font-medium" data-testid={`report-confidence-${f.ruleId}`}>
           Confiança: {confidenceLabel(f.confidence, example)}
         </span>{' '}
-        · {keepCurrency(exampleText(findingText(f), example && alertish))}
+        · {keepCurrency(exampleText(findingText(f), exampleFor(f.ruleId, example) && alertish))}
       </p>
       <Scroll>
         <TraceTable f={f} />

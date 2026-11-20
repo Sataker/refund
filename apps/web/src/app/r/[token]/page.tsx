@@ -11,6 +11,7 @@ import { alertCostLabel } from '@/features/findings/text';
 import { AccountantDecision, type ReviewItem } from '@/features/live/accountant-decision.client';
 import {
   bankBannerText,
+  exampleFor,
   exampleText,
   isExampleBank,
   liveSealLabel,
@@ -71,7 +72,7 @@ function reviewItems(live: LiveAnalysis): ReviewItem[] {
             ...lawRef,
           },
         ];
-      const text = exampleText(findingText(f), example);
+      const text = exampleText(findingText(f), exampleFor(f.ruleId, example));
       return [
         {
           id,

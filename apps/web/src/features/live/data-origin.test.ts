@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   bankBannerText,
   bankSourceOf,
+  exampleFor,
   exampleText,
   exampleTitle,
   isExampleBank,
@@ -97,5 +98,14 @@ describe('example data (bug bash 20/11, C1)', () => {
     );
     expect(exampleText('PIS e Cofins', true)).toBe('No extrato de exemplo: PIS e Cofins');
     expect(exampleText('Um mês', false)).toBe('Um mês');
+  });
+});
+
+describe('exampleFor (R06 comes from the activity, not the example statement)', () => {
+  it('keeps the prefix for statement findings and drops it for R06', () => {
+    expect(exampleFor('R02', true)).toBe(true);
+    expect(exampleFor('A01', true)).toBe(true);
+    expect(exampleFor('R06', true)).toBe(false);
+    expect(exampleFor('R02', false)).toBe(false);
   });
 });

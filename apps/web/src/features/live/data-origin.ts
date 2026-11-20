@@ -62,6 +62,14 @@ export function isExampleBank(origin: DataOrigin): boolean {
 /** Prefix of every risk and alert text of an example analysis (C1). */
 export const EXAMPLE_PREFIX = 'No extrato de exemplo: ';
 
+/** Rules whose text comes from the company's real activity (CNAE), not from the example statement. */
+const FROM_ACTIVITY: ReadonlySet<string> = new Set(['R06']);
+
+/** Whether a finding's text gets the example prefix: example data, and the text comes from the statement. */
+export function exampleFor(ruleId: string, example: boolean): boolean {
+  return example && !FROM_ACTIVITY.has(ruleId);
+}
+
 /** "No extrato de exemplo: " + the text, with its first letter lower-cased (proper nouns aside, e.g. "PIS"). */
 export function exampleText(text: string, example: boolean): string {
   if (!example) return text;

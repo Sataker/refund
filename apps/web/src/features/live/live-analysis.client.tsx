@@ -18,7 +18,13 @@ import { findingText, keepCurrency, sampleDescription, shortTitle } from '@/feat
 import { confirmCta, confirmProgress, estimatedLine } from '@/features/findings/progress';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { type DataOrigin, exampleText, exampleTitle, isExampleBank } from './data-origin';
+import {
+  type DataOrigin,
+  exampleFor,
+  exampleText,
+  exampleTitle,
+  isExampleBank,
+} from './data-origin';
 import { OriginBanner } from './origin-banner';
 
 // Screen 4 in /app (IDENTITY-AND-UI §5 Screen 4; ARCHITECTURE §4.6): the same reducer as /demo over the persisted log.
@@ -476,7 +482,7 @@ export function LiveAnalysis({
                 />
                 <span className="type-small text-foreground" data-testid="analysis-alert-text">
                   {f.type === 'risk' ? 'Risco' : 'Alerta'} · fora do total ·{' '}
-                  {keepCurrency(exampleText(findingText(f), example))}
+                  {keepCurrency(exampleText(findingText(f), exampleFor(f.ruleId, example)))}
                 </span>
               </li>
             ))}
