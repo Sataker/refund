@@ -11,7 +11,8 @@ test.describe('security @security', () => {
     expect(h['content-security-policy']).toContain("frame-ancestors 'none'");
     expect(h['content-security-policy']).toContain('frame-src https://connect.pluggy.ai');
     expect(h['content-security-policy']).toContain("object-src 'none'");
-    expect(h['strict-transport-security']).toContain('max-age=63072000');
+    // HSTS is sent only on Vercel (https); over http it would break Safari. Production P4 checks it.
+    expect(h['strict-transport-security']).toBeUndefined();
     expect(h['x-content-type-options']).toBe('nosniff');
     expect(h['x-frame-options']).toBe('DENY');
     expect(h['cache-control']).toContain('no-store');

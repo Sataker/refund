@@ -1,6 +1,9 @@
 // ARCHITECTURE §9.1. No 'server-only' here: next.config.ts reads this file at build time.
 
 const isDev = process.env.NODE_ENV === 'development';
+// HSTS and upgrade-insecure-requests only on Vercel (always https). On http://localhost, Safari obeys them:
+// it rewrites every CSS/JS request to https://localhost and caches HSTS for the host, so the page loads unstyled.
+const httpsOnly = process.env.VERCEL === '1';
 
 const CSP = [
   "default-src 'self'",
@@ -15,12 +18,14 @@ const CSP = [
   "form-action 'self' https://*.authkit.app https://api.workos.com",
   "base-uri 'self'",
   "object-src 'none'",
-  'upgrade-insecure-requests',
+  ...(httpsOnly ? ['upgrade-insecure-requests'] : []),
 ].join('; ');
 
 export const SECURITY_HEADERS = [
   { key: 'Content-Security-Policy', value: CSP },
-  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  ...(httpsOnly
+    ? [{ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' }]
+    : []),
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   {
