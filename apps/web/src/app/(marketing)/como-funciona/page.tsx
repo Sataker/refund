@@ -47,8 +47,10 @@ export default function HowItWorksPage() {
             apagada na hora, sem copiar nenhum dado.
           </li>
           <li>
-            Em /app, o CNPJ que você digita é consultado de verdade em bases públicas (BrasilAPI e,
-            se ela falhar, CNPJ.ws).
+            Em /app, o CNPJ que você digita é consultado de verdade em bases públicas dos dados da
+            Receita: primeiro a BrasilAPI e, se ela falhar, OpenCNPJ, CNPJá, Minha Receita, CNPJ.ws
+            e ReceitaWS, uma por vez. Um CNPJ consultado nos últimos 7 dias vem da cópia que
+            guardamos.
           </li>
         </Bullets>
       </Section>
