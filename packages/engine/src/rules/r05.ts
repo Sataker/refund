@@ -39,6 +39,17 @@ export const exclusionRef = (pa: YearMonth) =>
  */
 export const r05CoversAnexo = (anexo: Anexo): boolean => anexo !== 'II';
 
+/**
+ * D54: what the company exports, by its base anexo. Anexos I (resale, LC 123, art. 18, § 4º, I) and II (goods the
+ * company manufactures, § 4º, II) sell goods; Anexos III, IV and V render services. The DAS arithmetic is the same
+ * for both (art. 18, § 14; Res. CGSN 140, art. 25, § 3º); the qualification, the PGDAS-D activity, the citations and
+ * the "não faça" texts differ.
+ */
+export type ExportKind = 'goods' | 'services';
+export const exportKindOf = (anexo: Anexo): ExportKind =>
+  anexo === 'I' || anexo === 'II' ? 'goods' : 'services';
+const exportKind = (ctx: Ctx): ExportKind => exportKindOf(ctx.facts.companyDetails.value.baseAnexo);
+
 /** Trigger of D.5: Simples, export revenue in the statement, qualification confirmed, PGDAS-D not segregated. */
 export function eligibleR05(ctx: Ctx, segregates: 'yes' | 'no' | 'unknown'): boolean {
   const f = ctx.facts;
@@ -64,12 +75,28 @@ const R05_DO_NOT = [
   'A partir do PA 01/2027: não tire a CBS e o IBS de serviço cujo adquirente ou destinatário está no Brasil ou que é consumido aqui (LC 214, art. 80, § 1º-A).',
   'Não peça a restituição sem antes retificar o PGDAS-D.',
 ];
+// D54: goods (Anexos I and II). LC 123, art. 18, §§ 4º-A, IV, and 14; PGDAS-D manual, item 1.5; Res. CGSN 140,
+// art. 25, § 3º, in the 2026 wording and in that of Res. CGSN 190/2026 (from 01/2027).
+const R05_GOODS_DO_NOT = [
+  'Não marque como exportação a venda de mercadoria no mercado interno: só conta a venda (indústria) ou a revenda (comércio) de mercadorias para o exterior do país, inclusive a feita por meio de comercial exportadora (LC 123, art. 18, § 4º-A, IV; Manual do PGDAS-D, item 1.5).',
+  'Não tire do DAS as parcelas de IRPJ, CSLL e CPP: na exportação saem só, conforme o caso, as de Cofins, PIS, IPI, ICMS e ISS (LC 123, art. 18, § 14; Res. CGSN 140, art. 25, § 3º) e, a partir do PA 01/2027, as de IBS, CBS, IPI, ICMS e ISS (Res. CGSN 140, art. 25, § 3º, na redação da Res. CGSN 190/2026).',
+  'Não peça a restituição sem antes retificar o PGDAS-D.',
+];
 // R05 is about the months ahead (nothing is amended there); R05-REC amends past PGDAS-D (E10 UX review, M6).
 const R05_TRADEOFFS = [
   'A prefeitura pode questionar o ISS dessa receita. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento).',
 ];
 const REC_TRADEOFFS = [
   'Ao retificar, a prefeitura pode questionar o ISS. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação (por exemplo, contrato com o cliente, fatura e comprovante de recebimento).',
+];
+// D54: goods have no ISS. R05: the documents are kept while the period to review the calculation is open (Res. CGSN
+// 140, art. 66; CTN, art. 173). R05-REC: an amended return may be held for review (Res. CGSN 140, art. 39-A). Which
+// documents prove the export stays a question (research 08 §11, item 8).
+const R05_GOODS_TRADEOFFS = [
+  'O Fisco pode revisar essa apuração enquanto não acabar o prazo. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação das mercadorias.',
+];
+const REC_GOODS_TRADEOFFS = [
+  'Ao retificar, a declaração pode ficar retida para análise. Guarde os documentos que fundamentaram a apuração e confirme com o contador quais provam a exportação das mercadorias.',
 ];
 
 export const R05_REFS = refsOf([
@@ -88,6 +115,21 @@ export const R05_REFS = refsOf([
   'lc116-2003/art2',
   'lc214-2025/art79',
   'lc214-2025/art80',
+]);
+
+/** D54: the Finding.refs of R05 for goods (Anexos I and II). First = the citation on screen, as for services. */
+export const R05_GOODS_REFS = refsOf([
+  'lc123-2006/art18/p4-a',
+  'lc123-2006/art3/p14',
+  'lc123-2006/art3/p15',
+  'lc123-2006/art18/p14',
+  'res-cgsn140-2018/art16/p3',
+  'res-cgsn140-2018/art25/p3',
+  'res-cgsn190-2026/art1/res140-art25',
+  'res-cgsn190-2026/art9',
+  'lei10833-2003/art6',
+  'lei10637-2002/art5',
+  'lc214-2025/art79',
 ]);
 
 function removedShares(pa: YearMonth): string {
@@ -202,9 +244,12 @@ export function r05Finding(
       rounding: 'NONE',
     }),
   ];
+  const goods = exportKind(ctx) === 'goods';
   const assumptionsUsed = [
     'Receita do exterior futura = média dos 12 meses observados.',
-    'A pergunta de qualificação confirmada vale para o ISS (LC 116, art. 2º) e, a partir de 01/2027, para a CBS e o IBS (LC 214, art. 80, § 1º-A, II).',
+    goods
+      ? 'A pergunta de qualificação confirmada vale para a venda de mercadorias para o exterior (LC 123, art. 18, § 4º-A, IV) e, a partir de 01/2027, para a imunidade da CBS e do IBS na exportação de bens (LC 214, art. 79).'
+      : 'A pergunta de qualificação confirmada vale para o ISS (LC 116, art. 2º) e, a partir de 01/2027, para a CBS e o IBS (LC 214, art. 80, § 1º-A, II).',
   ];
   if (confidence !== 'confirmed') assumptionsUsed.push('o contador não segregou');
   if (next.horizon.some((r) => is2027(r.pa)) || next.regime.some((r) => is2027(r.pa))) {
@@ -222,9 +267,9 @@ export function r05Finding(
     annualRegimeValue: regimeValue,
     confidence,
     trace,
-    refs: R05_REFS,
-    doNot: R05_DO_NOT,
-    tradeoffs: R05_TRADEOFFS,
+    refs: goods ? R05_GOODS_REFS : R05_REFS,
+    doNot: goods ? R05_GOODS_DO_NOT : R05_DO_NOT,
+    tradeoffs: goods ? R05_GOODS_TRADEOFFS : R05_TRADEOFFS,
     countsInTotal: recommended,
     assumptionsUsed,
   };
@@ -248,6 +293,21 @@ export const REC_REFS = refsOf([
   'res-cgsn140-2018/art128',
   'res-cgsn140-2018/art131',
   'lc116-2003/art2',
+  'lei10833-2003/art6',
+  'lei10637-2002/art5',
+  'lei5172-1966/art168',
+  'lei5172-1966/art210',
+  'lei810-1949/art1',
+  'lei810-1949/art3',
+]);
+
+/** D54: R05-REC for goods (Anexos I and II): no LC 116 and no services test; the goods segregation instead. */
+export const REC_GOODS_REFS = refsOf([
+  'res-cgsn140-2018/art25/p3',
+  'lc123-2006/art18/p4-a',
+  'lc123-2006/art18/p14',
+  'res-cgsn140-2018/art128',
+  'res-cgsn140-2018/art131',
   'lei10833-2003/art6',
   'lei10637-2002/art5',
   'lei5172-1966/art168',
@@ -351,6 +411,7 @@ export function r05RecFinding(ctx: Ctx, inference: PgdasInference): Finding | nu
   }
   items.sort((a, b) => (a.claimUntil < b.claimUntil ? -1 : a.claimUntil > b.claimUntil ? 1 : 0));
   const range: [Cents, Cents] = [cents(measured), upper(measured, measuredCount, projectedCount)];
+  const goods = exportKind(ctx) === 'goods';
   const byDestination = {
     federal: [cents(fed), upper(fed, measuredCount, projectedCount)] as [Cents, Cents],
     municipal: [cents(iss), upper(iss, measuredCount, projectedCount)] as [Cents, Cents],
@@ -383,9 +444,9 @@ export function r05RecFinding(ctx: Ctx, inference: PgdasInference): Finding | nu
     confidence: 'estimated',
     deadline: oldest.claimUntil,
     trace: steps,
-    refs: REC_REFS,
-    doNot: R05_DO_NOT,
-    tradeoffs: REC_TRADEOFFS,
+    refs: goods ? REC_GOODS_REFS : REC_REFS,
+    doNot: goods ? R05_GOODS_DO_NOT : R05_DO_NOT,
+    tradeoffs: goods ? REC_GOODS_TRADEOFFS : REC_TRADEOFFS,
     countsInTotal: false,
     recoveryItems: items,
     assumptionsUsed: [

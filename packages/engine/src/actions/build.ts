@@ -11,6 +11,7 @@ import { EngineError } from '../errors.ts';
 import { param } from '../parameters/index.ts';
 import { PROCEDURE_REFS } from '../parameters/legal-refs.ts';
 import { formatBrl } from '../rules/common.ts';
+import { exportKindOf } from '../rules/r05.ts';
 import { REFS } from '../rules/refs.ts';
 import { addMonths, civilDate } from '../time.ts';
 import type {
@@ -116,6 +117,14 @@ function holds(c: Condition, finding: Finding, ctx: PlanContext): boolean {
       return facts.company.value.regime === 'SIMPLES';
     case 'limit_exceeded':
       return r03LimitExceeded(finding);
+    case 'export_services':
+      return exportKindOf(facts.companyDetails.value.baseAnexo) === 'services';
+    case 'export_goods':
+      return exportKindOf(facts.companyDetails.value.baseAnexo) === 'goods';
+    case 'export_goods_resale':
+      return facts.companyDetails.value.baseAnexo === 'I';
+    case 'export_goods_industry':
+      return facts.companyDetails.value.baseAnexo === 'II';
   }
 }
 

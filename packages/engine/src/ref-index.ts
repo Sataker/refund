@@ -9,19 +9,29 @@ import { R01_REFS } from './rules/r01.ts';
 import { R02_REFS } from './rules/r02.ts';
 import { R03_REFS } from './rules/r03.ts';
 import { R04_REFS } from './rules/r04.ts';
-import { R05_REFS, REC_REFS } from './rules/r05.ts';
+import { R05_GOODS_REFS, R05_REFS, REC_GOODS_REFS, REC_REFS } from './rules/r05.ts';
 import { R06_REFS } from './rules/r06.ts';
 import type { LegalRef } from './types.ts';
 
 export type RuleId = 'R01' | 'R05' | 'R06' | 'R04' | 'R05-REC' | 'R02' | 'R03' | 'A01' | 'A02';
 
+/** Union by id, first list first (D54: R05 and R05-REC cite services or goods refs, by anexo). */
+const union = (...lists: (readonly LegalRef[])[]): readonly LegalRef[] => {
+  const seen = new Set<string>();
+  return lists.flat().filter((r) => {
+    if (seen.has(r.id)) return false;
+    seen.add(r.id);
+    return true;
+  });
+};
+
 /** The `Finding.refs` of each rule (its metadata, ENGINE-SPEC D). */
 export const RULE_REFS: Record<RuleId, readonly LegalRef[]> = {
   R01: R01_REFS,
-  R05: R05_REFS,
+  R05: union(R05_REFS, R05_GOODS_REFS),
   R06: R06_REFS,
   R04: R04_REFS,
-  'R05-REC': REC_REFS,
+  'R05-REC': union(REC_REFS, REC_GOODS_REFS),
   R02: R02_REFS,
   R03: R03_REFS,
   A01: A01_REFS,
