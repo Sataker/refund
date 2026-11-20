@@ -29,11 +29,13 @@ export const ALL_PERSONA_CNPJS: readonly PersonaCnpj[] = Object.values(PERSONA_C
 
 /**
  * Synthetic CNPJs that belong to no persona but appear in code and tests (compliance review G2 M2): the Lucro
- * Presumido company of the live track (`apps/web/src/server/company/replay-companies.ts`), the "not found" CNPJ of
+ * Presumido company and the unsupported-activity company of the live track
+ * (`apps/web/src/server/company/replay-companies.ts`), the "not found" CNPJ of
  * the E11 tests and the second payer of the engine's same-holder test. `verify-persona-cnpjs.ts` checks them too.
  */
 export const OTHER_SYNTHETIC_CNPJS: readonly PersonaCnpj[] = [
   synthetic('RFPRES01000137', 'no persona: Lucro Presumido company of the live track (replay)'),
+  synthetic('RFCOSM01000136', 'no persona: Simples company with a CNAE outside the table (replay)'),
   synthetic('RFNONE01000122', 'no persona: "not found" CNPJ of the live-track tests'),
   synthetic('RFDEV002000100', 'no persona: second payer in the engine same-holder test'),
 ];

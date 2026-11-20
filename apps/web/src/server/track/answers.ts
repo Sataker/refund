@@ -1,7 +1,7 @@
 import 'server-only';
 import type { Db } from '@refund/db';
 import { z } from 'zod';
-import { regimeStop } from '@/features/company/scope.ts';
+import { activityStop, regimeStop } from '@/features/company/scope.ts';
 import { nextAfter, type Step, stepPath } from '@/features/track/steps.ts';
 import { type ActionResult, fail, ok } from '../result.ts';
 import { trackLimit } from './limits.ts';
@@ -112,6 +112,9 @@ export async function markEstimateSeenWith(
   if (!company || progress.answers.monthlyRevenueBracket === undefined) {
     return fail('FORBIDDEN', 'Responda o faturamento para ver a estimativa.');
   }
+  // The activity stop: the estimate shows why and the ways out; the bank steps never open.
+  const stop = activityStop(company.company);
+  if (stop !== null) return fail('FORBIDDEN', stop.message);
   await setAssumption(db, userId, company.id, TRACK_KEYS.estimateSeen, true);
   return ok(await nextOf(db, userId, 'estimativa'));
 }
@@ -130,4 +133,18 @@ export async function skipPersonalAccountWith(
   }
   await setAssumption(db, userId, company.id, TRACK_KEYS.pfSkipped, true);
   return ok(await nextOf(db, userId, 'conta-pf'));
+}
+
+const OUT_OF_SCOPE = 'Por enquanto o Refund calcula só empresas do Simples Nacional.';
+
+/**
+ * H3: consent and the bank steps only for a company in scope: Simples or MEI, and a CNAE in the verified table. The
+ * page never offers them out of scope; this refuses a direct call too.
+ */
+export async function requireInScope(db: Db, userId: string): Promise<ActionResult<void>> {
+  const { progress, company } = await loadTrack(db, userId);
+  if (progress.company?.outOfScope) return fail('FORBIDDEN', OUT_OF_SCOPE);
+  const activity = company ? activityStop(company.company) : null;
+  if (activity !== null) return fail('FORBIDDEN', activity.message);
+  return ok(undefined);
 }

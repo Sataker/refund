@@ -47,9 +47,15 @@ export interface ConnectionSummary {
 export interface TrackProgress {
   /**
    * `outOfScope` (H3): the regime is not Simples nor MEI; the track stops at `confirmar-empresa` and never reaches the
-   * consent and the bank steps.
+   * consent and the bank steps. `activityOutOfScope`: the CNAE is outside the verified table; the track stops at
+   * `estimativa` the same way.
    */
-  company: { displayName: string; confirmed: boolean; outOfScope?: boolean } | null;
+  company: {
+    displayName: string;
+    confirmed: boolean;
+    outOfScope?: boolean;
+    activityOutOfScope?: boolean;
+  } | null;
   /** ENGINE-SPEC C.11.1: which optional questions apply to this company. */
   questions: { employees: boolean; abroad: boolean } | null;
   answers: Partial<ProfileAnswers>;
@@ -95,7 +101,7 @@ export function isDone(step: Step, p: TrackProgress): boolean {
     case 'exterior':
       return p.answers.receivesFromAbroad !== undefined;
     case 'estimativa':
-      return p.estimateSeen;
+      return p.estimateSeen && p.company?.activityOutOfScope !== true;
     case 'permissoes':
       return p.consented;
     case 'conta-pj':

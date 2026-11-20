@@ -71,7 +71,8 @@ const lowerFirst = (text: string): string => text.replace(/^\p{Lu}/u, (c) => c.t
 
 function listPt(items: readonly string[]): string {
   if (items.length <= 1) return items.join('');
-  return `${items.slice(0, -1).join('; ')} e ${items.at(-1)}`;
+  // Semicolons: a description of the table may carry its own comma.
+  return `${items.slice(0, -1).join('; ')}; e ${items.at(-1)}`;
 }
 
 /** The activities Refund calculates, from the verified rows of the CNAE table (never a hardcoded list). */

@@ -14,7 +14,7 @@ describe('persona CNPJs (ARCHITECTURE §7.5)', () => {
 
   it('the CNPJ check covers the synthetic CNPJs outside the personas too (compliance G2 M2)', () => {
     const all = ALL_SYNTHETIC_CNPJS.map((c) => c.cnpj);
-    for (const c of ['RFPRES01000137', 'RFNONE01000122', 'RFDEV002000100'])
+    for (const c of ['RFPRES01000137', 'RFCOSM01000136', 'RFNONE01000122', 'RFDEV002000100'])
       expect(all).toContain(c);
     for (const { cnpj } of ALL_SYNTHETIC_CNPJS) {
       expect(validateCnpj(cnpj)).toEqual({ ok: true, value: cnpj });

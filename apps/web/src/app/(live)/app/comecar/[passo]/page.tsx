@@ -4,7 +4,7 @@ import { joinWaitlist } from '@/app/(marketing)/actions';
 import { CnpjStep } from '@/features/company/cnpj-step.client';
 import { CompanyCard } from '@/features/company/company-card';
 import { EstimateView } from '@/features/company/estimate-view';
-import { regimeStop } from '@/features/company/scope';
+import { activityStop, regimeStop } from '@/features/company/scope';
 import { ConnectStep } from '@/features/connection/connect-step.client';
 import { ConsentContent } from '@/features/connection/consent-content';
 import { WaitlistForm } from '@/features/landing/waitlist-form.client';
@@ -122,38 +122,12 @@ function StepBody({
           <>
             <StepTitle title="É você?" />
             <CompanyCard company={c} />
-            <section
-              className="mt-8 flex flex-col gap-4 rounded-lg border border-warning bg-warning-soft p-5"
-              data-testid="out-of-scope"
-              data-regime={stop.regime}
-              aria-labelledby="fora-titulo"
-            >
-              <p id="fora-titulo" className="type-body-lg text-foreground" role="status">
-                {stop.message}
-              </p>
-              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                <Link
-                  href="/demo"
-                  data-testid="out-of-scope-demo"
-                  className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-5 font-medium text-primary-foreground"
-                >
-                  Ver a demo com a Marina
-                </Link>
-                <AdvanceButton
-                  action={rejectCompany}
-                  label="Usar outro CNPJ"
-                  variant="outline"
-                  arrow={false}
-                  testId="out-of-scope-other-cnpj"
-                />
-              </div>
-            </section>
-            <section className="mt-8" aria-label="Lista de espera">
-              <p className="type-small mb-3 text-muted-foreground">
-                Quer saber quando o Refund calcular o seu regime? Entre na lista de espera.
-              </p>
-              <WaitlistForm join={joinWaitlist} />
-            </section>
+            <ScopeStop
+              message={stop.message}
+              reason="regime"
+              data={{ 'data-regime': stop.regime }}
+              waitlist="Quer saber quando o Refund calcular o seu regime? Entre na lista de espera."
+            />
           </>
         );
       }
@@ -217,6 +191,8 @@ function StepBody({
     case 'estimativa': {
       if (!company) return null;
       const estimate = estimateFor(company.company, completeAnswers(progress.answers));
+      // The activity stop: like the regime one, the track ends here with the ways out (no consent, no bank).
+      const activity = activityStop(company.company);
       return (
         <>
           <StepTitle title="Quanto isso pode valer para você?" />
@@ -227,12 +203,21 @@ function StepBody({
               {estimate.error.message}
             </p>
           )}
-          <AdvanceButton
-            action={markEstimateSeen}
-            label="Ver o número exato"
-            testId="see-exact-number"
-            className="mt-8"
-          />
+          {activity !== null ? (
+            <ScopeStop
+              message={activity.message}
+              reason="activity"
+              data={{ 'data-cnae': activity.cnae }}
+              waitlist="Quer saber quando o Refund calcular a sua atividade? Entre na lista de espera."
+            />
+          ) : (
+            <AdvanceButton
+              action={markEstimateSeen}
+              label="Ver o número exato"
+              testId="see-exact-number"
+              className="mt-8"
+            />
+          )}
         </>
       );
     }
@@ -280,4 +265,56 @@ function StepBody({
         </>
       );
   }
+}
+
+/**
+ * The out-of-scope stop (H3), for the regime at "É você?" and for the activity at the estimate: the reason in plain
+ * words and the ways out (the demo, another CNPJ, the waitlist). Never a button that goes on.
+ */
+function ScopeStop({
+  message,
+  reason,
+  data,
+  waitlist,
+}: {
+  message: string;
+  reason: 'regime' | 'activity';
+  data: Record<`data-${string}`, string>;
+  waitlist: string;
+}) {
+  return (
+    <>
+      <section
+        className="mt-8 flex flex-col gap-4 rounded-lg border border-warning bg-warning-soft p-5"
+        data-testid="out-of-scope"
+        data-reason={reason}
+        {...data}
+        aria-labelledby="fora-titulo"
+      >
+        <p id="fora-titulo" className="type-body-lg text-foreground" role="status">
+          {message}
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <Link
+            href="/demo"
+            data-testid="out-of-scope-demo"
+            className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-5 font-medium text-primary-foreground"
+          >
+            Ver a demo com a Marina
+          </Link>
+          <AdvanceButton
+            action={rejectCompany}
+            label="Usar outro CNPJ"
+            variant="outline"
+            arrow={false}
+            testId="out-of-scope-other-cnpj"
+          />
+        </div>
+      </section>
+      <section className="mt-8" aria-label="Lista de espera">
+        <p className="type-small mb-3 text-muted-foreground">{waitlist}</p>
+        <WaitlistForm join={joinWaitlist} />
+      </section>
+    </>
+  );
 }

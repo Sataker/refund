@@ -25,10 +25,10 @@ import {
   markEstimateSeenWith,
   type Next,
   rejectCompanyWith,
+  requireInScope,
   saveAnswerWith,
   skipPersonalAccountWith,
 } from '@/server/track/answers.ts';
-import { loadTrack } from '@/server/track/state.ts';
 
 // ARCHITECTURE §4.7 (live): getSession → requireCapability (liveContext) → rateLimit → (entitlement)
 // → zod, inside each core. Results only: nothing here throws to the client.
@@ -49,16 +49,13 @@ async function run<T>(
   }
 }
 
-const OUT_OF_SCOPE = 'Por enquanto o Refund calcula só empresas do Simples Nacional.';
-
-/** H3: consent and the bank steps only for a company in scope (Simples or MEI). */
+/** H3: consent and the bank steps only for a company in scope (regime and activity). */
 async function inScope<T>(
   ctx: LiveContext,
   work: () => Promise<ActionResult<T>>,
 ): Promise<ActionResult<T>> {
-  const { progress } = await loadTrack(ctx.db, ctx.userId);
-  if (progress.company?.outOfScope) return fail('FORBIDDEN', OUT_OF_SCOPE);
-  return work();
+  const scope = await requireInScope(ctx.db, ctx.userId);
+  return scope.ok ? work() : scope;
 }
 
 const deps = (ctx: LiveContext) => ({

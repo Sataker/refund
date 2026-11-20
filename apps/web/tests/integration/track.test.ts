@@ -38,6 +38,7 @@ import {
   confirmCompanyWith,
   markEstimateSeenWith,
   rejectCompanyWith,
+  requireInScope,
   saveAnswerWith,
   skipPersonalAccountWith,
 } from '@/server/track/answers.ts';
@@ -59,6 +60,7 @@ const secrets: Secrets = {
 const NOW = Date.parse('2026-11-12T15:00:00Z');
 const HERO = 'RFDEV001000158';
 const PRESUMIDO = 'RFPRES01000137';
+const COSMETICS = 'RFCOSM01000136';
 const HERO_ANSWERS: ProfileAnswers = {
   monthlyRevenueBracket: 'from_30k_to_60k',
   hasEmployees: 'yes',
@@ -366,6 +368,54 @@ describe('first-access track state (D19; ARCHITECTURE §13)', () => {
     expect(
       await saveAnswerWith(h.db, userId, { step: 'faturamento', value: 'from_60k_to_150k' }),
     ).toMatchObject({ ok: false, error: { code: 'FORBIDDEN' } });
+  });
+
+  it('a CNAE outside the verified table stops at the estimate: no "seen", no consent, no bank step', async () => {
+    const userId = await newUser();
+    const looked = await lookupCnpjWith(
+      userId,
+      { cnpj: COSMETICS, context: 'live' },
+      companyDeps(),
+    );
+    expect(looked.ok).toBe(true);
+    expect(await confirmCompanyWith(h.db, userId)).toMatchObject({ ok: true });
+    const answered = await saveAnswerWith(h.db, userId, {
+      step: 'faturamento',
+      value: 'from_30k_to_60k',
+    });
+    expect(answered).toEqual({ ok: true, value: { next: '/app/comecar/estimativa' } });
+    const estimate = await estimateByRevenueWith(
+      userId,
+      { cnpj: COSMETICS, answers: { ...HERO_ANSWERS, hasEmployees: 'no' }, context: 'live' },
+      { db: h.db, nowMs: NOW },
+    );
+    expect(estimate).toMatchObject({ ok: true, value: { reason: 'CNAE_OUT_OF_SCOPE' } });
+    const seen = await markEstimateSeenWith(h.db, userId);
+    expect(seen.ok).toBe(false);
+    if (seen.ok) return;
+    expect(seen.error.code).toBe('FORBIDDEN');
+    expect(seen.error.message).toMatch(
+      /^Por enquanto o Refund calcula só estas atividades: .*web design \(6201-5\/02\).*\. A sua atividade \(4772-5\/00 Comércio varejista de cosméticos, produtos de perfumaria e de higiene pessoal\) ainda não está na nossa tabela conferida\.$/,
+    );
+    const { progress } = await loadTrack(h.db, userId);
+    expect(progress.company).toMatchObject({ outOfScope: false, activityOutOfScope: true });
+    expect(currentStep(progress)).toBe('estimativa');
+    expect(await requireInScope(h.db, userId)).toMatchObject({
+      ok: false,
+      error: { code: 'FORBIDDEN', message: seen.error.message },
+    });
+  });
+
+  it('the scope guard of consent and the bank steps lets the hero through and stops the regime', async () => {
+    const hero = await newUser();
+    await lookupCnpjWith(hero, { cnpj: HERO, context: 'live' }, companyDeps());
+    expect(await requireInScope(h.db, hero)).toEqual({ ok: true, value: undefined });
+    const presumido = await newUser();
+    await lookupCnpjWith(presumido, { cnpj: PRESUMIDO, context: 'live' }, companyDeps());
+    expect(await requireInScope(h.db, presumido)).toMatchObject({
+      ok: false,
+      error: { code: 'FORBIDDEN' },
+    });
   });
 
   it('"Não é minha empresa" clears the company and its answers; a new CNPJ starts over', async () => {

@@ -5,7 +5,8 @@ import { parsePublicCompany } from '@refund/sources';
 
 // Companies the replay CNPJ provider answers for (ARCHITECTURE §4.3, §5.3): the personas, plus one
 // synthetic company outside the Simples so `/app` can show the REGIME_OUT_OF_SCOPE path without a
-// network call (E11 definition of done). Every CNPJ here is synthetic: the alphanumeric `RF…` root of
+// network call (E11 definition of done), and one in the Simples with a CNAE outside the table (the
+// activity stop). Every CNPJ here is synthetic: the alphanumeric `RF…` root of
 // the personas (ARCHITECTURE §7.5); `RFPRES01000137` answered 404 on BrasilAPI on 16/11/2026 (with the
 // positive control answering 200). It belongs in @refund/personas' list; see EXECUTION §9 (E11).
 
@@ -34,13 +35,45 @@ const PRESUMIDO: PublicCompany = {
   fetchedAt: '2026-11-16T12:00:00.000Z',
 };
 
+/**
+ * Synthetic Simples company with a CNAE outside the verified table (cosmetics retail, 4772-5/00), so `/app` can show the
+ * activity stop at the estimate without a network call. Same rules as PRESUMIDO: whitelist fields only.
+ */
+const UNSUPPORTED_ACTIVITY: PublicCompany = {
+  cnpj: 'RFCOSM01000136' as PublicCompany['cnpj'],
+  displayLegalName: 'COSMETICOS EXEMPLO LTDA',
+  displayTradeName: 'Cosméticos Exemplo',
+  masked: false,
+  legalNature: { code: '2062', description: 'Sociedade Empresária Limitada' },
+  size: 'ME',
+  primaryCnae: {
+    code: '4772-5/00',
+    description: 'Comércio varejista de cosméticos, produtos de perfumaria e de higiene pessoal',
+  },
+  secondaryCnaes: [],
+  registrationStatus: 'ATIVA',
+  activityStartDate: '2019-03-01' as PublicCompany['activityStartDate'],
+  uf: 'SP',
+  ibgeMunicipality: '3550308',
+  simples: { optedIn: true, since: '2019-03-01', excludedAt: null },
+  mei: { optedIn: false, since: null, excludedAt: null },
+  taxRegimeHistory: [],
+  source: 'replay',
+  fetchedAt: '2026-11-20T12:00:00.000Z',
+};
+
 function persona(raw: { company: unknown }): PublicCompany {
   const company = parsePublicCompany(raw.company);
   if (!company) throw new Error('PERSONA_COMPANY_INVALID');
   return company;
 }
 
-export const REPLAY_COMPANIES: readonly PublicCompany[] = [persona(heroPersona), PRESUMIDO];
+export const REPLAY_COMPANIES: readonly PublicCompany[] = [
+  persona(heroPersona),
+  PRESUMIDO,
+  UNSUPPORTED_ACTIVITY,
+];
 
 export const HERO_CNPJ = 'RFDEV001000158';
 export const PRESUMIDO_CNPJ = PRESUMIDO.cnpj;
+export const UNSUPPORTED_ACTIVITY_CNPJ = UNSUPPORTED_ACTIVITY.cnpj;

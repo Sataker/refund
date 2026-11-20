@@ -18,8 +18,8 @@ import {
   type PipelineResult,
   runAnalysis,
 } from '@refund/pipeline';
-import type { FinancialProvider } from '@refund/sources';
-import { regimeStop } from '@/features/company/scope.ts';
+import type { FinancialProvider, PublicCompany } from '@refund/sources';
+import { activityStop, regimeStop } from '@/features/company/scope.ts';
 import type { Capabilities } from '../capabilities.ts';
 import type { Secrets } from '../crypto.ts';
 import { entitlementsWith } from '../entitlements.ts';
@@ -80,6 +80,14 @@ async function drain(
   }
 }
 
+/** The regime first, then the activity (the order of the track's stops). */
+function scopeStop(company: PublicCompany): { code: string; message: string } | null {
+  const regime = regimeStop(company);
+  if (regime !== null) return { code: 'REGIME_OUT_OF_SCOPE', message: regime.message };
+  const activity = activityStop(company);
+  return activity === null ? null : { code: 'CNAE_OUT_OF_SCOPE', message: activity.message };
+}
+
 /**
  * Runs the analysis if this caller can claim it. Returns false when another instance has it (or it already ran):
  * the caller then only reads the event log.
@@ -101,12 +109,13 @@ export async function executeAnalysis(analysisId: string, deps: RunDeps): Promis
     const { input, ids } = built.value;
     // H3: the regime is checked before the pipeline, whose first stop is the activity (CNAE): a Lucro Presumido
     // company must hear about its regime, not "Ainda não calculamos para a atividade …".
-    const regime = regimeStop(input.company);
-    if (regime !== null) {
+    // The activity next, with the same sentence as the estimate's stop (the track never gets here with it; a run
+    // created before that stop existed still ends here, before the pipeline).
+    const scope = scopeStop(input.company);
+    if (scope !== null) {
       const stop: Extract<AnalysisEvent, { type: 'error' }> = {
         type: 'error',
-        code: 'REGIME_OUT_OF_SCOPE',
-        message: regime.message,
+        ...scope,
         recoverable: false,
       };
       await saveRun(deps.db, analysisId, {

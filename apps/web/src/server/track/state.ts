@@ -3,7 +3,7 @@ import { companyRow, type Db, schema } from '@refund/db';
 import type { ProfileAnswers } from '@refund/engine';
 import { type PublicCompany, parsePublicCompany } from '@refund/sources';
 import { and, count, desc, eq, inArray, isNull } from 'drizzle-orm';
-import { outOfScopeRegime } from '@/features/company/scope.ts';
+import { activityStop, outOfScopeRegime } from '@/features/company/scope.ts';
 import {
   type ConnectionStatus,
   type ConnectionSummary,
@@ -248,6 +248,7 @@ export async function loadTrack(db: Db, userId: string): Promise<TrackSnapshot> 
         displayName: c.displayTradeName ?? c.displayLegalName,
         confirmed: get(TRACK_KEYS.confirmed) === true,
         outOfScope: outOfScopeRegime(c) !== null,
+        activityOutOfScope: activityStop(c) !== null,
       },
       questions: profileQuestions(c),
       answers,

@@ -420,6 +420,42 @@ describe('live jury path (UX review 19/11: H1, C2, H3)', () => {
     // C2: a real-looking company next to Marina's statements carries the banner.
     expect(live?.origin).toMatchObject({ companyIsSample: false, bank: 'sample' });
   });
+
+  it('a run for a CNAE outside the verified table ends before the pipeline with the activity stop', async () => {
+    const [u] = await h.db.insert(schema.users).values({}).returning();
+    const userId = u?.id as string;
+    const looked = await lookupCnpjWith(
+      userId,
+      { cnpj: 'RFCOSM01000136', context: 'live' },
+      { db: h.db, secrets, headers: headers(), dataMode: 'replay', nowMs: NOW },
+    );
+    expect(looked.ok).toBe(true);
+    const [company] = await h.db
+      .select({ id: schema.companies.id })
+      .from(schema.companies)
+      .where(eq(schema.companies.cnpj, 'RFCOSM01000136'));
+    await recordConsentWith(
+      { scopes: [...CONSENT_SCOPES], termsVersion: TERMS_VERSION },
+      connDeps(userId),
+    );
+    expect((await connectSampleWith({ holder: 'PJ' }, connDeps(userId))).ok).toBe(true);
+    const row = await createAnalysis(h.db, {
+      userId,
+      companyId: company?.id as string,
+      referenceMonth: '2026-10',
+    });
+    await executeAnalysis(row.id, { db: h.db, ...runDeps });
+    const log = await frames(row.id, 0);
+    expect(log.map((f) => f.type)).toEqual(['error']);
+    expect(log[0]?.data).toMatchObject({
+      code: 'CNAE_OUT_OF_SCOPE',
+      message: expect.stringContaining(
+        'A sua atividade (4772-5/00 Comércio varejista de cosméticos, produtos de perfumaria e de higiene pessoal) ainda não está na nossa tabela conferida.',
+      ),
+      recoverable: false,
+    });
+    expect((await loadLiveAnalysis(h.db, userId, row.id))?.analysis.status).toBe('error');
+  });
 });
 
 describe('Finanças (A10; D31 persisted)', () => {
