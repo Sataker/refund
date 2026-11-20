@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { Bullets, Section, SupportPage, TextLink } from '@/features/support/page-shell';
-import { CONTACT_EMAIL } from '@/lib/contact';
+import { CONTACT_CITY, CONTACT_EMAIL } from '@/lib/contact';
 import { plansModel } from '@/server/plans/offer';
 
 // /termos (ARCHITECTURE §13; EXECUTION E20, task 4): plain terms for the hackathon MVP. Nothing here promises more than
 // the code does: the disclaimer of every R$ (components/brand/disclaimer.tsx), the sandbox (server/connection), the
-// Pix grant without renewal and the guarantee (server/plans/offer.ts, features/plans), the MIT LICENSE.
+// Pix grant without renewal and the guarantee (server/plans/offer.ts, features/plans), the MIT LICENSE. D37 (PLAN §18)
+// set the payment terms: the guarantee refund cancels the period (refundCharge), the CDC art. 49 withdrawal and the
+// refund of the unused part are commitments Enzo settles by hand, and the identification carries no CPF.
 
 export const metadata: Metadata = {
   title: 'Termos · Refund',
@@ -13,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default function TermsPage() {
-  const { guaranteeDays } = plansModel();
+  const { guaranteeDays, refundWithinDays, withdrawalDays } = plansModel();
   return (
     <SupportPage
       title="Termos de uso"
@@ -72,11 +74,22 @@ export default function TermsPage() {
             Um pagamento por Pix libera o plano pelo período mostrado na tela de planos, sem
             renovação automática.
           </li>
+          <li data-testid="terms-guarantee">
+            Garantia de {guaranteeDays} dias a partir do pagamento: devolvemos o primeiro pagamento,
+            sem perguntas, por Pix, em até {refundWithinDays} dias depois do pedido; o plano termina
+            quando o valor é devolvido. É só pedir em {CONTACT_EMAIL}.
+          </li>
+          <li data-testid="terms-withdrawal">
+            Em qualquer pagamento, você também pode desistir em até {withdrawalDays} dias e receber
+            tudo de volta (Código de Defesa do Consumidor, art. 49).
+          </li>
           <li>
-            Garantia de {guaranteeDays} dias: devolvemos o primeiro pagamento, sem perguntas. É só
-            pedir em {CONTACT_EMAIL}.
+            Se o Refund sair do ar de vez durante um período pago, devolvemos a parte que faltava.
           </li>
           <li>Na demonstração, o pagamento é simulado: nenhum dinheiro de verdade.</li>
+          <li data-testid="terms-identification">
+            Responsável: Enzo Vaccaro, {CONTACT_CITY}, contato: {CONTACT_EMAIL}.
+          </li>
         </Bullets>
       </Section>
 

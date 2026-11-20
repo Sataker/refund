@@ -61,6 +61,23 @@ test.describe('support pages @demo', () => {
     }
   });
 
+  test('/termos carries the D37 payment terms, with no CPF', async ({ page }) => {
+    await page.goto('/termos');
+    await expect(page.getByTestId('terms-guarantee')).toContainText(
+      'Garantia de 30 dias a partir do pagamento',
+    );
+    await expect(page.getByTestId('terms-guarantee')).toContainText(
+      'em até 7 dias depois do pedido',
+    );
+    await expect(page.getByTestId('terms-withdrawal')).toContainText(
+      'Código de Defesa do Consumidor, art. 49',
+    );
+    await expect(page.getByTestId('terms-identification')).toContainText(
+      'Responsável: Enzo Vaccaro',
+    );
+    await expect(page.getByTestId('terms-page')).not.toContainText('CPF');
+  });
+
   test('/motor shows the generated counts', async ({ page }) => {
     await page.goto('/motor');
     for (const id of ['engine/rules', 'engine/tests', 'engine/oracle-tests']) {
