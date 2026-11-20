@@ -27,7 +27,8 @@ test.describe('security @security', () => {
       .headersArray()
       .find((x) => x.name.toLowerCase() === 'set-cookie' && x.value.startsWith('rf_sid='));
     expect(cookie?.value).toMatch(/HttpOnly/i);
-    expect(cookie?.value).toMatch(/Secure/i);
+    // Secure is off only under `next dev` (Safari and http://localhost); CI runs `next start`.
+    if (process.env.CI) expect(cookie?.value).toMatch(/Secure/i);
     expect(cookie?.value).toMatch(/SameSite=lax/i);
   });
 

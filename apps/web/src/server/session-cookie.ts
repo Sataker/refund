@@ -7,9 +7,14 @@ import { hmac, safeEqual } from './crypto.ts';
 
 export const SESSION_COOKIE = 'rf_sid';
 export const SESSION_MAX_AGE_S = 7_776_000; // 90 days
+// Secure everywhere except `next dev` off Vercel: Safari drops Secure cookies on http://localhost (Chrome makes an
+// exception), which loses the session between steps of the local track. Vercel and `next start` builds stay Secure.
+export const cookieSecure = (env: NodeJS.ProcessEnv = process.env): boolean =>
+  !(env.NODE_ENV === 'development' && env.VERCEL !== '1');
+
 export const SESSION_COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: true,
+  secure: cookieSecure(),
   sameSite: 'lax',
   path: '/',
   maxAge: SESSION_MAX_AGE_S,

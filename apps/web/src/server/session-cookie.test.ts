@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  cookieSecure,
   newSession,
   SESSION_COOKIE_OPTIONS,
   SESSION_MAX_AGE_S,
@@ -38,6 +39,13 @@ describe('rf_sid (ARCHITECTURE §9.2)', () => {
     expect(verifySession(signedGarbage, SECRET, NOW)).toBeNull();
     expect(verifySession(value, SECRET, NOW + (SESSION_MAX_AGE_S + 1) * 1000)).toBeNull();
     expect(verifySession(value, SECRET, NOW - 120_000)).toBeNull();
+  });
+
+  it('Secure is off only under next dev off Vercel (Safari drops Secure cookies on http://localhost)', () => {
+    expect(cookieSecure({ NODE_ENV: 'production' })).toBe(true);
+    expect(cookieSecure({ NODE_ENV: 'test' })).toBe(true);
+    expect(cookieSecure({ NODE_ENV: 'development', VERCEL: '1' })).toBe(true);
+    expect(cookieSecure({ NODE_ENV: 'development' })).toBe(false);
   });
 
   it('cookie is HttpOnly, Secure, SameSite=Lax, 90 days', () => {
