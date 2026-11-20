@@ -35,6 +35,12 @@ export interface R01Plan {
   p28: Cents;
   pStar: Cents;
   curve: { monthlyProLabore: Cents; annualTotalCost: Cents }[];
+  /**
+   * D48 (PLAN §18, 20/11): `curve` plus DISPLAY-ONLY points below the minimum wage, on the same R$ 50 grid down to half
+   * of it, so the chart starts below today's pró-labore. Same cost function; never candidates: they enter neither the
+   * argmin, P*, the trace nor any finding number.
+   */
+  displayCurve: { monthlyProLabore: Cents; annualTotalCost: Cents }[];
   steps: Step[];
 }
 
@@ -224,7 +230,11 @@ export function optimizerR01(
       rounding: 'NONE',
     }),
   ];
-  return { rbt, fso, target, pTarget, p28, pStar, curve, steps };
+  const below: R01Plan['curve'] = [];
+  for (let p: number = sm - 5000; p >= Math.ceil(sm / 2); p -= 5000)
+    below.unshift({ monthlyProLabore: cents(p), annualTotalCost: model(cents(p)).total });
+  const displayCurve = [...below, ...curve];
+  return { rbt, fso, target, pTarget, p28, pStar, curve, displayCurve, steps };
 }
 
 /**

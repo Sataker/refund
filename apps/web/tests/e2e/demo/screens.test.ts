@@ -231,9 +231,10 @@ test.describe('demo screens 5–8 @demo', () => {
       await expect(page.getByTestId('sim/cost')).toContainText(
         /Mais folga antecipa o Anexo III \(abr\/2027 com 1 p\.p\.\), mas custa R\$\s165,00 por ano a cada 0,25 p\.p\. depois disso\./,
       );
-      // UX review G2 H3: the x window ends at 1,25× the recommended P* (R$ 2.260,00); it starts where the engine's
-      // grid starts, at "hoje" (R$ 1.621,00), which is above 0,5× P*.
-      await expect(page.getByTestId('optimizer-curve')).toHaveAttribute('data-x0', '162100');
+      // UX review G2 H3: the x window is 0,5× to 1,25× the recommended P* (R$ 2.260,00). D48: the engine's display
+      // curve starts below "hoje" (R$ 1.621,00), so the window starts at 0,5× P* and the V → III step sits mid-chart.
+      await expect(page.getByTestId('optimizer-curve')).toHaveAttribute('data-x0', '113000');
+      await expect(page.getByTestId('optimizer-curve/below-minimum')).toHaveCount(1);
       await expect(page.getByTestId('optimizer-curve')).toHaveAttribute('data-x1', '282500');
       await expect(page.getByTestId('sim/late')).toHaveCount(0);
 

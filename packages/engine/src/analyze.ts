@@ -89,6 +89,7 @@ interface Chain {
   findings: Finding[];
   final: Simulation;
   curve?: EngineResult['optimizerCurve'];
+  displayCurve?: EngineResult['optimizerDisplayCurve'];
   r05SwitchedOff: boolean;
   r06SwitchedOff: boolean;
 }
@@ -106,11 +107,13 @@ function runChain(
   let cur = s0;
   let dec = s0Dec;
   let curve: Chain['curve'];
+  let displayCurve: Chain['displayCurve'];
 
   // 1) R01, with the optimal decisions of the other levers already on (D2).
   if (appliesR01(ctx, s0)) {
     const plan = optimizerR01(ctx, s0Dec, seg, mono);
     curve = plan.curve;
+    displayCurve = plan.displayCurve;
     const d1: ScenarioDecisions = { ...dec, proLabore: plan.pStar };
     const s1 = simulate(ctx, 'S1', d1, s0Dec);
     const gain = gainOf(cur, s1);
@@ -220,6 +223,7 @@ function runChain(
 
   const out: Chain = { findings, final: cur, r05SwitchedOff, r06SwitchedOff };
   if (curve !== undefined) out.curve = curve;
+  if (displayCurve !== undefined) out.displayCurve = displayCurve;
   return out;
 }
 
@@ -239,6 +243,7 @@ function runWith(facts: Facts, setId: string): EngineResult {
     recoveryRange: null,
   };
   let optimizerCurve: EngineResult['optimizerCurve'];
+  let optimizerDisplayCurve: EngineResult['optimizerDisplayCurve'];
 
   if (facts.company.value.regime === 'SIMPLES') {
     const inference = inferPgdas(ctx);
@@ -266,6 +271,7 @@ function runWith(facts: Facts, setId: string): EngineResult {
     }
     findings.push(...chain.findings);
     optimizerCurve = chain.curve;
+    optimizerDisplayCurve = chain.displayCurve;
 
     if (r05Eligible) {
       const rec = r05RecFinding(ctx, inference);
@@ -321,6 +327,7 @@ function runWith(facts: Facts, setId: string): EngineResult {
     total,
   };
   if (optimizerCurve !== undefined) result.optimizerCurve = optimizerCurve;
+  if (optimizerDisplayCurve !== undefined) result.optimizerDisplayCurve = optimizerDisplayCurve;
   return result;
 }
 

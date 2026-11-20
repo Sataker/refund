@@ -222,7 +222,10 @@ export default async function DemoFindingPage({
             facts={snap.facts}
             defaultMargin={marginOf(snap.facts)}
             base={point}
-            baseCurve={snap.result.optimizerCurve}
+            baseCurve={snap.result.optimizerDisplayCurve ?? snap.result.optimizerCurve}
+            {...(snap.result.optimizerCurve[0]
+              ? { candidatesFrom: snap.result.optimizerCurve[0].monthlyProLabore }
+              : {})}
             steps={marginStepValues(snap.facts)}
           />
         ) : null}

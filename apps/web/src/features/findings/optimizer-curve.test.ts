@@ -11,6 +11,14 @@ describe('curveDomain', () => {
     expect(curveDomain([0, 1_000_000], 400_000, [400_000])).toEqual([200_000, 500_000]);
   });
 
+  it('D48: with the display points below the minimum wage, the V → III step (1.760) sits at about a third', () => {
+    const [x0, x1] = curveDomain([82_100, 162_100, 847_555], 226_000, [162_100, 226_000]);
+    expect([x0, x1]).toEqual([113_000, 282_500]);
+    const at = (176_000 - x0) / (x1 - x0);
+    expect(at).toBeGreaterThan(0.3);
+    expect(at).toBeLessThan(0.4);
+  });
+
   it('widens to keep "hoje" and the slider P* inside', () => {
     expect(curveDomain([0, 1_000_000], 400_000, [100_000, 700_000])).toEqual([100_000, 700_000]);
   });

@@ -44,6 +44,27 @@ describe('optimizer curve (D.1)', () => {
     expect(below - at).toBe(brl('35.062,08') - brl('51,48'));
   });
 
+  it('D48: the display curve adds points below the minimum wage only; the candidate curve and P* are untouched', () => {
+    const display = r.optimizerDisplayCurve ?? [];
+    const sm = brl('1.621,00');
+    const below = display.filter((c) => c.monthlyProLabore < sm);
+    expect(display.slice(below.length)).toEqual(curve);
+    expect(below[0]?.monthlyProLabore).toBe(brl('821,00'));
+    expect(below.at(-1)?.monthlyProLabore).toBe(brl('1.571,00'));
+    expect(
+      below.every(
+        (c, i) => i === 0 || c.monthlyProLabore - (below[i - 1]?.monthlyProLabore ?? 0) === 5000,
+      ),
+    ).toBe(true);
+    const argmin = r.findings
+      .find((f) => f.ruleId === 'R01')
+      ?.trace.find((s) => s.id === 'R01.ARGMIN');
+    expect(argmin?.inputs.candidates?.value).toBe(curve.length);
+    expect(argmin?.inputs.minimumCost?.value).toBe(
+      Math.min(...curve.map((c) => c.annualTotalCost)),
+    );
+  });
+
   it('T01-15: no curve when R01 does not run (CNAE outside the Fator R, P0 = minimum wage)', () => {
     const f = syntheticFacts({
       domestic: constant(brl('50.000,00')),

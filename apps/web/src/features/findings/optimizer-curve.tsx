@@ -18,6 +18,11 @@ interface OptimizerCurveProps {
   target: number;
   /** The recommended P* (default margin): anchors the x domain so it does not jump while the slider moves. */
   recommended?: number;
+  /**
+   * D48: the first optimizer candidate (the minimum wage). Points below it are the engine's display-only extension
+   * (`optimizerDisplayCurve`) and are drawn dashed and faded: a pró-labore below the minimum wage is not an option.
+   */
+  candidatesFrom?: number;
 }
 
 /** Window around the recommended P*, as multiples of it (UX review G2 H3). */
@@ -26,9 +31,9 @@ export const DOMAIN_HIGH = 1.25;
 
 /**
  * The x window of the chart (UX review G2 H3): the engine's grid runs far past P*, which squeezed the Anexo V → III
- * step and the savings area into a sliver. The window is 0,5× to 1,25× the recommended P* (the grid starts at today's
- * pró-labore, so the right end is what decides how wide the area between "hoje" and P* looks), always widened to keep
- * "hoje" and the slider's P* inside, and never wider than the grid. Positions only; no value is computed.
+ * step and the savings area into a sliver. The window is 0,5× to 1,25× the recommended P* (D48: the engine's display
+ * curve now starts at half the minimum wage, so the left end puts the Anexo V → III step at about a third of the
+ * width), always widened to keep "hoje" and the slider's P* inside, and never wider than the grid. Positions only; no value is computed.
  */
 export function curveDomain(
   xs: readonly number[],
@@ -46,7 +51,13 @@ export function curveDomain(
 const W = 100;
 const H = 100;
 
-export function OptimizerCurve({ points, current, target, recommended }: OptimizerCurveProps) {
+export function OptimizerCurve({
+  points,
+  current,
+  target,
+  recommended,
+  candidatesFrom,
+}: OptimizerCurveProps) {
   const all = [...points].sort((a, b) => a.monthlyProLabore - b.monthlyProLabore);
   if (all.length < 2) return null;
   const [x0, x1] = curveDomain(
@@ -62,12 +73,17 @@ export function OptimizerCurve({ points, current, target, recommended }: Optimiz
   const y1 = yMax + (yMax - yMin) * 0.05;
   const sx = (v: number) => ((v - x0) / (x1 - x0 || 1)) * W;
   const sy = (v: number) => H - ((v - y0) / (y1 - y0 || 1)) * H;
-  const line = sorted
-    .map(
-      (p, i) =>
-        `${i === 0 ? 'M' : 'L'}${sx(p.monthlyProLabore).toFixed(2)} ${sy(p.annualTotalCost).toFixed(2)}`,
-    )
-    .join(' ');
+  const path = (ps: readonly CurvePoint[]) =>
+    ps
+      .map(
+        (p, i) =>
+          `${i === 0 ? 'M' : 'L'}${sx(p.monthlyProLabore).toFixed(2)} ${sy(p.annualTotalCost).toFixed(2)}`,
+      )
+      .join(' ');
+  const from = candidatesFrom ?? -Infinity;
+  const line = path(sorted.filter((p) => p.monthlyProLabore >= from));
+  const belowPts = sorted.filter((p) => p.monthlyProLabore <= from);
+  const belowLine = belowPts.length >= 2 ? path(belowPts) : null;
   const [lo, hi] = current <= target ? [current, target] : [target, current];
   const between = sorted.filter((p) => p.monthlyProLabore >= lo && p.monthlyProLabore <= hi);
   const area =
@@ -139,6 +155,18 @@ export function OptimizerCurve({ points, current, target, recommended }: Optimiz
               />
             ))}
             {area ? <path d={area} fill="url(#curve-hatch)" /> : null}
+            {belowLine ? (
+              <path
+                d={belowLine}
+                fill="none"
+                stroke="var(--chart-3)"
+                strokeOpacity="0.45"
+                strokeWidth="2"
+                strokeDasharray="3 4"
+                vectorEffect="non-scaling-stroke"
+                data-testid="optimizer-curve/below-minimum"
+              />
+            ) : null}
             <path
               d={line}
               fill="none"

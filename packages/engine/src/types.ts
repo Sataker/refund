@@ -297,6 +297,8 @@ export interface EngineResult {
   findings: Finding[]; // sorted by `order`; Σ marginalValue12m (countsInTotal) == total.savings12m
   total: Total;
   optimizerCurve?: { monthlyProLabore: Cents; annualTotalCost: Cents }[]; // R01
+  // R01, D48: the curve plus display-only points below the minimum wage (chart only; never a candidate).
+  optimizerDisplayCurve?: { monthlyProLabore: Cents; annualTotalCost: Cents }[];
 }
 
 // ---------- Profile-based estimate (ENGINE-SPEC C.11; ARCHITECTURE §4.2) ----------

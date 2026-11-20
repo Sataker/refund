@@ -28,6 +28,8 @@ interface SimulatorProps {
   defaultMargin: string;
   base: ProLaborePoint;
   baseCurve: CurvePoint[];
+  /** D48: the first optimizer candidate (minimum wage); points below it are display-only. */
+  candidatesFrom?: number;
   /** R01's per-year value at every MARGIN_STEPS step (engine, at build). */
   steps: MarginStepValue[];
 }
@@ -44,7 +46,9 @@ function run(facts: Facts, margin: string): Point | null {
   });
   if (!r.ok) return null;
   const point = proLaborePoint(r.value as EngineResult);
-  return point ? { point, curve: r.value.optimizerCurve ?? [] } : null;
+  // D48: the display curve (display-only points below the minimum wage) when the engine gives one.
+  const curve = r.value.optimizerDisplayCurve ?? r.value.optimizerCurve ?? [];
+  return point ? { point, curve } : null;
 }
 
 export default function Simulator({
@@ -52,6 +56,7 @@ export default function Simulator({
   defaultMargin,
   base,
   baseCurve,
+  candidatesFrom,
   steps,
 }: SimulatorProps) {
   const labelId = useId();
@@ -157,6 +162,7 @@ export default function Simulator({
             current={point.current}
             target={point.target}
             recommended={base.target}
+            {...(candidatesFrom !== undefined ? { candidatesFrom } : {})}
           />
           <dl className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-0.5">
