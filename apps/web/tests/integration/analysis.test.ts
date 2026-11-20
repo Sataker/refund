@@ -450,7 +450,7 @@ describe('live jury path (UX review 19/11: H1, C2, H3)', () => {
     expect(log[0]?.data).toMatchObject({
       code: 'CNAE_OUT_OF_SCOPE',
       message: expect.stringContaining(
-        'A sua atividade (4772-5/00 Comércio varejista de cosméticos, produtos de perfumaria e de higiene pessoal) ainda não está na nossa tabela conferida.',
+        'Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples. A sua (4120-4/00 Construção de edifícios) é do Anexo IV.',
       ),
       recoverable: false,
     });

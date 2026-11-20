@@ -35,7 +35,7 @@ export const ALL_PERSONA_CNPJS: readonly PersonaCnpj[] = Object.values(PERSONA_C
  */
 export const OTHER_SYNTHETIC_CNPJS: readonly PersonaCnpj[] = [
   synthetic('RFPRES01000137', 'no persona: Lucro Presumido company of the live track (replay)'),
-  synthetic('RFCOSM01000136', 'no persona: Simples company with a CNAE outside the table (replay)'),
+  synthetic('RFCOSM01000136', 'no persona: Simples company in Anexo IV, construction (replay)'),
   synthetic('RFNONE01000122', 'no persona: "not found" CNPJ of the live-track tests'),
   synthetic('RFDEV002000100', 'no persona: second payer in the engine same-holder test'),
 ];

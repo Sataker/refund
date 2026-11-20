@@ -36,20 +36,19 @@ const PRESUMIDO: PublicCompany = {
 };
 
 /**
- * Synthetic Simples company with a CNAE outside the verified table (cosmetics retail, 4772-5/00), so `/app` can show the
- * activity stop at the estimate without a network call. Same rules as PRESUMIDO: whitelist fields only.
+ * Synthetic Simples company whose CNAE the engine does not calculate (construction, 4120-4/00, Anexo IV: LC 123,
+ * art. 18, § 5º-C, I), so `/app` can show the activity stop at the estimate without a network call. Until D50 it was a
+ * cosmetics retailer (4772-5/00), which the full CNAE table now puts in Anexo I, in scope. Same rules as PRESUMIDO:
+ * whitelist fields only.
  */
 const UNSUPPORTED_ACTIVITY: PublicCompany = {
   cnpj: 'RFCOSM01000136' as PublicCompany['cnpj'],
-  displayLegalName: 'COSMETICOS EXEMPLO LTDA',
-  displayTradeName: 'Cosméticos Exemplo',
+  displayLegalName: 'CONSTRUTORA EXEMPLO LTDA',
+  displayTradeName: 'Construtora Exemplo',
   masked: false,
   legalNature: { code: '2062', description: 'Sociedade Empresária Limitada' },
   size: 'ME',
-  primaryCnae: {
-    code: '4772-5/00',
-    description: 'Comércio varejista de cosméticos, produtos de perfumaria e de higiene pessoal',
-  },
+  primaryCnae: { code: '4120-4/00', description: 'Construção de edifícios' },
   secondaryCnaes: [],
   registrationStatus: 'ATIVA',
   activityStartDate: '2019-03-01' as PublicCompany['activityStartDate'],

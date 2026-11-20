@@ -1,4 +1,4 @@
-import { CNAE_IN_SCOPE, cnaeInScope } from '@refund/engine';
+import { cnaeAnexoRow, cnaeInScope } from '@refund/engine';
 import type { PublicCompany } from '@refund/sources';
 
 // H3 (UX review 19/11): Refund calculates only companies in the Simples Nacional (and MEI). A company in another
@@ -67,23 +67,33 @@ export function regimeStop(
     : { regime, message: outOfScopeMessage(companyNameOf(company), regime) };
 }
 
-const lowerFirst = (text: string): string => text.replace(/^\p{Lu}/u, (c) => c.toLowerCase());
-
-function listPt(items: readonly string[]): string {
-  if (items.length <= 1) return items.join('');
-  // Semicolons: a description of the table may carry its own comma.
-  return `${items.slice(0, -1).join('; ')}; e ${items.at(-1)}`;
+/** "4120-4/00 Construção de edifícios": the company's own code and description, as the public data gives them. */
+function activityLabel(cnae: { code: string; description: string }): string {
+  return [cnae.code, cnae.description].filter((s) => s.trim() !== '').join(' ');
 }
 
-/** The activities Refund calculates, from the verified rows of the CNAE table (never a hardcoded list). */
-export function supportedActivities(): string {
-  return listPt(CNAE_IN_SCOPE.map((r) => `${lowerFirst(r.description)} (${r.cnae})`));
-}
-
-/** The activity stop message, with the company's own CNAE and description. */
+/**
+ * The activity stop message, from the row of the CNAE table (D50, 20/11): one reason per case, never a list of the
+ * activities Refund calculates (hundreds since the table covers every CNAE 2.3 subclass).
+ */
 export function activityOutOfScopeMessage(cnae: { code: string; description: string }): string {
-  const activity = [cnae.code, cnae.description].filter((s) => s.trim() !== '').join(' ');
-  return `Por enquanto o Refund calcula só estas atividades: ${supportedActivities()}. A sua atividade (${activity}) ainda não está na nossa tabela conferida.`;
+  const row = cnaeAnexoRow(cnae.code);
+  if (row === undefined) return `Não encontramos a atividade ${cnae.code} na tabela oficial.`;
+  if (row.status === 'impeditive') {
+    return `A atividade ${activityLabel(cnae)} não pode estar no Simples Nacional.`;
+  }
+  if (row.status === 'verified' && (row.baseAnexo === 'II' || row.baseAnexo === 'IV')) {
+    return `Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples. A sua (${activityLabel(cnae)}) é do Anexo ${row.baseAnexo}.`;
+  }
+  if (row.status === 'verified' && row.anexoAdjustment !== undefined) {
+    const how =
+      row.anexoAdjustment === 'without_iss'
+        ? 'sem a parcela do ISS'
+        : 'sem a parcela do ISS e com a do ICMS';
+    return `Por enquanto o Refund calcula atividades dos Anexos I, III e V do Simples na tabela comum. A sua (${activityLabel(cnae)}) é do Anexo III ${how}.`;
+  }
+  // Ambiguous, and the dentistry row still to be confirmed (E.4): the anexo is not fixed for us yet.
+  return `O anexo da sua atividade (${cnae.code}) depende do que exatamente a empresa faz; por enquanto não calculamos esse caso.`;
 }
 
 /** The activity stop of a company whose regime is in scope, or null when its CNAE is in the verified table. */
