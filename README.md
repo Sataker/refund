@@ -1,14 +1,13 @@
 # Refund
 
-<!-- TODO(E21): GIF de 10 s da demo aqui (gerado do vídeo final). -->
-> _GIF de 10 s da demonstração: entra com o vídeo (etapa E21)._
+> _GIF de 10 s da demonstração: em breve._
 
 **O agente que acha o dinheiro que o governo te deve.** Economia tributária lícita para pessoa física e empresa, com a conta aberta e o artigo da lei citado em cada centavo. O contador revisa e aprova antes de qualquer mudança.
 
 Feito para o Hack Brasil 2026, trilha Pagamentos & finanças.
 
-- **Vídeo (até 3 min):** _link em breve_ <!-- TODO(E21): link do vídeo no YouTube (não listado) -->
-- **Demo no ar:** _link em breve_ <!-- TODO(E22): URL de produção/demo -->
+- **Vídeo (até 3 min):** _em breve_
+- **Demo no ar:** _em breve_
 - English version: [README.en.md](README.en.md)
 
 ## Rode em 2 comandos
@@ -20,20 +19,20 @@ pnpm dev
 
 Abra `http://localhost:3000/demo`. Nenhuma chave e nenhuma variável de ambiente: a demonstração roda sem `.env`, sem banco de dados e sem chamar nenhum serviço externo.
 
-Requisitos: Node 24 e pnpm 12.18.
+Requisitos: Node 24 e pnpm 12.18. Sem pnpm 12? Rode `corepack enable` antes.
 
 ## O que é real e o que é de teste
 
-|                                       | Real                                                                                                                               | De teste                                                                                             |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Motor de cálculo                      | O mesmo código em `/demo` e em `/app`, com a conta passo a passo                                                                   | —                                                                                                    |
-| Leis e tabelas                        | Alíquotas, faixas e limites de fontes oficiais, com a fonte registrada no código                                                   | —                                                                                                    |
-| Classificação das transações          | Regras determinísticas; a IA só entra no que sobra, e nunca aplica direto o que mexe num valor                                     | —                                                                                                    |
-| Pessoa, empresa e extratos da `/demo` | —                                                                                                                                  | Inventados; o CNPJ da persona não existe na Receita                                                  |
-| Contas bancárias em `/app`            | —                                                                                                                                  | Só o sandbox (ambiente de teste) da Pluggy; nenhum banco real é conectado                            |
-| CNPJ digitado em `/app`               | Consultado em bases públicas (BrasilAPI e, se falhar, CNPJ.ws)                                                                     | —                                                                                                    |
-| Ritmo da tela de análise da `/demo`   | A análise roda de verdade a cada vez                                                                                               | Só o intervalo entre os passos é controlado, para dar tempo de ler                                   |
-| IA                                    | No `/app`, quando configurada: classifica o que as regras não resolveram e escreve a explicação a partir da conta, atrás de travas | Na `/demo` a IA fica desligada: as explicações são textos-modelo preenchidos com os números do motor |
+|                                       | Real                                                                                                                               | De teste                                                                                                                                                                             |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Motor de cálculo                      | O mesmo código em `/demo` e em `/app`, com a conta passo a passo                                                                   | —                                                                                                                                                                                    |
+| Leis e tabelas                        | Alíquotas, faixas e limites de fontes oficiais, com a fonte registrada no código                                                   | —                                                                                                                                                                                    |
+| Classificação das transações          | Regras determinísticas; a IA só entra no que sobra, e nunca aplica direto o que mexe num valor                                     | —                                                                                                                                                                                    |
+| Pessoa, empresa e extratos da `/demo` | —                                                                                                                                  | Inventados; o CNPJ da persona não existe na Receita                                                                                                                                  |
+| Contas bancárias em `/app`            | —                                                                                                                                  | Só o ambiente de teste (sandbox) da Pluggy: a janela lista apenas bancos de teste, e se um banco real for conectado mesmo assim, a conexão é apagada na hora, sem copiar nenhum dado |
+| CNPJ digitado em `/app`               | Consultado em bases públicas (BrasilAPI e, se falhar, CNPJ.ws)                                                                     | —                                                                                                                                                                                    |
+| Ritmo da tela de análise da `/demo`   | A análise roda de verdade a cada vez                                                                                               | Só o intervalo entre os passos é controlado, para dar tempo de ler                                                                                                                   |
+| IA                                    | No `/app`, quando configurada: classifica o que as regras não resolveram e escreve a explicação a partir da conta, atrás de travas | Na `/demo` a IA fica desligada: as explicações são textos-modelo preenchidos com os números do motor                                                                                 |
 
 A IA nunca faz conta e nunca escolhe artigo de lei: todo valor sai do motor, e toda citação vem da própria regra.
 
@@ -42,11 +41,11 @@ A IA nunca faz conta e nunca escolhe artigo de lei: todo valor sai do motor, e t
 ```mermaid
 flowchart LR
   subgraph Pessoas
-    J[Jurado / visitante<br/>/demo sem login]
+    J[Visitante<br/>/demo sem login]
     D[Dono da PJ + sócio PF<br/>/app]
     C[Contador<br/>/r/token]
   end
-  R[(Refund<br/>Next.js 16 na Vercel)]
+  R[Refund<br/>Next.js 16 na Vercel]
   J --> R
   D --> R
   C --> R
@@ -80,13 +79,13 @@ Monorepo pnpm + Turborepo:
 
 Medida pelo teste `packages/pipeline/test/accuracy.test.ts` contra o gabarito da persona da demonstração (174 transações):
 
-| Critério (ENGINE-SPEC E.8)                                                 | Meta                                             | Medido          |
-| -------------------------------------------------------------------------- | ------------------------------------------------ | --------------- |
-| Transações que entram direto, sem pergunta (98)                            | ≥ 98% certas                                     | 100% (98 de 98) |
-| Transações que viram pergunta para o usuário (76)                          | sugestão certa, nunca aplicada antes da resposta | 76 de 76        |
-| Depois das respostas: transações acima de R$ 1.000 que alimentam um achado | 0 erro                                           | 0 erro          |
+| Critério                                                                                                          | Meta                                             | Medido          |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | --------------- |
+| Transações que entram direto, sem pergunta (98)                                                                   | ≥ 98% certas                                     | 100% (98 de 98) |
+| Transações que viram pergunta para o usuário (76)                                                                 | sugestão certa, nunca aplicada antes da resposta | 76 de 76        |
+| Depois das respostas da persona: todas as 174 transações (inclusive as acima de R$ 1.000 que alimentam um achado) | 0 erro                                           | 0 erro          |
 
-**Ressalva:** a persona e o gabarito foram escritos por nós, e as regras de classificação foram feitas olhando esse conjunto. O número mede consistência, não a precisão com extratos reais. Nesta persona as regras classificam tudo; a IA não classificou nenhuma transação. O segundo conjunto previsto, com pelo menos 300 transações ruidosas do sandbox da Pluggy rotuladas à mão, **ainda não foi medido**.
+**Ressalva:** a persona e o gabarito foram escritos por nós, e as regras de classificação foram feitas olhando esse conjunto. As respostas usadas são as do gabarito. O número mede consistência, não a precisão com extratos reais. Nesta persona as regras classificam tudo; a IA não classificou nenhuma transação. O segundo conjunto previsto, com pelo menos 300 transações ruidosas do sandbox da Pluggy rotuladas à mão, **ainda não foi medido**.
 
 ## Testes
 
@@ -99,22 +98,11 @@ pnpm e2e --project=demo-chromium
 
 ## Decisões de arquitetura (ADRs)
 
-1. Monorepo com pacotes internos e sem etapa de build
-2. O motor é puro e a IA não calcula
-3. Cenário combinado com contribuição marginal
-4. `/demo` sem banco, com zero variáveis e dados embutidos no build
-5. Fontes com modo ao vivo/replay e lista de campos permitidos na entrada
-6. Postgres portátil com schema `refund`; Supabase só como hospedagem; PGlite em dev e testes
-7. Tempo real via SSE com eventos persistidos
-8. Sessão anônima própria; WorkOS só quando configurado
-9. Direitos do plano no servidor com cota atômica; Pix avulso libera um período
-10. Webhooks verificados por provedor e idempotentes por tabela
-11. Observabilidade enxuta com keep-alive embutido
-12. Reserva automática do Open Finance por capacidade
-13. "A lei mudou" grava no banco e nunca muda um parâmetro sozinha
-14. CSP estática sem nonce
-15. TypeScript 6.0.3, Biome e dependency-cruiser
-16. Explicações usam lacunas; o modelo não escreve dígitos nem citações
+- ADR-002: O motor é puro e a IA não calcula
+- ADR-004: `/demo` sem banco, com zero variáveis e dados embutidos no build
+- ADR-005: Fontes com modo ao vivo/replay e lista de campos permitidos na entrada
+- ADR-013: "A lei mudou" grava no banco e nunca muda um parâmetro sozinha
+- ADR-016: Explicações usam lacunas; o modelo não escreve dígitos nem citações
 
 ## Licença
 
