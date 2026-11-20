@@ -11,7 +11,7 @@ const procedures = allProcedures();
 
 describe('procedure excerpts (@refund/law)', () => {
   it('holds the closed list of excerpts with unique ids that never collide with a provision', () => {
-    expect(procedures).toHaveLength(36);
+    expect(procedures).toHaveLength(40);
     const ids = procedures.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
     const provisions = new Set(all().map((p) => p.id));
@@ -84,6 +84,14 @@ describe('procedure excerpts (@refund/law)', () => {
       'poderá ser restituído ao contribuinte',
     );
     expect(procedure('manual-pgdas-d#6.10.1')?.text).toContain('em até 5 dias úteis');
+    // D54: the goods-export excerpts the R05 goods plan cites.
+    expect(procedure('manual-pgdas-d#1.5')?.text).toContain(
+      'revenda (comércio) de mercadorias para o exterior do país',
+    );
+    expect(procedure('manual-pgdas-d#6.5-mercadorias')?.text).toContain(
+      '4 - Venda de mercadorias industrializadas pelo contribuinte para o exterior',
+    );
+    expect(procedure('manual-pgdas-d#9.4.3.1')?.text).toContain('comercial exportadora');
     expect(procedure('nao-existe')).toBeUndefined();
   });
 });

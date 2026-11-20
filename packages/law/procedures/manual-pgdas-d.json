@@ -12,6 +12,18 @@
     "textFile": "pgdas-2026-11-13.pdfkit.txt"
   },
   {
+    "id": "manual-pgdas-d#1.5",
+    "kind": "procedure",
+    "label": "Manual do PGDAS-D e Defis (13/11/2026; PA de 2018 a 2026), item 1.5",
+    "text": "Receita de exportação de mercadorias – produto da venda (indústria) ou revenda (comércio) de mercadorias para o exterior do país.",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
+    "capturedAt": "2026-11-16",
+    "hash": "0b72025a9083acdd6de8dfd4401d9e1d9a178a5c5a399b4e3a62340ff4e3893c",
+    "sourceSha256": "1786a9badcd6676567b8a2ce27c6f11466b3abaf1ea1330a27eef31ec013119f",
+    "captureFile": "pgdas-2026-11-13.pdf",
+    "textFile": "pgdas-2026-11-13.pdfkit.txt"
+  },
+  {
     "id": "manual-pgdas-d#6.4",
     "kind": "procedure",
     "label": "Manual do PGDAS-D e Defis (13/11/2026; PA de 2018 a 2026), item 6.4",
@@ -31,6 +43,18 @@
     "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
     "capturedAt": "2026-11-16",
     "hash": "fefddbd2a654f35bb2c6f372f03ca50923e0846d5096e52e463350ff28b4bd4c",
+    "sourceSha256": "1786a9badcd6676567b8a2ce27c6f11466b3abaf1ea1330a27eef31ec013119f",
+    "captureFile": "pgdas-2026-11-13.pdf",
+    "textFile": "pgdas-2026-11-13.pdfkit.txt"
+  },
+  {
+    "id": "manual-pgdas-d#6.5-mercadorias",
+    "kind": "procedure",
+    "label": "Manual do PGDAS-D e Defis (13/11/2026; PA de 2018 a 2026), item 6.5 (mercadorias para o exterior)",
+    "text": "O contribuinte deverá considerar, destacadamente, para fins de cálculo, as receitas conforme abaixo:\n2 - Revenda de mercadorias para o exterior\n4 - Venda de mercadorias industrializadas pelo contribuinte para o exterior",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
+    "capturedAt": "2026-11-16",
+    "hash": "09e17bab45f25adc20af90c20a5b510a98fc30c0fbf414e513d9a1758186aca6",
     "sourceSha256": "1786a9badcd6676567b8a2ce27c6f11466b3abaf1ea1330a27eef31ec013119f",
     "captureFile": "pgdas-2026-11-13.pdf",
     "textFile": "pgdas-2026-11-13.pdfkit.txt"
@@ -79,6 +103,30 @@
     "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
     "capturedAt": "2026-11-16",
     "hash": "71ac740eded31aff2c438d39377f9c4a00f2c872af07b81e01a06d70c496f586",
+    "sourceSha256": "1786a9badcd6676567b8a2ce27c6f11466b3abaf1ea1330a27eef31ec013119f",
+    "captureFile": "pgdas-2026-11-13.pdf",
+    "textFile": "pgdas-2026-11-13.pdfkit.txt"
+  },
+  {
+    "id": "manual-pgdas-d#9.2",
+    "kind": "procedure",
+    "label": "Manual do PGDAS-D e Defis (13/11/2026; PA de 2018 a 2026), item 9.2",
+    "text": "A DEFIS é um módulo do PGDAS-D. O seu acesso se dá por meio do menu DEFIS (ver item 9.2).\nNo menu do lado esquerdo, clique em DEFIS e depois em Acessar DEFIS:",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
+    "capturedAt": "2026-11-16",
+    "hash": "56b1d4e0b8aeb16592019c003964fd1bb89715cdf5f792772e84609d53106527",
+    "sourceSha256": "1786a9badcd6676567b8a2ce27c6f11466b3abaf1ea1330a27eef31ec013119f",
+    "captureFile": "pgdas-2026-11-13.pdf",
+    "textFile": "pgdas-2026-11-13.pdfkit.txt"
+  },
+  {
+    "id": "manual-pgdas-d#9.4.3.1",
+    "kind": "procedure",
+    "label": "Manual do PGDAS-D e Defis (13/11/2026; PA de 2018 a 2026), item 9.4.3.1",
+    "text": "5. Receita proveniente de exportação direta (R$):\nInformar a receita proveniente de exportação direta, caso a pessoa jurídica tenha informado no PGDAS-D.\n6. Receita proveniente de exportação por meio de comercial exportadora:\nInformar o(s) CNPJ(s) da(s) empresa(s) comercial(is) exportadora(s) e o(s) valor(es) correspondente(s) à(s) operação(ões).",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/MANUAL_PGDAS-D_2018_V4.pdf",
+    "capturedAt": "2026-11-16",
+    "hash": "62b19f023fa135e66c2d0ccfad8a632903d1a641ca38253d409c1173319a1541",
     "sourceSha256": "1786a9badcd6676567b8a2ce27c6f11466b3abaf1ea1330a27eef31ec013119f",
     "captureFile": "pgdas-2026-11-13.pdf",
     "textFile": "pgdas-2026-11-13.pdfkit.txt"
