@@ -46,6 +46,12 @@
  * § 2º; CTN, art. 173; Res. CGSN 140/2018, arts. 25, § 6º (until 2026-12-31, like §§ 3º–4º-A), and 66; IN SF/SUREM 10/2019 (São Paulo), art. 1º-A. They carry
  * `capturedAt` 2026-11-12, the capture's URL, `captureFile` and, as `sourceSha256`, the SHA-256 of that file; the law
  * test finds each text verbatim in it (whitespace aside) when the captures are on disk. Same transcription rules.
+ *
+ * Added by D54 (R05 for goods, 20/11), the same way: LC 123/2006, art. 18, § 7º, and CTN, art. 166 (12/11 captures);
+ * LC 214/2025, art. 81-A (raw Planalto HTML of 12/11, `lc-214-2025.htm`, decoded by the test); and the excerpt
+ * `lc214-2025/art517/lc123-art18` ("LC 214/2025, art. 517 (art. 18 da LC 123/2006)": the new §§ 14 and 14-A of LC 123,
+ * art. 18, effective 2027-01-01 by LC 214, art. 544, III), from the 14/11 text `lc-214-2025-planalto-simples.md`.
+ * A line "[…]" marks source text skipped inside an excerpt; it is not looked up in the capture.
  */
 
 export type RegulationKind =

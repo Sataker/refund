@@ -72,5 +72,20 @@
     "capturedAt": "2026-11-14",
     "hash": "16babc84dd415f4f42b6c5642f954487ff20c9d354214923fc41c937289aeb9c",
     "sourceSha256": "783563120ea06a257dcf3e6a0460ce1ca5525ea30147930845048009e1ba406c"
+  },
+  {
+    "id": "lei5172-1966/art166",
+    "regulation": "lei5172-1966",
+    "provision": "art. 166",
+    "label": "CTN, art. 166",
+    "text": "Art. 166. A restituição de tributos que comportem, por sua natureza, transferência do respectivo encargo financeiro sòmente será feita a quem prove haver assumido o referido encargo, ou, no caso de tê-lo transferido a terceiro, estar por êste expressamente autorizado a recebê-la.",
+    "notes": [],
+    "effectiveFrom": null,
+    "effectiveUntil": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/l5172compilado.htm",
+    "capturedAt": "2026-11-12",
+    "hash": "21e755bdad8de527133b6f5a2dacfa2bee9c5e608d5067a1fe00666000bfe34e",
+    "sourceSha256": "410707c773eb0decd180e06e6ab6e5126f62d7c5b991f0c422ecea6663a5e15e",
+    "captureFile": "ctn-planalto.md"
   }
 ]

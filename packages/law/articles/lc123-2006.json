@@ -628,5 +628,20 @@
     "capturedAt": "2026-11-14",
     "hash": "707d1942867839d8a12e59b9214e9a230b3978c046afb652ac96ccc06933dfd6",
     "sourceSha256": "d660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d"
+  },
+  {
+    "id": "lc123-2006/art18/p7",
+    "regulation": "lc123-2006",
+    "provision": "art. 18, § 7º",
+    "label": "LC 123/2006, art. 18, § 7º",
+    "text": "§ 7º A sociedade de propósito específico de que trata o art. 56 desta Lei Complementar que houver adquirido mercadorias de microempresa ou empresa de pequeno porte que seja sua sócia, bem como a empresa comercial exportadora que houver adquirido mercadorias ou serviços de empresa optante pelo Simples Nacional, com o fim específico de exportação para o exterior, que, no prazo de 180 (cento e oitenta) dias, contado da data da emissão da nota fiscal pela vendedora, não comprovar o seu embarque para o exterior ficará sujeita ao pagamento de todos os impostos e contribuições que deixaram de ser pagos pela empresa vendedora, acrescidos de juros de mora e multa, de mora ou de ofício, calculados na forma da legislação relativa à cobrança do tributo não pago, aplicável à sociedade de propósito específico ou à própria comercial exportadora.",
+    "notes": ["(Redação dada pela Lei Complementar nº 147, de 2014)", "(Produção de efeito)"],
+    "effectiveFrom": null,
+    "effectiveUntil": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm",
+    "capturedAt": "2026-11-12",
+    "hash": "ecd05ab8567a3132c93e8105a71cfefceaee4a92bc00caa2193a33c083410f77",
+    "sourceSha256": "4b9be50796785eb69a80e0067955d694d76183ef7ea4121f6bffe64cb6e0329b",
+    "captureFile": "lc-123-2006-planalto.md"
   }
 ]

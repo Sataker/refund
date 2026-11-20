@@ -48,6 +48,18 @@
     "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
   },
   {
+    "id": "pr-simples-2026-10-09#7.10",
+    "kind": "procedure",
+    "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 7.10",
+    "text": "7.10. Quais as hipóteses de imunidade no Simples Nacional?\n[…]\n• Tributos sobre receitas relativas a exportações:\n✓ IPI (art. 153, § 3º, inciso III da CF)\n✓ PIS/Pasep e Cofins (art. 149, § 2º, inciso I; CSLL escapa à imunidade, porque é sobre o lucro – STF RE 564.413)\n✓ ICMS (art. 155, § 2º, inciso X, “a” da CF)",
+    "url": "https://www8.receita.fazenda.gov.br/SimplesNacional/Arquivos/manual/PerguntaoSN.pdf",
+    "capturedAt": "2026-11-12",
+    "hash": "10df075baecd2c0d9c5fa6e871b001e395f0dfa4994a7bc71752a028d023d270",
+    "sourceSha256": "08667b6c34527f12bce5db5391b377e3ed84f8dff6ba37b142427bb05a50d73f",
+    "captureFile": "perguntao-simples-nacional-2026-10-09.pdf",
+    "textFile": "perguntao-simples-nacional-2026-10-09.pdfkit.txt"
+  },
+  {
     "id": "pr-simples-2026-10-09#10.4",
     "kind": "procedure",
     "label": "CGSN, Perguntas e Respostas do Simples Nacional (09/10/2026), pergunta 10.4",

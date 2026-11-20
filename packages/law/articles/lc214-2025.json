@@ -29,5 +29,35 @@
     "capturedAt": "2026-11-14",
     "hash": "48e3c6cedd0c49c2174c9449a3fbf7ef3227baf336e1b77408878fd6f6c6280d",
     "sourceSha256": "a501f73cfba1667bb9aa2ded8da364d22f98d43410e73a89faef95287955165e"
+  },
+  {
+    "id": "lc214-2025/art81-a",
+    "regulation": "lc214-2025",
+    "provision": "art. 81-A",
+    "label": "LC 214/2025, art. 81-A",
+    "text": "Art. 81-A. A exportação de bens materiais, inclusive nos casos em que não haja saída física do território nacional de que trata o art. 81, será comprovada mediante registro pelo órgão competente ou documentação e procedimentos estabelecidos na legislação aduaneira, nos termos do regulamento.\n§ 1º Decorrido o prazo de 180 (cento e oitenta) dias, contado da emissão do documento fiscal eletrônico, sem a comprovação da exportação, considera-se ocorrida operação onerosa e serão exigidos do exportador, com os devidos acréscimos, a CBS e o IBS incidentes na operação, inclusive os relativos às operações de que trata o inciso II do § 1º do art. 80.\n§ 2º O regulamento poderá prever hipóteses de ampliação do prazo previsto no § 1º deste artigo.",
+    "notes": ["(Incluído pela Lei Complementar nº 227, de 2026)"],
+    "effectiveFrom": null,
+    "effectiveUntil": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm",
+    "capturedAt": "2026-11-12",
+    "hash": "33beda6a46adbb9a8f1763dd95d01383d5a67b9c4e55aaed929297a54b93631d",
+    "sourceSha256": "b6e0d63a71305f6d0384fab10a759b0b7fa2f049d67f162e6ce656e08910f32d",
+    "captureFile": "lc-214-2025.htm"
+  },
+  {
+    "id": "lc214-2025/art517/lc123-art18",
+    "regulation": "lc214-2025",
+    "provision": "art. 517 (art. 18 da LC 123/2006)",
+    "label": "LC 214/2025, art. 517 (art. 18 da LC 123/2006)",
+    "text": "Art. 18. ....................................................................................\n[…]\n§ 14. Observado o disposto no § 14-A, a redução no montante a ser recolhido no Simples Nacional relativo aos valores das receitas decorrentes da exportação de que trata o inciso IV do § 4º-A deste artigo também corresponderá às alíquotas efetivas relativas ao ICMS e ao ISS, apuradas com base nos Anexos I a V desta Lei Complementar.\n§ 14-A. A redução no montante a ser recolhido no Simples Nacional relativo aos valores das receitas decorrentes da exportação de que trata o inciso IV do § 4º-A deste artigo corresponderá às alíquotas efetivas relativas ao IPI, ao IBS e à CBS, apuradas com base nos Anexos I a V desta Lei Complementar.",
+    "notes": ["Produção de efeitos"],
+    "effectiveFrom": "2027-01-01",
+    "effectiveUntil": null,
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm",
+    "capturedAt": "2026-11-14",
+    "hash": "99728f03dde66c19e5214c62a25f2e154078243db39f2a84556fa82f3fd5a622",
+    "sourceSha256": "20e51b3fd6f208ee0d3533a16d37e79f1477515c7c0cbb4081b5d92c6e04d2cb",
+    "captureFile": "lc-214-2025-planalto-simples.md"
   }
 ]

@@ -34,7 +34,32 @@ export const CAPTURE_SHA256: Readonly<Record<string, string>> = {
   'rfb-pr-irpf-2026-extrato.md': '721038645d4de73786f1bcc72a096646305d02cba85e8d1f9517638a5aceed62',
   'rfb-noticia-irpf-2026.md': '8360d0ead67e0f1d73d0dcbb8e192d43b9a0122e2ab6b4997b9e01c207f64132',
   'pr.pdf': '51712e390f090521d07a0013c0dec041981e160b1b638ae92888fa278c3a7b44',
+  // D54: LC 214/2025 at Planalto, raw HTML of 12/11 (art. 81-A) and the text of its Simples articles, 14/11 (art. 517).
+  'lc-214-2025.htm': 'b6e0d63a71305f6d0384fab10a759b0b7fa2f049d67f162e6ce656e08910f32d',
+  'lc-214-2025-planalto-simples.md':
+    '20e51b3fd6f208ee0d3533a16d37e79f1477515c7c0cbb4081b5d92c6e04d2cb',
 };
+
+/** A line of an excerpt that marks skipped source text (D54 audit, L1); it is not looked up in the capture. */
+export const SKIPPED = '[…]';
+
+/**
+ * Text of a capture file for the verbatim check. The raw Planalto HTML (`.htm`, Windows-1252) is decoded, its struck
+ * text (`<strike>`, `<s>`, `<del>`) dropped, its tags removed and its entities decoded; other files are UTF-8 text.
+ */
+export function captureText(file: Buffer, name: string): string {
+  if (!name.endsWith('.htm')) return file.toString('utf8');
+  const entities: Record<string, string> = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"' };
+  return new TextDecoder('windows-1252')
+    .decode(file)
+    .replace(/<(strike|s|del)\b[\s\S]*?<\/\1\s*>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&(#\d+|[a-z]+);/gi, (m, e: string) =>
+      e.startsWith('#')
+        ? String.fromCodePoint(Number(e.slice(1)))
+        : (entities[e.toLowerCase()] ?? m),
+    );
+}
 
 function findCaptures(): string | null {
   const fromEnv = process.env.REFUND_CAPTURES_DIR;

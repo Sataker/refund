@@ -4,14 +4,14 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { all, allProcedures, type Procedure, procedure } from '../src/index.ts';
-import { CAPTURE_SHA256, CAPTURES, sha256Bytes, squash } from './captures.ts';
+import { CAPTURE_SHA256, CAPTURES, SKIPPED, sha256Bytes, squash } from './captures.ts';
 
 const ID = /^[a-z0-9.-]+(#[a-z0-9.-]+)?$/;
 const procedures = allProcedures();
 
 describe('procedure excerpts (@refund/law)', () => {
   it('holds the closed list of excerpts with unique ids that never collide with a provision', () => {
-    expect(procedures).toHaveLength(40);
+    expect(procedures).toHaveLength(45);
     const ids = procedures.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
     const provisions = new Set(all().map((p) => p.id));
@@ -70,6 +70,7 @@ describe('procedure excerpts (@refund/law)', () => {
           texts.get(p.textFile) ?? squash(readFileSync(join(dir, p.textFile), 'utf8'));
         texts.set(p.textFile, haystack);
         for (const line of p.text.split('\n')) {
+          if (line === SKIPPED) continue;
           expect(haystack.includes(squash(line)), `${p.id}: ${line}`).toBe(true);
         }
       }
@@ -92,6 +93,8 @@ describe('procedure excerpts (@refund/law)', () => {
       '4 - Venda de mercadorias industrializadas pelo contribuinte para o exterior',
     );
     expect(procedure('manual-pgdas-d#9.4.3.1')?.text).toContain('comercial exportadora');
+    // L1: a skip is marked, never the first line.
+    for (const p of procedures) expect(p.text.startsWith(SKIPPED), p.id).toBe(false);
     expect(procedure('nao-existe')).toBeUndefined();
   });
 });

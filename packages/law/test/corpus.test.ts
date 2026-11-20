@@ -11,14 +11,22 @@ import {
   regulation,
   regulations,
 } from '../src/index.ts';
-import { byCapture, CAPTURE_SHA256, CAPTURES, sha256Bytes, squash } from './captures.ts';
+import {
+  byCapture,
+  CAPTURE_SHA256,
+  CAPTURES,
+  captureText,
+  SKIPPED,
+  sha256Bytes,
+  squash,
+} from './captures.ts';
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const ID =
-  /^[a-z0-9-]+\/(art\d+(-[a-z])?|anexo\d+)(\/(caput|pu|p\d+(-[a-z]+)?|[ivxlc]+|res140-art\d+))*$/;
+  /^[a-z0-9-]+\/(art\d+(-[a-z])?|anexo\d+)(\/(caput|pu|p\d+(-[a-z]+)?|[ivxlc]+|(res140|lc123)-art\d+))*$/;
 const UNIT =
-  /^(art\. \d+º?(-[A-Z])?(, (caput|§ \d+º?(-[A-Z]+)?|parágrafo único|[IVXLC]+))*|Anexo [IVX]+)( \(art\. \d+ da Res\. CGSN 140\/2018\))?$/;
+  /^(art\. \d+º?(-[A-Z])?(, (caput|§ \d+º?(-[A-Z]+)?|parágrafo único|[IVXLC]+))*|Anexo [IVX]+)( \(art\. \d+ da (Res\. CGSN 140\/2018|LC 123\/2006)\))?$/;
 const REVOKED = /\(\s*revogad|^\s*revogad[oa]s?\s*[.;]?\s*$|<\s*\/?\s*(strike|s|del)\b/im;
 const DRAFTING_NOTE =
   /\(\s*(Reda[çc][ãa]o dada|Inclu[ií]d[oa]|Vide |Renumerad|Produ[çc][ãa]o de efeito|Vig[êe]ncia\))/i;
@@ -39,6 +47,8 @@ function expectedOpening(p: Provision): RegExp | null {
   if (/^[ivxlc]+$/.test(last)) return new RegExp(`^${last.toUpperCase()} [-–]`);
   if (/^anexo\d+$/.test(last)) return /^ANEXO [IVX]+$/m;
   if (/^res140-art\d+$/.test(last)) return new RegExp(`^"Art\\. ${last.split('art')[1]}\\b`);
+  // D54: LC 214/2025, art. 517, as transcribed at Planalto (no opening quote).
+  if (/^lc123-art\d+$/.test(last)) return new RegExp(`^Art\\. ${last.split('art')[1]}\\b`);
   return null;
 }
 
@@ -47,7 +57,7 @@ describe(PACKAGE_NAME, () => {
 
   it('holds the closed list of provisions of every catalogued regulation', () => {
     expect(regulations).toHaveLength(26);
-    expect(corpus).toHaveLength(117);
+    expect(corpus).toHaveLength(121);
     for (const r of regulations)
       expect(regulation(r.id)?.provisions.length ?? 0).toBeGreaterThan(0);
     for (const p of corpus) expect(short.has(p.regulation)).toBe(true);
@@ -137,6 +147,8 @@ describe(PACKAGE_NAME, () => {
     expect(article('res-cgsn190-2026/art1/res140-art26')?.effectiveFrom).toBe('2027-01-01');
     expect(article('lc238-2026/art2')?.effectiveFrom).toBe('2027-01-01');
     expect(article('res-cgsn190-2026/art1/res140-art25')?.effectiveFrom).toBe('2027-01-01');
+    // LC 214/2025, art. 544, III: art. 517 produces effects from 1º/1/2027.
+    expect(article('lc214-2025/art517/lc123-art18')?.effectiveFrom).toBe('2027-01-01');
   });
 
   it('ends a wording only when a captured provision replaces or revokes it', () => {
@@ -199,7 +211,7 @@ describe(PACKAGE_NAME, () => {
     expect(regulation('nao-existe')).toBeUndefined();
     const lc123 = regulation('lc123-2006');
     expect(lc123?.short).toBe('LC 123/2006');
-    expect(lc123?.provisions).toHaveLength(42);
+    expect(lc123?.provisions).toHaveLength(43);
     expect(all()).toBe(corpus);
   });
 
@@ -209,22 +221,31 @@ describe(PACKAGE_NAME, () => {
     expect(fromCaptures.map((p) => p.id).sort()).toEqual([
       'in-sf-surem10-2019/art1-a/caput',
       'in-sf-surem10-2019/art1-a/ii',
+      'lc123-2006/art18/p7',
       'lc123-2006/art26/p2',
+      'lc214-2025/art517/lc123-art18',
+      'lc214-2025/art81-a',
+      'lei5172-1966/art166',
       'lei5172-1966/art173',
       'res-cgsn140-2018/art25/p6',
       'res-cgsn140-2018/art66',
     ]);
     for (const p of fromCaptures) {
-      expect(p.capturedAt, p.id).toBe('2026-11-12');
+      // 12/11 captures, except the LC 214 Simples text of 14/11 (D54, art. 517).
+      expect(p.capturedAt, p.id).toBe(
+        p.captureFile === 'lc-214-2025-planalto-simples.md' ? '2026-11-14' : '2026-11-12',
+      );
       expect(CAPTURE_SHA256[p.captureFile as string], p.id).toBe(p.sourceSha256);
     }
     if (CAPTURES === null) return;
     for (const p of fromCaptures) {
       const file = readFileSync(join(CAPTURES, p.captureFile as string));
       expect(sha256Bytes(file), p.id).toBe(p.sourceSha256);
-      const haystack = squash(file.toString('utf8'));
-      for (const line of p.text.split('\n'))
+      const haystack = squash(captureText(file, p.captureFile as string));
+      for (const line of p.text.split('\n')) {
+        if (line === SKIPPED) continue;
         expect(haystack.includes(squash(line)), line).toBe(true);
+      }
     }
   });
 });
