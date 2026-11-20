@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { formatBRL, moneyParts } from '@/lib/format';
+import { formatBRL, moneyParts, THIN_NBSP } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { cssVars } from './highlight';
 
@@ -82,14 +82,30 @@ export function MoneyHero({
   const parts = moneyParts(cents);
   return (
     <div data-testid={testId} data-cents={cents} className={cn('min-w-0', className)}>
-      <p className="sr-only" aria-live={live ? 'polite' : undefined}>
+      <p className="sr-only select-none" aria-live={live ? 'polite' : undefined}>
         {srLabel ? `${srLabel}: ` : ''}
         {formatBRL(cents)}
       </p>
-      <p aria-hidden="true" className={cn(SIZE[size], 'num')}>
+      <p aria-hidden="true" className={cn(SIZE[size], 'num relative')}>
+        {/*
+         * Copy layer (E21): the odometer keeps ten reel digits per position in the DOM, so selecting it pasted
+         * "0123456789…". The visible number is not selectable; this transparent twin, laid out like the static
+         * number, is what a drag-select and copy pick up ("R$ 21.138,60"). Screen readers use the sr-only line.
+         */}
+        <span
+          data-testid={`${testId}/copy`}
+          className="absolute top-0 left-0 z-10 pr-[0.06em] pl-[0.02em] whitespace-nowrap text-transparent select-text selection:bg-cobalt/25 selection:text-transparent"
+        >
+          {/* Inline (not flex) so the copied text has no line breaks between R$, reais and cents. */}
+          <span className="mr-[0.1em] align-top text-[0.45em] leading-none">
+            {parts.negative ? '−' : ''}R$<span className="text-[0px]">{THIN_NBSP}</span>
+          </span>
+          {parts.reais}
+          <span className="align-top text-[0.5em] leading-none">,{parts.cents}</span>
+        </span>
         <span
           className={cn(
-            'hl inline-flex items-start pr-[0.06em] pl-[0.02em] text-found-foreground',
+            'hl inline-flex items-start pr-[0.06em] pl-[0.02em] text-found-foreground select-none',
             !animate && 'hl-static',
           )}
           style={cssVars({ '--hl-delay': '120ms' })}
