@@ -334,7 +334,7 @@ describe('first-access track state (D19; ARCHITECTURE §13)', () => {
     expect(
       await saveAnswerWith(h.db, userId, { step: 'faturamento', value: 'from_30k_to_60k' }),
     ).toMatchObject({ ok: false, error: { code: 'FORBIDDEN' } });
-    expect(await confirmCompanyWith(h.db, userId)).toEqual({
+    expect(await confirmCompanyWith(h.db, userId)).toMatchObject({
       ok: true,
       value: { next: '/app/comecar/faturamento' },
     });
@@ -349,17 +349,23 @@ describe('first-access track state (D19; ARCHITECTURE §13)', () => {
     expect(currentStep(progress)).toBe('funcionarios');
   });
 
-  it('a company out of the Simples skips "funcionários?" and "exterior?" and refuses their answers', async () => {
+  it('H3: a company out of the Simples stops at "É você?": "Sou eu" is refused with the regime, no step after it', async () => {
     const userId = await newUser();
     await lookupCnpjWith(userId, { cnpj: PRESUMIDO, context: 'live' }, companyDeps());
-    await confirmCompanyWith(h.db, userId);
+    expect(await confirmCompanyWith(h.db, userId)).toMatchObject({
+      ok: false,
+      error: {
+        code: 'FORBIDDEN',
+        message:
+          'Por enquanto o Refund calcula só empresas do Simples Nacional. A Consultoria Exemplo está no Lucro Presumido.',
+      },
+    });
+    const { progress } = await loadTrack(h.db, userId);
+    expect(progress.company?.outOfScope).toBe(true);
+    expect(currentStep(progress)).toBe('confirmar-empresa');
     expect(
       await saveAnswerWith(h.db, userId, { step: 'faturamento', value: 'from_60k_to_150k' }),
-    ).toEqual({ ok: true, value: { next: '/app/comecar/estimativa' } });
-    expect(await saveAnswerWith(h.db, userId, { step: 'exterior', value: 'no' })).toMatchObject({
-      ok: false,
-      error: { code: 'INVALID_INPUT' },
-    });
+    ).toMatchObject({ ok: false, error: { code: 'FORBIDDEN' } });
   });
 
   it('"Não é minha empresa" clears the company and its answers; a new CNPJ starts over', async () => {

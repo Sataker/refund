@@ -1,9 +1,13 @@
+import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { joinWaitlist } from '@/app/(marketing)/actions';
 import { CnpjStep } from '@/features/company/cnpj-step.client';
 import { CompanyCard } from '@/features/company/company-card';
 import { EstimateView } from '@/features/company/estimate-view';
+import { outOfScopeMessage, outOfScopeRegime } from '@/features/company/scope';
 import { ConnectStep } from '@/features/connection/connect-step.client';
 import { ConsentContent } from '@/features/connection/consent-content';
+import { WaitlistForm } from '@/features/landing/waitlist-form.client';
 import { AdvanceButton } from '@/features/track/advance-button.client';
 import { ChoiceStep } from '@/features/track/choice-step.client';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
@@ -105,8 +109,50 @@ function StepBody({
           <CnpjStep lookup={lookupCnpj} {...(typedCnpj ? { initial: typedCnpj } : {})} />
         </>
       );
-    case 'confirmar-empresa':
+    case 'confirmar-empresa': {
       if (!company) return null;
+      const regime = outOfScopeRegime(company.company);
+      if (regime !== null) {
+        const c = company.company;
+        return (
+          <>
+            <StepTitle title="É você?" />
+            <CompanyCard company={c} />
+            <section
+              className="mt-8 flex flex-col gap-4 rounded-lg border border-warning bg-warning-soft p-5"
+              data-testid="out-of-scope"
+              data-regime={regime}
+              aria-labelledby="fora-titulo"
+            >
+              <p id="fora-titulo" className="type-body-lg text-foreground" role="status">
+                {outOfScopeMessage(c.displayTradeName ?? c.displayLegalName, regime)}
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <Link
+                  href="/demo"
+                  data-testid="out-of-scope-demo"
+                  className="inline-flex min-h-12 items-center justify-center rounded-md bg-primary px-5 font-medium text-primary-foreground"
+                >
+                  Ver a demo com a Marina
+                </Link>
+                <AdvanceButton
+                  action={rejectCompany}
+                  label="Usar outro CNPJ"
+                  variant="outline"
+                  arrow={false}
+                  testId="out-of-scope-other-cnpj"
+                />
+              </div>
+            </section>
+            <section className="mt-8" aria-label="Lista de espera">
+              <p className="type-small mb-3 text-muted-foreground">
+                Quer saber quando o Refund calcular o seu regime? Entre na lista de espera.
+              </p>
+              <WaitlistForm join={joinWaitlist} />
+            </section>
+          </>
+        );
+      }
       return (
         <>
           <StepTitle title="É você?" />
@@ -124,6 +170,7 @@ function StepBody({
           </div>
         </>
       );
+    }
     case 'faturamento':
       return (
         <>

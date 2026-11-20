@@ -45,7 +45,11 @@ export interface ConnectionSummary {
 }
 
 export interface TrackProgress {
-  company: { displayName: string; confirmed: boolean } | null;
+  /**
+   * `outOfScope` (H3): the regime is not Simples nor MEI; the track stops at `confirmar-empresa` and never reaches the
+   * consent and the bank steps.
+   */
+  company: { displayName: string; confirmed: boolean; outOfScope?: boolean } | null;
   /** ENGINE-SPEC C.11.1: which optional questions apply to this company. */
   questions: { employees: boolean; abroad: boolean } | null;
   answers: Partial<ProfileAnswers>;
@@ -83,7 +87,7 @@ export function isDone(step: Step, p: TrackProgress): boolean {
     case 'cnpj':
       return p.company !== null;
     case 'confirmar-empresa':
-      return p.company?.confirmed === true;
+      return p.company?.confirmed === true && p.company.outOfScope !== true;
     case 'faturamento':
       return p.answers.monthlyRevenueBracket !== undefined;
     case 'funcionarios':

@@ -28,6 +28,7 @@ import {
   saveAnswerWith,
   skipPersonalAccountWith,
 } from '@/server/track/answers.ts';
+import { loadTrack } from '@/server/track/state.ts';
 
 // ARCHITECTURE §4.7 (live): getSession → requireCapability (liveContext) → rateLimit → (entitlement)
 // → zod, inside each core. Results only: nothing here throws to the client.
@@ -46,6 +47,18 @@ async function run<T>(
     logger.error('action.error', { action: name, error: err });
     return fail('UNAVAILABLE', FAILED);
   }
+}
+
+const OUT_OF_SCOPE = 'Por enquanto o Refund calcula só empresas do Simples Nacional.';
+
+/** H3: consent and the bank steps only for a company in scope (Simples or MEI). */
+async function inScope<T>(
+  ctx: LiveContext,
+  work: () => Promise<ActionResult<T>>,
+): Promise<ActionResult<T>> {
+  const { progress } = await loadTrack(ctx.db, ctx.userId);
+  if (progress.company?.outOfScope) return fail('FORBIDDEN', OUT_OF_SCOPE);
+  return work();
 }
 
 const deps = (ctx: LiveContext) => ({
@@ -111,13 +124,13 @@ export async function recordConsent(input: {
   scopes: string[];
   termsVersion: string;
 }): Promise<ActionResult<{ consentId: string } & Next>> {
-  return run('recordConsent', (ctx) => recordConsentWith(input, deps(ctx)));
+  return run('recordConsent', (ctx) => inScope(ctx, () => recordConsentWith(input, deps(ctx))));
 }
 
 export async function connectSampleData(input: {
   holder: 'PF' | 'PJ';
 }): Promise<ActionResult<ConnectionView>> {
-  return run('connectSampleData', (ctx) => connectSampleWith(input, deps(ctx)));
+  return run('connectSampleData', (ctx) => inScope(ctx, () => connectSampleWith(input, deps(ctx))));
 }
 
 export async function createConnectToken(input: { holder: 'PF' | 'PJ' }): Promise<
@@ -128,7 +141,9 @@ export async function createConnectToken(input: { holder: 'PF' | 'PJ' }): Promis
     connectorIds: number[];
   }>
 > {
-  return run('createConnectToken', (ctx) => createConnectTokenWith(input, deps(ctx)));
+  return run('createConnectToken', (ctx) =>
+    inScope(ctx, () => createConnectTokenWith(input, deps(ctx))),
+  );
 }
 
 export async function registerPluggyItem(input: {
@@ -136,7 +151,9 @@ export async function registerPluggyItem(input: {
   holder: 'PF' | 'PJ';
   companyCnpj?: string;
 }): Promise<ActionResult<{ connectionId: string }>> {
-  return run('registerPluggyItem', (ctx) => registerPluggyItemWith(input, deps(ctx)));
+  return run('registerPluggyItem', (ctx) =>
+    inScope(ctx, () => registerPluggyItemWith(input, deps(ctx))),
+  );
 }
 
 export async function getConnectionStatus(input: {
