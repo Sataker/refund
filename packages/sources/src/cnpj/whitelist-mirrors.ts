@@ -242,8 +242,14 @@ export const receitaWsSchema = z.object({
 });
 const RECEITAWS_KEPT = new Set(Object.keys(receitaWsSchema.shape));
 
-/** "203-8 - Sociedade de Economia Mista" → code "2038" and its description. */
-function receitaWsNature(value: string | null | undefined): { code: string; description: string } {
+/** A legal-nature text that names a person's business (EI, EIRELI, rural producer…). */
+export const PERSON_NATURE = /empres[aá]rio|individual|eireli|produtor rural/i;
+
+/** "203-8 - Sociedade de Economia Mista" → code "2038" and its description; no code → code ''. */
+export function receitaWsNature(value: string | null | undefined): {
+  code: string;
+  description: string;
+} {
   const v = clean(value);
   const m = /^([\d-]+)\s*-\s*(.*)$/.exec(v);
   return m
@@ -286,7 +292,14 @@ export function sanitizeReceitaWsCompany(
   const nature = receitaWsNature(r.natureza_juridica);
   const company: PublicCompany = {
     cnpj: requested,
-    ...legalName(nature.code, meiOptedIn, r.nome, r.fantasia),
+    // An empty code already masks (fail closed); a description that reads like a person's business masks
+    // too, in case the code is there but outside MASKED_LEGAL_NATURES (E21 review, rule 4).
+    ...legalName(
+      nature.code,
+      meiOptedIn || PERSON_NATURE.test(nature.description),
+      r.nome,
+      r.fantasia,
+    ),
     legalNature: nature,
     size: brasilApiSize(meiOptedIn, '', clean(r.porte)),
     primaryCnae: { code: primary, description: clean(main?.text) },

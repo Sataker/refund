@@ -251,3 +251,101 @@ describe('ReceitaWS specifics', () => {
     expect(r).toMatchObject({ ok: false, error: { code, source: 'receitaws' } });
   });
 });
+
+// E21 review (rule 4): the EI/MEI mask fails closed. When the legal nature is missing or unreadable,
+// the name may be a person's, so it is masked; the person's name never reaches the output.
+describe('legal nature missing → name masked (fail closed)', () => {
+  const person = 'CICRANO DA SILVA PESSOA';
+  const withoutNature: Record<CnpjSource, (raw: Record<string, unknown>) => unknown> = {
+    brasilapi: (raw) => ({
+      ...raw,
+      razao_social: person,
+      nome_fantasia: person,
+      codigo_natureza_juridica: null,
+      natureza_juridica: null,
+    }),
+    minhareceita: ({ codigo_natureza_juridica: _code, ...rest }) => ({
+      ...rest,
+      razao_social: person,
+      nome_fantasia: person,
+    }),
+    opencnpj: ({ codigo_natureza_juridica: _code, natureza_juridica: _text, ...rest }) => ({
+      ...rest,
+      razao_social: person,
+      nome_fantasia: person,
+    }),
+    cnpja: (raw) => ({
+      ...raw,
+      alias: person,
+      company: { ...(raw.company as Record<string, unknown>), name: person, nature: null },
+    }),
+    cnpjws: (raw) => ({
+      ...raw,
+      razao_social: person,
+      natureza_juridica: null,
+      estabelecimento: {
+        ...(raw.estabelecimento as Record<string, unknown>),
+        nome_fantasia: person,
+      },
+    }),
+    receitaws: ({ natureza_juridica: _nature, ...rest }) => ({
+      ...rest,
+      nome: person,
+      fantasia: person,
+    }),
+  };
+
+  it.each(CNPJ_SOURCES.map((s) => [s.source, s] as const))('%s', (source, spec) => {
+    const r = spec.sanitize(withoutNature[source](clone(fixture(source))), BB, fetchedAt);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value).toMatchObject({
+      displayLegalName: MASKED_LEGAL_NAME,
+      displayTradeName: null,
+      masked: true,
+    });
+    expect(JSON.stringify(r.value)).not.toContain(person);
+  });
+
+  it.each([
+    'Empresário (Individual)',
+    'Empresa Individual de Responsabilidade Limitada (de Natureza Empresária)',
+    'Produtor Rural (Pessoa Física)',
+    '213-5 - Empresário (Individual)',
+    '999-9 - Empresário (Individual)',
+  ])('ReceitaWS nature "%s" masks the name', (natureza) => {
+    const r = sanitizeReceitaWsCompany(
+      { ...fixture('receitaws'), natureza_juridica: natureza, nome: person },
+      BB,
+      fetchedAt,
+    );
+    expect(r.ok && r.value.masked).toBe(true);
+    expect(JSON.stringify(r)).not.toContain(person);
+  });
+
+  it('a company nature with its code is not masked (no over-masking)', () => {
+    const r = sanitizeReceitaWsCompany(fixture('receitaws'), BB, fetchedAt);
+    expect(r.ok && r.value.masked).toBe(false);
+  });
+});
+
+// E21 review item 9: every source sends the CNPJ, so an answer without it is refused.
+describe('an answer without the CNPJ is refused', () => {
+  const drop: Record<CnpjSource, (raw: Record<string, unknown>) => unknown> = {
+    brasilapi: ({ cnpj: _c, ...rest }) => rest,
+    minhareceita: ({ cnpj: _c, ...rest }) => rest,
+    opencnpj: ({ cnpj: _c, ...rest }) => rest,
+    cnpja: ({ taxId: _c, ...rest }) => rest,
+    cnpjws: (raw) => {
+      const { cnpj: _c, ...est } = raw.estabelecimento as Record<string, unknown>;
+      return { ...raw, estabelecimento: est };
+    },
+    receitaws: ({ cnpj: _c, ...rest }) => rest,
+  };
+  it.each(CNPJ_SOURCES.map((s) => [s.source, s] as const))('%s', (source, spec) => {
+    expect(spec.sanitize(drop[source](clone(fixture(source))), BB, fetchedAt)).toMatchObject({
+      ok: false,
+      error: { code: 'UNEXPECTED_RESPONSE', source },
+    });
+  });
+});

@@ -135,11 +135,15 @@ export function unexpected(source: string, what: string): { ok: false; error: Pr
   });
 }
 
+/**
+ * The answer is about the CNPJ we asked for. Every one of the six sources sends the CNPJ (checked on
+ * 20/11/2026), so a missing one is refused too (E21 review, item 9).
+ */
 export function sameCnpj(raw: number | string | null | undefined, requested: Cnpj): boolean {
   const v = String(raw ?? '')
     .replace(/[.\-/\s]/g, '')
     .toUpperCase();
-  return v === '' || v.padStart(14, '0') === requested;
+  return v !== '' && v.padStart(14, '0') === requested;
 }
 
 /** Legal-nature code as 4 digits ("213-5" → "2135"), so a formatting variant cannot skip the mask. */
@@ -147,9 +151,13 @@ export function legalNatureCode(value: number | string | null | undefined): stri
   return String(value ?? '').replace(/\D/g, '');
 }
 
-/** True when the legal name is a person's name and must be masked. */
+/**
+ * True when the legal name is a person's name and must be masked. Fails closed (E21 review, rule 4): a
+ * missing or unparseable legal-nature code also masks, since we cannot tell that the name is not a person's.
+ */
 export function mustMaskLegalName(natureCode: string, meiOptedIn: boolean): boolean {
-  return meiOptedIn || MASKED_LEGAL_NATURES.includes(legalNatureCode(natureCode));
+  const code = legalNatureCode(natureCode);
+  return meiOptedIn || code === '' || MASKED_LEGAL_NATURES.includes(code);
 }
 
 export function legalName(
