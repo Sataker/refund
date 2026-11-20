@@ -66,8 +66,15 @@ export function replayCnpj(): CnpjProvider {
   return new ReplayCnpj({ companies: REPLAY_COMPANIES });
 }
 
-/** One breaker and pacing state per server process, shared by every lookup (and read by the health). */
-const guard = new CnpjProviderGuard();
+/**
+ * One breaker and pacing state per server process, shared by every lookup and read by the health. Kept
+ * on `globalThis`: Next bundles each route on its own, so a plain module constant would give the health
+ * route a different (always empty) instance than the server action that runs the lookups.
+ */
+const GUARD_KEY = Symbol.for('refund.cnpjProviderGuard');
+const holder = globalThis as typeof globalThis & { [GUARD_KEY]?: CnpjProviderGuard };
+holder[GUARD_KEY] ??= new CnpjProviderGuard();
+const guard: CnpjProviderGuard = holder[GUARD_KEY];
 
 /**
  * The six live sources. BrasilAPI's own retry is off here: the next source is a better retry than the
