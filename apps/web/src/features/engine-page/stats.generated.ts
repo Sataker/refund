@@ -101,6 +101,12 @@ export const ENGINE_STATS = {
       todo: 0,
     },
     {
+      file: 'packages/engine/test/golden/profile-commerce.test.ts',
+      group: 'golden',
+      passed: 4,
+      todo: 0,
+    },
+    {
       file: 'packages/engine/test/golden/profile.coverage-150k.test.ts',
       group: 'golden',
       passed: 4,
@@ -121,7 +127,7 @@ export const ENGINE_STATS = {
     {
       file: 'packages/engine/test/golden/profile.test.ts',
       group: 'golden',
-      passed: 26,
+      passed: 27,
       todo: 0,
     },
     {
@@ -181,11 +187,11 @@ export const ENGINE_STATS = {
   ],
   totals: {
     oracle: 39,
-    golden: 225,
+    golden: 230,
     property: 12,
     invariant: 8,
-    passed: 284,
+    passed: 289,
     todo: 1,
   },
-  inputsHash: 'd8914406a86e1eff8da0fec7ab73fd4a734d90e6ce672b1c6c7780e19194342a',
+  inputsHash: '89d8f213f667817616ccdf7ef53815b8f196dbc3f637a61ae0c5c1f9596e6323',
 } as const;
