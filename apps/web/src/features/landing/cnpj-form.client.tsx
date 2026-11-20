@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowRight } from 'lucide-react';
+import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useId, useRef, useState } from 'react';
 import { cnpjHint, cnpjStatus, maskCnpj } from '@/lib/cnpj';
@@ -19,8 +20,9 @@ interface CnpjFormProps {
 
 /**
  * Hero CNPJ field (IDENTITY-AND-UI Screen 0): the largest interactive element of the page (56px), automatic
- * mask, pasting with punctuation accepted, "Faltam N dígitos" in real time. For now it opens /demo (E6); the
- * live lookup is wired in E11. The CNPJ typed here is not sent or stored anywhere.
+ * mask, pasting with punctuation accepted, "Faltam N dígitos" in real time. A valid CNPJ goes straight to the
+ * live track with the field prefilled (`/app/comecar/cnpj?cnpj=`), whose step starts the lookup on its own:
+ * "whoever typed it on the landing goes straight to the next step" (IDENTITY-AND-UI §5, first-access track).
  */
 export function CnpjForm({ id, className }: CnpjFormProps) {
   const router = useRouter();
@@ -43,7 +45,7 @@ export function CnpjForm({ id, className }: CnpjFormProps) {
       inputRef.current?.focus();
       return;
     }
-    router.push(ROUTES.demo);
+    router.push(`${ROUTES.track}?cnpj=${encodeURIComponent(status.cnpj)}` as Route);
   }
 
   return (
@@ -89,7 +91,8 @@ export function CnpjForm({ id, className }: CnpjFormProps) {
         aria-live="polite"
         className={cx('type-small mt-2 min-h-5', error ? 'text-risk' : 'text-muted-foreground')}
       >
-        {error ?? 'Sem cadastro. Nesta versão, o botão abre a demo com dados sintéticos.'}
+        {error ??
+          'Sem cadastro. Analisamos o CNPJ na Receita; as contas bancárias usam o ambiente de testes.'}
       </p>
     </form>
   );

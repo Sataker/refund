@@ -3,6 +3,7 @@ import type { Route } from 'next';
 // Routes the landing and the site footer link to (ARCHITECTURE §13). Every one exists, so typedRoutes checks them.
 export const ROUTES = {
   demo: '/demo',
+  track: '/app/comecar/cnpj',
   security: '/seguranca',
   howItWorks: '/como-funciona',
   engine: '/motor',

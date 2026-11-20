@@ -58,7 +58,7 @@ test.describe('landing @demo', () => {
     }
   });
 
-  test('landing CNPJ field masks, explains what is missing and opens the demo', async ({
+  test('landing CNPJ field masks, explains what is missing and opens the live track with it', async ({
     page,
   }) => {
     await page.goto('/');
@@ -72,7 +72,8 @@ test.describe('landing @demo', () => {
     await field.fill('RF.DEV.001/0001-58');
     await expect(field).toHaveAttribute('aria-invalid', 'false');
     await page.getByRole('button', { name: 'Ver quanto posso economizar' }).first().click();
-    await expect(page).toHaveURL(/\/demo$/);
+    // IDENTITY-AND-UI §5: whoever typed it on the landing goes straight to the track, CNPJ prefilled.
+    await expect(page).toHaveURL(/\/app\/comecar\/cnpj\?cnpj=RFDEV001000158$/);
   });
 
   test('landing demo link points to /demo', async ({ page }) => {
