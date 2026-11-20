@@ -142,20 +142,51 @@ test.describe('first-access track @app', () => {
     ).toBeVisible();
   });
 
-  test('a Lucro Presumido company skips the optional questions and gets the reason, no R$', async ({
+  test('H3: a Lucro Presumido company stops at "É você?" with its regime and the ways out', async ({
     page,
   }) => {
     await lookUp(page, PRESUMIDO_CNPJ);
+    await expect(page).toHaveURL(/\/confirmar-empresa$/);
+    const stop = page.getByTestId('out-of-scope');
+    await expect(stop).toContainText(
+      'Por enquanto o Refund calcula só empresas do Simples Nacional. A Consultoria Exemplo está no Lucro Presumido.',
+    );
+    await expect(page.getByTestId('confirm-company')).toHaveCount(0);
+    await expect(page.getByTestId('out-of-scope-demo')).toHaveAttribute('href', '/demo');
+    await expect(page.getByRole('button', { name: 'Entrar na lista' })).toBeVisible();
+    // Never past this step: consent and the bank steps lead back here.
+    for (const step of ['faturamento', 'estimativa', 'permissoes', 'conta-pj']) {
+      await page.goto(`/app/comecar/${step}`);
+      await expect(page).toHaveURL(/\/confirmar-empresa$/);
+    }
+    await page.getByTestId('out-of-scope-other-cnpj').click();
+    await expect(page).toHaveURL(/\/cnpj$/);
+  });
+
+  test('M5: the step focuses its chip and keys 1-9 pick one from anywhere on the step', async ({
+    page,
+  }) => {
+    await lookUp(page, HERO_CNPJ);
     await tap(page, 'Sou eu', /\/faturamento$/);
-    // No "funcionários?" nor "exterior?": out of the Simples (ENGINE-SPEC C.11.1, C.11.5 item 3).
-    await tap(page, 'R$ 60 mil a 150 mil', /\/estimativa$/);
-    const none = page.getByTestId('no-range');
-    await expect(none).toHaveAttribute('data-reason', 'REGIME_OUT_OF_SCOPE');
-    await expect(none).toContainText('Por enquanto o Refund calcula empresas do Simples Nacional.');
-    await expect(page.getByTestId('profile-range')).toHaveCount(0);
-    await expect(page.getByTestId('estimate')).not.toContainText('R$');
-    await page.goto('/app/comecar/funcionarios');
-    await expect(page).toHaveURL(/\/estimativa$/);
+    await expect(page.getByTestId('choice-group').locator('button').first()).toBeFocused();
+    await page.locator('body').click({ position: { x: 5, y: 5 } });
+    await page.keyboard.press('3');
+    await expect(page).toHaveURL(/\/funcionarios$/);
+    await expect(page.getByRole('link', { name: 'Pular para o conteúdo' })).toHaveAttribute(
+      'href',
+      '#conteudo',
+    );
+    await expect(page.getByRole('link', { name: 'Voltar ao site' })).toHaveAttribute('href', '/');
+  });
+
+  test('C1: a CNPJ typed on the landing lands on "É você?"', async ({ page }) => {
+    await page.goto('/');
+    await page.getByLabel('CNPJ da sua empresa').first().fill(HERO_CNPJ);
+    await page.getByRole('button', { name: 'Ver quanto posso economizar' }).first().click();
+    await expect(page).toHaveURL(/\/app\/comecar\/confirmar-empresa$/);
+    await expect(page.getByTestId('company-card')).toBeVisible();
+    // The hero is a synthetic company: the seal says so.
+    await expect(page.getByTestId('sandbox-seal').first()).toContainText('Dados sintéticos');
   });
 
   test('CNPJ not found: the error stays on the step, in plain words', async ({ page }) => {

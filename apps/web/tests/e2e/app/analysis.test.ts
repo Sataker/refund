@@ -116,11 +116,13 @@ test.describe('live analysis @app', () => {
     await finishTrack(page);
     const id = await analyze(page);
     await page.goto(`/app/analises/${id}/relatorio`);
-    await expect(page.getByTestId('report-sender')).toContainText('copie o link');
-    // Compliance G2 M1: a real company's report never says "dados sintéticos".
-    await expect(page.getByTestId('report-seal')).toContainText('dados públicos da Receita');
-    await expect(page.getByTestId('report-seal')).not.toContainText('Dados sintéticos');
-    await page.getByTestId('accountant-email').fill('contador@example.com');
+    // M3: no e-mail in this deploy → no e-mail field; the link leads.
+    await expect(page.getByTestId('report-link-howto')).toBeVisible();
+    await expect(page.getByTestId('accountant-email')).toHaveCount(0);
+    // The hero's company is synthetic (replay): the seal says so (a real company's would say "dados públicos").
+    await expect(page.getByTestId('report-seal')).toContainText(
+      'Dados sintéticos · Open Finance em sandbox',
+    );
     await page.getByTestId('create-report-link').click();
     const link = await page.getByTestId('report-link').textContent();
     expect(link).toMatch(/\/r\/[\w-]{20,}$/);
@@ -131,7 +133,12 @@ test.describe('live analysis @app', () => {
     const other = await accountant.newPage();
     await other.goto(new URL(link ?? '').pathname);
     await expect(other.getByTestId('accountant-page')).toBeVisible();
-    await expect(other.getByTestId('report-seal')).toContainText('dados públicos da Receita');
+    // M4: who asked, when, the seal, and what the buttons do.
+    await expect(other.getByTestId('accountant-title')).toContainText(
+      /Marina Dev pediu sua revisão · \d{2}\/\d{2}\/\d{4}/,
+    );
+    await expect(other.getByTestId('accountant-howto')).toContainText('Aprovo');
+    await expect(other.getByTestId('report-seal')).toContainText('Dados sintéticos');
     await other.getByTestId('approve-report').click();
     await expect(other.getByTestId('accountant-done')).toHaveAttribute('data-decision', 'approved');
     await accountant.close();
@@ -172,6 +179,70 @@ test.describe('live analysis @app', () => {
     await page.getByTestId('start-analysis').click();
     await expect(page.getByTestId('paywall-plan-limit')).toHaveAttribute('data-code', 'PLAN_LIMIT');
     await expect(page).toHaveURL(/\/app$/);
+  });
+
+  test('H1/H2: answering every card on the live hero gives the /demo total (R$ 62.318,92 confirmed)', async ({
+    page,
+  }) => {
+    await finishTrack(page);
+    const id = await analyze(page);
+    // H2: Screen 4's big number is confirmed only and matches the dashboard; the CTA has no "até R$ X".
+    const screen4 = Number(
+      await page.getByTestId('analysis/money-hero').getAttribute('data-cents'),
+    );
+    const cta = page.getByTestId('open-confirm');
+    await expect(cta).toHaveText(/^Responda \d+ perguntas? para confirmar$/);
+    const open = Number(await cta.getAttribute('data-count'));
+    await expect(page.getByTestId('analysis/estimated')).toHaveAttribute('data-open', String(open));
+    await page.goto(`/app/analises/${id}/painel`);
+    expect(Number(await page.getByTestId('dashboard/money-hero').getAttribute('data-cents'))).toBe(
+      screen4,
+    );
+    // The hero's own company and statements: no "not your statements" banner.
+    await expect(page.getByTestId('data-origin-banner')).toHaveCount(0);
+
+    await page.goto(`/app/analises/${id}/confirmar`);
+    // M1: nothing pre-selected.
+    await expect(page.getByTestId('confirm-pending')).toHaveText(`0 de ${open} respondidas`);
+    await expect(page.locator('[data-testid^="card-"] [aria-pressed="true"]')).toHaveCount(0);
+    const cards = await page
+      .locator('[data-testid^="card-"]')
+      .evaluateAll((els) => els.map((e) => (e.getAttribute('data-testid') ?? '').slice(5)));
+    expect(cards.length).toBe(open);
+    for (const card of cards) {
+      const value = card.startsWith('health:') ? 'holder' : 'yes';
+      await page.getByTestId(`answer-${card}-${value}`).click();
+      await expect(page.getByTestId(`card-${card}`)).toHaveAttribute('data-choice', value);
+    }
+    await expect(page.getByTestId('confirm-pending')).toHaveText(`${open} de ${open} respondidas`);
+    await page.getByTestId('reanalyze-confirm').click();
+    await expect(page).toHaveURL(/\/app\/analises\/[0-9a-f-]{36}$/);
+    expect(page.url()).not.toContain(id);
+    await expect(page.getByTestId('analysis')).toHaveAttribute('data-status', 'done', {
+      timeout: 60_000,
+    });
+    await expect(page.getByTestId('analysis/money-hero')).toHaveAttribute('data-cents', '6231892');
+    await expect(page.getByTestId('open-confirm')).toHaveCount(0);
+    await page.getByTestId('open-dashboard').click();
+    await expect(page.getByTestId('dashboard/money-hero')).toHaveAttribute('data-cents', '6231892');
+  });
+
+  test('H4: the analysis and the shell never scroll sideways at 390 px', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await finishTrack(page);
+    const id = await analyze(page);
+    const sideways = () =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+    expect(await sideways()).toBe(0);
+    await expect(page.getByTestId('open-confirm')).toBeVisible();
+    const cta = await page.getByTestId('open-confirm').boundingBox();
+    expect(cta?.width ?? 0).toBeGreaterThan(300);
+    for (const path of ['painel', 'confirmar', 'financas', 'relatorio']) {
+      await page.goto(`/app/analises/${id}/${path}`);
+      expect(await sideways(), path).toBe(0);
+    }
   });
 
   test('A10: Finanças live — groups sum to the tiles and every seal opens a finding of this analysis', async ({
