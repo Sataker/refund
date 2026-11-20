@@ -41,6 +41,8 @@ export type Condition =
   | 'fator_r_raise' // R01: P* above the current pró-labore in a CNAE subject to the Fator R
   | 'pro_labore_lowered' // R01: P* below the current pró-labore
   | 'subject_to_fator_r' // the CNAE is subject to the Fator R (FS12 is asked in the PGDAS-D)
+  | 'cpp_inside_das' // the company's CPP is inside the DAS (Anexos I, II, III and V)
+  | 'cpp_outside_das' // Anexo IV: the company's CPP is paid outside the DAS (LC 123, art. 18, § 5º-C)
   | 'regime_mei'
   | 'regime_simples'
   | 'limit_exceeded'; // R03: the projected revenue passes the MEI limit, or the Simples ceiling (exclusion)
@@ -183,7 +185,21 @@ export const CATALOG: Record<RuleKey, RuleCatalog> = {
         summary: 'Menos INSS e imposto de renda sobre o pró-labore, a partir do mês indicado.',
         firstEffect: 'regime_from',
         refIds: ['lei8212-1991/art21/caput', 'lei15191-2025/art2'],
-        appliesIf: ['pro_labore_lowered'],
+        appliesIf: ['pro_labore_lowered', 'cpp_inside_das'],
+      },
+      // D52: in Anexo IV the company also pays 20% of the pró-labore outside the DAS (C.3.3), which the gain includes.
+      {
+        method: 'lower_tax',
+        summary:
+          'Menos INSS e imposto de renda sobre o pró-labore, e menos contribuição da empresa ao INSS sobre o pró-labore (CPP), que no Anexo IV é paga fora do DAS, a partir do mês indicado.',
+        firstEffect: 'regime_from',
+        refIds: [
+          'lei8212-1991/art21/caput',
+          'lei8212-1991/art22/iii',
+          'lc123-2006/art18/p5-c',
+          'lei15191-2025/art2',
+        ],
+        appliesIf: ['pro_labore_lowered', 'cpp_outside_das'],
       },
     ],
   },

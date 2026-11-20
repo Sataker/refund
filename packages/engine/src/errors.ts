@@ -5,7 +5,6 @@ import type { DomainError } from './types.ts';
 
 export type EngineErrorCode =
   | 'RBT12_ABOVE_CEILING'
-  | 'ANEXO_WITHOUT_TABLE'
   | 'PARAMETER_NOT_IN_FORCE'
   | 'START_OF_ACTIVITY_NOT_SUPPORTED'
   | 'UNKNOWN_ASSUMPTION'
@@ -18,7 +17,6 @@ export type EngineErrorCode =
 const MESSAGES: Record<EngineErrorCode, string> = {
   RBT12_ABOVE_CEILING:
     'A receita dos últimos 12 meses passa do teto do Simples Nacional (R$ 4,8 milhões); o cálculo do DAS não se aplica.',
-  ANEXO_WITHOUT_TABLE: 'Ainda não calculamos empresas neste anexo do Simples Nacional.',
   PARAMETER_NOT_IN_FORCE: 'Não há parâmetro legal vigente para um dos meses da análise.',
   START_OF_ACTIVITY_NOT_SUPPORTED:
     'A empresa tem menos de 14 meses de atividade; ainda não calculamos o Fator R nesse período.',

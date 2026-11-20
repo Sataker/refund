@@ -480,6 +480,13 @@ export function r01Finding(i: R01FindingInput): Finding {
       `Folga de segurança no Fator R: ${D(i.ctx.assumptions.fatorRMargin).times(100).toFixed()} p.p.`,
       'Receita futura = média dos 12 meses observados; folha CLT futura = mesmo mês do ano anterior.',
       'CPP recolhida no DAS não somada à folha.',
+      // D52 (EXECUTION §9): the curve is an absolute cost; in Anexo IV it leaves out the CPP on the CLT payroll, which
+      // is equal in every scenario (C.5), so the gain is unaffected.
+      ...(i.ctx.facts.companyDetails.value.baseAnexo === 'IV'
+        ? [
+            'Custo por ano da curva sem a CPP sobre a folha CLT (20% + RAT×FAP), paga fora do DAS no Anexo IV; ela é igual em todos os cenários e não muda o ganho.',
+          ]
+        : []),
     ],
   };
   if (recommended) out.regimeFrom = next.regimeFrom;

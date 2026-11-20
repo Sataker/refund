@@ -19,6 +19,12 @@ export const REFS = {
     'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
     'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
   ),
+  'lc123-2006/art18/p5-c': ref(
+    'lc123-2006/art18/p5-c',
+    'LC 123/2006, art. 18, § 5º-C',
+    'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp123.htm',
+    'd660912f6ffaf94250a80a0fea1a8e35b9cdbb8a1f595e4673c6cfad7887820d',
+  ),
   'lc123-2006/art18/p5-d': ref(
     'lc123-2006/art18/p5-d',
     'LC 123/2006, art. 18, § 5º-D',

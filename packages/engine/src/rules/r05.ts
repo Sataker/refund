@@ -9,6 +9,7 @@ import { dasUnder, paInputs, type Simulation } from '../scenario.ts';
 import { addMonths, compareYearMonth, monthRange } from '../time.ts';
 import { step } from '../trace.ts';
 import {
+  type Anexo,
   type Cents,
   type CivilDate,
   cents,
@@ -29,10 +30,20 @@ const is2027 = (pa: YearMonth) => compareYearMonth(pa, FIRST_2027) >= 0;
 export const exclusionRef = (pa: YearMonth) =>
   is2027(pa) ? REFS['res-cgsn190-2026/art1/res140-art25'] : REFS['res-cgsn140-2018/art25/p3'];
 
+/**
+ * D52 (EXECUTION §9, 20/11): R05's qualification, steps, citations and "não faça" texts are those of the export of
+ * SERVICES (Res. CGSN 140, art. 25, §§ 4º/4º-A; LC 116, art. 2º; LC 214, art. 80). For the export of Anexo II goods the
+ * spec defines no action plan nor citations (LC 214, art. 81, for CBS/IBS; the PGDAS-D goods-export activity), so R05
+ * stays off for Anexo II until it is specified (CLAUDE.md, rule 12). The DAS arithmetic of the removed shares (IPI
+ * included, LC 123, art. 18, § 14) stays in `dasByMarket` and its golden reference cases.
+ */
+export const r05CoversAnexo = (anexo: Anexo): boolean => anexo !== 'II';
+
 /** Trigger of D.5: Simples, export revenue in the statement, qualification confirmed, PGDAS-D not segregated. */
 export function eligibleR05(ctx: Ctx, segregates: 'yes' | 'no' | 'unknown'): boolean {
   const f = ctx.facts;
   if (f.company.value.regime !== 'SIMPLES') return false;
+  if (!r05CoversAnexo(f.companyDetails.value.baseAnexo)) return false;
   if (f.qualifications.exportResultAbroad?.value !== true) return false;
   if (!ctx.observed.some((m) => revenue(ctx, 'export', m) > 0)) return false;
   return segregates !== 'yes';

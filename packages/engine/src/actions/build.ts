@@ -98,6 +98,10 @@ function holds(c: Condition, finding: Finding, ctx: PlanContext): boolean {
       );
     case 'subject_to_fator_r':
       return facts.companyDetails.value.subjectToFatorR;
+    case 'cpp_inside_das':
+      return facts.companyDetails.value.baseAnexo !== 'IV';
+    case 'cpp_outside_das':
+      return facts.companyDetails.value.baseAnexo === 'IV';
     case 'fator_r_raise': {
       const p = r01ProLabore(finding);
       return p !== null && facts.companyDetails.value.subjectToFatorR && p.pStar > p.current;

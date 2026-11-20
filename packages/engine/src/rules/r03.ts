@@ -1,6 +1,5 @@
 // R03: MEI and Simples revenue limit, alert outside the total (ENGINE-SPEC D.3). It changes no decision: it projects
 // the calendar year's revenue and says how close it is to the limit and what happens if it is exceeded.
-import { EngineError } from '../errors.ts';
 import { D, reais, roundToCents, sumCents } from '../money.ts';
 import { param } from '../parameters/index.ts';
 import { anexoTable } from '../primitives/simples.ts';
@@ -136,9 +135,9 @@ export interface MeiLimitResult {
   dependsOnRegulation: boolean;
   floorLimit: Cents | null; // the unconditioned limit used for the floor, when the limit depends on the LOA
   band: MeiBand | null;
-  /** Estimated cost (outside the total); null when the anexo has no table in ENGINE-SPEC A.3 (II, IV). */
-  cost: Cents | null;
-  nominalRate: Rate | null;
+  /** Estimated cost (outside the total): every anexo has its table in ENGINE-SPEC A.3 since D52. */
+  cost: Cents;
+  nominalRate: Rate;
   effectiveFrom: CivilDate | null; // removal from the MEI (01/01 of the next year or retroactive to 01/01)
 }
 
@@ -177,25 +176,18 @@ export function meiLimit(i: MeiLimitInput): MeiLimitResult {
           ? 'overrun_up_to_20'
           : 'overrun_above_20';
   }
-  let nominalRate: Rate | null = null;
-  try {
-    nominalRate =
-      anexoTable(i.anexo, `${i.year}-12` as YearMonth).value.brackets[0]?.nominal ?? null;
-  } catch (e) {
-    if (!(e instanceof EngineError) || e.code !== 'ANEXO_WITHOUT_TABLE') throw e;
-  }
-  let cost: Cents | null = cents(0);
+  const firstBracket = anexoTable(i.anexo, `${i.year}-12` as YearMonth).value.brackets[0];
+  if (firstBracket === undefined) throw new RangeError(`Anexo ${i.anexo} has no 1st bracket`);
+  const nominalRate = firstBracket.nominal;
+  let cost: Cents = cents(0);
   let effectiveFrom: CivilDate | null = null;
   if (band === 'overrun_up_to_20') {
     effectiveFrom = `${i.year + 1}-01-01` as CivilDate;
-    cost = nominalRate === null ? null : times(cents(i.rbaProj - limit), nominalRate);
+    cost = times(cents(i.rbaProj - limit), nominalRate);
   } else if (band === 'overrun_above_20') {
     effectiveFrom = `${i.year}-01-01` as CivilDate;
     // Never below zero: a DAS-MEI paid above the Simples amount is no cost (INV-3).
-    cost =
-      nominalRate === null
-        ? null
-        : cents(Math.max(0, times(i.rbaProj, nominalRate) - i.dasMeiPaid));
+    cost = cents(Math.max(0, times(i.rbaProj, nominalRate) - i.dasMeiPaid));
   }
   return {
     limit,
@@ -355,7 +347,7 @@ export function r03MeiFinding(ctx: Ctx): Finding | null {
   });
   if (r.band === null) return null;
   const limitRef = param('mei.limit', `${rev.year}-12` as YearMonth);
-  const cost = r.cost ?? cents(0);
+  const cost = r.cost;
   const trace: Step[] = [
     projectionStep(rev),
     step({
@@ -386,10 +378,7 @@ export function r03MeiFinding(ctx: Ctx): Finding | null {
             ? 'faturamento projetado × alíquota nominal da 1ª faixa − DAS-MEI pagos no ano'
             : 'sem excesso',
       inputs: {
-        nominalRate: {
-          value: r.nominalRate ?? 'anexo sem tabela',
-          unit: r.nominalRate ? 'rate' : 'text',
-        },
+        nominalRate: { value: r.nominalRate, unit: 'rate' },
         dasMeiPaid: { value: dasMeiPaid, unit: 'cents' },
       },
       result: { value: cost, unit: 'cents' },
@@ -403,13 +392,14 @@ export function r03MeiFinding(ctx: Ctx): Finding | null {
   if (r.band === 'warning') {
     title = `Faltam R$ ${formatBrl(cents(r.limit - rev.total))} para o limite do MEI${lc238}. Se a venda puder acontecer em janeiro, ela conta para o ano que vem.`;
   } else if (r.band === 'overrun_up_to_20') {
-    title = `O faturamento projetado passa o limite do MEI em até 20%: a partir de ${date(r.effectiveFrom as CivilDate)} você vira ME${r.cost === null ? '' : `, e paga R$ ${formatBrl(cost)} sobre o excesso junto com o DAS de janeiro`}.`;
+    title = `O faturamento projetado passa o limite do MEI em até 20%: a partir de ${date(r.effectiveFrom as CivilDate)} você vira ME, e paga R$ ${formatBrl(cost)} sobre o excesso junto com o DAS de janeiro.`;
   } else {
-    title = `O faturamento projetado passa o limite do MEI em mais de 20%: o desenquadramento volta a ${date(r.effectiveFrom as CivilDate)}${r.cost === null ? '' : `, com cerca de R$ ${formatBrl(cost)} a pagar, mais juros e multa (não calculados)`}.`;
+    title = `O faturamento projetado passa o limite do MEI em mais de 20%: o desenquadramento volta a ${date(r.effectiveFrom as CivilDate)}, com cerca de R$ ${formatBrl(cost)} a pagar, mais juros e multa (não calculados).`;
   }
   const assumptions = [PROJECTION_ASSUMPTION];
-  if (r.cost === null)
-    assumptions.push('Custo não calculado: o anexo da atividade não tem tabela no Refund.');
+  // D52: in Anexo IV the CPP is paid outside the DAS (LC 123, art. 18, § 5º-C); the 1st-bracket rate has no CPP share.
+  if (ctx.facts.companyDetails.value.baseAnexo === 'IV')
+    assumptions.push('No Anexo IV, a CPP sobre o pró-labore fica fora deste custo.');
   return finding(
     title,
     cost,
