@@ -46,8 +46,10 @@ export {
 } from './primitives/simples.ts';
 export {
   CNAE_ANEXO,
+  CNAE_IN_SCOPE,
   type CnaeAnexoRow,
   cnaeAnexoRow,
+  cnaeInScope,
   estimateByProfile,
   formatProfileRange,
   NO_RANGE_MESSAGES,

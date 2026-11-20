@@ -64,6 +64,19 @@ export const CNAE_ANEXO: readonly CnaeAnexoRow[] = cnaeTable as CnaeAnexoRow[];
 export const cnaeAnexoRow = (cnae: string): CnaeAnexoRow | undefined =>
   CNAE_ANEXO.find((r) => r.cnae === cnae);
 
+/** C.11.5, item 4: only a verified row outside Anexos II and IV gets a number (the same test the estimate runs). */
+const rowInScope = (row: CnaeAnexoRow | undefined): row is CnaeAnexoRow =>
+  row !== undefined &&
+  row.status === 'verified' &&
+  row.baseAnexo !== 'II' &&
+  row.baseAnexo !== 'IV';
+
+/** The rows Refund calculates today, in the table's order (the web lists them; it never hardcodes them). */
+export const CNAE_IN_SCOPE: readonly CnaeAnexoRow[] = CNAE_ANEXO.filter(rowInScope);
+
+/** Whether a CNAE ("6201-5/01") is in scope: the estimate's C.11.5 item 4, shared with the live track's stop. */
+export const cnaeInScope = (cnae: string): boolean => rowInScope(cnaeAnexoRow(cnae));
+
 // ---------- Grid (C.11.2) ----------
 
 /** Grid revenues in cents per month: lower limit · midpoint · upper limit. Brackets without a grid have no range. */
@@ -431,14 +444,7 @@ function estimate(
   if (profile.optedIntoMei) return ok(noRange('REGIME_MEI', [R03_MEI()]));
   if (!profile.optedIntoSimples) return ok(noRange('REGIME_OUT_OF_SCOPE', []));
   const row = cnaeAnexoRow(profile.primaryCnae);
-  if (
-    row === undefined ||
-    row.status !== 'verified' ||
-    row.baseAnexo === 'II' ||
-    row.baseAnexo === 'IV'
-  ) {
-    return ok(noRange('CNAE_OUT_OF_SCOPE', [R02_RULE()]));
-  }
+  if (!rowInScope(row)) return ok(noRange('CNAE_OUT_OF_SCOPE', [R02_RULE()]));
   const rules = applicableRules(row, answers, profile.primaryCnae);
   const bracket = answers.monthlyRevenueBracket;
   if (bracket === 'dont_know') return ok(noRange('REVENUE_NOT_PROVIDED', rules));
