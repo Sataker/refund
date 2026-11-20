@@ -59,6 +59,12 @@ export const ENGINE_STATS = {
       todo: 0,
     },
     {
+      file: 'packages/engine/test/golden/anexos-ii-iv.test.ts',
+      group: 'golden',
+      passed: 25,
+      todo: 0,
+    },
+    {
       file: 'packages/engine/test/golden/curve.test.ts',
       group: 'golden',
       passed: 5,
@@ -103,7 +109,7 @@ export const ENGINE_STATS = {
     {
       file: 'packages/engine/test/golden/profile-commerce.test.ts',
       group: 'golden',
-      passed: 4,
+      passed: 5,
       todo: 0,
     },
     {
@@ -187,11 +193,11 @@ export const ENGINE_STATS = {
   ],
   totals: {
     oracle: 39,
-    golden: 231,
+    golden: 257,
     property: 12,
     invariant: 8,
-    passed: 290,
+    passed: 316,
     todo: 1,
   },
-  inputsHash: '8b85c060a15a73ccde087adeb25bae64d4629ddf55263d824b285a9696659a77',
+  inputsHash: 'a475f2dcd0c61f3998a89649b2c0353cd2ef5a929804e2cc395bd1495c3c2df0',
 } as const;
