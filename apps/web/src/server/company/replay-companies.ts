@@ -104,6 +104,22 @@ const MEI: PublicCompany = {
   fetchedAt: '2026-11-20T12:00:00.000Z',
 };
 
+/**
+ * A synthetic Simples shop in scope (cosmetics retail, 4772-5/00, Anexo I since D50), not the hero: with
+ * "Usar dados de exemplo" it runs Marina's statements on another company, the example-data path of the bug bash
+ * (C1, C2), without a network call.
+ */
+const SHOP: PublicCompany = {
+  ...UNSUPPORTED_ACTIVITY,
+  cnpj: 'RFLOJA01000103' as PublicCompany['cnpj'],
+  displayLegalName: 'LOJA EXEMPLO COSMETICOS LTDA',
+  displayTradeName: 'Loja Exemplo',
+  primaryCnae: {
+    code: '4772-5/00',
+    description: 'Comércio varejista de cosméticos, produtos de perfumaria e de higiene pessoal',
+  },
+};
+
 function persona(raw: { company: unknown }): PublicCompany {
   const company = parsePublicCompany(raw.company);
   if (!company) throw new Error('PERSONA_COMPANY_INVALID');
@@ -118,6 +134,7 @@ export const REPLAY_COMPANIES: readonly PublicCompany[] = [
   INAPTA,
   SUSPENSA,
   MEI,
+  SHOP,
 ];
 
 export const HERO_CNPJ = 'RFDEV001000158';

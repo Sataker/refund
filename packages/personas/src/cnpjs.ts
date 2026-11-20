@@ -44,6 +44,10 @@ export const OTHER_SYNTHETIC_CNPJS: readonly PersonaCnpj[] = [
   synthetic('RFINAP01000143', 'no persona: inapta company of the live track (replay)'),
   synthetic('RFSUSP01000170', 'no persona: suspensa company of the live track (replay)'),
   synthetic('RFMEIS01000128', 'no persona: MEI of the live track (replay)'),
+  synthetic(
+    'RFLOJA01000103',
+    'no persona: Simples cosmetics shop of the live track, runs the sample statements (replay)',
+  ),
   synthetic('RFDEV002000100', 'no persona: second payer in the engine same-holder test'),
 ];
 
