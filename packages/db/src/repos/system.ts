@@ -69,8 +69,10 @@ export interface TechnicalCleanup {
 }
 
 /**
- * Technical cleanup (SCHEMA §6): system_events > 14 days, external_cache expired > 7 days ago,
- * webhook payloads > 30 days (metadata stays). rate_limits has its own function.
+ * Technical cleanup (SCHEMA §6): system_events > 14 days, external_cache expired > 6 days ago,
+ * webhook payloads > 30 days (metadata stays). rate_limits has its own function. The cache cut is 6 days
+ * (was 7, E21 review item 8): the cleanup runs once a day, so a CNPJ copy (7-day TTL) is gone at most
+ * 7 + 6 + 1 = 14 days after it was fetched, the "até 14 dias" promised on /privacidade.
  */
 export async function cleanupTechnical(db: Db): Promise<TechnicalCleanup> {
   const events = await db
@@ -79,7 +81,7 @@ export async function cleanupTechnical(db: Db): Promise<TechnicalCleanup> {
     .returning({ id: systemEvents.id });
   const cache = await db
     .delete(externalCache)
-    .where(lt(externalCache.expiresAt, sql`now() - interval '7 days'`))
+    .where(lt(externalCache.expiresAt, sql`now() - interval '6 days'`))
     .returning({ key: externalCache.key });
   const payloads = await db
     .update(webhookEvents)

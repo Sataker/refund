@@ -19,8 +19,8 @@ import { REPLAY_COMPANIES } from './replay-companies.ts';
 // CNPJ). In `replay` mode (CI, local, backup, /demo) only the replay provider answers: no network at all.
 
 /**
- * 7 days fresh; the daily cleanup deletes an entry 7 days after it expires (SCHEMA §6), so a copy lives
- * at most 14 days: the "até 14 dias" promised on /privacidade.
+ * 7 days fresh; the daily cleanup deletes an entry once it is more than 6 days past expiry (SCHEMA §6),
+ * and it runs daily, so a copy lives at most 7 + 6 + 1 = 14 days: the "até 14 dias" on /privacidade.
  */
 const CNPJ_CACHE_TTL_MS = 7 * 24 * 60 * 60_000;
 

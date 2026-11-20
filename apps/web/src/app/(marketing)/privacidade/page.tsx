@@ -108,8 +108,8 @@ export default function PrivacyPage() {
           <li>Pluggy: faz a conexão de Open Finance (sandbox, nesta versão).</li>
           <li>
             BrasilAPI, OpenCNPJ, CNPJá, Minha Receita, CNPJ.ws e ReceitaWS: consultamos nessas bases
-            públicas o CNPJ que você digita, uma por vez, passando à próxima quando uma não
-            responde. Elas recebem só o número do CNPJ.
+            públicas o CNPJ que você digita, uma por vez, passando à próxima quando uma não responde
+            ou não tem o CNPJ. Elas recebem só o número do CNPJ.
           </li>
           <li>
             Vercel AI Gateway com modelos da Anthropic, quando a IA está ligada: recebe a descrição

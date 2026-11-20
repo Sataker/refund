@@ -29,6 +29,7 @@ import {
   analyses,
   companyLinks,
   connections,
+  externalCache,
   lawChanges,
   monitoredRegulations,
   systemEvents,
@@ -162,6 +163,24 @@ describe('system', () => {
     expect(cleaned.webhookPayloads).toBe(1);
     const remaining = await db.select().from(systemEvents);
     expect(remaining.map((e) => e.event)).toEqual(['limit.rate']);
+  });
+
+  it('a CNPJ copy is gone within 14 days of its fetch: deleted once more than 6 days past expiry', async () => {
+    const day = 86_400_000;
+    const now = Date.now();
+    const row = (key: string, fetchedDaysAgo: number) => ({
+      source: 'cnpj',
+      key,
+      payload: {},
+      fetchedAt: new Date(now - fetchedDaysAgo * day),
+      expiresAt: new Date(now - (fetchedDaysAgo - 7) * day),
+    });
+    // 13 days 1 hour after the fetch it is deleted, so the next daily run cannot leave it past day 14.
+    await db.insert(externalCache).values([row('kept', 12.9), row('gone', 13 + 1 / 24)]);
+    await cleanupTechnical(db);
+    const keys = (await db.select().from(externalCache)).map((r) => r.key);
+    expect(keys).toContain('kept');
+    expect(keys).not.toContain('gone');
   });
 });
 
