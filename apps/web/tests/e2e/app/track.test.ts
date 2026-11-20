@@ -86,7 +86,7 @@ test.describe('first-access track @app', () => {
     await page.getByTestId('see-exact-number').click();
     await expect(page).toHaveURL(/\/permissoes$/);
     // Compliance C2: the consent screen says this is Pluggy's sandbox, no real bank.
-    await expect(page.getByTestId('sandbox-notice')).toContainText('nenhum banco real é conectado');
+    await expect(page.getByTestId('sandbox-notice')).toContainText('a conexão é apagada na hora');
     await page.getByTestId('give-consent').click();
     await expect(page).toHaveURL(/\/conta-pj$/);
 

@@ -54,8 +54,8 @@ export function ConsentContent() {
         className="type-small rounded-lg border border-border bg-surface px-4 py-3 text-foreground"
         data-testid="sandbox-notice"
       >
-        Nesta versão, a conexão usa o ambiente de testes da Pluggy (sandbox): nenhum banco real é
-        conectado.
+        Nesta versão, a conexão usa o ambiente de testes da Pluggy (sandbox): a janela lista apenas
+        bancos de teste, e se um banco real for conectado mesmo assim, a conexão é apagada na hora.
       </p>
       {BLOCKS.map(({ id, title, Icon, tone, items }) => (
         <section key={id} aria-labelledby={`consent-${id}`}>
