@@ -23,6 +23,24 @@ export function bankSourceOf(providers: readonly string[]): BankSource {
   return 'none';
 }
 
+/**
+ * The origin before the run, on /app's "Tudo pronto" (the track's connections): the same banner and seal as the analysis
+ * screens, from the active connections the run will read.
+ */
+export function trackOrigin(input: {
+  companySource: string | undefined;
+  companyIsSample: boolean;
+  connections: readonly ({ provider: string; status: string } | null)[];
+}): DataOrigin {
+  return {
+    companySynthetic: input.companySource === 'persona' || input.companySource === 'replay',
+    companyIsSample: input.companyIsSample,
+    bank: bankSourceOf(
+      input.connections.flatMap((c) => (c !== null && c.status === 'active' ? [c.provider] : [])),
+    ),
+  };
+}
+
 /** The persistent banner's text, or null when the statements are the company's own (or there are none). */
 export function bankBannerText(origin: DataOrigin, companyName: string): string | null {
   if (origin.bank === 'sample' && !origin.companyIsSample)

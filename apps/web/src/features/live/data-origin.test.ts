@@ -6,6 +6,7 @@ import {
   PUBLIC_LIVE_LABEL,
   SAMPLE_BANK_LABEL,
   SYNTHETIC_LIVE_LABEL,
+  trackOrigin,
 } from './data-origin';
 
 describe('data origin of a live analysis (C2)', () => {
@@ -37,5 +38,29 @@ describe('data origin of a live analysis (C2)', () => {
     const origin = { companySynthetic: true, companyIsSample: true, bank: 'sample' } as const;
     expect(bankBannerText(origin, 'Marina Dev')).toBeNull();
     expect(liveSealLabel(origin)).toBe(SYNTHETIC_LIVE_LABEL);
+  });
+
+  it('before the run, /app reads the origin from the active track connections', () => {
+    const sample = { provider: 'replay', status: 'active' };
+    expect(
+      trackOrigin({
+        companySource: 'brasilapi',
+        companyIsSample: false,
+        connections: [sample, null],
+      }),
+    ).toEqual({ companySynthetic: false, companyIsSample: false, bank: 'sample' });
+    expect(
+      trackOrigin({
+        companySource: 'replay',
+        companyIsSample: true,
+        connections: [
+          { provider: 'pluggy', status: 'active' },
+          { provider: 'persona', status: 'error' },
+        ],
+      }),
+    ).toEqual({ companySynthetic: true, companyIsSample: true, bank: 'sandbox' });
+    expect(
+      trackOrigin({ companySource: undefined, companyIsSample: false, connections: [] }).bank,
+    ).toBe('none');
   });
 });

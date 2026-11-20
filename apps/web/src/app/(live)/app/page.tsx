@@ -6,12 +6,15 @@ import { redirect } from 'next/navigation';
 import { Disclaimer } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
+import { titleCase } from '@/demo/view.ts';
 import { DisconnectButton } from '@/features/connection/disconnect-button.client';
 import { ROUTES } from '@/features/landing/routes';
 import { StartAnalysisButton } from '@/features/live/buttons.client';
-import { SYNTHETIC_LIVE_LABEL } from '@/features/live/data-origin';
+import { liveSealLabel, trackOrigin } from '@/features/live/data-origin';
+import { OriginBanner } from '@/features/live/origin-banner';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { CONNECTION_STATUS_LABEL, currentStep, stepPath } from '@/features/track/steps';
+import { HERO_CNPJ } from '@/server/company/replay-companies.ts';
 import { liveContext } from '@/server/live.ts';
 import { loadTrack } from '@/server/track/state.ts';
 import { startAnalysis } from './analises/actions';
@@ -33,6 +36,14 @@ export default async function AppHome() {
     { holder: 'PJ', label: 'Conta da empresa', conn: progress.pj },
     { holder: 'PF', label: 'Sua conta pessoal', conn: progress.pf },
   ] as const;
+  // C2: the user knows the statements are sample or sandbox before starting, as on every analysis screen.
+  const c = company?.company;
+  const origin = trackOrigin({
+    companySource: c?.source,
+    companyIsSample: c?.cnpj === HERO_CNPJ,
+    connections: [progress.pj, progress.pf],
+  });
+  const companyName = c ? titleCase(c.displayTradeName ?? c.displayLegalName) : 'Sua empresa';
 
   return (
     <div className="flex min-h-dvh flex-col bg-background" data-testid="track-done">
@@ -47,16 +58,11 @@ export default async function AppHome() {
           <Link href="/" aria-label="Refund, página inicial" className="text-xl">
             <Logo />
           </Link>
-          <SandboxSeal
-            live
-            {...(company?.company.source === 'persona' || company?.company.source === 'replay'
-              ? { label: SYNTHETIC_LIVE_LABEL }
-              : {})}
-            className="hidden sm:inline-flex"
-          />
+          <SandboxSeal live label={liveSealLabel(origin)} className="hidden sm:inline-flex" />
         </div>
       </header>
       <main id="conteudo" className="mx-auto flex w-full max-w-[560px] flex-1 flex-col px-4 py-12">
+        <OriginBanner origin={origin} companyName={companyName} className="mb-6" />
         <h1 className="type-h1 text-foreground">Tudo pronto para a análise.</h1>
         <p className="type-body-lg mt-4 text-muted-foreground">
           {progress.company?.displayName}: perfil respondido e contas conectadas.
