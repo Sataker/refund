@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { quotaMonth } from './entitlements.ts';
 import { clientIp, ipKey, memoryRateLimit, windowStart } from './rate-limit.ts';
@@ -25,8 +26,14 @@ describe('client IP key', () => {
     const withPepper = ipKey('cnpj', headers, Buffer.alloc(32, 1));
     const withoutPepper = ipKey('cnpj', headers);
     expect(withPepper).toMatch(/^cnpj:ip:[\w-]{43}$/);
-    expect(withoutPepper).toMatch(/^cnpj:ip:[0-9a-f]{43}$/);
-    expect(withPepper).not.toContain('203.0.113.7');
+    expect(withoutPepper).toMatch(/^cnpj:ip:[\w-]{43}$/);
+    expect(withoutPepper).not.toBe(withPepper);
+    expect(ipKey('cnpj', headers)).toBe(withoutPepper);
+    for (const key of [withPepper, withoutPepper]) expect(key).not.toContain('203.0.113.7');
+    // Not a plain hash: without the key, sha256(ip) does not reproduce it.
+    expect(withoutPepper).not.toContain(
+      createHash('sha256').update('203.0.113.7').digest('hex').slice(0, 20),
+    );
   });
 });
 

@@ -1,12 +1,13 @@
 import 'server-only';
+import { randomBytes } from 'node:crypto';
 import { type Db, hitRateLimit } from '@refund/db';
 import { ipAddress } from '@vercel/functions';
-import { hmac, sha256Hex } from './crypto.ts';
+import { hmac } from './crypto.ts';
 import { logger } from './log.ts';
 import { type ActionResult, fail, ok } from './result.ts';
 
 // ARCHITECTURE §9.4: fixed window. Postgres (`rate_limits`) for the live actions; per-instance memory
-// for /api/demo and the deep health. The IP is only ever kept as an HMAC (or a hash, in memory).
+// for /api/demo and the deep health. The IP is only ever kept as an HMAC (PII_PEPPER, or a per-process key in memory).
 
 export interface RateRule {
   /** e.g. 'cnpj:u:<id>', 'waitlist:ip:<hmac>'. */
@@ -60,9 +61,13 @@ export function clientIp(headers: Headers): string {
   return ipAddress(headers) ?? headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
 }
 
-/** `<prefix>:ip:<hmac>`. Without a pepper (memory-only limiters) a plain hash is enough. */
+/**
+ * Key of the memory-only limiters when no pepper is passed: random per process, never stored, so /demo with zero env
+ * still keeps the IP only as an HMAC (/seguranca says so; compliance review E20, H5).
+ */
+const MEMORY_IP_KEY = randomBytes(32);
+
+/** `<prefix>:ip:<hmac>`: HMAC with PII_PEPPER (database limiters) or with the per-process key (memory limiters). */
 export function ipKey(prefix: string, headers: Headers, pepper?: Buffer): string {
-  const ip = clientIp(headers);
-  const digest = pepper ? hmac(ip, pepper) : sha256Hex(ip).slice(0, 43);
-  return `${prefix}:ip:${digest}`;
+  return `${prefix}:ip:${hmac(clientIp(headers), pepper ?? MEMORY_IP_KEY)}`;
 }
