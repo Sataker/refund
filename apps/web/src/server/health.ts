@@ -6,9 +6,11 @@ import {
   EXPECTED_MIGRATIONS,
   touchHeartbeat,
 } from '@refund/db';
+import type { ProviderHealth } from '@refund/sources';
 import { type DemoHealth, demoHealth } from '@/demo/health.ts';
 import { type BasicHealth, basicHealth, type HealthStatus } from '@/lib/health.ts';
 import { type Capabilities, capabilitiesFrom } from './capabilities.ts';
+import { cnpjSourcesHealth } from './company/providers.ts';
 import { getDb } from './db.ts';
 import { readEnv } from './env.ts';
 import { logger } from './log.ts';
@@ -41,7 +43,11 @@ export interface HealthReport extends BasicHealth {
   demo: DemoHealth | { personas: 0; recordingsComplete: false; videoNumbers: 'unavailable' };
   /** Malformed variables: names and reasons only. */
   problems?: { name: string; reason: string }[];
-  checks?: { database: DatabaseCheck };
+  /**
+   * `cnpjSources` (E21): what this server instance has seen of each public CNPJ source (state and
+   * error code only). Informational: a source down never changes the status, the chain has five more.
+   */
+  checks?: { database: DatabaseCheck; cnpjSources: ProviderHealth[] };
 }
 
 const RANK: Record<HealthStatus, number> = { ok: 0, degraded: 1, failed: 2 };
@@ -137,7 +143,7 @@ export async function healthReport(options: {
   if (options.deep) {
     const db = await checkDatabase();
     status = worst(status, db.status);
-    body.checks = { database: db.check };
+    body.checks = { database: db.check, cnpjSources: cnpjSourcesHealth() };
   }
   body.status = status;
   return { httpStatus: status === 'failed' ? 503 : 200, body };

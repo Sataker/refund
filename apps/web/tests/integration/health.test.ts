@@ -52,6 +52,24 @@ describe('GET /api/health', () => {
     expect(status).toBe(200);
     expect(body.status).toBe('ok');
     expect(body.checks.database).toMatchObject({ ok: false, reason: 'not_configured' });
+    // E21: the six CNPJ sources, state only (no CNPJ, no message, no secret).
+    expect(body.checks.cnpjSources.map((s: { source: string }) => s.source)).toEqual([
+      'brasilapi',
+      'opencnpj',
+      'cnpja',
+      'minhareceita',
+      'cnpjws',
+      'receitaws',
+    ]);
+    for (const s of body.checks.cnpjSources) {
+      expect(Object.keys(s).sort()).toEqual([
+        'consecutiveFailures',
+        'lastFailure',
+        'lastOkAt',
+        'source',
+        'state',
+      ]);
+    }
   });
 
   it('deep with the database (PGlite): heartbeat written, migrations match', async () => {

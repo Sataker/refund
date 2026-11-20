@@ -6,6 +6,7 @@ import {
   detectPii,
   findForbiddenKeys,
   PersonaFinancial,
+  type PublicCompany,
   type SourceItem,
 } from '@refund/sources';
 import { eq } from 'drizzle-orm';
@@ -14,6 +15,7 @@ import { currentStep } from '@/features/track/steps.ts';
 import type { Capabilities } from '@/server/capabilities.ts';
 import { estimateByRevenueWith, lookupCnpjWith } from '@/server/company/lookup.ts';
 import { toPublicProfile } from '@/server/company/profile.ts';
+import { cnpjProvider, externalCachePort, skippedSources } from '@/server/company/providers.ts';
 import { REPLAY_COMPANIES } from '@/server/company/replay-companies.ts';
 import {
   CONSENT_SCOPES,
@@ -202,6 +204,54 @@ describe('lookupCnpj + estimateByRevenue (ARCHITECTURE §4.7; E11 definition of 
     expect(detectPii(rows.map((r) => r.publicData))).toEqual([]);
     const links = await h.db.select().from(schema.companyLinks);
     expect(links.filter((l) => l.userId === userId)).toHaveLength(1);
+  });
+
+  it.each(['opencnpj', 'cnpja', 'minhareceita', 'receitaws'] as const)(
+    'E21: a company answered by %s is stored (migration 0005 enum value)',
+    async (source) => {
+      const userId = await newUser();
+      const company = { ...(REPLAY_COMPANIES[0] as PublicCompany), source };
+      const live: CnpjProvider = { lookup: async () => ({ ok: true, value: company }) };
+      const r = await lookupCnpjWith(
+        userId,
+        { cnpj: HERO, context: 'live' },
+        companyDeps({ dataMode: 'live', provider: live }),
+      );
+      expect(r.ok).toBe(true);
+      const [row] = await h.db
+        .select()
+        .from(schema.companies)
+        .where(eq(schema.companies.cnpj, HERO));
+      expect(row?.source).toBe(source);
+    },
+  );
+
+  it('E21: the live chain writes the whitelisted company to external_cache and a fresh entry answers without the network', async () => {
+    const userId = await newUser();
+    const company = { ...(REPLAY_COMPANIES[0] as PublicCompany), source: 'opencnpj' as const };
+    const cache = externalCachePort(h.db);
+    // Written now (real clock) so the entry is inside its 7-day TTL whenever the test runs.
+    await cache.set?.('cnpj', HERO, company, new Date().toISOString());
+    const fetch = vi.fn(async () => new Response(null, { status: 500 }));
+    vi.stubGlobal('fetch', fetch);
+    try {
+      const r = await lookupCnpjWith(
+        userId,
+        { cnpj: HERO, context: 'live' },
+        companyDeps({ dataMode: 'live', provider: cnpjProvider(h.db, 'live'), nowMs: NOW }),
+      );
+      expect(r).toMatchObject({ ok: true, value: { company: { source: 'opencnpj' } } });
+      expect(fetch).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('E21: the outage switch works only in next dev, never on Vercel or in production', () => {
+    const env = { CNPJ_SKIP_PROVIDERS: 'brasilapi, OpenCNPJ,unknown' };
+    expect(skippedSources({ ...env, NODE_ENV: 'development' })).toEqual(['brasilapi', 'opencnpj']);
+    expect(skippedSources({ ...env, NODE_ENV: 'development', VERCEL: '1' })).toEqual([]);
+    expect(skippedSources({ ...env, NODE_ENV: 'production' })).toEqual([]);
   });
 
   it('errors: malformed input → INVALID_INPUT, unknown CNPJ → NOT_FOUND, foreign CNPJ → FORBIDDEN', async () => {
