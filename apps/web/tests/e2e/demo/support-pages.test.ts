@@ -1,19 +1,20 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '../fixtures.ts';
 
-// EXECUTION E20, task 4: the support pages (ARCHITECTURE §13) render without any variable, carry one h1, link every
-// other support page from the footer and pass axe (serious/critical) in light and dark.
+// EXECUTION E20, task 4: the support pages (ARCHITECTURE §13) render without any variable, carry one h1, lead back to
+// /demo from the header, link the demo and every support page from the footer and pass axe (serious/critical) in
+// light and dark. The page-level disclaimer stays only where the page talks about money or tax (UX review E20, L1).
 
 const PAGES = [
-  { path: '/como-funciona', h1: 'Como funciona', testId: 'how-it-works-page' },
-  { path: '/seguranca', h1: 'Segurança', testId: 'security-page' },
-  { path: '/motor', h1: 'Motor e testes', testId: 'engine-page' },
-  { path: '/status', h1: 'Status', testId: 'status-page' },
-  { path: '/privacidade', h1: 'Privacidade', testId: 'privacy-page' },
-  { path: '/termos', h1: 'Termos de uso', testId: 'terms-page' },
+  { path: '/como-funciona', h1: 'Como funciona', testId: 'how-it-works-page', disclaimer: true },
+  { path: '/seguranca', h1: 'Segurança', testId: 'security-page', disclaimer: false },
+  { path: '/motor', h1: 'Motor e testes', testId: 'engine-page', disclaimer: false },
+  { path: '/status', h1: 'Status', testId: 'status-page', disclaimer: false },
+  { path: '/privacidade', h1: 'Privacidade', testId: 'privacy-page', disclaimer: true },
+  { path: '/termos', h1: 'Termos de uso', testId: 'terms-page', disclaimer: false },
 ] as const;
 
-const FOOTER_HREFS = PAGES.map((p) => p.path);
+const FOOTER_HREFS = ['/demo', ...PAGES.map((p) => p.path)];
 
 test.describe('support pages @demo', () => {
   for (const p of PAGES) {
@@ -23,7 +24,11 @@ test.describe('support pages @demo', () => {
       await expect(page.getByTestId(p.testId)).toBeVisible();
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(p.h1);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
-      await expect(page.getByTestId('disclaimer').first()).toBeVisible();
+      await expect(page.getByTestId(p.testId).getByTestId('disclaimer')).toHaveCount(
+        p.disclaimer ? 1 : 0,
+      );
+      await expect(page.getByTestId('support/demo-link')).toHaveAttribute('href', '/demo');
+      await expect(page.getByTestId('support/demo-link')).toHaveText('Ver a demonstração');
       const footer = page.getByRole('navigation', { name: 'Rodapé' });
       for (const href of FOOTER_HREFS) {
         await expect(footer.locator(`a[href="${href}"]`)).toHaveCount(1);

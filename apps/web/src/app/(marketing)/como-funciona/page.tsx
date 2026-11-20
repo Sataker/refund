@@ -28,8 +28,9 @@ export default function HowItWorksPage() {
           </li>
           <li>
             As leis e as tabelas. Alíquotas, faixas e limites vêm de leis e tabelas oficiais, com a
-            fonte registrada no código. Os resultados são conferidos com exemplos e tabelas
-            oficiais, como os da Receita Federal (veja{' '}
+            fonte registrada no código. O cálculo do DAS e do imposto de renda mensal é conferido
+            com exemplos e tabelas oficiais, como os da Receita Federal; as outras regras são
+            conferidas com casos de referência escritos a partir da lei (veja{' '}
             <TextLink href="/motor">Motor e testes</TextLink>).
           </li>
           <li>A classificação das transações e a montagem dos fatos que entram no cálculo.</li>
@@ -41,8 +42,9 @@ export default function HowItWorksPage() {
             não existe na Receita.
           </li>
           <li>
-            Em /app, a conexão com bancos usa só o ambiente de teste (sandbox) da Pluggy: as contas
-            e as transações são de teste. Nenhum banco real é conectado.
+            Em /app, a conexão com bancos usa só o ambiente de teste (sandbox) da Pluggy: a janela
+            lista apenas bancos de teste, e se um banco real for conectado mesmo assim, a conexão é
+            apagada na hora, sem copiar nenhum dado.
           </li>
           <li>
             Em /app, o CNPJ que você digita é consultado de verdade em bases públicas (BrasilAPI e,

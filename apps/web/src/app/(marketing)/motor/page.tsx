@@ -20,17 +20,17 @@ const GROUPS = [
   {
     key: 'oracle',
     label: 'Conferência com fontes oficiais',
-    text: 'O motor refaz exemplos publicados pela Receita Federal e pelo governo federal (manual do PGDAS-D, exemplos da Lei 15.270, tabela do simulador de IR) e precisa chegar ao mesmo centavo.',
+    text: 'O motor refaz exemplos publicados pela Receita Federal e pelo governo federal (manual do PGDAS-D, exemplos da Lei 15.270, tabela do simulador de IR) e precisa chegar ao mesmo centavo. Um dos exemplos vem de fonte secundária (COAD). Onde as fontes oficiais divergem entre si ou têm erro de impressão, a escolha e o motivo ficam registrados no próprio teste.',
   },
   {
     key: 'golden',
     label: 'Casos de referência das regras',
-    text: 'Para cada regra, casos com o valor esperado tirado da especificação, incluindo as fronteiras (por exemplo, Fator R em 27,99% e em 28%).',
+    text: 'Para cada regra, casos com o valor esperado calculado à mão a partir da lei, incluindo as fronteiras (por exemplo, Fator R em 27,99% e em 28%).',
   },
   {
     key: 'property',
     label: 'Propriedades',
-    text: 'Centenas de entradas geradas ao acaso em cada teste: imposto nunca negativo, mais receita nunca reduz o DAS, todo valor é um número inteiro de centavos.',
+    text: 'De 25 a 200 entradas geradas ao acaso em cada teste (até 1.000 na integração contínua): imposto nunca negativo, mais receita nunca reduz o DAS, todo valor é um número inteiro de centavos.',
   },
   {
     key: 'invariant',
@@ -56,13 +56,14 @@ export default function EnginePage() {
       title="Motor e testes"
       lead="O motor é o código que faz todas as contas do Refund. Os números desta página são contados direto do repositório, rodando os testes."
       testId="engine-page"
+      disclaimer={false}
     >
       <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
         <Stat value={S.rules.length} label="regras no motor" testId="engine/rules" />
-        <Stat value={S.totals.passed} label="testes passando" testId="engine/tests" />
+        <Stat value={S.totals.passed} label="testes do motor passando" testId="engine/tests" />
         <Stat
           value={S.totals.oracle}
-          label="conferências com fonte oficial"
+          label="testes de conferência com fontes publicadas"
           testId="engine/oracle-tests"
         />
       </dl>

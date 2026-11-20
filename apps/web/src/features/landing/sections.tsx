@@ -493,6 +493,7 @@ export function FinalCtaSection() {
 }
 
 const FOOTER_LINKS = [
+  { href: ROUTES.demo, label: 'Demonstração' },
   { href: ROUTES.howItWorks, label: 'Como funciona' },
   { href: ROUTES.security, label: 'Segurança' },
   { href: ROUTES.engine, label: 'Motor e testes' },

@@ -19,6 +19,7 @@ export default function TermsPage() {
       title="Termos de uso"
       lead="As regras para usar o Refund, sem letra miúda. Ao usar o site, você concorda com elas."
       testId="terms-page"
+      disclaimer={false}
     >
       <Section title="Quem somos">
         <p>
@@ -58,8 +59,9 @@ export default function TermsPage() {
         <Bullets>
           <li>Em /demo, pessoas, empresas, CNPJs e extratos são inventados.</li>
           <li>
-            Em /app, a conexão com bancos usa só o ambiente de teste (sandbox) da Pluggy. Nenhum
-            banco real é conectado.
+            Em /app, a conexão com bancos usa só o ambiente de teste (sandbox) da Pluggy: a janela
+            lista apenas bancos de teste, e se um banco real for conectado mesmo assim, a conexão é
+            apagada na hora, sem copiar nenhum dado.
           </li>
         </Bullets>
       </Section>
@@ -81,9 +83,9 @@ export default function TermsPage() {
       <Section title="Sem garantia de funcionamento">
         <p>
           O Refund é oferecido como está. Fazemos o possível para que ele funcione e para que as
-          contas estejam certas, e o cálculo do DAS e do imposto de renda é conferido com exemplos
-          oficiais (veja <TextLink href="/motor">Motor e testes</TextLink>), mas não garantimos que
-          o serviço fique no ar o tempo todo nem que esteja livre de erros.
+          contas estejam certas, e o cálculo do DAS e do imposto de renda mensal é conferido com
+          exemplos oficiais (veja <TextLink href="/motor">Motor e testes</TextLink>), mas não
+          garantimos que o serviço fique no ar o tempo todo nem que esteja livre de erros.
         </p>
       </Section>
 

@@ -21,6 +21,13 @@ const STATUS_TEXT: Record<HealthStatus, string> = {
   failed: 'Com falha agora.',
 };
 
+/** VERCEL_ENV in Portuguese; anything else (no Vercel) is a local run. */
+const ENVIRONMENT_LABELS: Readonly<Record<string, string>> = {
+  production: 'produção',
+  preview: 'prévia',
+  development: 'desenvolvimento',
+};
+
 const CAPABILITY_LABELS: [keyof Capabilities, string][] = [
   ['database', 'Banco de dados'],
   ['pluggy', 'Conexão de contas (Pluggy, sandbox)'],
@@ -51,6 +58,7 @@ export default async function StatusPage() {
       title="Status"
       lead="Se o Refund está no ar agora e onde ver o histórico."
       testId="status-page"
+      disclaimer={false}
     >
       <Section title="Agora">
         <p className="type-h3" data-testid="status/overall" data-status={body.status}>
@@ -78,7 +86,7 @@ export default async function StatusPage() {
             testId="status/demo-numbers"
           />
           <Row
-            label="Gravações da IA completas"
+            label="Explicações da demonstração prontas"
             value={body.demo.recordingsComplete ? 'Sim' : 'Não'}
           />
         </dl>
@@ -115,8 +123,8 @@ export default async function StatusPage() {
           </p>
         )}
         <p className="type-small text-muted-foreground">
-          Versão {body.version}, ambiente {body.environment}. Como o motor é testado está em{' '}
-          <TextLink href="/motor">Motor e testes</TextLink>.
+          Versão {body.version}, ambiente {ENVIRONMENT_LABELS[body.environment] ?? 'local'}. Como o
+          motor é testado está em <TextLink href="/motor">Motor e testes</TextLink>.
         </p>
       </Section>
     </SupportPage>

@@ -19,7 +19,25 @@ export default function SecurityPage() {
       title="Segurança"
       lead="O que lemos, o que nunca guardamos e como cada dado é protegido. Tudo aqui descreve o que o código faz hoje."
       testId="security-page"
+      disclaimer={false}
     >
+      <Section title="Em resumo">
+        <Bullets>
+          <li>
+            Nenhum banco real: só o ambiente de teste da Pluggy. A demonstração usa pessoas e
+            empresas inventadas.
+          </li>
+          <li>
+            CPF, IP e lista de sócios nunca ficam guardados em claro; o que é sensível fica cifrado.
+          </li>
+          <li>
+            Quem vê seus dados: você, pela sua sessão. O seu contador (ou quem tiver o link que você
+            mandar) vê só aquele relatório. Não existe tela de administração; quem opera o banco de
+            dados do projeto tem acesso técnico a ele.
+          </li>
+        </Bullets>
+      </Section>
+
       <Section title="Só dados de teste do Open Finance">
         <Bullets>
           <li>
@@ -95,7 +113,7 @@ export default function SecurityPage() {
           <li>
             Pagamentos (AbacatePay) e mudanças de lei (Firecrawl): cada aviso precisa vir com uma
             assinatura HMAC-SHA256 do conteúdo, conferida antes de qualquer ação. O de pagamento
-            também precisa trazer um segredo combinado.
+            também precisa trazer um segredo combinado, que é o que prova a origem.
           </li>
           <li>
             Pluggy, que não assina os avisos: conferimos um segredo combinado e o identificador da
@@ -121,17 +139,18 @@ export default function SecurityPage() {
           </li>
           <li>
             A cada mudança no código, verificações automáticas procuram CPF, lista de sócios e
-            segredos no repositório, e falham se acharem. As automações do repositório só têm
-            permissão de leitura.
+            segredos no repositório, e falham se acharem. As automações do repositório só podem ler
+            o código: nenhuma consegue alterá-lo. A única que mexe no banco de produção (migração)
+            roda à mão, com aprovação.
           </li>
         </Bullets>
       </Section>
 
       <Section title="Como você revoga">
         <p>
-          Em Conta e privacidade você desconecta cada conta ou apaga todos os seus dados de uma vez.
-          Os detalhes de o que guardamos e por quanto tempo estão em{' '}
-          <TextLink href="/privacidade">Privacidade</TextLink>.
+          Em <TextLink href="/app/conta">Conta e privacidade</TextLink> você desconecta cada conta
+          ou apaga todos os seus dados de uma vez. Os detalhes de o que guardamos e por quanto tempo
+          estão em <TextLink href="/privacidade">Privacidade</TextLink>.
         </p>
       </Section>
     </SupportPage>
