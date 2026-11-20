@@ -57,7 +57,7 @@ export const PIX_EXPIRES_IN_SECONDS = 900;
 /** §4.7 / §2.5: getCharge asks AbacatePay itself only after 20 s without a webhook. */
 export const RECONCILE_AFTER_MS = 20_000;
 
-const PAYMENTS_OFF = 'O pagamento por Pix não está ativo neste deploy.';
+const PAYMENTS_OFF = 'Pagamento por Pix em breve.';
 const PIX_FAILED = 'Não conseguimos gerar o Pix agora. Tente de novo em instantes.';
 const NOT_FOUND = 'Cobrança não encontrada.';
 

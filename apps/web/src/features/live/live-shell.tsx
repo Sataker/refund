@@ -7,7 +7,7 @@ import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { ThemeToggle } from '@/components/brand/theme-toggle.client';
 import { SidebarNav, TabBar } from '@/features/demo/shell-nav.client';
-import { type DataOrigin, liveSealLabel } from './data-origin';
+import { type DataOrigin, liveSealLabel, liveShortLabel } from './data-origin';
 import { OriginBanner } from './origin-banner';
 
 // The /app shell (IDENTITY-AND-UI §5 "App shell"; D30): the same sidebar and 5-item tab bar as /demo, under
@@ -52,7 +52,7 @@ export function LiveShell({
               <Link
                 href={'/app/plano' as Route}
                 data-testid="nav-plano"
-                className="text-cobalt underline-offset-4 hover:underline"
+                className="text-cobalt underline underline-offset-4"
               >
                 ver planos
               </Link>
@@ -84,7 +84,7 @@ export function LiveShell({
               {companyName}
             </p>
             <div className="flex items-center gap-2">
-              <SandboxSeal live={!origin.companySynthetic} compact className="lg:hidden" />
+              <SandboxSeal live compact label={liveShortLabel(origin)} className="lg:hidden" />
               <Link
                 href={'/app/plano' as Route}
                 aria-label="Planos"

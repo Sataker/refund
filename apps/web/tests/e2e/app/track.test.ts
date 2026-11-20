@@ -88,7 +88,9 @@ test.describe('first-access track @app', () => {
     await page.getByTestId('see-exact-number').click();
     await expect(page).toHaveURL(/\/permissoes$/);
     // Compliance C2: the consent screen says this is Pluggy's sandbox, no real bank.
-    await expect(page.getByTestId('sandbox-notice')).toContainText('a conexão é apagada na hora');
+    // H7 (bug bash 20/11): without Pluggy keys there is no widget, so no "bancos de teste" promise.
+    await expect(page.getByTestId('sandbox-notice')).toContainText('extrato de exemplo da Marina');
+    await expect(page.getByTestId('sandbox-notice')).not.toContainText('bancos de teste');
     await page.getByTestId('give-consent').click();
     await expect(page).toHaveURL(/\/conta-pj$/);
 
@@ -130,7 +132,9 @@ test.describe('first-access track @app', () => {
 
     await expect(page.getByTestId('connect-real-bank')).toHaveCount(0);
     await expect(page.getByRole('button', { name: /Conectar banco real/ })).toHaveCount(0);
-    await expect(page.getByTestId('open-finance-video-note')).toContainText('demonstrada no vídeo');
+    await expect(page.getByTestId('open-finance-video-note')).toContainText(
+      'Nesta versão a conexão com o banco está desligada.',
+    );
     await expect(page.getByTestId('use-sample-data')).toBeEnabled();
   });
 

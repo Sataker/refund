@@ -305,7 +305,7 @@ export function ConnectSeal() {
       data-testid="demo-connect-seal"
     >
       <FlaskConical className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
-      dados da persona sintética · integração real demonstrada no sandbox
+      dados da persona sintética
     </p>
   );
 }

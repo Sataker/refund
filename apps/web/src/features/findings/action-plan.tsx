@@ -136,7 +136,11 @@ export function ActionPlan({
       {cut < steps.length ? (
         <details className="group/steps" data-testid="more-steps">
           <summary className="type-small inline-flex min-h-11 cursor-pointer list-none items-center font-medium text-cobalt [&::-webkit-details-marker]:hidden">
-            <span className="group-open/steps:hidden">Ver os {steps.length} passos</span>
+            <span className="group-open/steps:hidden">
+              {steps.length - cut === 1
+                ? 'Ver mais 1 passo'
+                : `Ver mais ${steps.length - cut} passos`}
+            </span>
             <span className="hidden group-open/steps:inline">Mostrar menos</span>
           </summary>
           <ol className="mt-3 flex flex-col gap-4" start={cut + 1}>

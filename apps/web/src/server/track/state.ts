@@ -4,6 +4,7 @@ import type { ProfileAnswers } from '@refund/engine';
 import { type PublicCompany, parsePublicCompany } from '@refund/sources';
 import { and, count, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { estimateStop, regimeStop } from '@/features/company/scope.ts';
+import { type DataOrigin, trackOrigin } from '@/features/live/data-origin';
 import {
   type ConnectionStatus,
   type ConnectionSummary,
@@ -11,6 +12,7 @@ import {
   type TrackProgress,
 } from '@/features/track/steps.ts';
 import { profileQuestions } from '../company/profile.ts';
+import { HERO_CNPJ } from '../company/replay-companies.ts';
 
 // Track state from the anonymous session (ADR-008; ARCHITECTURE §13: "answers of each step are saved
 // on advancing, so the user can resume"). No new table: the company is a `company_links` row, the
@@ -212,6 +214,16 @@ export interface TrackSnapshot {
   company: TrackCompany | null;
 }
 
+/** The data origin of the track (its company and active connections): one seal label for every /app page. */
+export function originOfTrack(t: TrackSnapshot): DataOrigin {
+  const c = t.company?.company;
+  return trackOrigin({
+    companySource: c?.source,
+    companyIsSample: c?.cnpj === HERO_CNPJ,
+    connections: [t.progress.pj, t.progress.pf],
+  });
+}
+
 /** Everything the track pages need, in one place (read-only). */
 export async function loadTrack(db: Db, userId: string): Promise<TrackSnapshot> {
   const company = await trackCompany(db, userId);
@@ -245,7 +257,8 @@ export async function loadTrack(db: Db, userId: string): Promise<TrackSnapshot> 
     company,
     progress: {
       company: {
-        displayName: c.displayTradeName ?? c.displayLegalName,
+        // Bug bash 20/11: the stepper shows the trade name, or the first two words of the legal name.
+        displayName: c.displayTradeName ?? c.displayLegalName.split(/\s+/).slice(0, 2).join(' '),
         confirmed: get(TRACK_KEYS.confirmed) === true,
         outOfScope: regimeStop(c) !== null,
         activityOutOfScope: estimateStop(c) !== null,

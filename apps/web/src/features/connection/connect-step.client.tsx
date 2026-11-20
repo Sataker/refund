@@ -278,8 +278,8 @@ export function ConnectStep({
               </>
             ) : (
               <p className="type-small text-muted-foreground" data-testid="open-finance-video-note">
-                Integração com Open Finance demonstrada no vídeo. Para seguir agora, use os dados de
-                exemplo da Marina, uma persona sintética.
+                Nesta versão a conexão com o banco está desligada. Siga com o extrato de exemplo da
+                Marina para ver como a análise funciona.
               </p>
             )}
             <Button

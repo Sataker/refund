@@ -66,7 +66,7 @@ const OFF_MESSAGE: Record<keyof Capabilities, string> = {
   ai: 'A explicação por IA não está ativa neste deploy.',
   pluggy: 'A conexão com banco real não está ativa agora. Use os dados de exemplo.',
   email: 'O envio de e-mail não está ativo neste deploy. Copie o link e envie você mesmo.',
-  payments: 'O pagamento por Pix não está ativo neste deploy.',
+  payments: 'Pagamento por Pix em breve.',
   lawMonitor: 'O monitor de leis não está ativo neste deploy.',
   login: 'O login não está ativo neste deploy.',
   cron: 'Rotina não configurada.',

@@ -85,6 +85,13 @@ export const SAMPLE_BANK_LABEL = 'Dados públicos da Receita · extrato de exemp
 /** Same text as SandboxSeal's LIVE_LABEL (a real company's public data, sandbox accounts). */
 export const PUBLIC_LIVE_LABEL = 'Open Finance sandbox · dados públicos da Receita';
 
+/** The compact seal on mobile: the same origin as `liveSealLabel`, in two words. */
+export function liveShortLabel(origin: DataOrigin): string {
+  if (origin.companySynthetic) return 'Dados sintéticos';
+  if (origin.bank === 'sample') return 'Extrato de exemplo';
+  return 'Open Finance sandbox';
+}
+
 /** The seal of a live analysis (screens and the report footer). */
 export function liveSealLabel(origin: DataOrigin): string {
   if (origin.companySynthetic) return SYNTHETIC_LIVE_LABEL;

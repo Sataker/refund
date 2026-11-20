@@ -27,7 +27,7 @@ export function SandboxSeal({
   className?: string;
   live?: boolean;
   compact?: boolean;
-  /** A live analysis's own seal (features/live/data-origin.ts); overrides the full label, not the compact one. */
+  /** A live analysis's own seal (features/live/data-origin.ts); overrides both the full and the compact label. */
   label?: string;
 }) {
   return (
@@ -39,7 +39,7 @@ export function SandboxSeal({
       )}
     >
       <span className="seal-dot size-1.5 rounded-full bg-cobalt" aria-hidden="true" />
-      {compact ? (live ? LIVE_SHORT : DEMO_SHORT) : (label ?? (live ? LIVE_LABEL : DEMO_LABEL))}
+      {label ?? (compact ? (live ? LIVE_SHORT : DEMO_SHORT) : live ? LIVE_LABEL : DEMO_LABEL)}
     </span>
   );
 }

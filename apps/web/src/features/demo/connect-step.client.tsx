@@ -84,7 +84,7 @@ export function DemoConnectStep({ holder, account, onContinue, onSkip }: DemoCon
             <Lock className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
             Conexão Open Finance
           </span>
-          <span className="type-caption text-muted-foreground">réplica do widget</span>
+          <span className="type-caption text-muted-foreground">exemplo</span>
         </div>
 
         <div

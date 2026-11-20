@@ -302,7 +302,7 @@ export function PlansScreen(props: PlansScreenProps) {
               </a>
             ) : (
               <p className="type-caption text-muted-foreground" data-testid="contact-accountant">
-                Em breve. Quer testar com seus clientes? Fale com a gente.
+                Em breve.
               </p>
             )
           }
@@ -516,7 +516,7 @@ function SubscribeButton({
   if (!port) {
     return (
       <p className="type-caption text-muted-foreground" data-testid="payments-off">
-        {offMessage ?? 'O pagamento por Pix não está ativo agora.'}
+        {offMessage ?? 'Pagamento por Pix em breve.'}
       </p>
     );
   }

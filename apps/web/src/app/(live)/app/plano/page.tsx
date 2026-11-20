@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { Disclaimer } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
+import { liveSealLabel } from '@/features/live/data-origin';
 import { type LiveActions, LivePlans } from '@/features/plans/live-plans.client';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { currentStep, stepPath } from '@/features/track/steps';
@@ -14,7 +15,7 @@ import { activePlanWith } from '@/server/entitlements.ts';
 import { liveContext } from '@/server/live.ts';
 import { paymentsConfig } from '@/server/payments/gateway.ts';
 import { plansModel } from '@/server/plans/offer.ts';
-import { loadTrack } from '@/server/track/state.ts';
+import { loadTrack, originOfTrack } from '@/server/track/state.ts';
 import { getCharge, simulateDevPayment, startPixCheckout } from './actions';
 
 // Screen 10 live (ARCHITECTURE §13 `/app/plano`; IDENTITY-AND-UI Screen 10): the 4 cards with the catalog's prices and
@@ -40,7 +41,8 @@ export default async function PlanPage({
   if (!ctx.ok) return <LiveUnavailable message={ctx.error.message} />;
   const { db, userId } = ctx.value;
   // ARCHITECTURE §13 shell lock: the plan route waits for the first-access track like the other shell routes.
-  const { progress, company } = await loadTrack(db, userId);
+  const track = await loadTrack(db, userId);
+  const { progress, company } = track;
   const step = currentStep(progress);
   if (step !== 'done') redirect(stepPath(step) as never);
 
@@ -74,7 +76,11 @@ export default async function PlanPage({
           <Link href="/" aria-label="Refund, página inicial" className="text-xl">
             <Logo />
           </Link>
-          <SandboxSeal live className="hidden sm:inline-flex" />
+          <SandboxSeal
+            live
+            label={liveSealLabel(originOfTrack(track))}
+            className="hidden sm:inline-flex"
+          />
         </div>
       </header>
       <main

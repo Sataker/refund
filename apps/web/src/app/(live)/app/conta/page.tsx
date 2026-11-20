@@ -6,13 +6,14 @@ import { Disclaimer } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { DisconnectButton } from '@/features/connection/disconnect-button.client';
+import { liveSealLabel } from '@/features/live/data-origin';
 import { DeleteData } from '@/features/live/delete-data.client';
 import { PLAN_LABEL } from '@/features/live/live-shell';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { CONNECTION_STATUS_LABEL } from '@/features/track/steps';
 import { activePlanWith } from '@/server/entitlements.ts';
 import { liveContext } from '@/server/live.ts';
-import { activeConsent, loadTrack } from '@/server/track/state.ts';
+import { activeConsent, loadTrack, originOfTrack } from '@/server/track/state.ts';
 import { revokeConnection } from '../comecar/actions';
 import { deleteMyData } from './actions';
 
@@ -30,7 +31,8 @@ export default async function AccountPage() {
   const ctx = await liveContext();
   if (!ctx.ok) return <LiveUnavailable message={ctx.error.message} />;
   const { db, userId } = ctx.value;
-  const { progress } = await loadTrack(db, userId);
+  const track = await loadTrack(db, userId);
+  const { progress } = track;
   const consent = await activeConsent(db, userId);
   const [consentRow] = consent
     ? await db
@@ -55,7 +57,11 @@ export default async function AccountPage() {
           <Link href="/" aria-label="Refund, página inicial" className="text-xl">
             <Logo />
           </Link>
-          <SandboxSeal live className="hidden sm:inline-flex" />
+          <SandboxSeal
+            live
+            label={liveSealLabel(originOfTrack(track))}
+            className="hidden sm:inline-flex"
+          />
         </div>
       </header>
       <main
@@ -98,7 +104,18 @@ export default async function AccountPage() {
                 key={holder}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface p-4"
               >
-                <span className="type-small font-medium text-foreground">{label}</span>
+                <span className="type-small inline-flex items-center gap-2 font-medium text-foreground">
+                  {label}
+                  {/* Every connection in this version is example data: the sample persona or the Pluggy sandbox. */}
+                  {conn ? (
+                    <span
+                      className="type-caption rounded-sm bg-warning-soft px-1.5 py-0.5 font-medium text-foreground"
+                      data-testid={`account-example-${holder}`}
+                    >
+                      exemplo
+                    </span>
+                  ) : null}
+                </span>
                 <span className="type-small num text-muted-foreground">
                   {conn
                     ? `${CONNECTION_STATUS_LABEL[conn.status]} · ${conn.transactions} transações`

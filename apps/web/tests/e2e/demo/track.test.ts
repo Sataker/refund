@@ -134,9 +134,7 @@ test.describe('demo track @demo', () => {
     await advance(page, 'permissoes');
     await expect(page.getByTestId('consent')).toBeVisible();
     await advance(page, 'conta-pj');
-    await expect(page.getByTestId('demo-connect-seal')).toHaveText(
-      'dados da persona sintética · integração real demonstrada no sandbox',
-    );
+    await expect(page.getByTestId('demo-connect-seal')).toHaveText('dados da persona sintética');
     await expect(page.getByTestId('widget-replica')).toBeVisible();
     await expect(page.getByTestId('account-card-PJ')).toHaveAttribute('data-status', 'active');
     await advance(page, 'conta-pf');

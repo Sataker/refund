@@ -217,9 +217,7 @@ export function LiveAnalysis({ persona, rules, defaults }: LiveAnalysisProps) {
             aria-live="off"
           >
             <Timer className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
-            {firstMoneyMs === null
-              ? 'cronômetro ligado'
-              : `primeiro valor em ${seconds(firstMoneyMs)} s`}
+            {firstMoneyMs === null ? 'calculando' : `primeiro valor em ${seconds(firstMoneyMs)} s`}
           </p>
         </div>
 

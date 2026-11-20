@@ -78,7 +78,9 @@ export default async function TrackStepPage({ params, searchParams }: PageProps)
   const query = await searchParams;
   const typed = typeof query.cnpj === 'string' ? query.cnpj : undefined;
   const pluggyOn =
-    passo === 'conta-pj' || passo === 'conta-pf' ? await pluggyAvailable(caps, secrets) : false;
+    passo === 'conta-pj' || passo === 'conta-pf' || passo === 'estimativa' || passo === 'permissoes'
+      ? await pluggyAvailable(caps, secrets)
+      : false;
 
   return (
     <TrackShell
@@ -255,7 +257,7 @@ function StepBody({
           ) : (
             <AdvanceButton
               action={markEstimateSeen}
-              label="Ver o número exato"
+              label={pluggyOn ? 'Ver o número exato' : 'Continuar com dados de exemplo'}
               testId="see-exact-number"
               className="mt-8"
             />
@@ -267,7 +269,7 @@ function StepBody({
       return (
         <>
           <StepTitle title="O que vamos ler e o que nunca fazemos" />
-          <ConsentContent />
+          <ConsentContent pluggyOn={pluggyOn} />
           <AdvanceButton
             action={recordConsent.bind(null, {
               scopes: [...CONSENT_SCOPES],

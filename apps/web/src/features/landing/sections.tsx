@@ -119,6 +119,9 @@ export function SiteHeader() {
   );
 }
 
+/** Bug bash 20/11 (H6): the live product reads a real company's public data with example statements. */
+const LANDING_SEAL = 'Dados públicos da Receita · extrato de exemplo';
+
 const PILLS = [
   { icon: Scale, text: 'Lei citada em cada centavo' },
   { icon: Link2, text: 'PF + PJ juntos' },
@@ -130,7 +133,7 @@ export function HeroSection() {
     <Section inner="pt-10 lg:pt-16" labelledBy="hero-title">
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-7">
-          <SandboxSeal />
+          <SandboxSeal label={LANDING_SEAL} />
           <p className="type-small mt-4">
             <Link
               href={ROUTES.demo}
@@ -387,8 +390,8 @@ export function SecuritySection() {
     },
     {
       icon: FileCheck2,
-      title: 'Dados sintéticos nesta demo',
-      text: 'Personas e CNPJs inventados, Open Finance em sandbox. Nenhum dado real.',
+      title: 'Empresa real, extrato de exemplo',
+      text: 'A empresa vem dos dados públicos da Receita. Os extratos bancários desta versão são de exemplo (persona sintética).',
     },
   ];
   return (
@@ -485,6 +488,9 @@ export function FinalCtaSection() {
             <CnpjForm id="cta" />
             <DemoLink className="mt-1" />
           </div>
+        </div>
+        {/* Bug bash 20/11: the waitlist sits below the working CNPJ input, not beside it. */}
+        <div className="border-t border-border pt-8 lg:col-span-12">
           <WaitlistForm join={joinWaitlist} />
         </div>
       </div>
@@ -529,12 +535,12 @@ export function SiteFooter() {
         </nav>
         <div className="flex flex-col items-start gap-3 lg:col-span-3 lg:items-end">
           <ThemeToggle />
-          <SandboxSeal />
+          <SandboxSeal label={LANDING_SEAL} />
         </div>
         <p className="type-small border-t border-border pt-6 text-muted-foreground lg:col-span-12">
           {DISCLAIMER_TEXT} O Refund mostra planejamento tributário lícito, com base na lei vigente;
-          não é consultoria jurídica nem contábil. Nesta demo, pessoas, empresas, CNPJs e extratos
-          são sintéticos.
+          não é consultoria jurídica nem contábil. A empresa vem dos dados públicos da Receita. Os
+          extratos bancários desta versão são de exemplo (persona sintética).
         </p>
       </div>
     </footer>

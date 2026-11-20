@@ -47,15 +47,20 @@ const BLOCKS: Block[] = [
   },
 ];
 
-export function ConsentContent() {
+/**
+ * `pluggyOn`: the Pluggy widget is actually available in this deploy. Only then does the notice talk about the test
+ * banks in the window (bug bash 20/11, H7); without it the bank steps use the example statement.
+ */
+export function ConsentContent({ pluggyOn = true }: { pluggyOn?: boolean } = {}) {
   return (
     <div className="flex flex-col gap-6" data-testid="consent">
       <p
         className="type-small rounded-lg border border-border bg-surface px-4 py-3 text-foreground"
         data-testid="sandbox-notice"
       >
-        Nesta versão, a conexão usa o ambiente de testes da Pluggy (sandbox): a janela lista apenas
-        bancos de teste, e se um banco real for conectado mesmo assim, a conexão é apagada na hora.
+        {pluggyOn
+          ? 'Nesta versão, a conexão usa o ambiente de testes da Pluggy (sandbox): a janela lista apenas bancos de teste, e se um banco real for conectado mesmo assim, a conexão é apagada na hora.'
+          : 'Nesta versão a conexão com o banco está desligada: nos próximos passos você segue com o extrato de exemplo da Marina, e nada do seu banco é lido.'}
       </p>
       {BLOCKS.map(({ id, title, Icon, tone, items }) => (
         <section key={id} aria-labelledby={`consent-${id}`}>

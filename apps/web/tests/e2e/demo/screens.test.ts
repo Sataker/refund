@@ -178,7 +178,7 @@ test.describe('demo screens 5–8 @demo', () => {
       );
       expect(order).toEqual([...order].sort((a, b) => a - b));
       await expect(page.getByTestId('more-steps').locator(':scope > summary')).toHaveText(
-        /Ver os 7 passos/,
+        /Ver mais 4 passos/,
       );
       await expect(page.getByTestId('action-plan')).toContainText('Quando o efeito começa');
       await page.getByTestId('calc-trace').locator('summary').first().click();
