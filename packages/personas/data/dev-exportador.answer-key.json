@@ -2582,7 +2582,7 @@
     {
       "id": "psychologist-beneficiary",
       "type": "transaction",
-      "question": "Foi atendimento de saúde de você ou de dependente? Com qual profissional?",
+      "question": "Foi atendimento de saúde de você ou de dependente?",
       "answer": "holder",
       "transactionIds": [
         "acfb716b-6481-42e6-98f7-796196d73273",

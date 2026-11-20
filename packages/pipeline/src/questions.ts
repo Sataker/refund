@@ -108,7 +108,7 @@ function textOf(
     case 'health':
       return {
         type: 'transaction',
-        text: `Os pagamentos a este profissional (${sum} no total) foram atendimento de saúde seu ou de dependente? Com qual profissional?`,
+        text: `Os pagamentos a este profissional (${sum} no total) foram atendimento de saúde seu ou de dependente?`,
         options: [
           { value: 'holder', label: 'Sim, meu' },
           { value: 'dependent', label: 'Sim, de dependente' },

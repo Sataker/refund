@@ -267,6 +267,10 @@ describe('PF cards (E.3, E.6)', () => {
 
   it('health: holder + profession deducts; "other" stays out of the deduction; "no" rejects; junk stays open', () => {
     const id = cardOf(classify(psychologist()), 'health:');
+    // D44 (PLAN §18, 20/11): the card asks only whose care it was, never "Com qual profissional?".
+    expect(questions(classify(psychologist()))[0]?.text).toBe(
+      'Os pagamentos a este profissional (R$ 3.200,00 no total) foram atendimento de saúde seu ou de dependente?',
+    );
     const yes = classify(psychologist(), {
       [id]: { beneficiary: 'holder', profession: 'psychologist' },
     });

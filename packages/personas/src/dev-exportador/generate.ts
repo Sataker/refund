@@ -994,7 +994,7 @@ function cardAnswers(tx: Record<string, string[]>): CardAnswer[] {
     {
       id: 'psychologist-beneficiary',
       type: 'transaction',
-      question: 'Foi atendimento de saúde de você ou de dependente? Com qual profissional?',
+      question: 'Foi atendimento de saúde de você ou de dependente?',
       answer: 'holder',
       transactionIds: ids('psychologist'),
       source,
