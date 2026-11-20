@@ -77,6 +77,8 @@ export default defineConfig({
           // PGlite migrations in beforeAll take seconds each; under parallel load the 10 s default timed out.
           hookTimeout: 60_000,
           maxWorkers: 4,
+          // Vitest 5 refuses projects with different maxWorkers in the same group: run this one after the unit tests.
+          sequence: { groupOrder: 1 },
         },
       },
     ],
