@@ -7,6 +7,8 @@ import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { ThemeToggle } from '@/components/brand/theme-toggle.client';
 import { SidebarNav, TabBar } from '@/features/demo/shell-nav.client';
+import { type DataOrigin, liveSealLabel } from './data-origin';
+import { OriginBanner } from './origin-banner';
 
 // The /app shell (IDENTITY-AND-UI §5 "App shell"; D30): the same sidebar and 5-item tab bar as /demo, under
 // /app/analises/[id]. Server component: the analysis and the plan are read by the layout.
@@ -15,13 +17,16 @@ export function LiveShell({
   base,
   companyName,
   planLabel,
+  origin,
   children,
 }: {
   base: string;
   companyName: string;
   planLabel: string;
+  origin: DataOrigin;
   children: ReactNode;
 }) {
+  const seal = liveSealLabel(origin);
   return (
     <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[248px_minmax(0,1fr)]">
       <a
@@ -62,7 +67,7 @@ export function LiveShell({
             Conta e privacidade
           </Link>
           <ThemeToggle />
-          <SandboxSeal live className="self-start whitespace-normal" />
+          <SandboxSeal live label={seal} className="self-start whitespace-normal" />
         </div>
       </aside>
       <div className="flex min-w-0 flex-col">
@@ -79,7 +84,7 @@ export function LiveShell({
               {companyName}
             </p>
             <div className="flex items-center gap-2">
-              <SandboxSeal live compact className="lg:hidden" />
+              <SandboxSeal live={!origin.companySynthetic} compact className="lg:hidden" />
               <Link
                 href={'/app/plano' as Route}
                 aria-label="Planos"
@@ -110,6 +115,7 @@ export function LiveShell({
           id="conteudo"
           className="mx-auto w-full max-w-[1080px] flex-1 overflow-x-clip px-4 pt-6 pb-28 lg:px-8 lg:pt-10 lg:pb-12 print:max-w-none print:p-0"
         >
+          <OriginBanner origin={origin} companyName={companyName} className="mb-6 print:hidden" />
           {children}
         </main>
         <footer className="border-t border-border pb-20 lg:pb-0 print:hidden">

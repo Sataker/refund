@@ -21,6 +21,7 @@ export default async function LiveAnalysisShell({
       base={`/app/analises/${id}`}
       companyName={page.live.companyName}
       planLabel={PLAN_LABEL[page.live.plan] ?? page.live.plan}
+      origin={page.live.origin}
     >
       {children}
     </LiveShell>

@@ -30,6 +30,10 @@ interface ReportProps {
    * (compliance review G2 M1, same rule as SandboxSeal). /demo leaves it false.
    */
   live?: boolean;
+  /** A live analysis's seal from its data origin (features/live/data-origin.ts); wins over `live`. */
+  seal?: string;
+  /** The data-origin banner text (C2), printed on the paper too: the statements are not the company's. */
+  notice?: string | null;
 }
 
 function Section({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
@@ -250,6 +254,8 @@ export function Report({
   labelOf,
   approval,
   live = false,
+  seal,
+  notice,
 }: ReportProps) {
   // One order everywhere (UX review): biggest effect first, ties in the engine order.
   const savings = result.findings.filter((f) => f.type === 'savings').sort(byValue);
@@ -280,6 +286,14 @@ export function Report({
           {company}
           {holderName ? ` + ${holderName}` : ''} · análise de {formatCivilDate(analysisDate)}
         </p>
+        {notice ? (
+          <p
+            className="rounded-[2px] border border-amber-400 bg-amber-50 px-2 py-1 text-[12px] font-medium text-neutral-900"
+            data-testid="report-origin"
+          >
+            {notice}
+          </p>
+        ) : null}
         <p className="flex flex-wrap items-baseline gap-x-3 text-neutral-900">
           <span className="text-[13px] text-neutral-600">
             Total, próximos 12 meses (confirmado):
@@ -483,7 +497,7 @@ export function Report({
           Hash dos parâmetros {result.parametersHash} · hash das entradas {result.inputsHash}
         </p>
         <p data-testid="report-seal">
-          {DISCLAIMER_TEXT} {sealLabel(live)}.
+          {DISCLAIMER_TEXT} {seal ?? sealLabel(live)}.
         </p>
       </footer>
     </article>

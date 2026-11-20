@@ -10,9 +10,11 @@ import {
 } from '@refund/db';
 import type { EngineResult, Finding, Total } from '@refund/engine';
 import { parsePublicCompany } from '@refund/sources';
-import { eq } from 'drizzle-orm';
+import { and, eq, lte, or } from 'drizzle-orm';
 import { titleCase } from '@/demo/view.ts';
 import { type DashboardModel, dashboardModel } from '@/features/findings/model';
+import { type BankSource, bankSourceOf, type DataOrigin } from '@/features/live/data-origin';
+import { HERO_CNPJ } from '../company/replay-companies.ts';
 import { entitlementsWith } from '../entitlements.ts';
 import type { Entitlements, PlanId } from '../plans/catalog.ts';
 import { type LiveFindingDto, largestRuleId, serializeFinding } from '../plans/serialize.ts';
@@ -45,6 +47,40 @@ export interface LiveAnalysis {
   dashboard: DashboardModel;
   /** "YYYY-MM-DD" of the run (BRT), the anchor of every `daysLeft`. */
   analysisDate: string;
+  /** Where the company card and the statements came from (C2: the banner and the seal). */
+  origin: DataOrigin;
+}
+
+/**
+ * Providers of the connections this run read: through its classifications (the ledger), else, when those rows are
+ * gone (a revoked connection drops its transactions), the user's connections in force when the run was created.
+ */
+/** The bank source of a run (sample, sandbox or none). */
+export async function analysisBankSource(db: Db, analysis: AnalysisRow): Promise<BankSource> {
+  return bankSourceOf(await bankProviders(db, analysis));
+}
+
+async function bankProviders(db: Db, analysis: AnalysisRow): Promise<string[]> {
+  const { classifications, transactions, accounts, connections } = schema;
+  const used = await db
+    .selectDistinct({ provider: connections.provider })
+    .from(classifications)
+    .innerJoin(transactions, eq(transactions.id, classifications.transactionId))
+    .innerJoin(accounts, eq(accounts.id, transactions.accountId))
+    .innerJoin(connections, eq(connections.id, accounts.connectionId))
+    .where(eq(classifications.analysisId, analysis.id));
+  if (used.length > 0) return used.map((r) => r.provider);
+  const candidates = await db
+    .selectDistinct({ provider: connections.provider })
+    .from(connections)
+    .where(
+      and(
+        eq(connections.userId, analysis.userId),
+        lte(connections.createdAt, analysis.createdAt),
+        or(eq(connections.holder, 'PF'), eq(connections.companyId, analysis.companyId)),
+      ),
+    );
+  return candidates.map((r) => r.provider);
 }
 
 const DATE_BRT = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' });
@@ -60,7 +96,7 @@ export async function loadLiveAnalysis(
   const findings = rows.map(findingOf);
   const total = analysis.total ?? ZERO_TOTAL;
   const [company] = await db
-    .select({ publicData: schema.companies.publicData })
+    .select({ publicData: schema.companies.publicData, source: schema.companies.source })
     .from(schema.companies)
     .where(eq(schema.companies.id, analysis.companyId))
     .limit(1);
@@ -80,6 +116,11 @@ export async function loadLiveAnalysis(
     largest: largestRuleId(findings),
     dashboard: dashboardModel({ findings, total }, analysisDate),
     analysisDate,
+    origin: {
+      companySynthetic: company?.source === 'persona' || company?.source === 'replay',
+      companyIsSample: parsed?.cnpj === HERO_CNPJ,
+      bank: await analysisBankSource(db, analysis),
+    },
   };
 }
 

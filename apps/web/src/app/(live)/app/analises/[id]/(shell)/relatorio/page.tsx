@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { sendReportFor } from '@/app/(live)/app/analises/actions';
 import { lawExcerpt } from '@/demo/snapshot.ts';
 import { Report } from '@/features/findings/report';
+import { bankBannerText, liveSealLabel } from '@/features/live/data-origin';
 import { ReportSender } from '@/features/live/report-sender.client';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { shellPage } from '@/server/analysis/page.ts';
@@ -55,6 +56,8 @@ export default async function LiveReportPage({ params }: { params: Promise<{ id:
         model={live.dashboard}
         labelOf={(ref) => labels.get(ref)}
         live
+        seal={liveSealLabel(live.origin)}
+        notice={bankBannerText(live.origin, live.companyName)}
       />
     </div>
   );

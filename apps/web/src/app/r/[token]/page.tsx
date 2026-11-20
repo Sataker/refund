@@ -3,10 +3,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Disclaimer } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
+import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { lawExcerpt } from '@/demo/snapshot.ts';
 import { displayTitle } from '@/features/demo/display';
 import { Report } from '@/features/findings/report';
 import { AccountantDecision } from '@/features/live/accountant-decision.client';
+import { bankBannerText, liveSealLabel } from '@/features/live/data-origin';
+import { OriginBanner } from '@/features/live/origin-banner';
+import { formatBrtDate } from '@/lib/date';
 import { loadLiveAnalysis, reportResult } from '@/server/analysis/read.ts';
 import { getDb } from '@/server/db.ts';
 import { reportByToken } from '@/server/report/report.ts';
@@ -69,6 +73,21 @@ export default async function AccountantReportPage({
         className="mx-auto flex max-w-[960px] flex-col gap-6 px-4 py-8"
         data-testid="accountant-page"
       >
+        <header className="flex flex-col gap-2 print:hidden">
+          <h1 className="type-h3 text-foreground" data-testid="accountant-title">
+            {live.companyName} pediu sua revisão · {formatBrtDate(found.report.createdAt)}
+          </h1>
+          <SandboxSeal
+            live
+            label={liveSealLabel(live.origin)}
+            className="self-start whitespace-normal"
+          />
+          <p className="type-small text-muted-foreground" data-testid="accountant-howto">
+            Em cada achado, “Aprovo” confirma a conta e “Ajustar” pede uma correção ao cliente; no
+            fim, aprove o relatório ou peça ajustes. O cliente vê a sua resposta na hora.
+          </p>
+          <OriginBanner origin={live.origin} companyName={live.companyName} />
+        </header>
         {found.report.message ? (
           <p className="rounded-md border border-border bg-surface p-4 text-base text-foreground print:hidden">
             Mensagem do cliente: {found.report.message}
@@ -86,6 +105,8 @@ export default async function AccountantReportPage({
           model={live.dashboard}
           labelOf={(ref) => labels.get(ref)}
           live
+          seal={liveSealLabel(live.origin)}
+          notice={bankBannerText(live.origin, live.companyName)}
         />
         <Disclaimer />
       </main>
