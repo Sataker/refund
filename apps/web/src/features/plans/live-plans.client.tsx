@@ -33,17 +33,28 @@ export interface LiveActions {
 /** D58: "Tentar de novo" after a failed sign-in (the auth callback sends `?login=erro`). */
 export const RETRY_LOGIN = `/auth/entrar?voltar=${encodeURIComponent('/app/plano')}`;
 
+export type LoginError = 'erro' | 'confirme-email';
+
+const LOGIN_ERROR_TEXT: Readonly<Record<LoginError, string>> = {
+  erro: 'Não conseguimos concluir o login. Tente de novo.',
+  'confirme-email':
+    'Este e-mail já tem uma conta no Refund. Confirme o e-mail no login para entrar nela.',
+};
+
 export function LivePlans({
   actions,
   validationCode,
-  loginError = false,
+  loginError = null,
   ...props
 }: Omit<PlansScreenProps, 'port' | 'simulated' | 'validationOffer'> & {
   actions: LiveActions | null;
   /** The code from the private link; present = the validation offer is shown. */
   validationCode: string | null;
-  /** D58: the sign-in did not complete (`?login=erro` from the auth callback). */
-  loginError?: boolean;
+  /**
+   * D58: the sign-in did not complete (`?login=erro` from the auth callback), or WorkOS returned an unverified
+   * e-mail that already has an account (`?login=confirme-email`).
+   */
+  loginError?: LoginError | null;
 }) {
   const router = useRouter();
   // `assinar` and `login` are used once: a reload or the way back must not open a second Pix or repeat the alert.
@@ -83,9 +94,7 @@ export function LivePlans({
           className="flex flex-col gap-3 rounded-lg border border-warning bg-warning-soft p-4 sm:flex-row sm:items-center sm:justify-between"
           data-testid="login-error"
         >
-          <p className="type-small text-foreground">
-            Não conseguimos concluir o login. Tente de novo.
-          </p>
+          <p className="type-small text-foreground">{LOGIN_ERROR_TEXT[loginError]}</p>
           {/* A route handler that redirects to the identity provider: a plain link, a full navigation. */}
           <a
             href={RETRY_LOGIN}

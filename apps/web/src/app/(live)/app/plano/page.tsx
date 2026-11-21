@@ -136,7 +136,7 @@ export default async function PlanPage({
           linkedCompany={linkedCompany}
           returnTo={returnTo}
           initialCheckout={intent}
-          loginError={login === 'erro'}
+          loginError={login === 'erro' || login === 'confirme-email' ? login : null}
           contactEmail={CONTACT_EMAIL === CONTACT_PLACEHOLDER ? null : CONTACT_EMAIL}
           {...(off.ok ? {} : { offMessage: off.error.message })}
         />

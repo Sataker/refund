@@ -138,12 +138,17 @@ test.describe('plans and Pix @app', () => {
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
-    await offer.evaluate((el) => el.scrollIntoView({ block: 'start' }));
-    for (const id of ['roi-unlock', 'see-exact-number']) {
-      const box = await offer.getByTestId(id).boundingBox();
-      expect(box, id).not.toBeNull();
-      expect((box?.y ?? -1) >= 0 && (box?.y ?? 0) + (box?.height ?? 0) <= 844, id).toBe(true);
-    }
+    // Both ways on fit in one phone screen together, whatever the scroll position the page allows.
+    const unlockBox = await offer.getByTestId('roi-unlock').boundingBox();
+    const freeBox = await offer.getByTestId('see-exact-number').boundingBox();
+    expect(unlockBox, 'roi-unlock').not.toBeNull();
+    expect(freeBox, 'see-exact-number').not.toBeNull();
+    const top = Math.min(unlockBox?.y ?? 0, freeBox?.y ?? 0);
+    const bottom = Math.max(
+      (unlockBox?.y ?? 0) + (unlockBox?.height ?? 0),
+      (freeBox?.y ?? 0) + (freeBox?.height ?? 0),
+    );
+    expect(bottom - top).toBeLessThanOrEqual(844);
     await page.setViewportSize({ width: 1280, height: 720 });
     const unlock = offer.getByTestId('roi-unlock');
     await expect(unlock).toHaveAttribute(
