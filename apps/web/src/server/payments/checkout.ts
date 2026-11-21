@@ -12,7 +12,9 @@ import {
   settleCharge,
 } from '@refund/db';
 import { z } from 'zod';
+import { loginPath } from '../auth/return-path.ts';
 import { safeEqual } from '../crypto.ts';
+import { recordFunnelWith } from '../funnel.ts';
 import { logger } from '../log.ts';
 import {
   type ChargePeriod,
@@ -42,7 +44,16 @@ export interface PaymentDeps {
   ipHash?: string | null;
   /** VALIDATION_OFFER_CODE; null or absent = the validation offer is off. */
   validationCode?: string | null;
+  /**
+   * D58: the `login` capability is on, so a paid plan must belong to an account (it survives cookie loss and the
+   * 30-day anonymous cleanup). Absent or false: checkout works for the anonymous session, as before.
+   */
+  requireLogin?: boolean;
+  /** The session user has not signed in (only read when `requireLogin`). */
+  anonymous?: boolean;
 }
+
+const LOGIN_FIRST = 'Entre para guardar o seu plano.';
 
 /** ARCHITECTURE §9.4: startPixCheckout 10/h per session. */
 export const PIX_RATE = { limit: 10, windowMs: 60 * 60_000 } as const;
@@ -107,6 +118,12 @@ export async function startPixCheckoutWith(
   const { planId, period } = parsed.data;
   const amountCents = pixAmountCents(planId, period);
   if (amountCents === null) return fail('INVALID_INPUT', 'Plano inválido.');
+  if (deps.requireLogin && deps.anonymous !== false) {
+    // Back to the plans page with the same plan, so the Pix dialog reopens after the sign-in (the validation offer's
+    // code is not carried through the sign-in: that link is opened again by hand).
+    const back = period === 'validation' ? '/app/plano' : `/app/plano?assinar=${planId}-${period}`;
+    return fail('UNAUTHENTICATED', LOGIN_FIRST, { login: loginPath(back) });
+  }
   if (period === 'validation') {
     // Payments review M1: the offer exists only with VALIDATION_OFFER_CODE, and only for whoever has the link.
     const expected = deps.validationCode ?? null;
@@ -183,6 +200,7 @@ export async function startPixCheckoutWith(
     devMode: pix.devMode,
   });
   logger.info('payments.charge_created', { planId, period, devMode: pix.devMode });
+  await recordFunnelWith(db, userId, 'funnel.checkout_started', { plan: planId, period });
   return ok({
     chargeId: charge.id,
     brCode: pix.brCode,
@@ -206,8 +224,11 @@ export async function grantPaidCharge(
   const days = PERIOD_DAYS[period];
   if (days === undefined) throw new Error(`grantPaidCharge: unknown period ${charge.period}`);
   const r = await settleCharge(db, { chargeId: charge.id, paidAt, days });
-  if (r.settled) logger.info('payments.charge_paid', { period });
-  return r.settled ? 'granted' : 'already';
+  if (!r.settled) return 'already';
+  logger.info('payments.charge_paid', { period });
+  // The owner at settlement time (a merge may have moved the charge since the caller read it).
+  await recordFunnelWith(db, r.userId, 'funnel.paid', { plan: r.planId, period });
+  return 'granted';
 }
 
 export const chargeIdInput = z.object({ chargeId: z.uuid() });

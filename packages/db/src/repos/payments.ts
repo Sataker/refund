@@ -148,7 +148,7 @@ export interface SettleInput {
 }
 
 export type SettleOutcome =
-  | { settled: true; subscriptionId: string; endsAt: Date }
+  | { settled: true; subscriptionId: string; endsAt: Date; userId: string; planId: string }
   | { settled: false; reason: 'NOT_PENDING' };
 
 const DAY_MS = 86_400_000;
@@ -198,7 +198,13 @@ export async function settleCharge(db: Db, input: SettleInput): Promise<SettleOu
       })
       .returning({ id: subscriptions.id });
     if (!sub) throw new Error('settleCharge: no subscription returned');
-    return { settled: true, subscriptionId: sub.id, endsAt } as const;
+    return {
+      settled: true,
+      subscriptionId: sub.id,
+      endsAt,
+      userId: paid.userId,
+      planId: paid.planId,
+    } as const;
   });
 }
 

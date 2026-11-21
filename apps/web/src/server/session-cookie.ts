@@ -24,7 +24,15 @@ export interface SessionPayload {
   userId: string;
   /** Epoch seconds. */
   issuedAt: number;
+  /**
+   * D58: the WorkOS user this session was signed for, set only by a sign-in. A session for an account is honoured
+   * only while it matches the account (session.ts) and, with login on, a live WorkOS session (proxy.ts).
+   */
+  wid?: string;
 }
+
+/** A WorkOS user id (`user_01…`): the only shape `wid` may take. */
+export const WORKOS_ID = /^[A-Za-z0-9_-]{1,80}$/;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
@@ -53,7 +61,8 @@ export function verifySession(
   if (typeof p.issuedAt !== 'number' || !Number.isSafeInteger(p.issuedAt)) return null;
   const age = Math.floor(nowMs / 1000) - p.issuedAt;
   if (age < -60 || age > SESSION_MAX_AGE_S) return null;
-  return { userId: p.userId, issuedAt: p.issuedAt };
+  if (p.wid !== undefined && (typeof p.wid !== 'string' || !WORKOS_ID.test(p.wid))) return null;
+  return { userId: p.userId, issuedAt: p.issuedAt, ...(p.wid !== undefined ? { wid: p.wid } : {}) };
 }
 
 export function newSession(secret: Buffer, nowMs: number = Date.now()) {

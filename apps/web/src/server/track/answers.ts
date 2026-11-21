@@ -3,6 +3,7 @@ import type { Db } from '@refund/db';
 import { z } from 'zod';
 import { estimateStop, regimeStop } from '@/features/company/scope.ts';
 import { nextAfter, type Step, stepPath } from '@/features/track/steps.ts';
+import { recordFunnelWith } from '../funnel.ts';
 import { type ActionResult, fail, ok } from '../result.ts';
 import { trackLimit } from './limits.ts';
 import { loadTrack, setAssumption, TRACK_KEYS, type TrackKey, unlinkCompany } from './state.ts';
@@ -116,6 +117,7 @@ export async function markEstimateSeenWith(
   const stop = estimateStop(company.company);
   if (stop !== null) return fail('FORBIDDEN', stop.message);
   await setAssumption(db, userId, company.id, TRACK_KEYS.estimateSeen, true);
+  await recordFunnelWith(db, userId, 'funnel.estimate_seen', { where: 'estimativa' });
   return ok(await nextOf(db, userId, 'estimativa'));
 }
 

@@ -115,7 +115,7 @@ describe('anonymous session (ARCHITECTURE §9.2)', () => {
     expect(row?.anonymous).toBe(true);
 
     const again = await resolveSession(jar(j.written), deps);
-    expect(again).toEqual({ ok: true, value: { userId } });
+    expect(again).toEqual({ ok: true, value: { userId, anonymous: true } });
   });
 
   it('a tampered cookie is not accepted', async () => {

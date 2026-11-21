@@ -90,6 +90,9 @@ export default defineConfig({
           maxWorkers: 4,
           // Vitest 5 refuses projects with different maxWorkers in the same group: run this one after the unit tests.
           sequence: { groupOrder: 1 },
+          // AuthKit imports `next/cache` and `server-only` without the paths Node's ESM resolver needs: let Vite
+          // resolve it (and apply the `server-only` stand-in) for the /auth route and proxy tests.
+          server: { deps: { inline: ['@workos-inc/authkit-nextjs'] } },
         },
       },
     ],

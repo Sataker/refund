@@ -28,6 +28,9 @@ export async function startPixCheckout(input: {
       userId: ctx.userId,
       gateway: config?.gateway ?? null,
       validationCode: config?.validationCode ?? null,
+      // D58: with the `login` capability, an anonymous session signs in before paying.
+      requireLogin: ctx.caps.login,
+      anonymous: !ctx.isLoggedIn,
       // The IP only as an HMAC (ARCHITECTURE §9.4).
       ipHash: hmac(clientIp(ctx.headers), ctx.secrets.pepper),
     });
