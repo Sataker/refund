@@ -38,7 +38,7 @@ const BULLETS = [
 function estimateLabel(cents: number): string {
   const thousands = (cents - (cents % 100_000)) / 100_000;
   if (thousands === 0) return formatBRLWhole(cents);
-  return `R$${THIN_NBSP}${thousands.toLocaleString('pt-BR')} mil`;
+  return `R$${THIN_NBSP}${thousands.toLocaleString('pt-BR')}\u00a0mil`;
 }
 
 const nb = (s: string): string => s.replaceAll('R$ ', 'R$ ');
