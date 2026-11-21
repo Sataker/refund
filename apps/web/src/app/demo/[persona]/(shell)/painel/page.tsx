@@ -33,7 +33,10 @@ export default async function DemoDashboardPage({
       holderName={snap.view.holderName}
       base={snap.dashboard}
       cards={snap.cards}
-      offer={{ terms: roiOfferTerms(), href: `/demo/${persona}/plano` }}
+      offer={{
+        terms: roiOfferTerms(),
+        href: `/demo/${persona}/plano?voltar=${encodeURIComponent(`/demo/${persona}/painel`)}`,
+      }}
       financeCard={
         finance.ok ? (
           <FinanceEntryCard view={finance.value.view} href={`/demo/${persona}/financas`} />

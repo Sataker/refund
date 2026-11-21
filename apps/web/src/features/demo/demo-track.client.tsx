@@ -15,6 +15,8 @@ import {
   saveTrack,
 } from '@/demo/answers';
 import { restartDemo, updatePersonaState } from '@/demo/demo-session';
+import type { RoiOfferTerms } from '@/features/plans/model';
+import { RoiOffer } from '@/features/plans/roi-offer';
 import { ChoiceStep } from '@/features/track/choice-step.client';
 import {
   ABROAD_OPTIONS,
@@ -41,6 +43,8 @@ export interface DemoTrackSlots {
   consent?: ReactNode;
   /** Every distinct estimate, rendered at build; the browser only picks one (ARCHITECTURE §4.2). */
   estimates?: { variants: Record<string, ReactNode>; index: Record<string, string> };
+  /** D58: the Empresa offer under the estimate; `minimums` per estimate variant id (absent = no offer). */
+  offer?: { terms: RoiOfferTerms; href: string; minimums: Record<string, number> };
 }
 
 interface DemoTrackProps {
@@ -85,17 +89,25 @@ function Advance({
   label,
   onClick,
   className,
+  outline = false,
 }: {
   label: string;
   onClick: () => void;
   className?: string;
+  /** The free path inside the offer card: outlined, wraps, no cue (one highlighted button per screen). */
+  outline?: boolean;
 }) {
   return (
     <Button
       type="button"
       size="xl"
+      variant={outline ? 'outline' : 'default'}
       onClick={onClick}
-      className={`demo-cue w-full sm:w-auto sm:self-start ${className ?? ''}`}
+      className={
+        outline
+          ? `h-auto min-h-14 w-full py-3 text-center whitespace-normal sm:w-auto ${className ?? ''}`
+          : `demo-cue w-full sm:w-auto sm:self-start ${className ?? ''}`
+      }
       data-testid="track-advance"
     >
       {label}
@@ -231,13 +243,31 @@ export function DemoTrack({ persona, step, defaults, slots }: DemoTrackProps) {
     case 'estimativa': {
       const key = answersKey(effectiveAnswers(state.answers, persona.questions));
       const variant = slots.estimates?.index[key];
+      const offerCents = variant ? slots.offer?.minimums[variant] : undefined;
       body = (
         <>
           <StepTitle title="Quanto isso pode valer para você?" />
           <div data-testid="estimate-slot" data-answers={key}>
             {variant ? slots.estimates?.variants[variant] : null}
           </div>
-          <Advance label="Ver o número exato" onClick={() => go(next)} className="mt-8" />
+          {offerCents !== undefined && slots.offer ? (
+            <RoiOffer
+              variant="estimate"
+              savingsCents={offerCents}
+              terms={slots.offer.terms}
+              href={slots.offer.href}
+              className="mt-8"
+              secondary={
+                <Advance
+                  label="Continuar grátis e ver o número exato"
+                  onClick={() => go(next)}
+                  outline
+                />
+              }
+            />
+          ) : (
+            <Advance label="Ver o número exato" onClick={() => go(next)} className="mt-8" />
+          )}
         </>
       );
       break;
