@@ -15,6 +15,7 @@
   },
   "globalPassThroughEnv": [
     "LIVE",
+    "SKIP_HEAVY_SWEEPS",
     "FC_NUM_RUNS",
     "CI",
     "REFUND_CAPTURES_DIR",

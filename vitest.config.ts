@@ -4,6 +4,16 @@ import { defineConfig } from 'vitest/config';
 // *.live.test.ts only run with LIVE=1 (never in CI). TESTS §1.
 const live = process.env.LIVE === '1';
 
+// The two densest T11-19 sweeps take ~50 s each uncovered but blow past their per-test timeout under v8 coverage on
+// the GitHub runner (60k: 225 s against 180 s in the first CI run). The CI coverage job sets SKIP_HEAVY_SWEEPS=1 and
+// leaves them to the `golden` job, which runs every golden file without instrumentation; the code they exercise is
+// still covered by profile.coverage.test.ts and profile.test.ts.
+const skipHeavySweeps = process.env.SKIP_HEAVY_SWEEPS === '1';
+const HEAVY_SWEEPS = [
+  'packages/engine/test/golden/profile.coverage-60k.test.ts',
+  'packages/engine/test/golden/profile.coverage-150k.test.ts',
+];
+
 // apps/web code imports `@/…` and `server-only` (E4): same alias as its tsconfig, and an empty
 // stand-in for `server-only` (the real one throws outside Next's react-server condition).
 const webResolve = {
@@ -63,6 +73,7 @@ export default defineConfig({
             'packages/engine/test/properties/**/*.test.ts',
             'packages/pipeline/test/invariants/**/*.test.ts',
           ],
+          exclude: ['**/node_modules/**', ...(skipHeavySweeps ? HEAVY_SWEEPS : [])],
           environment: 'node',
         },
       },
