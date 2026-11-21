@@ -177,12 +177,13 @@ export async function runDailyCron(deps: CronDeps): Promise<CronReport> {
         report.cleaned.usersKeptForPluggy += 1;
         continue;
       }
-      await eraseUser(
+      const erased = await eraseUser(
         { db: deps.db, userId: user.id, secrets: deps.secrets, caps: deps.caps },
         'system',
         pending,
+        { abandonedDays: INACTIVE_DAYS },
       );
-      report.cleaned.users += 1;
+      if (erased !== null) report.cleaned.users += 1;
     }
   });
 

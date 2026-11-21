@@ -7,9 +7,11 @@ import { activeSubscriptions } from '../src/repos/subscriptions.ts';
 import { insertAuditEvent } from '../src/repos/system.ts';
 import { consumeUsage } from '../src/repos/usage.ts';
 import {
+  deleteAbandonedUser,
   deleteInactiveAnonymousUsers,
   findUser,
-  findUserByIdentity,
+  findUserByEmailHash,
+  findUserByWorkosId,
   linkIdentity,
   mergeUsers,
 } from '../src/repos/users.ts';
@@ -22,6 +24,7 @@ import {
   consents,
   monthlyUsage,
   userAssumptions,
+  users,
 } from '../src/schema/index.ts';
 import { makeAnalysis, makeCompany, makeUser, memoryDb } from './factories.ts';
 
@@ -42,9 +45,7 @@ function identity() {
   seq += 1;
   return {
     workosUserId: `user_test${seq}`,
-    emailHash: `email-hash-${seq}`,
-    emailEncrypted: `v1.enc${seq}`,
-    displayName: 'Marina',
+    email: { hash: `email-hash-${seq}`, encrypted: `v1.enc${seq}` },
   };
 }
 
@@ -62,8 +63,8 @@ async function paidCharge(userId: string, planId = 'business') {
   return charge;
 }
 
-describe('linkIdentity / findUserByIdentity', () => {
-  it('turns the anonymous user into an account in place and finds it by WorkOS id or e-mail hash', async () => {
+describe('linkIdentity / findUserByWorkosId / findUserByEmailHash', () => {
+  it('turns the anonymous user into an account in place, without a name, and finds it by each key', async () => {
     const user = await makeUser(db);
     const id = identity();
     const linked = await linkIdentity(db, user.id, id);
@@ -71,35 +72,18 @@ describe('linkIdentity / findUserByIdentity', () => {
       id: user.id,
       anonymous: false,
       workosUserId: id.workosUserId,
-      emailHash: id.emailHash,
-      emailEncrypted: id.emailEncrypted,
-      displayName: 'Marina',
+      emailHash: id.email.hash,
+      emailEncrypted: id.email.encrypted,
+      displayName: null,
     });
-    expect((await findUserByIdentity(db, id))?.id).toBe(user.id);
-    expect(
-      (await findUserByIdentity(db, { workosUserId: 'user_other', emailHash: id.emailHash }))?.id,
-    ).toBe(user.id);
-    expect(
-      (await findUserByIdentity(db, { workosUserId: id.workosUserId, emailHash: 'other' }))?.id,
-    ).toBe(user.id);
-    expect(
-      await findUserByIdentity(db, { workosUserId: 'nobody', emailHash: 'nobody' }),
-    ).toBeNull();
+    expect((await findUserByWorkosId(db, id.workosUserId))?.id).toBe(user.id);
+    expect((await findUserByEmailHash(db, id.email.hash))?.id).toBe(user.id);
+    expect(await findUserByWorkosId(db, 'nobody')).toBeNull();
+    expect(await findUserByEmailHash(db, 'nobody')).toBeNull();
     expect(await linkIdentity(db, '00000000-0000-4000-8000-000000000000', identity())).toBeNull();
-  });
-
-  it('prefers the WorkOS id match over an e-mail-only match', async () => {
-    const byEmail = await makeUser(db);
-    const byWorkos = await makeUser(db);
-    const a = identity();
-    const b = identity();
-    await linkIdentity(db, byEmail.id, a);
-    await linkIdentity(db, byWorkos.id, b);
-    const found = await findUserByIdentity(db, {
-      workosUserId: b.workosUserId,
-      emailHash: a.emailHash,
-    });
-    expect(found?.id).toBe(byWorkos.id);
+    // Without an e-mail the row keeps the one it has.
+    const again = await linkIdentity(db, user.id, { workosUserId: id.workosUserId });
+    expect(again?.emailHash).toBe(id.email.hash);
   });
 });
 
@@ -246,5 +230,47 @@ describe('LGPD cleanup never selects a user who paid', () => {
     await deleteInactiveAnonymousUsers(db, 30);
     expect(await findUser(db, paid.id)).not.toBeNull();
     expect(await findUser(db, pendingOnly.id)).toBeNull();
+  });
+});
+
+describe('deleteAbandonedUser (the guard lives in the DELETE)', () => {
+  it('deletes an abandoned anonymous user and keeps one who signed in, paid or came back', async () => {
+    const old = () => makeUser(db, { lastAccessAt: new Date(Date.now() - 31 * DAY) });
+    const abandoned = await old();
+    const linked = await old();
+    await linkIdentity(db, linked.id, identity());
+    // linkIdentity refreshes last access; push it back to prove the anonymous flag alone keeps the row.
+    await db
+      .update(users)
+      .set({ lastAccessAt: new Date(Date.now() - 31 * DAY) })
+      .where(eq(users.id, linked.id));
+    const paid = await old();
+    await paidCharge(paid.id, 'mei');
+    const back = await makeUser(db);
+
+    expect(await deleteAbandonedUser(db, abandoned.id, 30)).toBe(true);
+    expect(await deleteAbandonedUser(db, linked.id, 30)).toBe(false);
+    expect(await deleteAbandonedUser(db, paid.id, 30)).toBe(false);
+    expect(await deleteAbandonedUser(db, back.id, 30)).toBe(false);
+    expect(await findUser(db, abandoned.id)).toBeNull();
+    for (const u of [linked, paid, back]) expect(await findUser(db, u.id)).not.toBeNull();
+    const ids = (await inactiveAnonymousUsers(db, 30)).map((u) => u.id);
+    expect(ids).not.toContain(linked.id);
+    expect(ids).not.toContain(paid.id);
+  });
+
+  it('settleCharge reports whose charge it settled', async () => {
+    const user = await makeUser(db);
+    const charge = await insertCharge(db, {
+      userId: user.id,
+      planId: 'personal',
+      period: 'monthly',
+      amountCents: 1990,
+      devMode: true,
+      expiresAt: new Date(Date.now() + 900_000),
+    });
+    expect(
+      await settleCharge(db, { chargeId: charge.id, paidAt: new Date(), days: 31 }),
+    ).toMatchObject({ settled: true, userId: user.id, planId: 'personal' });
   });
 });

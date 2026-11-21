@@ -2,6 +2,7 @@ import 'server-only';
 import {
   connectionsWithItem,
   type Db,
+  deleteAbandonedUser,
   deleteRateLimitsOfUser,
   deleteUnusedCompanies,
   deleteUser,
@@ -31,13 +32,17 @@ export interface DeleteDeps {
   nowMs?: number;
 }
 
-/** The deletion itself, shared with the cron (actor `system`). Returns how many Pluggy items were left behind. */
+/**
+ * The deletion itself, shared with the cron (actor `system`). Returns how many Pluggy items were left behind, or null
+ * when the cron's user is no longer abandoned (signed in, paid or came back) and was kept.
+ */
 export async function eraseUser(
   deps: Omit<DeleteDeps, 'nowMs'>,
   actor: 'user' | 'system',
   /** Already asked Pluggy (the cron): how many items were left there. */
   pendingAtPluggy?: number,
-): Promise<number> {
+  options: { abandonedDays?: number } = {},
+): Promise<number | null> {
   let pending = pendingAtPluggy ?? 0;
   if (pendingAtPluggy === undefined)
     for (const row of await connectionsWithItem(deps.db, [deps.userId])) {
@@ -46,7 +51,12 @@ export async function eraseUser(
   const companies = await linkedCompanyIds(deps.db, deps.userId);
   // The request is honoured even if Pluggy is down: the sandbox item keeps no data of ours, and the deletion here
   // cannot wait (the encrypted item id goes with the row). The count is kept without any id.
-  await deleteUser(deps.db, deps.userId);
+  // The cron deletes only a user who is still abandoned, re-checked in the DELETE (security review D58, item 6).
+  const removed =
+    options.abandonedDays === undefined
+      ? await deleteUser(deps.db, deps.userId)
+      : await deleteAbandonedUser(deps.db, deps.userId, options.abandonedDays);
+  if (!removed && options.abandonedDays !== undefined) return null;
   await deleteUnusedCompanies(deps.db, companies);
   await deleteRateLimitsOfUser(deps.db, deps.userId);
   await deps.db.insert(schema.auditEvents).values({
@@ -70,7 +80,7 @@ export async function deleteMyDataWith(
   if (!limited.ok) return limited;
   if (!deleteInput.safeParse(input).success)
     return fail('INVALID_INPUT', 'Digite APAGAR para confirmar.');
-  const pending = await eraseUser(deps, 'user');
+  const pending = (await eraseUser(deps, 'user')) ?? 0;
   logger.info('account.deleted', { pendingAtPluggy: pending });
   return ok({ pendingAtPluggy: pending });
 }

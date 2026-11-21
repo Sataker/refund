@@ -118,11 +118,13 @@ export {
 } from './repos/system.ts';
 export { type ConsumeInput, consumeUsage } from './repos/usage.ts';
 export {
+  deleteAbandonedUser,
   deleteInactiveAnonymousUsers,
   deleteUser,
   ensureAnonymousUser,
   findUser,
-  findUserByIdentity,
+  findUserByEmailHash,
+  findUserByWorkosId,
   type IdentityInput,
   linkIdentity,
   mergeUsers,

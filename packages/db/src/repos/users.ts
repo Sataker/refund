@@ -1,5 +1,5 @@
 // Users aggregate (SCHEMA §2.2, §6 LGPD cleanup). No business rule: only access.
-import { and, eq, inArray, lt, notExists, or, sql } from 'drizzle-orm';
+import { and, eq, inArray, lt, notExists, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Db } from '../client.ts';
 import {
@@ -64,12 +64,14 @@ export async function deleteInactiveAnonymousUsers(db: Db, days: number): Promis
   return rows.length;
 }
 
-/** What a WorkOS sign-in attaches to a user (ARCHITECTURE §9.2). The e-mail arrives hashed and encrypted, never plain. */
+/**
+ * What a WorkOS sign-in attaches to a user (ARCHITECTURE §9.2). The e-mail arrives hashed and encrypted, never plain.
+ * No name: `display_name` stays null (real-name PII we do not need; security review D58, item 10).
+ */
 export interface IdentityInput {
   workosUserId: string;
-  emailHash: string;
-  emailEncrypted: string;
-  displayName: string | null;
+  /** Absent: the row keeps the e-mail it has (an unverified e-mail, or one another account already holds). */
+  email?: { hash: string; encrypted: string };
 }
 
 /** The session user becomes a real account in place: same id, so its analyses, charges and links stay attached. */
@@ -82,9 +84,9 @@ export async function linkIdentity(
     .update(users)
     .set({
       workosUserId: identity.workosUserId,
-      emailHash: identity.emailHash,
-      emailEncrypted: identity.emailEncrypted,
-      displayName: identity.displayName?.slice(0, 120) ?? null,
+      ...(identity.email
+        ? { emailHash: identity.email.hash, emailEncrypted: identity.email.encrypted }
+        : {}),
       anonymous: false,
       lastAccessAt: sql`now()`,
     })
@@ -93,22 +95,40 @@ export async function linkIdentity(
   return row ?? null;
 }
 
+/** The account bound to this WorkOS user id (the only match that proves identity on its own). */
+export async function findUserByWorkosId(db: Db, workosUserId: string): Promise<UserRow | null> {
+  const [row] = await db.select().from(users).where(eq(users.workosUserId, workosUserId)).limit(1);
+  return row ?? null;
+}
+
+/** The account holding this e-mail hash. The caller trusts it only for an e-mail WorkOS has verified. */
+export async function findUserByEmailHash(db: Db, emailHash: string): Promise<UserRow | null> {
+  const [row] = await db.select().from(users).where(eq(users.emailHash, emailHash)).limit(1);
+  return row ?? null;
+}
+
 /**
- * The account that already holds this WorkOS user or this e-mail. A match on the WorkOS id wins over a match on the
- * e-mail alone (the e-mail of a WorkOS user can change; the id cannot).
+ * The cron's deletion of one abandoned user, re-checked in the DELETE itself (security review D58, item 6): still
+ * anonymous, still inactive for `days` days, and no paid charge. A user who signed in or paid since the select is kept.
  */
-export async function findUserByIdentity(
-  db: Db,
-  identity: Pick<IdentityInput, 'workosUserId' | 'emailHash'>,
-): Promise<UserRow | null> {
+export async function deleteAbandonedUser(db: Db, userId: string, days: number): Promise<boolean> {
   const rows = await db
-    .select()
-    .from(users)
+    .delete(users)
     .where(
-      or(eq(users.workosUserId, identity.workosUserId), eq(users.emailHash, identity.emailHash)),
+      and(
+        eq(users.id, userId),
+        eq(users.anonymous, true),
+        lt(users.lastAccessAt, sql`now() - make_interval(days => ${days})`),
+        notExists(
+          db
+            .select({ x: sql`1` })
+            .from(charges)
+            .where(and(eq(charges.userId, users.id), eq(charges.status, 'paid'))),
+        ),
+      ),
     )
-    .limit(2);
-  return rows.find((r) => r.workosUserId === identity.workosUserId) ?? rows[0] ?? null;
+    .returning({ id: users.id });
+  return rows.length > 0;
 }
 
 /**

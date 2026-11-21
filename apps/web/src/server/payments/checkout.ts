@@ -217,7 +217,7 @@ export async function startPixCheckoutWith(
  */
 export async function grantPaidCharge(
   db: Db,
-  charge: Pick<ChargeRow, 'id' | 'period' | 'userId' | 'planId'>,
+  charge: Pick<ChargeRow, 'id' | 'period'>,
   paidAt: Date,
 ): Promise<'granted' | 'already'> {
   const period = charge.period as ChargePeriod;
@@ -226,7 +226,8 @@ export async function grantPaidCharge(
   const r = await settleCharge(db, { chargeId: charge.id, paidAt, days });
   if (!r.settled) return 'already';
   logger.info('payments.charge_paid', { period });
-  await recordFunnelWith(db, charge.userId, 'funnel.paid', { plan: charge.planId, period });
+  // The owner at settlement time (a merge may have moved the charge since the caller read it).
+  await recordFunnelWith(db, r.userId, 'funnel.paid', { plan: r.planId, period });
   return 'granted';
 }
 
