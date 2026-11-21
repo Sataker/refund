@@ -129,6 +129,30 @@ test.describe('demo track @demo', () => {
     );
   });
 
+  test('D58: the estimate offers Empresa from the minimum; the offer opens the simulated plans before the track ends', async ({
+    page,
+  }) => {
+    await toEstimate(page);
+    const offer = page.getByTestId('roi-offer');
+    // R$ 12.463,38 (the minimum, never the maximum) over R$ 599/ano: 20 times, floored.
+    await expect(offer).toHaveAttribute('data-variant', 'estimate');
+    await expect(offer).toHaveAttribute('data-cents', RANGE.min);
+    await expect(offer).toHaveAttribute('data-multiple', '20');
+    await expect(offer.getByTestId('roi-savings')).toContainText('R$ 12 mil/ano');
+    await expect(offer.getByTestId('roi-multiple')).toContainText('20 vezes');
+    await expect(offer.getByTestId('roi-monthly-loss').locator('[data-cents]')).toHaveAttribute(
+      'data-cents',
+      '103861',
+    );
+    await noHorizontalScroll(page);
+    await offer.getByTestId('roi-unlock').click();
+    await expect(page).toHaveURL(new RegExp(`/demo/${HERO}/plano$`));
+    await expect(page.getByTestId('simulation-label')).toBeVisible();
+    // The plans screen does not count as the end of the track: the dashboard is still locked.
+    await page.goto(`/demo/${HERO}/painel`);
+    await expect(page).toHaveURL(step('cnpj'));
+  });
+
   test('D3: consent and the widget replica carry the persona seal', async ({ page }) => {
     await toEstimate(page);
     await advance(page, 'permissoes');

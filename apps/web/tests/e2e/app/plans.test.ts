@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures.ts';
 import { type FakeAbacatePay, startFakeAbacatePay } from '../support/fake-abacatepay.ts';
-import { analyze, finishTrack } from './live-flow.ts';
+import { analyze, finishTrack, HERO_CNPJ, tap } from './live-flow.ts';
 
 // E17 done criterion on /app: charge → simulate-payment → webhook → Empresa unlocked, end to end through the real
 // server actions, the real HTTP adapter and the real webhook route, against a local fake AbacatePay in Test Mode (the
@@ -40,6 +40,8 @@ test.describe('plans and Pix @app', () => {
     }) => {
       await finishTrack(page);
       const id = await analyze(page);
+      // D58: Screen 4 ends with the Empresa offer over the confirmed total.
+      await expect(page.getByTestId('roi-offer')).toHaveAttribute('data-variant', 'confirmed');
       // Free: a finding that is not the largest arrives locked.
       const sse = await page.request.get(`/api/analises/${id}/eventos?from=100000`);
       const findings = (await sse.text())
@@ -88,6 +90,58 @@ test.describe('plans and Pix @app', () => {
       await expect(page.getByTestId('trace-locked')).toHaveCount(0);
       await expect(page.getByTestId('plan-label')).toContainText('Empresa');
     });
+  });
+
+  test('D58: the estimate offers Empresa; "Desbloquear" opens the yearly Pix on /app/plano by itself', async ({
+    page,
+  }) => {
+    // Before the estimate the plans page stays locked (D42, relaxed by D58 only from the estimate on).
+    await page.goto('/app/plano');
+    await expect(page).toHaveURL(/\/app\/comecar\/cnpj$/);
+    await page.getByLabel('CNPJ da sua empresa').fill(HERO_CNPJ);
+    await page.getByRole('button', { name: 'Continuar' }).click();
+    await expect(page).toHaveURL(/\/confirmar-empresa$/);
+    await tap(page, 'Sou eu', /\/faturamento$/);
+    await tap(page, 'R$ 30 mil a 60 mil', /\/funcionarios$/);
+    await tap(page, 'Sim', /\/exterior$/);
+    await tap(page, 'Sim, metade ou mais', /\/estimativa$/);
+
+    // The ROI is the range's minimum over the yearly Empresa price, floored (never the maximum).
+    const min = Number(await page.getByTestId('profile-range').getAttribute('data-cents-min'));
+    const multiple = (min - (min % 59900)) / 59900;
+    const offer = page.getByTestId('roi-offer');
+    await expect(offer).toHaveAttribute('data-variant', 'estimate');
+    await expect(offer).toHaveAttribute('data-cents', String(min));
+    await expect(offer).toHaveAttribute('data-multiple', String(multiple));
+    await expect(offer.getByTestId('roi-price')).toHaveAttribute('data-cents', '59900');
+    await expect(offer.getByTestId('roi-multiple')).toContainText(`${multiple} vezes`);
+    await expect(offer.getByTestId('see-exact-number')).toBeVisible();
+    const unlock = offer.getByTestId('roi-unlock');
+    await expect(unlock).toHaveAttribute(
+      'href',
+      '/app/plano?assinar=business-yearly&voltar=%2Fapp%2Fcomecar%2Festimativa',
+    );
+
+    // With login off (CI) the checkout needs no account: the Pix dialog opens on arrival, yearly Empresa.
+    await unlock.click();
+    await expect(page).toHaveURL(/\/app\/plano\?/);
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText('Pix · Empresa');
+    await expect(page.getByTestId('period-yearly')).toBeChecked();
+    await expect(page.getByTestId('plans-heading')).toHaveAttribute(
+      'data-multiple',
+      String(multiple),
+    );
+    // The intent is used once: it leaves the URL, so a reload does not open a second Pix.
+    await expect(page).not.toHaveURL(/assinar=/);
+    await dialog.getByTestId('pix-close').click();
+    await page.reload();
+    await expect(page.getByTestId('plan-page')).toBeVisible();
+    await expect(page.getByTestId('pix-dialog')).toHaveCount(0);
+    // The way back leads to the estimate, which still offers the free path.
+    await page.getByRole('link', { name: '← Voltar' }).click();
+    await expect(page).toHaveURL(/\/app\/comecar\/estimativa$/);
   });
 
   test('the webhook refuses a valid secret with a bad signature (401)', async ({ request }) => {
