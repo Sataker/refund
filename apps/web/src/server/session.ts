@@ -13,8 +13,8 @@ import {
 } from './session-cookie.ts';
 
 // ARCHITECTURE §9.2 and ADR-008: anonymous session. The proxy mints `rf_sid` on the first visit to
-// /app/**; the users row is created lazily by the first server action (getSession). WorkOS joins in
-// E18 when the `login` capability exists.
+// /app/**; the users row is created lazily by the first server action (getSession). With the `login` capability,
+// a WorkOS sign-in at payment intent links the same row to an account (D58, server/auth/link.ts).
 
 const UNAVAILABLE = 'Não conseguimos abrir sua sessão agora. Tente de novo em instantes.';
 
@@ -25,6 +25,8 @@ export interface CookieJar {
 
 export interface Session {
   userId: string;
+  /** False once a WorkOS sign-in linked this user to an account (D58). */
+  anonymous: boolean;
 }
 
 /**
@@ -45,13 +47,14 @@ export async function resolveSession(
     jar.set(SESSION_COOKIE, fresh.value, SESSION_COOKIE_OPTIONS);
     payload = fresh.payload;
   }
+  let anonymous: boolean;
   try {
-    await ensureAnonymousUser(deps.db, payload.userId);
+    anonymous = (await ensureAnonymousUser(deps.db, payload.userId)).anonymous;
   } catch (err) {
     logger.error('session.error', { error: err });
     return fail('UNAVAILABLE', UNAVAILABLE);
   }
-  return ok({ userId: payload.userId });
+  return ok({ userId: payload.userId, anonymous });
 }
 
 /** First step of every server action (ARCHITECTURE §4.7). */

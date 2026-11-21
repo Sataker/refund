@@ -15,6 +15,8 @@ import { resolveSession } from './session.ts';
 
 export interface LiveContext {
   userId: string;
+  /** D58: the session user is linked to a WorkOS account (only a sign-in with the `login` capability sets it). */
+  isLoggedIn: boolean;
   db: Db;
   secrets: Secrets;
   caps: Capabilities;
@@ -53,6 +55,7 @@ export async function liveContext(
   if (!session.ok) return session;
   return ok({
     userId: session.value.userId,
+    isLoggedIn: !session.value.anonymous,
     db: handle.db,
     secrets,
     caps,
