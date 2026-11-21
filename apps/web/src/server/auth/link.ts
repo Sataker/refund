@@ -3,7 +3,8 @@ import { randomUUID } from 'node:crypto';
 import {
   type Db,
   ensureAnonymousUser,
-  findUserByIdentity,
+  findUserByEmailHash,
+  findUserByWorkosId,
   type IdentityInput,
   linkIdentity,
   mergeUsers,
@@ -19,29 +20,33 @@ import {
   SESSION_COOKIE_OPTIONS,
   signSession,
   verifySession,
+  WORKOS_ID,
 } from '../session-cookie.ts';
 
 // ARCHITECTURE §9.2 and ADR-008, as implemented in D58: the WorkOS sign-in (at payment intent) turns the anonymous
 // `rf_sid` user into an account. The e-mail is stored only as HMAC (lookup) and AES-GCM (display); it is never logged.
 //
+// Matching (security review D58, items 1 and 5): the WorkOS user id first; the e-mail hash only for an e-mail WorkOS
+// has verified (an unverified e-mail that another account holds is refused, never linked). Only a verified e-mail is
+// stored as a lookup key, so nobody can pre-claim someone else's address.
+//
 // - No account holds this identity yet: the session user is linked in place (same id, so everything stays attached).
-// - An account already holds it (returning owner on a new device): the anonymous session user is merged into that
-//   account and `rf_sid` is re-signed to the account's id.
-// - The session user is already another account (a second person on the same browser): nothing is merged; `rf_sid`
-//   just switches to the account that signed in.
+// - An account already holds it (returning owner on a new device): the anonymous session user is merged into it.
+// - The session user is already another account (a second person on the same browser): nothing is merged.
+// Every successful sign-in rotates `rf_sid` and binds it to the WorkOS user (`wid`): no session fixation, and the
+// proxy drops the account's session once the WorkOS session ends.
 
-/** The fields of the WorkOS `User` this core reads. */
+/** The fields of the WorkOS `User` this core reads (no name: `display_name` is never stored). */
 export interface WorkosIdentity {
   id: string;
   email: string;
-  firstName?: string | null;
-  lastName?: string | null;
+  emailVerified?: boolean;
 }
 
 export interface LinkDeps {
   db: Db;
   secrets: Secrets;
-  /** The request cookies: `rf_sid` is read here and re-signed when the user changes. */
+  /** The request cookies: `rf_sid` is read here and rotated on success. */
   jar: CookieJar;
   nowMs?: number;
 }
@@ -54,21 +59,51 @@ export interface LinkOutcome {
   switched: boolean;
 }
 
-const FAILED = 'Não conseguimos concluir o login agora. Tente de novo em instantes.';
+/** An unverified e-mail that already belongs to another account (the callback maps it to `?login=confirme-email`). */
+export const EMAIL_UNVERIFIED = 'EMAIL_UNVERIFIED';
 
-function identityOf(user: WorkosIdentity, secrets: Secrets): IdentityInput | null {
+const FAILED = 'Não conseguimos concluir o login agora. Tente de novo em instantes.';
+const UNVERIFIED =
+  'Este e-mail já tem uma conta no Refund. Confirme o e-mail no login para entrar nela.';
+
+interface Identity {
+  workosUserId: string;
+  email: { hash: string; encrypted: string };
+  verified: boolean;
+}
+
+function identityOf(user: WorkosIdentity, secrets: Secrets): Identity | null {
   const email = user.email.trim();
-  if (!email.includes('@') || !/^[A-Za-z0-9_-]{1,80}$/.test(user.id)) return null;
-  const name = [user.firstName, user.lastName]
-    .map((p) => p?.trim())
-    .filter(Boolean)
-    .join(' ');
+  if (!email.includes('@') || !WORKOS_ID.test(user.id)) return null;
   return {
     workosUserId: user.id,
-    emailHash: hashEmail(email, secrets.pepper),
-    emailEncrypted: encrypt(email, secrets.encryption),
-    displayName: name === '' ? null : name,
+    email: {
+      hash: hashEmail(email, secrets.pepper),
+      encrypted: encrypt(email, secrets.encryption),
+    },
+    verified: user.emailVerified === true,
   };
+}
+
+type Resolved = { ok: true; target: UserRow | null; write: IdentityInput } | { ok: false };
+
+/** Which account this identity is, and what may be written on it. */
+async function resolve(db: Db, identity: Identity): Promise<Resolved> {
+  const bare: IdentityInput = { workosUserId: identity.workosUserId };
+  const withEmail: IdentityInput = identity.verified ? { ...bare, email: identity.email } : bare;
+  const byWorkos = await findUserByWorkosId(db, identity.workosUserId);
+  const holder = await findUserByEmailHash(db, identity.email.hash);
+  if (byWorkos) {
+    // A changed e-mail that another row already holds: keep this account's e-mail and let the sign-in through.
+    if (holder && holder.id !== byWorkos.id) {
+      logger.warn('auth.email_kept');
+      return { ok: true, target: byWorkos, write: bare };
+    }
+    return { ok: true, target: byWorkos, write: withEmail };
+  }
+  if (holder)
+    return identity.verified ? { ok: true, target: holder, write: withEmail } : { ok: false };
+  return { ok: true, target: null, write: withEmail };
 }
 
 export async function linkWorkosUserWith(
@@ -87,16 +122,20 @@ export async function linkWorkosUserWith(
 
   let outcome: LinkOutcome;
   try {
+    const resolved = await resolve(db, identity);
+    if (!resolved.ok) {
+      logger.info('auth.email_unverified');
+      return fail(EMAIL_UNVERIFIED, UNVERIFIED);
+    }
     const sessionUser: UserRow | null = sessionUserId
       ? await ensureAnonymousUser(db, sessionUserId)
       : null;
-    const existing = await findUserByIdentity(db, identity);
     let target: string;
     let merged = false;
-    if (existing) {
-      target = existing.id;
-      if (sessionUser?.anonymous && sessionUser.id !== existing.id) {
-        merged = await mergeUsers(db, sessionUser.id, existing.id);
+    if (resolved.target) {
+      target = resolved.target.id;
+      if (sessionUser?.anonymous && sessionUser.id !== target) {
+        merged = await mergeUsers(db, sessionUser.id, target);
       }
     } else if (sessionUser?.anonymous) {
       target = sessionUser.id;
@@ -104,8 +143,7 @@ export async function linkWorkosUserWith(
       // No session, or the session is somebody else's account: a fresh account for this identity.
       target = (await ensureAnonymousUser(db, randomUUID())).id;
     }
-    // Also refreshes a returning account (a changed e-mail or name at WorkOS).
-    const linked = await linkIdentity(db, target, identity);
+    const linked = await linkIdentity(db, target, resolved.write);
     if (!linked) return fail('UNAVAILABLE', FAILED);
     outcome = { userId: target, merged, switched: target !== sessionUserId };
   } catch (err) {
@@ -113,14 +151,14 @@ export async function linkWorkosUserWith(
     return fail('UNAVAILABLE', FAILED);
   }
 
-  if (outcome.switched) {
-    const issuedAt = Math.floor(nowMs / 1000);
-    jar.set?.(
-      SESSION_COOKIE,
-      signSession({ userId: outcome.userId, issuedAt }, secrets.session),
-      SESSION_COOKIE_OPTIONS,
-    );
-  }
+  jar.set?.(
+    SESSION_COOKIE,
+    signSession(
+      { userId: outcome.userId, issuedAt: Math.floor(nowMs / 1000), wid: identity.workosUserId },
+      secrets.session,
+    ),
+    SESSION_COOKIE_OPTIONS,
+  );
   await recordFunnelWith(db, outcome.userId, 'funnel.login_completed', { merged: outcome.merged });
   logger.info('auth.linked', { merged: outcome.merged, switched: outcome.switched });
   return ok(outcome);

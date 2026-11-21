@@ -1,13 +1,13 @@
 import { createMemoryDb, type DbHandle, linkIdentity, schema } from '@refund/db';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { linkWorkosUserWith, type WorkosIdentity } from '@/server/auth/link.ts';
+import { EMAIL_UNVERIFIED, linkWorkosUserWith, type WorkosIdentity } from '@/server/auth/link.ts';
 import { decrypt, hashEmail, type Secrets } from '@/server/crypto.ts';
 import { migrationsFolder } from '@/server/db.ts';
 import { offerClickedWith, recordFunnelWith } from '@/server/funnel.ts';
 import type { PixGateway } from '@/server/payments/abacatepay.ts';
 import { grantPaidCharge, startPixCheckoutWith } from '@/server/payments/checkout.ts';
-import type { CookieJar } from '@/server/session.ts';
+import { type CookieJar, resolveSession } from '@/server/session.ts';
 import { SESSION_COOKIE, signSession, verifySession } from '@/server/session-cookie.ts';
 
 // D58 (ARCHITECTURE §9.2): login at payment intent. The WorkOS identity links to the rf_sid user in place, or merges
@@ -45,9 +45,12 @@ async function newUserId(): Promise<string> {
   return u?.id as string;
 }
 
-function jarFor(userId?: string): CookieJar & { written?: string } {
+function jarFor(userId?: string, wid?: string): CookieJar & { written?: string } {
   const initial = userId
-    ? signSession({ userId, issuedAt: Math.floor(Date.now() / 1000) }, secrets.session)
+    ? signSession(
+        { userId, issuedAt: Math.floor(Date.now() / 1000), ...(wid ? { wid } : {}) },
+        secrets.session,
+      )
     : undefined;
   const store: CookieJar & { written?: string } = {
     get: (name) => (name === SESSION_COOKIE && initial ? { value: initial } : undefined),
@@ -59,13 +62,13 @@ function jarFor(userId?: string): CookieJar & { written?: string } {
 }
 
 let seq = 0;
-function workosUser(): WorkosIdentity {
+function workosUser(over: Partial<WorkosIdentity> = {}): WorkosIdentity {
   seq += 1;
   return {
     id: `user_01TEST${seq}`,
     email: `  Marina.Dev${seq}@Example.com `,
-    firstName: 'Marina',
-    lastName: 'Dev',
+    emailVerified: true,
+    ...over,
   };
 }
 
@@ -85,19 +88,23 @@ async function funnelRows(userId: string, action?: string) {
 }
 
 describe('linkWorkosUserWith', () => {
-  it('fresh link: the anonymous session user becomes the account in place, rf_sid untouched', async () => {
+  it('fresh link: the anonymous session user becomes the account in place; rf_sid is rotated and bound', async () => {
     const userId = await newUserId();
     const jar = jarFor(userId);
+    const before = jar.get(SESSION_COOKIE)?.value;
     const user = workosUser();
     const linked = await linkWorkosUserWith(user, { db: h.db, secrets, jar });
     expect(linked).toEqual({ ok: true, value: { userId, merged: false, switched: false } });
-    expect(jar.written).toBeUndefined();
+    // Session fixation: even the in-place link issues a new cookie, bound to the WorkOS user.
+    expect(jar.written).toBeDefined();
+    expect(jar.written).not.toBe(before);
+    expect(verifySession(jar.written, secrets.session)).toMatchObject({ userId, wid: user.id });
     const row = await userRow(userId);
     expect(row).toMatchObject({
       anonymous: false,
       workosUserId: user.id,
       emailHash: hashEmail(user.email, secrets.pepper),
-      displayName: 'Marina Dev',
+      displayName: null,
     });
     expect(decrypt(row?.emailEncrypted ?? '', secrets.encryption)).toBe(user.email.trim());
     expect(await funnelRows(userId, 'funnel.login_completed')).toHaveLength(1);
@@ -135,7 +142,10 @@ describe('linkWorkosUserWith', () => {
     });
     expect(await userRow(anonId)).toBeNull();
     // rf_sid re-signed to the existing account.
-    expect(verifySession(jar.written, secrets.session)?.userId).toBe(accountId);
+    expect(verifySession(jar.written, secrets.session)).toMatchObject({
+      userId: accountId,
+      wid: user.id,
+    });
     const subs = await h.db
       .select()
       .from(schema.subscriptions)
@@ -147,6 +157,74 @@ describe('linkWorkosUserWith', () => {
     expect((await funnelRows(accountId, 'funnel.login_completed')).at(-1)?.data).toEqual({
       merged: true,
     });
+  });
+
+  it('a verified e-mail finds the account even under a new WorkOS id', async () => {
+    const accountId = await newUserId();
+    const user = workosUser();
+    await linkWorkosUserWith(user, { db: h.db, secrets, jar: jarFor(accountId) });
+    const anonId = await newUserId();
+    const linked = await linkWorkosUserWith(
+      { id: 'user_01RECREATED', email: user.email, emailVerified: true },
+      { db: h.db, secrets, jar: jarFor(anonId) },
+    );
+    expect(linked).toMatchObject({ ok: true, value: { userId: accountId, merged: true } });
+    expect((await userRow(accountId))?.workosUserId).toBe('user_01RECREATED');
+  });
+
+  it('account takeover is refused: an unverified e-mail that another account holds is never linked', async () => {
+    const victimId = await newUserId();
+    const victim = workosUser();
+    await linkWorkosUserWith(victim, { db: h.db, secrets, jar: jarFor(victimId) });
+    const attackerId = await newUserId();
+    const jar = jarFor(attackerId);
+    const before = (await h.db.select().from(schema.users)).length;
+    const r = await linkWorkosUserWith(
+      { id: 'user_01ATTACKER', email: victim.email, emailVerified: false },
+      { db: h.db, secrets, jar },
+    );
+    expect(r).toEqual({
+      ok: false,
+      error: {
+        code: EMAIL_UNVERIFIED,
+        message:
+          'Este e-mail já tem uma conta no Refund. Confirme o e-mail no login para entrar nela.',
+        recoverable: true,
+      },
+    });
+    expect(jar.written).toBeUndefined();
+    expect((await h.db.select().from(schema.users)).length).toBe(before);
+    expect(await userRow(attackerId)).toMatchObject({ anonymous: true, workosUserId: null });
+    expect(await userRow(victimId)).toMatchObject({ workosUserId: victim.id });
+  });
+
+  it('an unverified e-mail nobody holds links by WorkOS id only, without claiming the e-mail', async () => {
+    const userId = await newUserId();
+    const user = workosUser({ emailVerified: false });
+    const r = await linkWorkosUserWith(user, { db: h.db, secrets, jar: jarFor(userId) });
+    expect(r.ok).toBe(true);
+    expect(await userRow(userId)).toMatchObject({
+      anonymous: false,
+      workosUserId: user.id,
+      emailHash: null,
+    });
+  });
+
+  it('a changed e-mail that another account holds: the account keeps its e-mail and the login succeeds', async () => {
+    const aId = await newUserId();
+    const a = workosUser();
+    await linkWorkosUserWith(a, { db: h.db, secrets, jar: jarFor(aId) });
+    const bId = await newUserId();
+    const b = workosUser();
+    await linkWorkosUserWith(b, { db: h.db, secrets, jar: jarFor(bId) });
+
+    const jar = jarFor(aId, a.id);
+    const r = await linkWorkosUserWith({ ...a, email: b.email }, { db: h.db, secrets, jar });
+    expect(r).toMatchObject({ ok: true, value: { userId: aId, merged: false } });
+    expect((await userRow(aId))?.emailHash).toBe(hashEmail(a.email, secrets.pepper));
+    expect((await userRow(bId))?.emailHash).toBe(hashEmail(b.email, secrets.pepper));
+    expect(out.join('')).toContain('auth.email_kept');
+    expect(out.join('').toLowerCase()).not.toContain(b.email.trim().toLowerCase());
   });
 
   it('another account on the same browser is never merged: rf_sid just switches', async () => {
@@ -195,13 +273,43 @@ describe('linkWorkosUserWith', () => {
       ),
     ).toMatchObject({ ok: false, error: { code: 'INVALID_INPUT' } });
     const broken = {
-      insert: () => {
+      select: () => {
         throw new Error('down');
       },
     } as unknown as DbHandle['db'];
     expect(await linkWorkosUserWith(workosUser(), { db: broken, secrets, jar })).toMatchObject({
       ok: false,
       error: { code: 'UNAVAILABLE' },
+    });
+  });
+});
+
+describe('resolveSession binds an account to its sign-in (security review D58, item 2)', () => {
+  it('honours the rotated cookie, refuses a pre-sign-in copy (fixation) and mints a fresh one in actions', async () => {
+    const userId = await newUserId();
+    const preLogin = jarFor(userId);
+    const user = workosUser();
+    const jar = jarFor(userId);
+    await linkWorkosUserWith(user, { db: h.db, secrets, jar });
+    const deps = { db: h.db, secret: secrets.session };
+
+    const bound: CookieJar = { get: () => ({ value: jar.written as string }) };
+    expect(await resolveSession(bound, deps)).toEqual({
+      ok: true,
+      value: { userId, anonymous: false },
+    });
+    // The attacker's copy from before the sign-in: no account, ever.
+    expect(await resolveSession({ get: preLogin.get }, deps)).toMatchObject({
+      ok: false,
+      error: { code: 'UNAUTHENTICATED' },
+    });
+    const fresh = await resolveSession(preLogin, deps, { create: true });
+    expect(fresh.ok && fresh.value.userId).not.toBe(userId);
+    expect(fresh.ok && fresh.value.anonymous).toBe(true);
+    expect(verifySession(preLogin.written, secrets.session)?.userId).not.toBe(userId);
+    // A cookie bound to another WorkOS user does not open this account either.
+    expect(await resolveSession(jarFor(userId, 'user_01SOMEONEELSE'), deps)).toMatchObject({
+      ok: false,
     });
   });
 });
@@ -264,9 +372,7 @@ describe('checkout gate (D58)', () => {
     const userId = await newUserId();
     await linkIdentity(h.db, userId, {
       workosUserId: `user_gate${userId.slice(0, 8)}`,
-      emailHash: `gate-${userId}`,
-      emailEncrypted: 'v1.x',
-      displayName: null,
+      email: { hash: `gate-${userId}`, encrypted: 'v1.x' },
     });
     const r = await startPixCheckoutWith(input, {
       db: h.db,

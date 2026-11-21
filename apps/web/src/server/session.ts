@@ -17,6 +17,7 @@ import {
 // a WorkOS sign-in at payment intent links the same row to an account (D58, server/auth/link.ts).
 
 const UNAVAILABLE = 'Não conseguimos abrir sua sessão agora. Tente de novo em instantes.';
+const EXPIRED = 'Sua sessão expirou. Recarregue a página para continuar.';
 
 export interface CookieJar {
   get(name: string): { value: string } | undefined;
@@ -38,23 +39,34 @@ export async function resolveSession(
   deps: { db: Db; secret: Buffer },
   options: { create?: boolean } = {},
 ): Promise<ActionResult<Session>> {
-  let payload = verifySession(jar.get(SESSION_COOKIE)?.value, deps.secret);
-  if (!payload) {
-    if (!options.create || !jar.set) {
-      return fail('UNAUTHENTICATED', 'Sua sessão expirou. Recarregue a página para continuar.');
+  const payload = verifySession(jar.get(SESSION_COOKIE)?.value, deps.secret);
+  if (payload) {
+    let row: Awaited<ReturnType<typeof ensureAnonymousUser>>;
+    try {
+      row = await ensureAnonymousUser(deps.db, payload.userId);
+    } catch (err) {
+      logger.error('session.error', { error: err });
+      return fail('UNAVAILABLE', UNAVAILABLE);
     }
-    const fresh = newSession(deps.secret);
-    jar.set(SESSION_COOKIE, fresh.value, SESSION_COOKIE_OPTIONS);
-    payload = fresh.payload;
+    // D58 (security review, item 2): an account is granted only to the session its sign-in signed (`wid`). A copy of
+    // the cookie from before the sign-in (session fixation) or for another WorkOS user falls back to a new session.
+    if (row.anonymous || (row.workosUserId !== null && row.workosUserId === payload.wid)) {
+      return ok({ userId: payload.userId, anonymous: row.anonymous });
+    }
+    logger.info('session.account_not_bound');
   }
-  let anonymous: boolean;
+  if (!options.create || !jar.set) {
+    return fail('UNAUTHENTICATED', EXPIRED);
+  }
+  const fresh = newSession(deps.secret);
+  jar.set(SESSION_COOKIE, fresh.value, SESSION_COOKIE_OPTIONS);
   try {
-    anonymous = (await ensureAnonymousUser(deps.db, payload.userId)).anonymous;
+    await ensureAnonymousUser(deps.db, fresh.payload.userId);
   } catch (err) {
     logger.error('session.error', { error: err });
     return fail('UNAVAILABLE', UNAVAILABLE);
   }
-  return ok({ userId: payload.userId, anonymous });
+  return ok({ userId: fresh.payload.userId, anonymous: true });
 }
 
 /** First step of every server action (ARCHITECTURE §4.7). */

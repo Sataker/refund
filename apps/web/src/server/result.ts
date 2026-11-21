@@ -26,7 +26,9 @@ export type ActionErrorCode =
   | 'NOT_FOUND'
   | 'CONSENT_REQUIRED'
   // Plans and Pix (E17): the R$ 1,00 validation offer reached its ceiling of sales.
-  | 'SOLD_OUT';
+  | 'SOLD_OUT'
+  // D58 sign-in: an unverified e-mail that another account already holds.
+  | 'EMAIL_UNVERIFIED';
 
 export interface ActionError extends DomainError {
   code: ActionErrorCode | (string & {});
