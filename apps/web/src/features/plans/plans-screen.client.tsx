@@ -65,6 +65,11 @@ export interface PlansScreenProps {
   linkedCompany?: 'mei' | 'other' | null;
   /** Where the paid state leads (a same-origin /app path checked on the server). */
   returnTo?: string | null;
+  /**
+   * D58: `?assinar=<plan>-<period>` (checked on the server against the Pix plans): preselects the period and opens the
+   * Pix dialog on arrival, unless that plan is already the current one.
+   */
+  initialCheckout?: { plan: SellablePlan; period: Period } | null;
 }
 
 const POLL_MS = 2_000;
@@ -72,12 +77,13 @@ const POLL_MAX_MS = 15 * 60_000;
 
 export function PlansScreen(props: PlansScreenProps) {
   const { model, current, simulated } = props;
-  const [period, setPeriod] = useState<Period>('yearly');
-  const [mei, setMei] = useState(current === 'mei');
+  const intent = props.initialCheckout ?? null;
+  const [period, setPeriod] = useState<Period>(intent?.period ?? 'yearly');
+  const [mei, setMei] = useState(current === 'mei' || intent?.plan === 'mei');
   const [checkout, setCheckout] = useState<{
     plan: SellablePlan;
     period: Period | 'validation';
-  } | null>(null);
+  } | null>(intent && props.port && intent.plan !== current ? intent : null);
   const [paidPlan, setPaidPlan] = useState<SellablePlan | null>(null);
   const effective = paidPlan ?? current;
   const personalPlan: SellablePlan = mei ? 'mei' : 'personal';

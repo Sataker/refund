@@ -5,6 +5,7 @@ import {
   currentStep,
   EMPTY_PROGRESS,
   nextAfter,
+  plansReachable,
   previousStep,
   stageOf,
   stepSummary,
@@ -109,5 +110,30 @@ describe('track steps', () => {
     expect(stepSummary('confirmar-empresa', p)).toBe('Marina Dev');
     expect(stepSummary('faturamento', p)).toBe('R$ 30 a 60 mil/mês');
     expect(stepSummary('funcionarios', p)).toBeNull();
+  });
+});
+
+describe('plans page lock (D58: open once the estimate is on screen)', () => {
+  const answers = { monthlyRevenueBracket: 'from_30k_to_60k' as const };
+  const atEstimate = progress({ company, questions: { employees: false, abroad: false }, answers });
+
+  it('stays closed before the estimate', () => {
+    expect(plansReachable(progress({}))).toBe(false);
+    expect(plansReachable(progress({ company, questions: both }))).toBe(false);
+  });
+
+  it('opens on the estimate step itself and stays open after it', () => {
+    expect(currentStep(atEstimate)).toBe('estimativa');
+    expect(plansReachable(atEstimate)).toBe(true);
+    expect(plansReachable({ ...atEstimate, estimateSeen: true })).toBe(true);
+    expect(plansReachable({ ...atEstimate, estimateSeen: true, consented: true, pj: active })).toBe(
+      true,
+    );
+  });
+
+  it('never opens at a stop (MEI or a CNAE outside the table)', () => {
+    expect(
+      plansReachable({ ...atEstimate, company: { ...company, activityOutOfScope: true } }),
+    ).toBe(false);
   });
 });
