@@ -1,5 +1,5 @@
 import 'server-only';
-import type { PlansModel, Price } from '@/features/plans/model.ts';
+import type { PlansModel, Price, RoiOfferTerms } from '@/features/plans/model.ts';
 import { liveAnalysesPerMonth, PLANS, type PlanId, VALIDATION_OFFER } from './catalog.ts';
 
 // The plans screen's numbers, read from the catalog (07 §3.1, §3.1b, §3.5) and handed to the client as plain data.
@@ -47,4 +47,10 @@ export function plansModel(): PlansModel {
     refundWithinDays: REFUND_WITHIN_DAYS,
     withdrawalDays: WITHDRAWAL_DAYS,
   };
+}
+
+/** D58: the Empresa terms the ROI offer quotes (price and guarantee), from the same catalog as the plans screen. */
+export function roiOfferTerms(): RoiOfferTerms {
+  const m = plansModel();
+  return { price: m.business, guaranteeDays: m.guaranteeDays };
 }
