@@ -31,6 +31,8 @@ export type ActionErrorCode =
 export interface ActionError extends DomainError {
   code: ActionErrorCode | (string & {});
   upgrade?: { resource: string; suggestedPlan: PlanId; url: '/app/plano' };
+  /** D58, `UNAUTHENTICATED` at checkout: where to sign in (`/auth/entrar?voltar=…`, a same-origin path). */
+  login?: string;
 }
 
 export type ActionResult<T> = Result<T, ActionError>;
