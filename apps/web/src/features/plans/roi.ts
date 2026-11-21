@@ -1,3 +1,6 @@
+import { formatBRLWhole } from '@/lib/format';
+import { perMonthOfYear, priceLabel } from './model';
+
 // D58 (PLAN §18, 21/11): the ROI anchor of the Empresa offer. Integer cents only (rule 2): floor everywhere, so the
 // claim is never rounded up. The savings basis is the estimate's minimum or the confirmed total, never the maximum.
 
@@ -41,4 +44,57 @@ export function parseCheckoutIntent(value: unknown): CheckoutIntent | null {
   const m = /^(personal|mei|business)-(monthly|yearly)$/.exec(value);
   if (!m) return null;
   return { plan: m[1] as CheckoutIntent['plan'], period: m[2] as CheckoutIntent['period'] };
+}
+
+/** What the plans page headline rests on (built on the server by `roiBasis`). */
+export interface RoiBasis {
+  kind: 'confirmed' | 'estimate';
+  cents: number;
+  /** Bug bash 20/11 C1: an analysis over example statements never reads as the company's own number. */
+  example: boolean;
+}
+
+export interface RoiHeadline {
+  title: string;
+  line: string;
+  multiple: number;
+  cents: number;
+}
+
+/**
+ * D58 plans page: "Retorno de 20× para Marina Dev" and the basis in one line. Null without a basis or when the savings
+ * do not pay the yearly price once (no claim at all).
+ */
+export function roiHeadline(
+  basis: RoiBasis | null,
+  yearlyCents: number,
+  companyName: string,
+): RoiHeadline | null {
+  if (!basis) return null;
+  const multiple = roiMultiple(basis.cents, yearlyCents);
+  if (multiple === null) return null;
+  const n = `${multiple.toLocaleString('pt-BR')}×`;
+  const price = `${priceLabel(yearlyCents)}/ano (${priceLabel(perMonthOfYear(yearlyCents))}/mês) do plano Empresa`;
+  const amount = formatBRLWhole(basis.cents);
+  if (basis.kind === 'estimate') {
+    return {
+      title: `Retorno de ${n} para ${companyName}`,
+      line: `Economia mínima estimada de ${amount} por ano, contra ${price}.`,
+      multiple,
+      cents: basis.cents,
+    };
+  }
+  return basis.example
+    ? {
+        title: `No extrato de exemplo: retorno de ${n} para ${companyName}`,
+        line: `${amount} nos próximos 12 meses sobre o extrato de exemplo, contra ${price}.`,
+        multiple,
+        cents: basis.cents,
+      }
+    : {
+        title: `Retorno de ${n} para ${companyName}`,
+        line: `${amount} confirmados nos próximos 12 meses, contra ${price}.`,
+        multiple,
+        cents: basis.cents,
+      };
 }

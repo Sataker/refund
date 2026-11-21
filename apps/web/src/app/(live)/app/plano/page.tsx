@@ -4,23 +4,22 @@ import { redirect } from 'next/navigation';
 import { Disclaimer } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
-import { titleCase } from '@/demo/view.ts';
+import { companyNameOf } from '@/features/company/scope';
 import { liveSealLabel } from '@/features/live/data-origin';
 import { type LiveActions, LivePlans } from '@/features/plans/live-plans.client';
-import { perMonthOfYear, priceLabel } from '@/features/plans/model';
 import { safeReturnPath } from '@/features/plans/return-path';
-import { parseCheckoutIntent, roiMultiple } from '@/features/plans/roi';
+import { type CheckoutIntent, parseCheckoutIntent, roiHeadline } from '@/features/plans/roi';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { currentStep, plansReachable, stepPath } from '@/features/track/steps';
 import { CONTACT_EMAIL, CONTACT_PLACEHOLDER } from '@/lib/contact';
-import { formatBRLWhole } from '@/lib/format';
 import { requireCapability } from '@/server/capabilities.ts';
 import { safeEqual } from '@/server/crypto.ts';
 import { activePlanWith } from '@/server/entitlements.ts';
 import { liveContext } from '@/server/live.ts';
 import { paymentsConfig } from '@/server/payments/gateway.ts';
+import { PLAN_TIER } from '@/server/plans/catalog.ts';
 import { plansModel } from '@/server/plans/offer.ts';
-import { type RoiBasis, roiBasis } from '@/server/plans/roi.ts';
+import { roiBasis } from '@/server/plans/roi.ts';
 import { loadTrack, originOfTrack } from '@/server/track/state.ts';
 import { getCharge, simulateDevPayment, startPixCheckout } from './actions';
 
@@ -50,16 +49,21 @@ export default async function PlanPage({
   const { progress, company } = track;
   if (!plansReachable(progress)) redirect(stepPath(currentStep(progress)) as never);
 
-  const { oferta, voltar, codigo, assinar } = await searchParams;
+  const { oferta, voltar, codigo, assinar, login } = await searchParams;
   // Back to where the offer or the paywall was seen: only a path of this user's own /app (no open redirect).
   const returnTo = safeReturnPath(voltar);
-  const intent = parseCheckoutIntent(assinar);
   const [active, basis] = await Promise.all([
     activePlanWith(db, userId),
     roiBasis(db, userId, track),
   ]);
   const model = plansModel();
-  const roi = roiHeadline(basis, model.business.yearlyCents, progress.company?.displayName);
+  const roi = roiHeadline(
+    basis,
+    model.business.yearlyCents,
+    company ? companyNameOf(company.company) : 'sua empresa',
+  );
+  const linkedCompany = company ? (company.company.mei.optedIn ? 'mei' : 'other') : null;
+  const intent = fittingIntent(parseCheckoutIntent(assinar), linkedCompany, active.plan);
   const payments = paymentsConfig();
   const off = requireCapability('payments');
   // The R$ 1,00 offer shows only with VALIDATION_OFFER_CODE set and the right code in the link (the server action
@@ -129,9 +133,10 @@ export default async function PlanPage({
           currentUntil={active.until ? DATE.format(active.until) : null}
           actions={actions}
           validationCode={offerCode}
-          linkedCompany={company ? (company.company.mei.optedIn ? 'mei' : 'other') : null}
+          linkedCompany={linkedCompany}
           returnTo={returnTo}
           initialCheckout={intent}
+          loginError={login === 'erro'}
           contactEmail={CONTACT_EMAIL === CONTACT_PLACEHOLDER ? null : CONTACT_EMAIL}
           {...(off.ok ? {} : { offMessage: off.error.message })}
         />
@@ -145,25 +150,18 @@ export default async function PlanPage({
   );
 }
 
-/** "Para a Marina Dev: retorno de 20×" with the basis in one line; null when the savings do not pay the plan once. */
-function roiHeadline(
-  basis: RoiBasis | null,
-  yearlyCents: number,
-  companyName: string | undefined,
-): { title: string; line: string; multiple: number; cents: number } | null {
-  if (!basis) return null;
-  const multiple = roiMultiple(basis.cents, yearlyCents);
-  if (multiple === null) return null;
-  const who = companyName ? `Para a ${titleCase(companyName)}: ` : 'Para você: ';
-  const price = `${priceLabel(yearlyCents)}/ano (${priceLabel(perMonthOfYear(yearlyCents))}/mês)`;
-  const line =
-    basis.kind === 'confirmed'
-      ? `${formatBRLWhole(basis.cents)} confirmados nos próximos 12 meses, contra ${price} do plano Empresa.`
-      : `Economia mínima estimada de ${formatBRLWhole(basis.cents)} por ano, contra ${price} do plano Empresa.`;
-  return {
-    title: `${who}retorno de ${multiple.toLocaleString('pt-BR')}×`,
-    line,
-    multiple,
-    cents: basis.cents,
-  };
+/**
+ * D58 (review L2): a link may only open a Pix that fits the linked company (Pessoal + MEI only for an MEI CNPJ) and
+ * never a lower tier than the plan in force; anything else just shows the plans.
+ */
+function fittingIntent(
+  intent: CheckoutIntent | null,
+  linkedCompany: 'mei' | 'other' | null,
+  current: string,
+): CheckoutIntent | null {
+  if (!intent) return null;
+  if (intent.plan === 'mei' && linkedCompany !== 'mei') return null;
+  const tiers = PLAN_TIER as readonly string[];
+  if (tiers.indexOf(intent.plan) < tiers.indexOf(current)) return null;
+  return intent;
 }

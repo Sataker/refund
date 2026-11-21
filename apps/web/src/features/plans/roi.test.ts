@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { RETURN_PATH, safeReturnPath } from './return-path';
-import { monthlyCents, parseCheckoutIntent, roiMultiple, unlockHref } from './roi';
+import { loginPathOf, RETURN_PATH, safePlansPath, safeReturnPath } from './return-path';
+import { monthlyCents, parseCheckoutIntent, roiHeadline, roiMultiple, unlockHref } from './roi';
 
 const EMPRESA_YEARLY = 59_900;
 
@@ -99,5 +99,98 @@ describe('the way back (no open redirect)', () => {
       null,
     ])
       expect(safeReturnPath(bad)).toBeNull();
+  });
+});
+
+describe('roiHeadline (plans page, D58 review H1 and M2)', () => {
+  it('the estimate: "Retorno de N× para <empresa>", no article, from the minimum', () => {
+    expect(
+      roiHeadline(
+        { kind: 'estimate', cents: 1_246_338, example: false },
+        EMPRESA_YEARLY,
+        'Marina Dev',
+      ),
+    ).toMatchObject({
+      title: 'Retorno de 20× para Marina Dev',
+      multiple: 20,
+      cents: 1_246_338,
+    });
+  });
+
+  it('a confirmed total reads "confirmados"; on example statements it says so and never "confirmados"', () => {
+    const own = roiHeadline(
+      { kind: 'confirmed', cents: 6_231_892, example: false },
+      EMPRESA_YEARLY,
+      'Marina Dev',
+    );
+    expect(own?.title).toBe('Retorno de 104× para Marina Dev');
+    expect(own?.line).toMatch(/^R\$\s62\.318 confirmados nos próximos 12 meses/);
+    const sample = roiHeadline(
+      { kind: 'confirmed', cents: 6_231_892, example: true },
+      EMPRESA_YEARLY,
+      'Clínica Exemplo',
+    );
+    expect(sample?.title).toBe('No extrato de exemplo: retorno de 104× para Clínica Exemplo');
+    expect(sample?.line).toContain('extrato de exemplo');
+    expect(sample?.line).not.toContain('confirmados');
+  });
+
+  it('no basis, or savings below the price: no headline at all', () => {
+    expect(roiHeadline(null, EMPRESA_YEARLY, 'Marina Dev')).toBeNull();
+    expect(
+      roiHeadline({ kind: 'confirmed', cents: 59_899, example: false }, EMPRESA_YEARLY, 'X'),
+    ).toBeNull();
+    expect(
+      roiHeadline({ kind: 'estimate', cents: 0, example: false }, EMPRESA_YEARLY, 'X'),
+    ).toBeNull();
+  });
+});
+
+describe('loginPathOf (review M6: only /auth/entrar with a safe voltar)', () => {
+  const err = (login: unknown, code = 'UNAUTHENTICATED') => ({ code, message: 'x', login });
+
+  it('follows the auth PR contract', () => {
+    for (const ok of [
+      '/auth/entrar?voltar=%2Fapp%2Fplano',
+      '/auth/entrar?voltar=/app/plano',
+      '/auth/entrar?voltar=%2Fapp%2Fplano%3Fassinar%3Dbusiness-yearly',
+      '/auth/entrar?voltar=/app/plano?assinar=business-yearly',
+      '/auth/entrar?voltar=%2Fapp%2Fcomecar%2Festimativa',
+    ])
+      expect(loginPathOf(err(ok))).toBe(ok);
+  });
+
+  it('refuses anything that could leave the site or land elsewhere', () => {
+    for (const bad of [
+      '//evil.test/auth/entrar?voltar=/app/plano',
+      'https://evil.test/auth/entrar?voltar=/app/plano',
+      '/auth/../x',
+      '/auth/entrar/../../x?voltar=/app/plano',
+      '/auth/login?next=/app/plano',
+      '/auth/entrar',
+      '/auth/entrar?voltar=https%3A%2F%2Fevil.test',
+      '/auth/entrar?voltar=%2F%2Fevil.test',
+      '/auth/entrar?voltar=/app/plano&next=//evil.test',
+      '/auth/entrar?voltar=/app/plano?assinar=api-yearly',
+      '/auth/entrar?voltar=/app/plano#x',
+      '\\evil.test',
+      null,
+      42,
+    ])
+      expect(loginPathOf(err(bad))).toBeNull();
+  });
+
+  it('ignores the login path of any other error code', () => {
+    for (const code of ['NOT_CONFIGURED', 'PLAN_LIMIT', 'FORBIDDEN', 'unauthenticated'])
+      expect(loginPathOf(err('/auth/entrar?voltar=/app/plano', code))).toBeNull();
+  });
+
+  it('the plans path takes only a valid assinar and a safe voltar', () => {
+    expect(safePlansPath('/app/plano')).toBe('/app/plano');
+    expect(
+      safePlansPath('/app/plano?assinar=mei-monthly&voltar=%2Fapp%2Fcomecar%2Festimativa'),
+    ).not.toBeNull();
+    expect(safePlansPath('/app/plano?oferta=validacao')).toBeNull();
+    expect(safePlansPath('/app/planos')).toBeNull();
   });
 });
