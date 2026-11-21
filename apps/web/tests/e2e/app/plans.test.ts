@@ -19,69 +19,75 @@ test.describe('plans and Pix @app', () => {
   test.describe.configure({ timeout: 240_000 });
   test.skip(SECRET === '', 'needs the e2e AbacatePay test variables (see the header)');
 
-  test.beforeAll(async () => {
-    fake = await startFakeAbacatePay({
-      port: FAKE_PORT,
-      webhookUrl: `http://localhost:${APP_PORT}/api/webhooks/abacatepay`,
-      webhookSecret: SECRET,
+  // Only the Pix test talks to the fake, and the server is pinned to its fixed port. With fullyParallel every test of a
+  // describe runs its beforeAll in its own worker, so a hook shared with the webhook test bound the port twice
+  // (EADDRINUSE in the first CI run): the fake lives in a describe of its own.
+  test.describe('with the fake AbacatePay', () => {
+    test.beforeAll(async () => {
+      fake = await startFakeAbacatePay({
+        port: FAKE_PORT,
+        webhookUrl: `http://localhost:${APP_PORT}/api/webhooks/abacatepay`,
+        webhookSecret: SECRET,
+      });
     });
-  });
-  test.afterAll(async () => {
-    await fake?.close();
-  });
-
-  test('Pix in Test Mode: charge → "Simular pagamento" → webhook → Empresa unlocks every calculation', async ({
-    page,
-  }) => {
-    await finishTrack(page);
-    const id = await analyze(page);
-    // Free: a finding that is not the largest arrives locked.
-    const sse = await page.request.get(`/api/analises/${id}/eventos?from=100000`);
-    const findings = (await sse.text())
-      .split('\n\n')
-      .filter((f) => /^event: (finding|alert)$/m.test(f))
-      .map((f) => JSON.parse(/^data: (.*)$/m.exec(f)?.[1] ?? 'null').finding);
-    const locked = findings.find((f) => f.traceLocked === true);
-    expect(locked).toBeTruthy();
-    await page.goto(`/app/analises/${id}/achados/${locked.id}`);
-    await expect(page.getByTestId('trace-locked')).toBeVisible();
-    await page.getByTestId('trace-locked-upgrade').click();
-    await expect(page).toHaveURL(/\/app\/plano\?voltar=/);
-
-    await expect(page.getByTestId('current-plan')).toHaveAttribute('data-plan', 'free');
-    await expect(page.getByTestId('period-yearly')).toBeChecked();
-    await page.getByTestId('subscribe-business').click();
-    const dialog = page.getByRole('dialog');
-    await expect(dialog.getByTestId('pix-amount')).toHaveAttribute('data-cents', '59900');
-    await expect(dialog.getByTestId('pix-qr')).toBeVisible();
-    await expect(dialog.getByTestId('pix-brcode')).toHaveValue(/^00020101/);
-    await expect(dialog.getByTestId('test-mode-label')).toContainText('Modo de teste');
-    await expect(dialog.getByTestId('pix-status')).toHaveAttribute('data-status', 'pending');
-    // The charge reached AbacatePay with the catalog price.
-    expect([...(fake?.charges.values() ?? [])].map((c) => c.amount)).toContain(59900);
-
-    await dialog.getByTestId('simulate-payment').click();
-    await expect(dialog.getByTestId('pix-status')).toHaveAttribute('data-status', 'paid', {
-      timeout: 30_000,
+    test.afterAll(async () => {
+      await fake?.close();
+      fake = null;
     });
-    await expect(dialog).toContainText('Boas-vindas ao Empresa');
-    expect(fake?.deliveries.at(-1)?.status).toBe(200);
-    await expect(dialog.getByTestId('pix-done')).toHaveText(/Ver o cálculo completo/);
-    // Back to the finding that hit the paywall: it now carries its trace on screen.
-    await dialog.getByTestId('pix-done').click();
-    await expect(page).toHaveURL(new RegExp(`/app/analises/${id}/achados/${locked.id}$`));
-    await expect(page.getByTestId('calc-trace')).toBeVisible();
-    await page.goto('/app/plano');
-    await expect(page.getByTestId('current-plan')).toHaveAttribute('data-plan', 'business');
-    // A second payment is not under the guarantee: the note points to the CDC art. 49 withdrawal (D37).
-    await expect(page.getByTestId('change-plan-note')).toContainText('art. 49');
-    await expect(page.getByTestId('change-plan-note')).not.toContainText('garantia');
-    // D41: the analysis uses an ME/EPP CNPJ and Pessoal keeps Grátis's CNPJ, so it is still sold, with a hint.
-    await expect(page.getByTestId('personal-hint')).toContainText('Empresa');
-    await expect(page.getByTestId('subscribe-personal')).toBeVisible();
-    await page.goto(`/app/analises/${id}/achados/${locked.id}`);
-    await expect(page.getByTestId('trace-locked')).toHaveCount(0);
-    await expect(page.getByTestId('plan-label')).toContainText('Empresa');
+
+    test('Pix in Test Mode: charge → "Simular pagamento" → webhook → Empresa unlocks every calculation', async ({
+      page,
+    }) => {
+      await finishTrack(page);
+      const id = await analyze(page);
+      // Free: a finding that is not the largest arrives locked.
+      const sse = await page.request.get(`/api/analises/${id}/eventos?from=100000`);
+      const findings = (await sse.text())
+        .split('\n\n')
+        .filter((f) => /^event: (finding|alert)$/m.test(f))
+        .map((f) => JSON.parse(/^data: (.*)$/m.exec(f)?.[1] ?? 'null').finding);
+      const locked = findings.find((f) => f.traceLocked === true);
+      expect(locked).toBeTruthy();
+      await page.goto(`/app/analises/${id}/achados/${locked.id}`);
+      await expect(page.getByTestId('trace-locked')).toBeVisible();
+      await page.getByTestId('trace-locked-upgrade').click();
+      await expect(page).toHaveURL(/\/app\/plano\?voltar=/);
+
+      await expect(page.getByTestId('current-plan')).toHaveAttribute('data-plan', 'free');
+      await expect(page.getByTestId('period-yearly')).toBeChecked();
+      await page.getByTestId('subscribe-business').click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog.getByTestId('pix-amount')).toHaveAttribute('data-cents', '59900');
+      await expect(dialog.getByTestId('pix-qr')).toBeVisible();
+      await expect(dialog.getByTestId('pix-brcode')).toHaveValue(/^00020101/);
+      await expect(dialog.getByTestId('test-mode-label')).toContainText('Modo de teste');
+      await expect(dialog.getByTestId('pix-status')).toHaveAttribute('data-status', 'pending');
+      // The charge reached AbacatePay with the catalog price.
+      expect([...(fake?.charges.values() ?? [])].map((c) => c.amount)).toContain(59900);
+
+      await dialog.getByTestId('simulate-payment').click();
+      await expect(dialog.getByTestId('pix-status')).toHaveAttribute('data-status', 'paid', {
+        timeout: 30_000,
+      });
+      await expect(dialog).toContainText('Boas-vindas ao Empresa');
+      expect(fake?.deliveries.at(-1)?.status).toBe(200);
+      await expect(dialog.getByTestId('pix-done')).toHaveText(/Ver o cálculo completo/);
+      // Back to the finding that hit the paywall: it now carries its trace on screen.
+      await dialog.getByTestId('pix-done').click();
+      await expect(page).toHaveURL(new RegExp(`/app/analises/${id}/achados/${locked.id}$`));
+      await expect(page.getByTestId('calc-trace')).toBeVisible();
+      await page.goto('/app/plano');
+      await expect(page.getByTestId('current-plan')).toHaveAttribute('data-plan', 'business');
+      // A second payment is not under the guarantee: the note points to the CDC art. 49 withdrawal (D37).
+      await expect(page.getByTestId('change-plan-note')).toContainText('art. 49');
+      await expect(page.getByTestId('change-plan-note')).not.toContainText('garantia');
+      // D41: the analysis uses an ME/EPP CNPJ and Pessoal keeps Grátis's CNPJ, so it is still sold, with a hint.
+      await expect(page.getByTestId('personal-hint')).toContainText('Empresa');
+      await expect(page.getByTestId('subscribe-personal')).toBeVisible();
+      await page.goto(`/app/analises/${id}/achados/${locked.id}`);
+      await expect(page.getByTestId('trace-locked')).toHaveCount(0);
+      await expect(page.getByTestId('plan-label')).toContainText('Empresa');
+    });
   });
 
   test('the webhook refuses a valid secret with a bad signature (401)', async ({ request }) => {
