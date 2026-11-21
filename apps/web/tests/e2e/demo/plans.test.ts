@@ -99,8 +99,12 @@ test.describe('plans @demo', () => {
     await expect(offer).toHaveAttribute('data-multiple', '104');
     await expect(offer.getByTestId('roi-price')).toHaveAttribute('data-cents', '59900');
     await expect(offer.getByTestId('roi-multiple')).toContainText('104 vezes');
+    // Marina's R01 saving starts at a later month (regimeFrom): no "cada mês" line (review M1).
+    await expect(offer.getByTestId('roi-monthly-loss')).toHaveCount(0);
     await offer.getByTestId('roi-unlock').click();
-    await expect(page).toHaveURL(/\/demo\/dev-exportador\/plano$/);
+    await expect(page).toHaveURL(/\/demo\/dev-exportador\/plano\?voltar=/);
     await expect(page.getByTestId('simulation-label')).toBeVisible();
+    await page.getByTestId('plans-back').click();
+    await expect(page).toHaveURL(/\/demo\/dev-exportador\/painel$/);
   });
 });

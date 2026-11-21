@@ -144,10 +144,20 @@ test.describe('demo track @demo', () => {
       'data-cents',
       '103861',
     );
+    await expect(offer.getByTestId('roi-monthly-loss')).toContainText('estimados');
+    // Review M4: one primary per screen; the free path is the card's outlined secondary.
+    await expect(offer.getByTestId('track-advance')).toHaveText(/Continuar grátis/);
+    await expect(page.getByTestId('track-advance')).toHaveCount(1);
     await noHorizontalScroll(page);
     await offer.getByTestId('roi-unlock').click();
-    await expect(page).toHaveURL(new RegExp(`/demo/${HERO}/plano$`));
+    await expect(page).toHaveURL(new RegExp(`/demo/${HERO}/plano\\?voltar=`));
     await expect(page.getByTestId('simulation-label')).toBeVisible();
+    // "Voltar" leads back to the estimate (an anchored path of this persona only).
+    await page.getByTestId('plans-back').click();
+    await expect(page).toHaveURL(step('estimativa'));
+    await page.goto(`/demo/${HERO}/plano?voltar=${encodeURIComponent('https://evil.test')}`);
+    await expect(page.getByTestId('simulation-label')).toBeVisible();
+    await expect(page.getByTestId('plans-back')).toHaveCount(0);
     // The plans screen does not count as the end of the track: the dashboard is still locked.
     await page.goto(`/demo/${HERO}/painel`);
     await expect(page).toHaveURL(step('cnpj'));

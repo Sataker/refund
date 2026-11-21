@@ -40,8 +40,22 @@ test.describe('plans and Pix @app', () => {
     }) => {
       await finishTrack(page);
       const id = await analyze(page);
-      // D58: Screen 4 ends with the Empresa offer over the confirmed total.
-      await expect(page.getByTestId('roi-offer')).toHaveAttribute('data-variant', 'confirmed');
+      // D58: Screen 4 ends with the Empresa offer over the confirmed total; the dashboard carries the same card.
+      const screen4 = page.getByTestId('roi-offer');
+      await expect(screen4).toHaveAttribute('data-variant', 'confirmed');
+      const confirmed = await page.getByTestId('analysis/money-hero').getAttribute('data-cents');
+      await expect(screen4).toHaveAttribute('data-cents', confirmed ?? '');
+      await page.goto(`/app/analises/${id}/painel`);
+      const painel = page.getByTestId('roi-offer');
+      await expect(painel).toHaveAttribute('data-variant', 'confirmed');
+      await expect(painel).toHaveAttribute(
+        'data-cents',
+        (await page.getByTestId('dashboard/money-hero').getAttribute('data-cents')) ?? '',
+      );
+      await expect(painel.getByTestId('roi-unlock')).toHaveAttribute(
+        'href',
+        `/app/plano?assinar=business-yearly&voltar=${encodeURIComponent(`/app/analises/${id}/painel`)}`,
+      );
       // Free: a finding that is not the largest arrives locked.
       const sse = await page.request.get(`/api/analises/${id}/eventos?from=100000`);
       const findings = (await sse.text())
@@ -116,23 +130,44 @@ test.describe('plans and Pix @app', () => {
     await expect(offer.getByTestId('roi-price')).toHaveAttribute('data-cents', '59900');
     await expect(offer.getByTestId('roi-multiple')).toContainText(`${multiple} vezes`);
     await expect(offer.getByTestId('see-exact-number')).toBeVisible();
+    await expect(offer.getByTestId('roi-monthly-loss')).toContainText('estimados');
+
+    // Review M5, at 390 px: no horizontal scroll, and with the card on screen both ways on are in the viewport.
+    await page.setViewportSize({ width: 390, height: 844 });
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    await offer.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    for (const id of ['roi-unlock', 'see-exact-number']) {
+      const box = await offer.getByTestId(id).boundingBox();
+      expect(box, id).not.toBeNull();
+      expect((box?.y ?? -1) >= 0 && (box?.y ?? 0) + (box?.height ?? 0) <= 844, id).toBe(true);
+    }
+    await page.setViewportSize({ width: 1280, height: 720 });
     const unlock = offer.getByTestId('roi-unlock');
     await expect(unlock).toHaveAttribute(
       'href',
       '/app/plano?assinar=business-yearly&voltar=%2Fapp%2Fcomecar%2Festimativa',
     );
 
-    // With login off (CI) the checkout needs no account: the Pix dialog opens on arrival, yearly Empresa.
+    // With login off (CI) the checkout needs no account: the Pix dialog opens on arrival, yearly Empresa, on a
+    // confirmation step (review M3: no charge exists until "Gerar Pix").
     await unlock.click();
     await expect(page).toHaveURL(/\/app\/plano\?/);
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText('Pix · Empresa');
+    await expect(dialog).toHaveAttribute('data-state', 'confirm');
+    await expect(dialog.getByTestId('pix-confirm-amount')).toHaveAttribute('data-cents', '59900');
     await expect(page.getByTestId('period-yearly')).toBeChecked();
     await expect(page.getByTestId('plans-heading')).toHaveAttribute(
       'data-multiple',
       String(multiple),
     );
+    await expect(page.getByTestId('plans-heading')).toContainText(`Retorno de ${multiple}× para`);
+    await dialog.getByTestId('pix-generate').click();
+    await expect(dialog).not.toHaveAttribute('data-state', 'confirm');
     // The intent is used once: it leaves the URL, so a reload does not open a second Pix.
     await expect(page).not.toHaveURL(/assinar=/);
     await dialog.getByTestId('pix-close').click();
@@ -142,6 +177,16 @@ test.describe('plans and Pix @app', () => {
     // The way back leads to the estimate, which still offers the free path.
     await page.getByRole('link', { name: '← Voltar' }).click();
     await expect(page).toHaveURL(/\/app\/comecar\/estimativa$/);
+
+    // A failed sign-in comes back with ?login=erro: a polite alert, a retry, and the param leaves the URL.
+    await page.goto('/app/plano?login=erro');
+    const alert = page.getByTestId('login-error');
+    await expect(alert).toContainText('Não conseguimos concluir o login. Tente de novo.');
+    await expect(alert.getByTestId('login-retry')).toHaveAttribute(
+      'href',
+      '/auth/entrar?voltar=%2Fapp%2Fplano',
+    );
+    await expect(page).not.toHaveURL(/login=/);
   });
 
   test('the webhook refuses a valid secret with a bad signature (401)', async ({ request }) => {
