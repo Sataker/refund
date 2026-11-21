@@ -6,7 +6,7 @@ import {
   readmeProblems,
   statusPageProblems,
 } from '../freeze-check.ts';
-import { inputsHashProblems } from '../generate-engine-page.ts';
+import { inputsHashProblems } from '../golden-inputs-hash.ts';
 
 // Freeze check 11 (compliance review E14, M1): the contact address on /privacidade must be real before the freeze.
 
