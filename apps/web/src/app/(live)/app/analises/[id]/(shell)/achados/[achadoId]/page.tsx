@@ -23,11 +23,14 @@ import type { Excerpt } from '@/features/findings/ref-sheet';
 import { steadyStateSuffix } from '@/features/findings/text';
 import { MarkFindingButton } from '@/features/live/buttons.client';
 import { exampleFor, exampleText, isExampleBank } from '@/features/live/data-origin';
+import { unlockHref } from '@/features/plans/roi';
+import { RoiOffer } from '@/features/plans/roi-offer';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { shellPage } from '@/server/analysis/page.ts';
 import { serializedFinding } from '@/server/analysis/read.ts';
+import { roiOfferTerms } from '@/server/plans/offer.ts';
 
 // Screen 6 + 6b in /app (ARCHITECTURE §13 `/app/analises/[id]/achados/[achadoId]`). The value, the action plan, the
 // law and "não faça" are free; the calculation goes through serializeFinding (§8.3): when it is locked the trace is
@@ -184,15 +187,26 @@ export default async function LiveFindingPage({
               (entradas, fórmula e artigo) abre só no maior achado. Seu contador vê tudo pelo link
               do relatório.
             </p>
-            <Link
-              href={
-                `/app/plano?voltar=${encodeURIComponent(`/app/analises/${id}/achados/${achadoId}`)}` as Route
+            {/* D58: the same offer as the estimate and the dashboard, over the confirmed total. A locked trace means
+                the free plan (any paid plan opens them all), so no plan lookup is needed here. */}
+            <RoiOffer
+              variant="confirmed"
+              savingsCents={live.dashboard.total}
+              terms={roiOfferTerms()}
+              href={unlockHref(`/app/analises/${id}/achados/${achadoId}`)}
+              example={example}
+              secondary={
+                <Link
+                  href={
+                    `/app/plano?voltar=${encodeURIComponent(`/app/analises/${id}/achados/${achadoId}`)}` as Route
+                  }
+                  data-testid="trace-locked-upgrade"
+                  className="inline-flex min-h-14 w-fit items-center text-base font-medium text-cobalt underline-offset-4 hover:underline"
+                >
+                  Ver todos os planos →
+                </Link>
               }
-              data-testid="trace-locked-upgrade"
-              className="inline-flex min-h-11 w-fit items-center text-base font-medium text-cobalt underline-offset-4 hover:underline"
-            >
-              Ver os planos →
-            </Link>
+            />
           </div>
         ) : (
           <CalcTrace

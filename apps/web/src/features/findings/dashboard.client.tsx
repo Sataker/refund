@@ -11,6 +11,8 @@ import { MoneyHero } from '@/components/brand/money-hero';
 import { Button } from '@/components/ui/button';
 import { keepCurrency, RISK_LINE } from '@/features/demo/display';
 import { exampleFor, exampleText } from '@/features/live/data-origin';
+import type { RoiOfferTerms } from '@/features/plans/model';
+import { RoiOffer } from '@/features/plans/roi-offer';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ConfirmCard } from './confirm';
@@ -39,6 +41,14 @@ interface DashboardProps {
   cards: ConfirmCard[];
   /** Screen 5b entry card (server-rendered, from the persona's default answers). */
   financeCard: ReactNode;
+  /** D58: the Empresa offer, pointing to the demo's simulated plans screen. */
+  offer?: DashboardOffer | null;
+}
+
+/** D58: the ROI offer's terms and link; the savings are the model's own confirmed total. */
+export interface DashboardOffer {
+  terms: RoiOfferTerms;
+  href: string;
 }
 
 const FILTERS: { id: Filter; label: string }[] = [
@@ -55,6 +65,7 @@ export function Dashboard({
   base,
   cards,
   financeCard,
+  offer = null,
 }: DashboardProps) {
   const visitor = useVisitorAnswers(persona, cards, base);
   const hrefs = Object.fromEntries(
@@ -72,6 +83,7 @@ export function Dashboard({
       open={visitor.open}
       loading={visitor.status === 'loading'}
       custom={visitor.custom}
+      offer={offer}
       banner={
         visitor.custom ? (
           <CustomBanner persona={persona} status={visitor.status} onRetry={visitor.retry} />
@@ -115,6 +127,8 @@ interface DashboardViewProps {
    * with no saving at all, the way to the demo. /demo keeps its own screen.
    */
   zeroState?: boolean;
+  /** D58: the Empresa offer over the confirmed total (free plan only; null hides it). */
+  offer?: DashboardOffer | null;
 }
 
 /** C2: the dashboard's headline and lead when nothing is confirmed (null: the normal big number). */
@@ -142,6 +156,7 @@ export function DashboardView({
   actions,
   example = null,
   zeroState = false,
+  offer = null,
 }: DashboardViewProps) {
   const [filter, setFilter] = useState<Filter>('all');
   const show = (f: DashboardFinding) => filter === 'all' || f.holder === filter;
@@ -514,6 +529,17 @@ export function DashboardView({
             </article>
           ))}
         </section>
+      ) : null}
+
+      {/* D58: not when nothing was found at all (C2: the way out is the demo, not a plan). */}
+      {offer && zeroLead(m) !== 'nothing' ? (
+        <RoiOffer
+          variant="confirmed"
+          savingsCents={m.total}
+          terms={offer.terms}
+          href={offer.href}
+          example={isExample}
+        />
       ) : null}
 
       <section aria-label="Finanças" className="flex flex-col gap-2">

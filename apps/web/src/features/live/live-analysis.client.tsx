@@ -16,6 +16,8 @@ import {
 } from '@/features/demo/analysis-state';
 import { findingText, keepCurrency, sampleDescription, shortTitle } from '@/features/demo/display';
 import { confirmCta, confirmProgress, estimatedLine } from '@/features/findings/progress';
+import type { RoiOfferTerms } from '@/features/plans/model';
+import { RoiOffer } from '@/features/plans/roi-offer';
 import { formatBRL, formatYearMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import {
@@ -90,12 +92,15 @@ export function LiveAnalysis({
   companyName,
   answered,
   origin,
+  offer = null,
 }: {
   analysisId: string;
   companyName: string;
   /** Card ids already answered for this company (the same count the dashboard shows; H2). */
   answered: readonly string[];
   origin: DataOrigin;
+  /** D58: the Empresa offer at the end of the run (free plan only; null hides it). */
+  offer?: { terms: RoiOfferTerms; href: string } | null;
 }) {
   const [view, dispatch] = useReducer(reducer, INITIAL_VIEW);
   const [lost, setLost] = useState(false);
@@ -487,6 +492,17 @@ export function LiveAnalysis({
               </li>
             ))}
           </ol>
+          {/* D58: after the run, the same offer as the estimate, fed by the confirmed total. Not when nothing was
+              found (C2: the way out is the demo, not a plan). */}
+          {offer && finished && zero !== 'nothing' ? (
+            <RoiOffer
+              variant="confirmed"
+              savingsCents={progress.confirmed}
+              terms={offer.terms}
+              href={offer.href}
+              example={example}
+            />
+          ) : null}
         </section>
       </div>
     </div>

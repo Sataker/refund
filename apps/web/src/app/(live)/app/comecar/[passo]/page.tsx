@@ -8,6 +8,9 @@ import { estimateStop, regimeStop } from '@/features/company/scope';
 import { ConnectStep } from '@/features/connection/connect-step.client';
 import { ConsentContent } from '@/features/connection/consent-content';
 import { WaitlistForm } from '@/features/landing/waitlist-form.client';
+import type { RoiOfferTerms } from '@/features/plans/model';
+import { unlockHref } from '@/features/plans/roi';
+import { RoiOffer } from '@/features/plans/roi-offer';
 import { AdvanceButton } from '@/features/track/advance-button.client';
 import { ChoiceStep } from '@/features/track/choice-step.client';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
@@ -32,6 +35,8 @@ import {
 import { CONSENT_SCOPES, TERMS_VERSION } from '@/server/connection/connections.ts';
 import { pluggyAvailable } from '@/server/financial/availability.ts';
 import { liveContext } from '@/server/live.ts';
+import { roiOfferTerms } from '@/server/plans/offer.ts';
+import { offerShown } from '@/server/plans/roi.ts';
 import { loadTrack, type TrackCompany } from '@/server/track/state.ts';
 import {
   answerStep,
@@ -81,6 +86,8 @@ export default async function TrackStepPage({ params, searchParams }: PageProps)
     passo === 'conta-pj' || passo === 'conta-pf' || passo === 'estimativa' || passo === 'permissoes'
       ? await pluggyAvailable(caps, secrets)
       : false;
+  // D58: the Empresa offer under the range, for the free plan only.
+  const offer = passo === 'estimativa' && (await offerShown(db, userId)) ? roiOfferTerms() : null;
 
   return (
     <TrackShell
@@ -94,6 +101,7 @@ export default async function TrackStepPage({ params, searchParams }: PageProps)
         company={company}
         typedCnpj={typed}
         pluggyOn={pluggyOn}
+        offer={offer}
       />
     </TrackShell>
   );
@@ -105,12 +113,15 @@ function StepBody({
   company,
   typedCnpj,
   pluggyOn,
+  offer,
 }: {
   step: Step;
   progress: TrackProgress;
   company: TrackCompany | null;
   typedCnpj: string | undefined;
   pluggyOn: boolean;
+  /** D58: the Empresa terms when the ROI offer shows (free plan), else null. */
+  offer: RoiOfferTerms | null;
 }) {
   switch (step) {
     case 'cnpj':
@@ -253,6 +264,28 @@ function StepBody({
               reason="activity"
               data={{ 'data-cnae': activity.cnae }}
               waitlist="Quer saber quando o Refund calcular a sua atividade? Deixe seu e-mail."
+            />
+          ) : offer && estimate.ok && estimate.value.type === 'range' ? (
+            // D58: the soft offer under the range; the free path to the exact number stays, as its secondary.
+            <RoiOffer
+              variant="estimate"
+              savingsCents={estimate.value.total[0]}
+              terms={offer}
+              href={unlockHref(stepPath('estimativa'))}
+              className="mt-8"
+              secondary={
+                <AdvanceButton
+                  action={markEstimateSeen}
+                  label={
+                    pluggyOn
+                      ? 'Continuar grátis e ver o número exato'
+                      : 'Continuar com dados de exemplo'
+                  }
+                  variant="outline"
+                  testId="see-exact-number"
+                  wrap
+                />
+              }
             />
           ) : (
             <AdvanceButton
