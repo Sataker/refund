@@ -501,6 +501,7 @@ export function LiveAnalysis({
               terms={offer.terms}
               href={offer.href}
               example={example}
+              startsLater={savings.some(({ finding: f }) => f.regimeFrom !== undefined)}
             />
           ) : null}
         </section>

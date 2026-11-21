@@ -539,6 +539,7 @@ export function DashboardView({
           terms={offer.terms}
           href={offer.href}
           example={isExample}
+          startsLater={m.savings.some((f) => f.regimeFrom !== null)}
         />
       ) : null}
 

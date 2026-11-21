@@ -195,6 +195,7 @@ export default async function LiveFindingPage({
               terms={roiOfferTerms()}
               href={unlockHref(`/app/analises/${id}/achados/${achadoId}`)}
               example={example}
+              startsLater={live.dashboard.savings.some((s) => s.regimeFrom !== null)}
               secondary={
                 <Link
                   href={

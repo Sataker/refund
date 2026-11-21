@@ -25,6 +25,11 @@ export interface RoiOfferProps {
   secondary?: ReactNode;
   /** Bug bash 20/11 C1: on example statements the amount never reads as the company's own confirmed number. */
   example?: boolean;
+  /**
+   * A counted saving only starts at a later month (a finding's `regimeFrom`, always after the analysis month): the
+   * "cada mês sem ajustar" line would overstate today's cost, so it is left out.
+   */
+  startsLater?: boolean;
   className?: string;
 }
 
@@ -50,12 +55,14 @@ export function RoiOffer({
   href,
   secondary,
   example = false,
+  startsLater = false,
   className,
 }: RoiOfferProps) {
   const yearly = terms.price.yearlyCents;
   const savings = savingsCents !== null && savingsCents > 0 ? savingsCents : null;
   const multiple = roiMultiple(savings, yearly);
-  const loss = savings === null ? 0 : monthlyCents(savings);
+  // Review M1: no monthly line on example statements nor when the saving starts later.
+  const loss = savings === null || example || startsLater ? 0 : monthlyCents(savings);
   const priceText = (
     <>
       O plano Empresa custa{' '}
@@ -114,23 +121,7 @@ export function RoiOffer({
           .
         </p>
       ) : null}
-      {loss > 0 ? (
-        <p className="type-small text-muted-foreground" data-testid="roi-monthly-loss">
-          Cada mês sem ajustar: cerca de{' '}
-          <span className="num text-foreground" data-cents={loss}>
-            {formatBRLWhole(loss)}
-          </span>{' '}
-          a mais de imposto.
-        </p>
-      ) : null}
-      <ul className="flex flex-col gap-1.5">
-        {BULLETS.map((b) => (
-          <li key={b} className="type-small flex items-start gap-2 text-foreground">
-            <Check className="mt-0.5 size-4 shrink-0 text-cobalt" aria-hidden="true" />
-            {b}
-          </li>
-        ))}
-      </ul>
+      {/* Review M5: the two ways on come right after the claim, so the free path shows without scrolling at 390 px. */}
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:gap-4">
         <Link
           href={href as Route}
@@ -142,9 +133,26 @@ export function RoiOffer({
         </Link>
         {secondary}
       </div>
+      {loss > 0 ? (
+        <p className="type-small text-muted-foreground" data-testid="roi-monthly-loss">
+          Cada mês sem ajustar: cerca de{' '}
+          <span className="num text-foreground" data-cents={loss}>
+            {formatBRLWhole(loss)}
+          </span>{' '}
+          {variant === 'estimate' ? 'estimados ' : ''}a mais de imposto.
+        </p>
+      ) : null}
+      <ul className="flex flex-col gap-1.5">
+        {BULLETS.map((b) => (
+          <li key={b} className="type-small flex items-start gap-2 text-foreground">
+            <Check className="mt-0.5 size-4 shrink-0 text-cobalt" aria-hidden="true" />
+            {b}
+          </li>
+        ))}
+      </ul>
       <p className="type-caption text-muted-foreground" data-testid="roi-trust">
         Pix · acesso imediato · estimativa informativa, o contador valida. Garantia de{' '}
-        {terms.guaranteeDays} dias: devolvemos o primeiro pagamento.
+        {terms.guaranteeDays} dias a partir do pagamento: devolvemos o primeiro pagamento.
       </p>
     </section>
   );
