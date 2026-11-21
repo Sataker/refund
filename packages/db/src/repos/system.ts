@@ -2,7 +2,13 @@
 import { and, isNotNull, lt, sql } from 'drizzle-orm';
 import journal from '../../migrations/meta/_journal.json' with { type: 'json' };
 import type { Db } from '../client.ts';
-import { externalCache, systemEvents, systemHeartbeat, webhookEvents } from '../schema/index.ts';
+import {
+  auditEvents,
+  externalCache,
+  systemEvents,
+  systemHeartbeat,
+  webhookEvents,
+} from '../schema/index.ts';
 
 /** Number of migrations bundled with this build (`_journal.json`), compared by the deep health. */
 export const EXPECTED_MIGRATIONS: number = journal.entries.length;
@@ -59,6 +65,27 @@ export async function insertSystemEvent(db: Db, input: SystemEventInput): Promis
     route: input.route?.slice(0, 200) ?? null,
     requestId: input.requestId?.slice(0, 120) ?? null,
     context: input.context ?? null,
+  });
+}
+
+export interface AuditEventInput {
+  actorType: 'user' | 'accountant' | 'system';
+  actorUserId: string | null;
+  action: string;
+  targetType?: string | null;
+  targetId?: string | null;
+  /** Never PII (SCHEMA §2.9). */
+  data?: unknown;
+}
+
+export async function insertAuditEvent(db: Db, input: AuditEventInput): Promise<void> {
+  await db.insert(auditEvents).values({
+    actorType: input.actorType,
+    actorUserId: input.actorUserId,
+    action: input.action.slice(0, 60),
+    targetType: input.targetType?.slice(0, 40) ?? null,
+    targetId: input.targetId?.slice(0, 80) ?? null,
+    data: input.data ?? null,
   });
 }
 

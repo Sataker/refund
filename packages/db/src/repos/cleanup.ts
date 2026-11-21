@@ -5,6 +5,7 @@ import type { Db } from '../client.ts';
 import {
   analyses,
   auditEvents,
+  charges,
   companies,
   companyLinks,
   connections,
@@ -18,7 +19,10 @@ import type { ConnectionRow } from './connections.ts';
 
 const olderThan = (days: number) => sql`now() - make_interval(days => ${days})`;
 
-/** Anonymous users with no access for `days` days (the caller deletes their Pluggy items first). */
+/**
+ * Anonymous users with no access for `days` days (the caller deletes their Pluggy items first). Never one that has
+ * paid (D58): a cascade delete would wipe a plan someone paid for before login existed.
+ */
 export async function inactiveAnonymousUsers(
   db: Db,
   days: number,
@@ -26,7 +30,18 @@ export async function inactiveAnonymousUsers(
   return db
     .select({ id: users.id, lastAccessAt: users.lastAccessAt })
     .from(users)
-    .where(and(eq(users.anonymous, true), lt(users.lastAccessAt, olderThan(days))));
+    .where(
+      and(
+        eq(users.anonymous, true),
+        lt(users.lastAccessAt, olderThan(days)),
+        notExists(
+          db
+            .select({ x: sql`1` })
+            .from(charges)
+            .where(and(eq(charges.userId, users.id), eq(charges.status, 'paid'))),
+        ),
+      ),
+    );
 }
 
 /**

@@ -104,11 +104,13 @@ export {
 } from './repos/runs.ts';
 export { type ActiveSubscription, activeSubscriptions } from './repos/subscriptions.ts';
 export {
+  type AuditEventInput,
   appliedMigrations,
   cleanupTechnical,
   databaseSizeBytes,
   EXPECTED_MIGRATIONS,
   type HeartbeatOrigin,
+  insertAuditEvent,
   insertSystemEvent,
   type SystemEventInput,
   type TechnicalCleanup,
@@ -120,6 +122,10 @@ export {
   deleteUser,
   ensureAnonymousUser,
   findUser,
+  findUserByIdentity,
+  type IdentityInput,
+  linkIdentity,
+  mergeUsers,
   type UserRow,
 } from './repos/users.ts';
 export { addToWaitlist, type WaitlistEntryInput } from './repos/waitlist.ts';
