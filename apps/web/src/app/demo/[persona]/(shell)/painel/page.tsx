@@ -5,6 +5,7 @@ import { requireSnapshot } from '@/demo/snapshot.ts';
 import { demoFinance } from '@/features/finance/demo-view';
 import { FinanceEntryCard } from '@/features/finance/entry';
 import { Dashboard } from '@/features/findings/dashboard.client';
+import { roiOfferTerms } from '@/server/plans/offer.ts';
 
 // Screen 5 on /demo (ARCHITECTURE §13 `/demo/[persona]/painel`, §7.3): static, computed at build time from the
 // persona's pipeline run. The browser only swaps in the engine's result for the visitor's own Screen 7 answers.
@@ -32,6 +33,7 @@ export default async function DemoDashboardPage({
       holderName={snap.view.holderName}
       base={snap.dashboard}
       cards={snap.cards}
+      offer={{ terms: roiOfferTerms(), href: `/demo/${persona}/plano` }}
       financeCard={
         finance.ok ? (
           <FinanceEntryCard view={finance.value.view} href={`/demo/${persona}/financas`} />

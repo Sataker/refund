@@ -109,16 +109,19 @@ export function TabBar({ base }: { base: string }) {
 
 /**
  * Shell lock (ARCHITECTURE §13): until the track ends (analysis watched or "Pular para o painel"), the shell routes
- * send the visitor back to the track. /demo keeps that state in the browser only (demo-session.ts).
+ * send the visitor back to the track. /demo keeps that state in the browser only (demo-session.ts). D58: the plans
+ * screen stays open, as on /app after the estimate, because the estimate's offer leads there.
  */
 export function ShellLock({ persona }: { persona: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   useEffect(() => {
+    if (pathname === `/demo/${persona}/plano`) return;
     if (demoSession().personas[persona]?.trackDone !== true) {
       rememberReturn(persona, window.location.pathname);
       router.replace(`/demo/${persona}/comecar/cnpj` as Route);
     }
-  }, [persona, router]);
+  }, [persona, router, pathname]);
   return null;
 }
 

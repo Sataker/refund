@@ -9,7 +9,9 @@ import { EstimateView } from '@/features/company/estimate-view';
 import { ConsentContent } from '@/features/connection/consent-content';
 import { DemoTrack, type DemoTrackSlots } from '@/features/demo/demo-track.client';
 import { demoProgress } from '@/features/demo/progress';
+import { RoiOffer } from '@/features/plans/roi-offer';
 import { applies, isStep, STEP_LABEL, STEPS } from '@/features/track/steps';
+import { roiOfferTerms } from '@/server/plans/offer.ts';
 
 // First-access track on /demo (D19; ARCHITECTURE §13 `/demo/[persona]/comecar/[passo]`): static pages,
 // one per persona and step (ADR-004). Everything the step needs is computed here at build time; the answers
@@ -56,9 +58,22 @@ export default async function DemoStepPage({ params }: PageProps) {
     const table = estimateTable(persona);
     if (table.ok) {
       const variants: Record<string, ReactNode> = {};
+      const terms = roiOfferTerms();
       for (const v of table.value.variants)
         variants[v.id] = (
-          <EstimateView estimate={v.estimate} cnae={persona.data.company.primaryCnae.code} />
+          <>
+            <EstimateView estimate={v.estimate} cnae={persona.data.company.primaryCnae.code} />
+            {/* D58: the same Empresa offer as /app, leading to the demo's simulated plans screen. */}
+            {v.estimate.type === 'range' && !persona.data.company.mei.optedIn ? (
+              <RoiOffer
+                variant="estimate"
+                savingsCents={v.estimate.total[0]}
+                terms={terms}
+                href={`/demo/${id}/plano`}
+                className="mt-8"
+              />
+            ) : null}
+          </>
         );
       slots.estimates = { variants, index: table.value.index };
     }
