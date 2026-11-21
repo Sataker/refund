@@ -4,28 +4,32 @@ import { redirect } from 'next/navigation';
 import { Disclaimer } from '@/components/brand/disclaimer';
 import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
+import { companyNameOf } from '@/features/company/scope';
 import { liveSealLabel } from '@/features/live/data-origin';
 import { type LiveActions, LivePlans } from '@/features/plans/live-plans.client';
+import { safeReturnPath } from '@/features/plans/return-path';
+import { type CheckoutIntent, parseCheckoutIntent, roiHeadline } from '@/features/plans/roi';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
-import { currentStep, stepPath } from '@/features/track/steps';
+import { currentStep, plansReachable, stepPath } from '@/features/track/steps';
 import { CONTACT_EMAIL, CONTACT_PLACEHOLDER } from '@/lib/contact';
 import { requireCapability } from '@/server/capabilities.ts';
 import { safeEqual } from '@/server/crypto.ts';
 import { activePlanWith } from '@/server/entitlements.ts';
 import { liveContext } from '@/server/live.ts';
 import { paymentsConfig } from '@/server/payments/gateway.ts';
+import { PLAN_TIER } from '@/server/plans/catalog.ts';
 import { plansModel } from '@/server/plans/offer.ts';
+import { roiBasis } from '@/server/plans/roi.ts';
 import { loadTrack, originOfTrack } from '@/server/track/state.ts';
 import { getCharge, simulateDevPayment, startPixCheckout } from './actions';
 
 // Screen 10 live (ARCHITECTURE §13 `/app/plano`; IDENTITY-AND-UI Screen 10): the 4 cards with the catalog's prices and
 // the real one-time Pix (AbacatePay). The plan in force is read on the server; the paywall itself lives in the
 // server actions and the serialization, never here. `?oferta=validacao&codigo=…` shows the hidden R$ 1,00 offer.
+// D58 (PLAN §18, 21/11): `?assinar=<plan>-<period>` preselects a Pix plan and opens its dialog (the ROI offer's
+// "Desbloquear"), and the headline quotes the user's own return when there is a confirmed total or an estimate.
 
 export const metadata: Metadata = { title: 'Planos · Refund', robots: { index: false } };
-
-const RETURN_PATH =
-  /^\/app\/analises\/[0-9a-f-]{36}(\/(painel|financas|confirmar|relatorio|achados(\/[0-9a-f-]{36})?))?$/;
 
 const DATE = new Intl.DateTimeFormat('pt-BR', {
   timeZone: 'America/Sao_Paulo',
@@ -40,16 +44,26 @@ export default async function PlanPage({
   const ctx = await liveContext();
   if (!ctx.ok) return <LiveUnavailable message={ctx.error.message} />;
   const { db, userId } = ctx.value;
-  // ARCHITECTURE §13 shell lock: the plan route waits for the first-access track like the other shell routes.
+  // ARCHITECTURE §13 shell lock, relaxed by D58: the plan route opens once the estimate is on screen.
   const track = await loadTrack(db, userId);
   const { progress, company } = track;
-  const step = currentStep(progress);
-  if (step !== 'done') redirect(stepPath(step) as never);
+  if (!plansReachable(progress)) redirect(stepPath(currentStep(progress)) as never);
 
-  const { oferta, voltar, codigo } = await searchParams;
-  // Back to where the paywall was hit: only a path of this user's own analyses (no open redirect).
-  const returnTo = typeof voltar === 'string' && RETURN_PATH.test(voltar) ? voltar : null;
-  const active = await activePlanWith(db, userId);
+  const { oferta, voltar, codigo, assinar, login } = await searchParams;
+  // Back to where the offer or the paywall was seen: only a path of this user's own /app (no open redirect).
+  const returnTo = safeReturnPath(voltar);
+  const [active, basis] = await Promise.all([
+    activePlanWith(db, userId),
+    roiBasis(db, userId, track),
+  ]);
+  const model = plansModel();
+  const roi = roiHeadline(
+    basis,
+    model.business.yearlyCents,
+    company ? companyNameOf(company.company) : 'sua empresa',
+  );
+  const linkedCompany = company ? (company.company.mei.optedIn ? 'mei' : 'other') : null;
+  const intent = fittingIntent(parseCheckoutIntent(assinar), linkedCompany, active.plan);
   const payments = paymentsConfig();
   const off = requireCapability('payments');
   // The R$ 1,00 offer shows only with VALIDATION_OFFER_CODE set and the right code in the link (the server action
@@ -96,22 +110,33 @@ export default async function PlanPage({
               ← Voltar
             </Link>
           </p>
-          <h1 className="font-serif text-[36px] leading-[40px] font-normal text-foreground lg:text-[44px] lg:leading-[48px]">
-            O valor é grátis. O caminho completo é do plano.
+          <h1
+            className="font-serif text-[36px] leading-[40px] font-normal text-balance text-foreground lg:text-[44px] lg:leading-[48px]"
+            data-testid="plans-heading"
+            {...(roi ? { 'data-multiple': roi.multiple, 'data-cents': roi.cents } : {})}
+          >
+            {roi ? roi.title : 'O valor é grátis. O caminho completo é do plano.'}
           </h1>
+          {roi ? (
+            <p className="type-body-lg num max-w-[60ch] text-foreground" data-testid="plans-roi">
+              {roi.line}
+            </p>
+          ) : null}
           <p className="type-small max-w-[60ch] text-muted-foreground">
             Todos os achados aparecem com o valor em qualquer plano. Os planos pagos abrem todos os
             cálculos, o plano de ação completo e o acompanhamento.
           </p>
         </div>
         <LivePlans
-          model={plansModel()}
+          model={model}
           current={active.plan}
           currentUntil={active.until ? DATE.format(active.until) : null}
           actions={actions}
           validationCode={offerCode}
-          linkedCompany={company ? (company.company.mei.optedIn ? 'mei' : 'other') : null}
+          linkedCompany={linkedCompany}
           returnTo={returnTo}
+          initialCheckout={intent}
+          loginError={login === 'erro' || login === 'confirme-email' ? login : null}
           contactEmail={CONTACT_EMAIL === CONTACT_PLACEHOLDER ? null : CONTACT_EMAIL}
           {...(off.ok ? {} : { offMessage: off.error.message })}
         />
@@ -123,4 +148,20 @@ export default async function PlanPage({
       </footer>
     </div>
   );
+}
+
+/**
+ * D58 (review L2): a link may only open a Pix that fits the linked company (Pessoal + MEI only for an MEI CNPJ) and
+ * never a lower tier than the plan in force; anything else just shows the plans.
+ */
+function fittingIntent(
+  intent: CheckoutIntent | null,
+  linkedCompany: 'mei' | 'other' | null,
+  current: string,
+): CheckoutIntent | null {
+  if (!intent) return null;
+  if (intent.plan === 'mei' && linkedCompany !== 'mei') return null;
+  const tiers = PLAN_TIER as readonly string[];
+  if (tiers.indexOf(intent.plan) < tiers.indexOf(current)) return null;
+  return intent;
 }

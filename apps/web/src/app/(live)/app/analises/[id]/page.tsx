@@ -4,9 +4,12 @@ import { Logo } from '@/components/brand/logo';
 import { SandboxSeal } from '@/components/brand/sandbox-seal';
 import { liveSealLabel } from '@/features/live/data-origin';
 import { LiveAnalysis } from '@/features/live/live-analysis.client';
+import { unlockHref } from '@/features/plans/roi';
 import { LiveUnavailable } from '@/features/track/live-unavailable';
 import { loadAnswers } from '@/server/analysis/input.ts';
 import { livePage } from '@/server/analysis/page.ts';
+import { roiOfferTerms } from '@/server/plans/offer.ts';
+import { offerShown } from '@/server/plans/roi.ts';
 
 // Screen 4 in /app (ARCHITECTURE §13 `/app/analises/[id]`): the browser opens the SSE; the first connection claims
 // and runs the analysis, every other one (reload, second tab) reads the persisted log.
@@ -18,7 +21,10 @@ export default async function LiveAnalysisPage({ params }: { params: Promise<{ i
   const page = await livePage(id);
   if (page.kind === 'off') return <LiveUnavailable message={page.message} />;
   const { ctx, live } = page;
-  const answers = await loadAnswers(ctx.db, ctx.userId, live.analysis.companyId);
+  const [answers, showOffer] = await Promise.all([
+    loadAnswers(ctx.db, ctx.userId, live.analysis.companyId),
+    offerShown(ctx.db, ctx.userId),
+  ]);
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="border-b border-border bg-surface">
@@ -38,6 +44,9 @@ export default async function LiveAnalysisPage({ params }: { params: Promise<{ i
           companyName={live.companyName}
           answered={answers.map((a) => a.questionId)}
           origin={live.origin}
+          offer={
+            showOffer ? { terms: roiOfferTerms(), href: unlockHref(`/app/analises/${id}`) } : null
+          }
         />
       </main>
     </div>

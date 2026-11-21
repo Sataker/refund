@@ -65,6 +65,12 @@ export interface PlansScreenProps {
   linkedCompany?: 'mei' | 'other' | null;
   /** Where the paid state leads (a same-origin /app path checked on the server). */
   returnTo?: string | null;
+  /**
+   * D58: `?assinar=<plan>-<period>` (checked on the server: a Pix plan that fits the company, never a downgrade):
+   * preselects the period and opens the Pix dialog on arrival, unless that plan is already the current one. The
+   * dialog opens on a confirmation step: no charge exists until "Gerar Pix" (a reload never makes a second one).
+   */
+  initialCheckout?: { plan: SellablePlan; period: Period } | null;
 }
 
 const POLL_MS = 2_000;
@@ -72,12 +78,14 @@ const POLL_MAX_MS = 15 * 60_000;
 
 export function PlansScreen(props: PlansScreenProps) {
   const { model, current, simulated } = props;
-  const [period, setPeriod] = useState<Period>('yearly');
-  const [mei, setMei] = useState(current === 'mei');
+  const intent = props.initialCheckout ?? null;
+  const [period, setPeriod] = useState<Period>(intent?.period ?? 'yearly');
+  const [mei, setMei] = useState(current === 'mei' || intent?.plan === 'mei');
   const [checkout, setCheckout] = useState<{
     plan: SellablePlan;
     period: Period | 'validation';
-  } | null>(null);
+    confirm?: boolean;
+  } | null>(intent && props.port && intent.plan !== current ? { ...intent, confirm: true } : null);
   const [paidPlan, setPaidPlan] = useState<SellablePlan | null>(null);
   const effective = paidPlan ?? current;
   const personalPlan: SellablePlan = mei ? 'mei' : 'personal';
@@ -355,6 +363,12 @@ export function PlansScreen(props: PlansScreenProps) {
           key={`${checkout.plan}-${checkout.period}`}
           plan={checkout.plan}
           period={checkout.period}
+          confirmFirst={checkout.confirm === true}
+          priceCents={
+            checkout.period === 'validation'
+              ? model.validation.amountCents
+              : model[checkout.plan][checkout.period === 'yearly' ? 'yearlyCents' : 'monthlyCents']
+          }
           port={props.port}
           simulated={simulated}
           returnTo={props.returnTo ?? null}
@@ -535,6 +549,7 @@ function SubscribeButton({
 }
 
 type DialogState =
+  | { kind: 'confirm' }
   | { kind: 'creating' }
   | { kind: 'waiting'; charge: CheckoutCharge }
   | { kind: 'paid'; charge: CheckoutCharge }
@@ -558,6 +573,8 @@ const TIME = new Intl.DateTimeFormat('pt-BR', {
 function PixDialog({
   plan,
   period,
+  confirmFirst,
+  priceCents,
   port,
   simulated,
   returnTo,
@@ -566,13 +583,20 @@ function PixDialog({
 }: {
   plan: SellablePlan;
   period: Period | 'validation';
+  /** D58: opened from a link (`?assinar=`): show the plan and the price first, and charge only on "Gerar Pix". */
+  confirmFirst: boolean;
+  /** The catalog price, shown on the confirmation step (the charge then carries its own amount). */
+  priceCents: number;
   port: CheckoutPort;
   simulated: boolean;
   returnTo: string | null;
   onClose: () => void;
   onPaid: (plan: SellablePlan) => void;
 }) {
-  const [state, setState] = useState<DialogState>({ kind: 'creating' });
+  const [state, setState] = useState<DialogState>(
+    confirmFirst ? { kind: 'confirm' } : { kind: 'creating' },
+  );
+  const [confirmed, setConfirmed] = useState(!confirmFirst);
   const [copied, setCopied] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -593,7 +617,7 @@ function PixDialog({
   // Exactly one charge per attempt, even when React runs the effect twice in development.
   const startedAttempt = useRef(-1);
   useEffect(() => {
-    if (startedAttempt.current === attempt) return;
+    if (!confirmed || startedAttempt.current === attempt) return;
     startedAttempt.current = attempt;
     setState({ kind: 'creating' });
     portRef.current.start(plan, period).then((r) => {
@@ -602,7 +626,7 @@ function PixDialog({
         r.ok ? { kind: 'waiting', charge: r.value } : { kind: 'error', message: r.error.message },
       );
     });
-  }, [plan, period, attempt]);
+  }, [plan, period, attempt, confirmed]);
 
   const waitingCharge = state.kind === 'waiting' ? state.charge : null;
   const onPaidRef = useRef(onPaid);
@@ -680,6 +704,36 @@ function PixDialog({
             <X className="size-5" aria-hidden="true" />
           </button>
         </div>
+
+        {state.kind === 'confirm' ? (
+          <div className="flex flex-col gap-4" data-testid="pix-confirm">
+            <p className="type-small text-foreground">
+              Plano {name},{' '}
+              {period === 'yearly'
+                ? 'anual (12 meses)'
+                : period === 'monthly'
+                  ? 'mensal (31 dias)'
+                  : 'de validação'}
+              :{' '}
+              <strong
+                className="num font-semibold"
+                data-testid="pix-confirm-amount"
+                data-cents={priceCents}
+              >
+                {priceLabel(priceCents)}
+              </strong>{' '}
+              em um Pix. Sem renovação automática.
+            </p>
+            <Button
+              type="button"
+              size="lg"
+              onClick={() => setConfirmed(true)}
+              data-testid="pix-generate"
+            >
+              Gerar Pix
+            </Button>
+          </div>
+        ) : null}
 
         {state.kind === 'creating' ? (
           <p className="type-small inline-flex items-center gap-2 text-muted-foreground">

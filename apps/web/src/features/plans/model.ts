@@ -37,6 +37,14 @@ export interface PlansModel {
   withdrawalDays: number;
 }
 
+/** D58: the Empresa terms the ROI offer quotes, read from the catalog on the server (`roiOfferTerms`). */
+export interface RoiOfferTerms {
+  /** Empresa's prices. */
+  price: Price;
+  /** D37: the money-back guarantee Screen 10 already states. */
+  guaranteeDays: number;
+}
+
 export const PLAN_NAME: Record<SellablePlan | 'free', string> = {
   free: 'Grátis',
   personal: 'Pessoal',

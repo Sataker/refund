@@ -87,4 +87,24 @@ test.describe('plans @demo', () => {
     );
     expect(serious.map((v) => v.id)).toEqual([]);
   });
+
+  test('D58: the dashboard offers Empresa over the confirmed total and leads to the simulated plans', async ({
+    page,
+  }) => {
+    await page.goto('/demo/dev-exportador/painel');
+    const offer = page.getByTestId('roi-offer');
+    // ENGINE-SPEC F.4 hero total, R$ 62.318,92, over R$ 599/ano: 104 times, floored.
+    await expect(offer).toHaveAttribute('data-variant', 'confirmed');
+    await expect(offer).toHaveAttribute('data-cents', '6231892');
+    await expect(offer).toHaveAttribute('data-multiple', '104');
+    await expect(offer.getByTestId('roi-price')).toHaveAttribute('data-cents', '59900');
+    await expect(offer.getByTestId('roi-multiple')).toContainText('104 vezes');
+    // Marina's R01 saving starts at a later month (regimeFrom): no "cada mês" line (review M1).
+    await expect(offer.getByTestId('roi-monthly-loss')).toHaveCount(0);
+    await offer.getByTestId('roi-unlock').click();
+    await expect(page).toHaveURL(/\/demo\/dev-exportador\/plano\?voltar=/);
+    await expect(page.getByTestId('simulation-label')).toBeVisible();
+    await page.getByTestId('plans-back').click();
+    await expect(page).toHaveURL(/\/demo\/dev-exportador\/painel$/);
+  });
 });

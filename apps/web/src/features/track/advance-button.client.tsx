@@ -15,6 +15,8 @@ interface AdvanceButtonProps {
   arrow?: boolean;
   testId?: string;
   className?: string;
+  /** A long label wraps instead of overflowing a narrow card (390 px). */
+  wrap?: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ export function AdvanceButton({
   arrow = true,
   testId,
   className,
+  wrap = false,
 }: AdvanceButtonProps) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -52,7 +55,10 @@ export function AdvanceButton({
         disabled={pending}
         aria-busy={pending}
         data-testid={testId}
-        className={cn(variant === 'link' ? 'px-0' : 'w-full sm:w-auto')}
+        className={cn(
+          variant === 'link' ? 'px-0' : 'w-full sm:w-auto',
+          wrap && 'h-auto min-h-14 py-3 text-center whitespace-normal',
+        )}
       >
         {label}
         {arrow ? <ArrowRight className="size-4" strokeWidth={1.5} aria-hidden="true" /> : null}

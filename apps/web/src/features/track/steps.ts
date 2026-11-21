@@ -120,6 +120,16 @@ export function currentStep(p: TrackProgress): Step | 'done' {
   return applicableSteps(p).find((s) => !isDone(s, p)) ?? 'done';
 }
 
+/**
+ * D58 (PLAN §18, 21/11): the plans page opens once the estimate is on screen, not only when the track is over (D42
+ * relaxed). The estimate counts as seen on the step itself, before "Ver o número exato" saves it, because the offer
+ * sits under the range; a company stopped at the estimate (MEI, CNAE outside the table) never gets there this way.
+ */
+export function plansReachable(p: TrackProgress): boolean {
+  if (p.estimateSeen) return true;
+  return currentStep(p) === 'estimativa' && p.company?.activityOutOfScope !== true;
+}
+
 export type StepAccess = { kind: 'render' } | { kind: 'redirect'; to: Step | 'done' };
 
 /**
