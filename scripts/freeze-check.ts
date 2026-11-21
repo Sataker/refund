@@ -3,7 +3,7 @@
 // Usage: node scripts/freeze-check.ts
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { inputsHashProblems, STATS_FILE } from './generate-engine-page.ts';
+import { inputsHashProblems, STATS_FILE } from './golden-inputs-hash.ts';
 import { checkFile } from './lint-conventions.ts';
 
 const EXPECTED_EMAIL = 'enzosvacarro@gmail.com';

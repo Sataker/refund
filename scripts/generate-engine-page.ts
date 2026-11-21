@@ -6,23 +6,23 @@
 // scripts/test/engine-page.unit.test.ts keeps the cheap structural checks (file list, rules, sources, versions).
 // Usage: node scripts/generate-engine-page.ts   (≈ 1 min: it runs the golden project)
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, sep } from 'node:path';
 import { ENGINE_VERSION, PARAMETERS_VERSION, RULE_REFS } from '../packages/engine/src/index.ts';
 import { SOURCES } from '../packages/engine/test/golden/oracles/sources.ts';
 import { biomeFormat } from './generate-fixtures-index.ts';
+import { goldenTestFiles, inputsHash, ROOT, STATS_FILE } from './golden-inputs-hash.ts';
 
-export const ROOT = join(import.meta.dirname, '..');
-export const STATS_FILE = 'apps/web/src/features/engine-page/stats.generated.ts';
-
-/** The directories the `golden` Vitest project reads (vitest.config.ts). */
-export const GOLDEN_DIRS = [
-  'packages/engine/test/golden',
-  'packages/engine/test/properties',
-  'packages/pipeline/test/invariants',
-] as const;
+export {
+  GOLDEN_DIRS,
+  goldenInputFiles,
+  goldenTestFiles,
+  inputsHash,
+  inputsHashProblems,
+  ROOT,
+  STATS_FILE,
+} from './golden-inputs-hash.ts';
 
 export type SuiteGroup = 'oracle' | 'golden' | 'property' | 'invariant';
 
@@ -41,33 +41,6 @@ export interface EngineStats {
   suites: SuiteStats[];
   totals: Record<SuiteGroup, number> & { passed: number; todo: number };
   inputsHash: string;
-}
-
-/** Every tracked file under GOLDEN_DIRS (tests, fixtures, oracle captures), sorted. Git, not a disk walk: no .DS_Store. */
-export function goldenInputFiles(): string[] {
-  return execFileSync('git', ['ls-files', '-z', '--', ...GOLDEN_DIRS], {
-    cwd: ROOT,
-    encoding: 'utf8',
-  })
-    .split('\0')
-    .filter(Boolean)
-    .sort();
-}
-
-export function goldenTestFiles(): string[] {
-  return goldenInputFiles().filter((f) => f.endsWith('.test.ts'));
-}
-
-/** sha256 over path + content of every tracked golden input: any edit makes the committed numbers stale. */
-export function inputsHash(files: readonly string[] = goldenInputFiles()): string {
-  const h = createHash('sha256');
-  for (const f of files) {
-    h.update(f);
-    h.update('\0');
-    h.update(readFileSync(join(ROOT, f)));
-    h.update('\0');
-  }
-  return h.digest('hex');
 }
 
 export function suiteGroup(file: string): SuiteGroup {
@@ -124,17 +97,6 @@ export function totalsOf(suites: readonly SuiteStats[]): EngineStats['totals'] {
     totals.todo += s.todo;
   }
   return totals;
-}
-
-/** Freeze item 13: the hash pinned in the generated file must equal the current golden inputs. */
-export function inputsHashProblems(statsSource: string, actual: string = inputsHash()): string[] {
-  const pinned = /inputsHash:\s*'([0-9a-f]{64})'/.exec(statsSource)?.[1];
-  if (pinned === undefined) return [`${STATS_FILE}: inputsHash not found`];
-  if (pinned !== actual)
-    return [
-      `${STATS_FILE}: golden inputs changed since generation; run \`node scripts/generate-engine-page.ts\``,
-    ];
-  return [];
 }
 
 export function renderStats(stats: EngineStats): string {
